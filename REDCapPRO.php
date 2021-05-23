@@ -5,13 +5,10 @@ namespace YaleREDCap\REDCapPRO;
 use ExternalModules\AbstractExternalModule;
 
 /**
- * 
+ * Main EM Class
  */
 class REDCapPRO extends AbstractExternalModule {
 
-    //public static $USER_TABLE       = "REDCAP_PRO_USER";
-    //public static $PROJECT_TABLE    = "REDCAP_PRO_PROJECT";
-    //public static $LINK_TABLE       = "REDCAP_PRO_LINK";
     private static $TABLES = array(
         "USER" => "REDCAP_PRO_USER",
         "PROJECT" => "REDCAP_PRO_PROJECT",
@@ -24,11 +21,16 @@ class REDCapPRO extends AbstractExternalModule {
         "PID" => -1
     );
 
+    /**
+     * Create a table of the USER Type
+     * 
+     * @return void
+     */
     private function createUserTable() {
         $USER_TABLE = $this->getTable("USER");
         $USERSQL = "CREATE TABLE ".$USER_TABLE." (
             id int NOT NULL PRIMARY KEY AUTO_INCREMENT,
-            username INT NOT NULL UNIQUE,
+            username VARCHAR(20) NOT NULL UNIQUE,
             email VARCHAR(50) NOT NULL UNIQUE, 
             fname VARCHAR(50) NOT NULL, 
             lname VARCHAR(50) NOT NULL, 
@@ -45,6 +47,11 @@ class REDCapPRO extends AbstractExternalModule {
         }
     } 
 
+    /**
+     * Create a table of the PROJECT Type
+     * 
+     * @return void
+     */
     private function createProjectTable() {
         $PROJECT_TABLE = $this->getTable("PROJECT");
         $PROJECTSQL = "CREATE TABLE ".$PROJECT_TABLE." (
@@ -60,6 +67,11 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+    /**
+     * Create a table of the LINK Type
+     * 
+     * @return void
+     */
     private function createLinkTable() {
         $LINK_TABLE = $this->getTable("LINK");
         $PROJECT_TABLE = $this->getTable("PROJECT");
@@ -78,6 +90,13 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+    /**
+     * Create a table of the given type
+     * 
+     * @param string $TYPE USER, PROJECT, or LINK
+     * 
+     * @return void
+     */
     public function createTable(string $TYPE) {
         if ($TYPE === "USER") {
             $this->createUserTable();
@@ -88,6 +107,11 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+    /**
+     * Create a test record in the USER table
+     * 
+     * @return void
+     */
     private function createTestUser() {
         try {
             $USER_TABLE = $this->getTable("USER");
@@ -101,6 +125,11 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+    /**
+     * Create a test record in the PROJECT table
+     * 
+     * @return void
+     */
     private function createTestProject() {
         $PROJECT_TABLE = $this->getTable("PROJECT");
         $TEST_PID = $this::$TEST_DATA["PID"];
@@ -113,6 +142,11 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
     
+    /**
+     * Create a test record in the LINK table
+     * 
+     * @return void
+     */
     private function createTestLink() {
         $LINK_TABLE = $this->getTable("LINK");
         $USER_TABLE = $this->getTable("USER");
@@ -138,6 +172,13 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+    /**
+     * Create a test record in the given table.
+     * 
+     * @param string $TYPE USER, PROJECT, or LINK
+     * 
+     * @return void
+     */
     public function createTestData(string $TYPE) {
         if ($TYPE === "USER") {
             $this->createTestUser();
@@ -149,12 +190,28 @@ class REDCapPRO extends AbstractExternalModule {
     }
 
 
+    /**
+     * Determine whether table of given type already exists.
+     * 
+     * @param string $TYPE USER, PROJECT, or LINK
+     * 
+     * @return boolean True if it exists, False if not
+     */
     public function tableExists(string $TYPE) {
         $TABLE = $this->getTable($TYPE);
         $res = $this->query('SHOW TABLES LIKE "'.$TABLE.'"', []);
         return $res->num_rows > 0;
     }
 
+    /**
+     * Remove a table.
+     * 
+     * This shouldn't be needed much.
+     * 
+     * @param string $TYPE USER, PROJECT, or LINK
+     * 
+     * @return void
+     */
     public function dropTable(string $TYPE) {
         $TABLE = $this->getTable($TYPE);
         $SQL = "DROP TABLE ".$TABLE.";";
@@ -199,9 +256,14 @@ class REDCapPRO extends AbstractExternalModule {
     public function createUser(string $email, string $pw_hash, string $fname, string $lname) {
         $username = $this->createUsername();
         $counter = 0;
-        while ($this->usernameIsTaken($username) && $counter < 90000000) {
+        $counterLimit = 90000000;
+        while ($this->usernameIsTaken($username) && $counter < $counterLimit) {
             $username = $this->createUsername();
             $counter++;
+        }
+        if ($counter >= $counterLimit) {
+            echo "Please contact your REDCap administrator.";
+            return;
         }
         $SQL = "INSERT INTO ".$this::$TABLES["USER"]." (username, email, pw, fname, lname) VALUES (?, ?, ?, ?, ?)";
         $this->query($SQL, [$username, $email, $pw_hash, $fname, $lname]);
