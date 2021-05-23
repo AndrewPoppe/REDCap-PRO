@@ -1,0 +1,57 @@
+{
+    "name": "REDCapPRO",
+    "namespace": "YaleREDCap\\REDCapPRO",
+    "description": "Patient Reported Outcomes in REDCap",
+    "permissions": [
+        "redcap_survey_page_top"
+    ],
+    "authors": [
+        {
+            "name": "Andrew Poppe",
+            "email": "andrew.poppe@yale.edu",
+            "institution": "Yale Center for Clinical Investigation"
+        }
+    ],
+    "system-settings": [
+    ],
+    "project-settings": [
+        {
+            "key": "managers",
+            "name": "<strong>Select Manager Accounts:</strong><br>These accounts will have the ability to edit user permissions in this module",
+            "type": "user-list",
+            "repeatable":true,
+            "super-users-only":true
+        }  
+    ],
+    "links": {
+        "project": [
+           {
+                "name": "REDCapPRO",
+                "key": "redcappro",
+                "icon": "fas fa-receipt",
+                "url": "register.php",
+                "show-header-and-footer": true
+           }
+        ],
+        "control-center": [
+           {
+                "name": "REDCapPRO",
+                "key": "redcappro",
+                "icon": "fas fa-receipt",
+                "url": "authenticate.php?NOAUTH",
+                "show-header-and-footer": true
+           }
+        ]
+     },
+    "no-auth-pages": [
+        "authenticate",
+        "register"
+    ],
+    "framework-version": 5,
+    "compatibility": {
+        "php-version-min": "7.3.0",
+        "php-version-max": "",
+        "redcap-version-min": "9.10.0",
+        "redcap-version-max": ""
+     }
+}
