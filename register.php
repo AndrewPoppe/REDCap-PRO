@@ -3,29 +3,47 @@
 // Define variables and initialize with empty values
 $email = $password = $confirm_password = "";
 $email_err = $password_err = $confirm_password_err = "";
+
+// Track any error
+$any_error = FALSE;
  
 // Processing form data when form is submitted
-if($_SERVER["REQUEST_METHOD"] == "POST"){
+if ($_SERVER["REQUEST_METHOD"] == "POST"){
+
+    // Validate Name
+    $fname = trim($_POST["REDCapPRO_FName"]);
+    if (empty($fname)) {
+        $fname_err = "Please enter a first name for this participant.";
+        $any_error = TRUE;
+    }
+    $lname = trim($_POST["REDCapPRO_LName"]);
+    if (empty($lname)) {
+        $lname_err = "Please enter a last name for this participant.";
+        $any_error = TRUE;
+    }
  
     // Validate email
     $param_email = trim($_POST["REDCapPRO_Email"]);
-    if(empty($param_email) || !filter_var($param_email, FILTER_VALIDATE_EMAIL)) {
+    if (empty($param_email) || !filter_var($param_email, FILTER_VALIDATE_EMAIL)) {
         $email_err = "Please enter a valid email address.";
+        $any_error = TRUE;
     } else {
-        $result = $module->checkEmail($param_email);
+        $result = $module->checkEmailExists($param_email);
         if ($result === NULL) {
             echo "Oops! Something went wrong. Please try again later.";
             return;
-        } else if($result == 1){
+        } else if ($result === TRUE){
             $email_err = "This email is already associated with an account.";
+            $any_error = TRUE;
         } else{
             $email = $param_email;
         }
     }
     
     // Validate password
-    if(empty(trim($_POST["REDCapPRO_PW"]))){
+    if (empty(trim($_POST["REDCapPRO_PW"]))){
         $password_err = "Please enter a password.";     
+        $any_error = TRUE;
     } else {
         $password1 = trim($_POST["REDCapPRO_PW"]);
         // Validate password strength
@@ -36,38 +54,40 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         $specialChars = preg_match('@[^\w]@', $password1);
         $goodLength   = strlen($password1) >= $pw_len_req;
 
-        if(!$uppercase || !$lowercase || !$number || !$specialChars || !$goodLength) {
+        if (!$uppercase || !$lowercase || !$number || !$specialChars || !$goodLength) {
             $password_err = "Password should be at least ${pw_len_req} characters in length and should include at least one of each of the following: 
             <br>- upper-case letter
             <br>- lower-case letter
             <br>- number
             <br>- special character";
+            $any_error = TRUE;
         } else {
             $password = trim($_POST["REDCapPRO_PW"]);
         }
     }
     
     // Validate confirm password
-    if(empty(trim($_POST["Confirm_REDCapPRO_PW"]))){
+    if (empty(trim($_POST["Confirm_REDCapPRO_PW"]))){
         $confirm_password_err = "Please confirm password.";     
+        $any_error = TRUE;
     } else{
         $confirm_password = trim($_POST["Confirm_REDCapPRO_PW"]);
-        if(empty($password_err) && ($password != $confirm_password)){
+        if (empty($password_err) && ($password != $confirm_password)){
             $confirm_password_err = "Password did not match.";
+            $any_error = TRUE;
         }
     }
     
     // Check input errors before inserting in database
-    if(empty($email_err) && empty($password_err) && empty($confirm_password_err)){
+    if (!$any_error){
         
         $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
         try {
-            $module->createUser($email, $password_hash);
+            $module->createUser($email, $password_hash, $fname, $lname);
             //header("location: login.php");
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
             echo "Oops! Something went wrong. Please try again later.";
         }
     }
@@ -88,7 +108,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 <body>
     <div class="wrapper">
         <h2>Register a Participant</h2>
-        <p>Please fill this form to create a new account for a participant.</p>
+        <p>Submit this form to create a new account for this participant.</p>
         <form class="register-form" action="<?= $module->getUrl("register.php"); ?>" method="POST" enctype="multipart/form-data" target="_self" >
             <div class="form-group">
                 <label>First Name</label>
