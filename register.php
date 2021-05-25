@@ -1,4 +1,16 @@
 <?php
+
+$role = $module->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
+if (SUPER_USER) {
+    $role = 3;
+}
+if ($role < 2) {
+    header("location:".$module->getUrl("home.php"));
+}
+
+echo "<title>".$module::$APPTITLE." - Enroll</title>";
+require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+$module->UiShowHeader("Register");
  
 // Define variables and initialize with empty values
 $email = $password = $confirm_password = "";
@@ -85,7 +97,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
 
         try {
             $module->createUser($email, $password_hash, $fname, $lname);
-            //header("location: login.php");
+            header("location: ".$module->getUrl("enroll.php"));
         }
         catch (\Exception $e) {
             echo "Oops! Something went wrong. Please try again later.";
@@ -102,13 +114,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
     <!--<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">-->
     <style>
         .wrapper{ width: 720px; padding: 20px; }
-        .register-form {width: 360px;}
+        .register-form {
+            width: 360px;
+            border-radius: 5px;
+            border: 1px solid #cccccc;
+            padding: 20px;
+            box-shadow: 0px 0px 5px #eeeeee;
+        }
     </style>
 </head>
 <body>
     <div class="wrapper">
         <h2>Register a Participant</h2>
         <p>Submit this form to create a new account for this participant.</p>
+        <p><em>If the participant already has an account, you can enroll them in this project </em><strong><a href="<?=$module->getUrl("enroll.php");?>">here</a></strong>.</p>
         <form class="register-form" action="<?= $module->getUrl("register.php"); ?>" method="POST" enctype="multipart/form-data" target="_self" >
             <div class="form-group">
                 <label>First Name</label>
@@ -139,8 +158,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
                 <input type="submit" class="btn btn-primary" value="Submit">
                 <!--<input type="reset" class="btn btn-secondary ml-2" value="Reset">-->
             </div>
-            <p>If the participant already has an account, you can enroll them in this project <a href="enroll.php">here</a>.</p>
         </form>
     </div>    
 </body>
 </html>
+<?php
+include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';

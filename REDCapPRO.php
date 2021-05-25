@@ -21,6 +21,29 @@ class REDCapPRO extends AbstractExternalModule {
         "PID" => -1
     );
 
+    static $APPTITLE = "REDCap PRO";
+
+
+    // SETTINGS
+
+    public function getUserRole($username) {
+        $managers = $this->getProjectSetting("managers");
+        $monitors = $this->getProjectSetting("monitors");
+        $users = $this->getProjectSetting("users");
+
+        if (in_array($username, $managers)) {
+            return 3;
+        } else if (in_array($username, $monitors)) {
+            return 2;
+        } else if (in_array($username, $users)) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+
+
     /**
      * Create a table of the USER Type
      * 
@@ -225,7 +248,7 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return string Table name
      */
-    private function getTable(string $TYPE) {
+    public function getTable(string $TYPE) {
         return $this::$TABLES[$TYPE];
     }
 
@@ -266,7 +289,12 @@ class REDCapPRO extends AbstractExternalModule {
             return;
         }
         $SQL = "INSERT INTO ".$this::$TABLES["USER"]." (username, email, pw, fname, lname) VALUES (?, ?, ?, ?, ?)";
-        $this->query($SQL, [$username, $email, $pw_hash, $fname, $lname]);
+        try {
+            $result = $this->query($SQL, [$username, $email, $pw_hash, $fname, $lname]);
+        }
+        catch (\Exception $e) {
+            return;
+        }
     }
 
 
@@ -311,14 +339,145 @@ class REDCapPRO extends AbstractExternalModule {
      */
     public function checkEmailExists(string $email) {
         $USER_TABLE = $this->getTable("USER");
-        $sql = "SELECT id FROM " .$USER_TABLE. " WHERE email = ?";
+        $SQL = "SELECT id FROM " .$USER_TABLE. " WHERE email = ?";
         try {
-            $result = $this->query($sql, [$email]);
+            $result = $this->query($SQL, [$email]);
             return $result->num_rows > 0;
         } 
         catch (\Exception $e) {
             return;
         }
     }
+
+
+    public function addProject($pid) {
+        $PROJECT_TABLE = $this->getTable("PROJECT");
+        $TESTPROJECTSQL = "INSERT INTO ".$PROJECT_TABLE." (pid) VALUES (?)";
+        try {
+            $this->query($TESTPROJECTSQL, [$pid]);
+        }
+        catch (\Exception $e) {
+            echo $e->getMessage();
+        }
+    }
+
+    public function checkProject($pid, $check_active = FALSE) {
+        $PROJECT_TABLE = $this->getTable("PROJECT");
+        $TESTPROJECTSQL = "SELECT * FROM ".$PROJECT_TABLE." WHERE pid = ?";
+        try {
+            $result = $this->query($TESTPROJECTSQL, [$pid]);
+            while ($row = $result->fetch_assoc()) {
+                if ($check_active) {
+                    return $row["active"] == "1";
+                } else {
+                    return TRUE;
+                }
+            }
+            return FALSE;
+        }
+        catch (\Exception $e) {
+            echo $e->getMessage();
+            return;
+        }
+    }
+
+    public function getProjectID($pid) {
+        $PROJECT_TABLE = $this->getTable("PROJECT");
+        $SQL = "SELECT id FROM " .$PROJECT_TABLE. " WHERE pid = ?";
+        try {
+            $result = $this->query($SQL, [$pid]);
+            return $result->fetch_assoc()["id"];
+        }
+        catch (\Exception $e) {
+            return $e->getMessage();
+        }
+    }
+
+    public function enrollParticipant($user_id, $pid) {
+        // If project does not exist, create it.
+        if (!$this->checkProject($pid)) {
+            $this->addProject($pid);
+        }
+        $proj_id = $this->getProjectID($pid);
+
+        // Check that user is not already enrolled in this project
+        if ($this->userEnrolled($user_id, $proj_id)) {
+            return -1;
+        }
+
+        return $this->createLink($user_id, $proj_id);
+    }
+
+    private function createLink($user_id, $proj_id) {
+        $LINK_TABLE = $this->getTable("LINK");
+        $SQL = "INSERT INTO ".$LINK_TABLE." 
+        (user, project) VALUES (?, ?)";
+        try {
+            $this->query($SQL, [$user_id, $proj_id]);
+            return TRUE;
+        }
+        catch (\Exception $e) {
+            echo $e->getMessage();
+            return;
+        }
+    }
+
+    private function userEnrolled($user_id, $proj_id) {
+        $LINK_TABLE = $this->getTable("LINK");
+        $SQL = "SELECT * FROM ${LINK_TABLE} WHERE user = ? AND project = ?;";
+        try {
+            $result = $this->query($SQL, [$user_id, $proj_id]);
+            return $result->num_rows > 0;
+        }
+        catch (\Exception $e) {
+            return;
+        }
+    }
+
+    public function UiShowHeader(string $page) {
+        $role = $this->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
+        if (SUPER_USER) {
+            $role = 3;
+        }
+        $header = "
+        <style>
+            .rcpro-nav a {
+                color: #900000 !important;
+                font-weight: bold !important;
+            }
+            .rcpro-nav a:hover {
+                color: #900000 !important;
+                font-weight: bold !important;
+                outline: none !important;
+                background-color: #f9f9f9 !important;
+            }
+        </style>
+        <div>
+            <img src='".$this->getUrl("images/REDCapPROLOGO_4.png")."' width='500px'></img>
+            <hr>
+            <ul class='nav nav-tabs rcpro-nav'>
+                <li class='nav-item'>
+                    <a class='nav-link ".($page==="Home" ? "active" : "")."' aria-current='page' href='".$this->getUrl("home.php")."'>Home</a>
+                </li>";
+        if ($role >= 1) {
+            $header .= "<li class='nav-item'>
+                            <a class='nav-link ".($page==="Manage" ? "active" : "")."' href='".$this->getUrl("manage.php")."'>Manage Participants</a>
+                        </li>";
+        }
+        if ($role >= 2) {
+            $header .= "<li class='nav-item'>
+                            <a class='nav-link ".($page==="Enroll" ? "active" : "")."' href='".$this->getUrl("enroll.php")."'>Enroll</a>
+                        </li>
+                        <li class='nav-item'>
+                            <a class='nav-link ".($page==="Register" ? "active" : "")."' href='".$this->getUrl("register.php")."'>Register</a>
+                        </li>";
+        }
+        $header .= "</ul>
+            </div>";
+        echo $header;
+    }
+
+
+
 
 }

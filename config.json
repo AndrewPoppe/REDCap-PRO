@@ -16,11 +16,38 @@
     ],
     "project-settings": [
         {
+            "key": "managers-info",
+            "name": "<font style='font-size:large; font-weight:bold; color: #900000'>Managers</font>",
+            "type": "descriptive"
+        },
+        {
             "key": "managers",
-            "name": "<strong>Select Manager Accounts:</strong><br>These accounts will have the ability to edit user permissions in this module",
+            "name": "<strong><font style='color: #900000'>Select Manager Accounts:</font></strong><br>These accounts will have the ability to edit user permissions in this module. (this setting is only available to super users)",
             "type": "user-list",
-            "repeatable":true,
+            "repeatable": true,
             "super-users-only":true
+        },
+        {
+            "key": "monitors-info",
+            "name": "<font style='font-size:large; font-weight:bold;'>Monitors</font>",
+            "type": "descriptive"
+        },
+        {
+            "key": "monitors",
+            "name": "<strong>Select Monitor Accounts:</strong><br>These accounts have the ability to register/enroll/disenroll etc. participants, including the ability to view names and emails of all registered participants",
+            "type": "user-list",
+            "repeatable": true
+        },
+        {
+            "key": "users-info",
+            "name": "<font style='font-size:large; font-weight:bold;'>Users</font>",
+            "type": "descriptive"
+        },
+        {
+            "key": "users",
+            "name": "<strong>Select Normal Users:</strong><br>These accounts can perform very basic management of participant accounts (basically just send password reset emails). They cannot view names or emails of participants",
+            "type": "user-list",
+            "repeatable": true
         }  
     ],
     "links": {
@@ -29,8 +56,7 @@
                 "name": "REDCapPRO",
                 "key": "redcappro",
                 "icon": "fas fa-receipt",
-                "url": "register.php",
-                "show-header-and-footer": true
+                "url": "home.php?NOAUTH"
            }
         ],
         "control-center": [
@@ -44,8 +70,7 @@
         ]
      },
     "no-auth-pages": [
-        "authenticate",
-        "register"
+        "home"
     ],
     "framework-version": 5,
     "compatibility": {
