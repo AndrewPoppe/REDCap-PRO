@@ -445,31 +445,52 @@ class REDCapPRO extends AbstractExternalModule {
                 color: #900000 !important;
                 font-weight: bold !important;
             }
-            .rcpro-nav a:hover {
+            .rcpro-nav a.active:hover {
                 color: #900000 !important;
                 font-weight: bold !important;
                 outline: none !important;
-                background-color: #f9f9f9 !important;
             }
+            .rcpro-nav a:hover:not(.active), a:focus {
+                color: #900000 !important;
+                font-weight: bold !important;
+                border: 1px solid #c0c0c0 !important;
+                background-color: #e1e1e1 !important;
+                outline: none !important;
+            }
+            .rcpro-nav a:not(.active) {
+                background-color: #f7f6f6 !important;
+                border: 1px solid #e1e1e1 !important;
+                outline: none !important;
+            }
+            
+
         </style>
         <div>
             <img src='".$this->getUrl("images/REDCapPROLOGO_4.png")."' width='500px'></img>
             <hr>
             <ul class='nav nav-tabs rcpro-nav'>
                 <li class='nav-item'>
-                    <a class='nav-link ".($page==="Home" ? "active" : "")."' aria-current='page' href='".$this->getUrl("home.php")."'>Home</a>
+                    <a class='nav-link ".($page==="Home" ? "active" : "")."' aria-current='page' href='".$this->getUrl("home.php")."'>
+                    <i class='fas fa-home'></i>
+                    Home</a>
                 </li>";
         if ($role >= 1) {
             $header .= "<li class='nav-item'>
-                            <a class='nav-link ".($page==="Manage" ? "active" : "")."' href='".$this->getUrl("manage.php")."'>Manage Participants</a>
+                            <a class='nav-link ".($page==="Manage" ? "active" : "")."' href='".$this->getUrl("manage.php")."'>
+                            <i class='fas fa-users-cog'></i>
+                            Manage Participants</a>
                         </li>";
         }
         if ($role >= 2) {
             $header .= "<li class='nav-item'>
-                            <a class='nav-link ".($page==="Enroll" ? "active" : "")."' href='".$this->getUrl("enroll.php")."'>Enroll</a>
+                            <a class='nav-link ".($page==="Enroll" ? "active" : "")."' href='".$this->getUrl("enroll.php")."'>
+                            <i class='fas fa-user-check'></i>
+                            Enroll</a>
                         </li>
                         <li class='nav-item'>
-                            <a class='nav-link ".($page==="Register" ? "active" : "")."' href='".$this->getUrl("register.php")."'>Register</a>
+                            <a class='nav-link ".($page==="Register" ? "active" : "")."' href='".$this->getUrl("register.php")."'>
+                            <i class='fas fa-id-card'></i>
+                            Register</a>
                         </li>";
         }
         $header .= "</ul>
