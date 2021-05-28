@@ -70,7 +70,9 @@
         ]
      },
     "no-auth-pages": [
-        "home"
+        "home",
+        "login",
+        "reset-password"
     ],
     "framework-version": 5,
     "compatibility": {

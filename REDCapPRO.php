@@ -21,8 +21,168 @@ class REDCapPRO extends AbstractExternalModule {
         "PID" => -1
     );
 
-    static $APPTITLE = "REDCap PRO";
+    static $APPTITLE = "REDCapPRO";
+    static $LOGIN_ATTEMPTS = 3;
+    static $LOCKOUT_DURATION_SECONDS = 60;
 
+    function redcap_survey_page_top($project_id, $record, $instrument, 
+    $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
+        $session_id = $_COOKIE[$this::$APPTITLE."_sessid"] ?? $_COOKIE["survey"] ?? $_COOKIE["PHPSESSID"];
+        if (!empty($session_id)) {
+            session_id($session_id);
+        }
+        session_start();
+        if (!isset($_SESSION[$this::$APPTITLE."_loggedin"]) || $_SESSION[$this::$APPTITLE."_loggedin"] !== TRUE) {
+            $this->createSession();
+        }
+
+        //$this->dropTable("USER");
+        //$this->createTable("USER");
+        //$this->createUser("andrew.poppe@yale.edu", password_hash("Password1!", PASSWORD_DEFAULT), "Andrew", "Poppe");
+
+        //$TT = password_hash("Password1!", PASSWORD_DEFAULT);
+        //$this->updatePassword($TT, 3, TRUE);
+
+        if (isset($_SESSION[$this::$APPTITLE."_loggedin"]) && $_SESSION[$this::$APPTITLE."_loggedin"] === true) {
+
+            if (isset($_SESSION[$this::$APPTITLE."_temp_pw"]) && $_SESSION[$this::$APPTITLE."_temp_pw"] === 1) {
+                // Need to set password
+                header("location: ".$this->getUrl("reset-password.php", true));
+                $this->exitAfterHook();
+            }
+
+            \REDCap::logEvent("REDCapPro Survey User Login", "user: ".$_SESSION[$this::$APPTITLE."_username"], NULL, $record, $event_id);
+            $this->log("REDCapPro Survey User Login", ["user"=>$_SESSION[$this::$APPTITLE."_username"], "id"=>$_SESSION[$this::$APPTITLE."_user_id"]]);
+            return;
+        } else {
+            $_SESSION[$this::$APPTITLE."_survey_url"] = APP_PATH_SURVEY_FULL."?s=${survey_hash}";
+            \Session::savecookie($this::$APPTITLE."_survey_url", APP_PATH_SURVEY_FULL."?s=${survey_hash}", 0, TRUE);
+            header("location: ".$this->getUrl("login.php", true)."&s=${survey_hash}");
+            $this->exitAfterHook();
+        }
+
+    }
+
+    public function createSession() {
+        //session_destroy();
+        //session_start();
+        \Session::init();
+        \Session::savecookie($this::$APPTITLE."_sessid", session_id(), 0, TRUE);
+        $_SESSION[$this::$APPTITLE."_token"] = bin2hex(random_bytes(24));
+    }
+
+    public function validateToken(string $token) {
+        return hash_equals($_SESSION[$this::$APPTITLE."_token"], $token);
+    }
+
+    public function incrementFailedLogin(int $uid) {
+        $USER_TABLE = $this->getTable("USER");
+        $SQL = "UPDATE ${USER_TABLE} SET failed_attempts=failed_attempts+1 WHERE id=?;";
+        try {
+            $res = $this->query($SQL, [$uid]);
+            return $res;
+        }
+        catch (\Exception $e) {
+            return;
+        }
+    }
+
+    public function resetFailedLogin(int $uid) {
+        $USER_TABLE = $this->getTable("USER");
+        $SQL = "UPDATE ${USER_TABLE} SET failed_attempts=0 WHERE id=?;";
+        try {
+            $res = $this->query($SQL, [$uid]);
+            return $res;
+        }
+        catch (\Exception $e) {
+            return;
+        }
+    }
+
+    public function getIPAddress() {
+        $ip = $_SERVER['REMOTE_ADDR'];   
+        /*if(!empty($_SERVER['HTTP_CLIENT_IP'])) {  
+            $ip = $_SERVER['HTTP_CLIENT_IP'];  
+        } 
+        
+        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {  
+            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];  
+        } else {  
+             
+        }*/  
+        return $ip;  
+    }  
+
+    /**
+     * @param mixed $ip Client IP address
+     * 
+     * @return int number of attempts INCLUDING current attempt
+     */
+    public function incrementFailedIp($ip) {
+        if ($this->getSystemSetting('ip_lockouts') === null) {
+            $this->setSystemSetting('ip_lockouts', json_encode(array()));
+        }
+        $ipLockouts = json_decode($this->getSystemSetting('ip_lockouts'), true);
+        if (isset($ipLockouts[$ip])) {
+            $ipStat = $ipLockouts[$ip];
+        } else {
+            $ipStat = array();
+        }
+        if (isset($ipStat["attempts"])) {
+            $ipStat["attempts"]++;
+        } else {
+            $ipStat["attempts"] = 1;
+        }
+        $ipLockouts[$ip] = $ipStat;
+        $this->setSystemSetting('ip_lockouts', json_encode($ipLockouts));
+        return $ipStat["attempts"];
+    }
+
+    private function checkIpAttempts($ip) { 
+        if ($this->getSystemSetting('ip_lockouts') === null) {
+            $this->setSystemSetting('ip_lockouts', json_encode(array()));
+        }
+        $ipLockouts = json_decode($this->getSystemSetting('ip_lockouts'), true);
+        if (isset($ipLockouts[$ip])) {
+            $ipStat = $ipLockouts[$ip];
+            if (isset($ipStat["attempts"])) {
+                return $ipStat["attempts"];
+            }
+        }
+        return 0;
+    }
+
+    private function checkUsernameAttempts(int $uid) {
+        $USER_TABLE = $this->getTable("USER");
+        $SQL = "SELECT failed_attempts FROM ${USER_TABLE} WHERE id=?;";
+        try {
+            $res = $this->query($SQL, [$uid]);
+            return $res->fetch_assoc["failed_attempts"];
+        }
+        catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Returns number of consecutive failed login attempts
+     * 
+     * This checks both by username and by ip, and returns the larger
+     * 
+     * @param int|null $uid
+     * @param mixed $ip
+     * 
+     * @return int number of consecutive attempts
+     */
+    public function checkAttempts($uid, $ip) {
+        if ($uid === null) {
+            $usernameAttempts = 0;
+        } else {
+            $usernameAttempts = $this->checkUsernameAttempts($uid);
+        }
+        $ipAttempts = $this->checkIpAttempts($ip);
+        return max($usernameAttempts, $ipAttempts);
+    }
 
     // SETTINGS
 
@@ -60,7 +220,9 @@ class REDCapPRO extends AbstractExternalModule {
             pw VARCHAR(512) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             last_modified_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
-            temp_pw INT(1) DEFAULT 1
+            temp_pw INT(1) DEFAULT 1,
+            failed_attempts int DEFAULT 0,
+            lockout_ts TIMESTAMP
         )";
         try {
             $this->query($USERSQL, []);
@@ -260,8 +422,53 @@ class REDCapPRO extends AbstractExternalModule {
      * @return string hashed password
      */
     public function getHash(string $uid) {
-        $res = $this->query('SELECT pw FROM '.$this::$TABLES["USER"].' WHERE id = ?', [$uid]);
-        return $res->fetch_assoc()['pw'];
+        $USER_TABLE = $this->getTable("USER");
+        try {
+            $res = $this->query("SELECT pw FROM ${USER_TABLE} WHERE id = ?", [$uid]);
+            return $res->fetch_assoc()['pw'];
+        }
+        catch (\Exception $e) {
+            return;
+        }
+    }
+
+    public function storeHash(string $hash, $uid) {
+        $USER_TABLE = $this->getTable("USER");
+        try {
+            $res = $this->query("UPDATE ${USER_TABLE} SET pw = ? WHERE id = ?", [$hash, $uid]);
+            return $res;
+        }
+        catch (\Exception $e) {
+            return;
+        }
+    }
+
+
+    /**
+     * @param string $hash Password hash to store
+     * @param mixed $uid ID (not username) of user
+     * @param bool $oneTime Whether or not this is a one-time use temporary password
+     * 
+     * @return void
+     */
+    public function updatePassword(string $hash, $uid, bool $oneTime = FALSE) {
+        $USER_TABLE = $this->getTable("USER");
+        $temp_pw = ($oneTime === TRUE) ? 1 : 0;
+        $SQL = "UPDATE ${USER_TABLE} SET pw = ?, temp_pw = ? WHERE id = ?;";
+        var_dump($SQL);
+
+        try {
+            $res = $this->query($SQL, [$hash, $temp_pw, $uid]);
+            var_dump($res);
+            $ok = $this->query("SELECT * FROM ${USER_TABLE}", []);
+            while($row = $ok->fetch_assoc()) {
+                var_dump($row);
+            }
+            return $res;
+        }
+        catch (\Exception $e) {
+            return;
+        }
     }
 
     /**
@@ -318,12 +525,25 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return boolean True if taken, False if free 
      */
-    private function usernameIsTaken(string $username) {
+    public function usernameIsTaken(string $username) {
         $USER_TABLE = $this->getTable("USER");
         $SQL = "SELECT id FROM ${USER_TABLE} WHERE username = ?";
         try {
             $result = $this->query($SQL, [$username]);
             return $result->num_rows > 0;
+        }
+        catch (\Exception $e) {
+            echo $e->getMessage();
+        }
+    }
+
+
+    public function getUser(string $username) {
+        $USER_TABLE = $this->getTable("USER");
+        $SQL = "SELECT id, username, email, fname, lname, temp_pw FROM ${USER_TABLE} WHERE username = ?";
+        try {
+            $result = $this->query($SQL, [$username]);
+            return $result->fetch_assoc();
         }
         catch (\Exception $e) {
             echo $e->getMessage();
@@ -434,6 +654,7 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+    
     public function UiShowHeader(string $page) {
         $role = $this->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
         if (SUPER_USER) {
@@ -462,13 +683,11 @@ class REDCapPRO extends AbstractExternalModule {
                 border: 1px solid #e1e1e1 !important;
                 outline: none !important;
             }
-            
-
         </style>
         <div>
             <img src='".$this->getUrl("images/REDCapPROLOGO_4.png")."' width='500px'></img>
             <hr>
-            <ul class='nav nav-tabs rcpro-nav'>
+            <nav><ul class='nav nav-tabs rcpro-nav'>
                 <li class='nav-item'>
                     <a class='nav-link ".($page==="Home" ? "active" : "")."' aria-current='page' href='".$this->getUrl("home.php")."'>
                     <i class='fas fa-home'></i>
@@ -493,7 +712,7 @@ class REDCapPRO extends AbstractExternalModule {
                             Register</a>
                         </li>";
         }
-        $header .= "</ul>
+        $header .= "</ul></nav>
             </div>";
         echo $header;
     }
