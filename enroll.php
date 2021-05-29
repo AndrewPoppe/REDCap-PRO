@@ -13,7 +13,7 @@ require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module->UiShowHeader("Enroll");
 
 
- ?>
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

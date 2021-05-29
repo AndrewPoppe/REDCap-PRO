@@ -8,6 +8,12 @@ if ($role < 2) {
     header("location:".$module->getUrl("home.php"));
 }
 
+// Initialize tables if necesary
+$module->initTables();
+
+
+
+
 echo "<title>".$module::$APPTITLE." - Enroll</title>";
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module->UiShowHeader("Register");

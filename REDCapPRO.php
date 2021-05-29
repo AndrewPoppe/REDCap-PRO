@@ -414,6 +414,18 @@ class REDCapPRO extends AbstractExternalModule {
         return $this::$TABLES[$TYPE];
     }
 
+    public function initTables() {
+        $types = ["USER", "PROJECT", "LINK"];
+        foreach ($types as $type) {
+            if (!$this->tableExists($type)) {
+                $this->createTable($type);
+            }
+        }
+    }
+
+
+
+
     /**
      * Get hashed password from USER database.
      * 
@@ -550,6 +562,40 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+
+    /**
+     * get array of enrolled participants given a project id
+     * 
+     * @param string $proj_id Project ID (not REDCap PID!)
+     * 
+     * @return [type]
+     */
+    public function getProjectParticipants(string $proj_id) {
+        $LINK_TABLE = $this->getTable("LINK");
+        $USER_TABLE = $this->getTable("USER");
+
+        // Grab all user IDs
+        $SQL = "SELECT user FROM ${LINK_TABLE} WHERE project = ?;";
+        try {
+            $result = $this->query($SQL, [$proj_id]);
+            $participants  = array();
+
+            // TODO: rename "USER" table ... it holds participants...
+            // grab participant details
+            while ($row = $result->fetch_assoc()) {
+                $participantSQL = "SELECT id,username,email,fname,lname,temp_pw,lockout_ts FROM ${USER_TABLE} WHERE id = ?;";
+                $participantResult = $this->query($participantSQL, [$row["user"]]);
+                $participant = $participantResult->fetch_assoc();
+                $participants[$row["user"]] = $participant;               
+            }
+            return $participants;
+        }
+        catch (\Exception $e) {
+            echo $e->getMessage();
+            return;
+        }
+    }
+
     /**
      * Determine whether email address already exists in database
      * 
@@ -601,7 +647,8 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
-    public function getProjectID($pid) {
+
+    public function getProjectId($pid) {
         $PROJECT_TABLE = $this->getTable("PROJECT");
         $SQL = "SELECT id FROM " .$PROJECT_TABLE. " WHERE pid = ?";
         try {
@@ -609,7 +656,21 @@ class REDCapPRO extends AbstractExternalModule {
             return $result->fetch_assoc()["id"];
         }
         catch (\Exception $e) {
-            return $e->getMessage();
+            echo $e->getMessage();
+            return;
+        }
+    }
+
+    public function getLinkId($user_id, $proj_id) {
+        $LINK_TABLE = $this->getTable("LINK");
+        $SQL = "SELECT id FROM ${LINK_TABLE} WHERE user = ? AND project = ?;";
+        try {
+            $result = $this->query($SQL, [$user_id, $proj_id]);
+            return $result->fetch_assoc()["id"];
+        }
+        catch (\Exception $e) {
+            echo $e->getMessage();
+            return;
         }
     }
 
@@ -654,7 +715,23 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+    public function sendPasswordResetEmail($user_id) {
+        return true;
+    }
     
+    public function disenrollParticipant($user_id, $proj_id) {
+        $LINK_TABLE = $this->getTable("LINK");
+        $link_id = $this->getLinkId($user_id, $proj_id);
+        $SQL = "DELETE FROM ${LINK_TABLE} WHERE id = ?;";
+        try {
+            $result = $this->query($SQL, [$link_id]);
+            return $result;
+        }
+        catch (\Exception $e) {
+            return;
+        }
+    }
+
     public function UiShowHeader(string $page) {
         $role = $this->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
         if (SUPER_USER) {
