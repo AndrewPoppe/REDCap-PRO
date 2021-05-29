@@ -787,6 +787,11 @@ class REDCapPRO extends AbstractExternalModule {
                             <a class='nav-link ".($page==="Register" ? "active" : "")."' href='".$this->getUrl("register.php")."'>
                             <i class='fas fa-id-card'></i>
                             Register</a>
+                        </li>
+                        <li class='nav-item'>
+                            <a class='nav-link ".($page==="Users" ? "active" : "")."' href='".$this->getUrl("manage-users.php")."'>
+                            <i class='fas fa-users'></i>
+                            Study Staff</a>
                         </li>";
         }
         $header .= "</ul></nav>

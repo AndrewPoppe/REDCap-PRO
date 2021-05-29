@@ -5,9 +5,9 @@ if (SUPER_USER) {
 }
 if ($role > 0) {
     
-    echo "<title>".$module::$APPTITLE." - Manage</title>";
+    echo "<title>".$module::$APPTITLE." - Users</title>";
     require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-    $module->UiShowHeader("Manage");
+    $module->UiShowHeader("Users");
 
     $proj_id = $module->getProjectId($project_id);
 
