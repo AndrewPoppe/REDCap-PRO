@@ -5,8 +5,6 @@ if (!empty($session_id)) {
     session_id($session_id);
 }
 session_start();
-var_dump(session_id());
-var_dump($_SESSION);
 
 
 // Check if the user is logged in, otherwise redirect to login page
@@ -107,29 +105,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         return;
     }
 }
+
+$module->UiShowParticipantHeader("Reset Password");
+if ($_SESSION[$module::$APPTITLE."_temp_pw"] == 1) {
+    echo "<p>Please fill out this form to set your password.</p>";
+} else {
+    echo "<p>Please fill out this form to reset your password.</p>";
+}
 ?>
- 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Reset Password</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        body{ font: 14px sans-serif; }
-        .wrapper{ width: 360px; padding: 20px; }
-    </style>
-</head>
-<body>
-    <div class="wrapper">
-        <h2>Reset Password</h2>
-        <?php
-            if ($_SESSION[$module::$APPTITLE."_temp_pw"] == 1) {
-                echo "<p>Please fill out this form to set your password.</p>";
-            } else {
-                echo "<p>Please fill out this form to reset your password.</p>";
-            }
-        ?>
         <form action="<?php $module->getUrl("reset-password.php", true); ?>" method="post"> 
             <div class="form-group">
                 <label>New Password</label>

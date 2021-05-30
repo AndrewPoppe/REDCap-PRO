@@ -36,10 +36,13 @@ class REDCapPRO extends AbstractExternalModule {
             $this->createSession();
         }
 
-        //$this->dropTable("USER");
-        //$this->createTable("USER");
-        //$this->createUser("andrew.poppe@yale.edu", password_hash("Password1!", PASSWORD_DEFAULT), "Andrew", "Poppe");
+        $this->dropTable("USER");
+        $this->createTable("USER");
+        $this->createUser("andrew.poppe@yale.edu", password_hash("Password1!", PASSWORD_DEFAULT), "Andrew", "Poppe");
 
+        $this->dropTable("LINK");
+        $this->createTable("LINK");
+        
         //$TT = password_hash("Password1!", PASSWORD_DEFAULT);
         //$this->updatePassword($TT, 3, TRUE);
 
@@ -222,7 +225,10 @@ class REDCapPRO extends AbstractExternalModule {
             last_modified_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
             temp_pw INT(1) DEFAULT 1,
             failed_attempts int DEFAULT 0,
-            lockout_ts TIMESTAMP
+            lockout_ts TIMESTAMP,
+            token VARCHAR(32),
+            token_ts TIMESTAMP,
+            token_valid INT(1) DEFAULT 0
         )";
         try {
             $this->query($USERSQL, []);
@@ -562,6 +568,30 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+    public function getUserName($user_id) {
+        $USER_TABLE = $this->getTable("USER");
+        $SQL = "SELECT username FROM ${USER_TABLE} WHERE id = ?";
+        try {
+            $result = $this->query($SQL, [$user_id]);
+            return $result->fetch_assoc()["username"];
+        }
+        catch (\Exception $e) {
+            echo $e->getMessage();
+        }
+    }
+
+    public function getEmail($user_id) {
+        $USER_TABLE = $this->getTable("USER");
+        $SQL = "SELECT email FROM ${USER_TABLE} WHERE id = ?";
+        try {
+            $result = $this->query($SQL, [$user_id]);
+            return $result->fetch_assoc()["email"];
+        }
+        catch (\Exception $e) {
+            echo $e->getMessage();
+        }
+    }
+
 
     /**
      * get array of enrolled participants given a project id
@@ -715,8 +745,46 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+    public function createResetToken($user_id) {
+        $USER_TABLE = $this->getTable("USER");
+        $token = bin2hex(random_bytes(32));
+        $SQL = "UPDATE ${USER_TABLE} SET token=?,token_ts=DATE_ADD(NOW(), INTERVAL 1 HOUR),token_valid=1 WHERE id=?;";
+        try {
+            $result = $this->query($SQL, [$token,$user_id]);
+            if ($result) {
+                return $token;
+            } 
+        }
+        catch (\Exception $e) {
+            return;
+        }
+    }
+
     public function sendPasswordResetEmail($user_id) {
-        return true;
+        // generate token
+        try {
+            $token = $this->createResetToken($user_id);
+            $to = $this->getEmail($user_id);
+            $username = $this->getUserName($user_id);
+        }
+        catch (\Exception $e) {
+            return false;
+        }
+        // create email
+        $subject = "REDCapPRO - Password Reset";
+        $from = "noreply@REDCapPro.com";
+        $body = "<html><body><div>
+        This is your username: ${username}<br>
+        Click <a href='".$this->getUrl("reset-password.php",true)."&token=${token}'>here</a> to set/reset your password.
+        </body></html></div>";
+
+        try {
+            $result = \REDCap::email($to, $from, $subject, $body);
+            return $result;
+        }
+        catch (\Exception $e) {
+            return false;
+        }
     }
     
     public function disenrollParticipant($user_id, $proj_id) {
@@ -730,6 +798,34 @@ class REDCapPRO extends AbstractExternalModule {
         catch (\Exception $e) {
             return;
         }
+    }
+
+    
+
+
+
+    public function UiShowParticipantHeader(string $title) {
+        echo '<!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>REDCapPRO '.$title.'</title>
+                    <link rel="stylesheet" href="'.$this->getUrl("lib/bootstrap/css/bootstrap.min.css").'">
+                    <script src="'.$this->getUrl("lib/bootstrap/js/bootstrap.bundle.min.js").'"></script>
+                    <style>
+                        body { font: 14px sans-serif; }
+                        .wrapper { width: 360px; padding: 20px; }
+                        .form-group { margin-top: 20px; }
+                        .center { display: flex; justify-content: center; align-items: center; }
+                        img#rcpro-logo { position: relative; left: -125px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="center">
+                        <div class="wrapper">
+                            <img id="rcpro-logo" src="'.$this->getUrl("images/REDCapPROLOGO_4.png").'" width="500px"></img>
+                            <hr>
+                            <h2>'.$title.'</h2>';
     }
 
     public function UiShowHeader(string $page) {
