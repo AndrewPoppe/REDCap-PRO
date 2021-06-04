@@ -25,6 +25,28 @@ class REDCapPRO extends AbstractExternalModule {
     static $LOGIN_ATTEMPTS = 3;
     static $LOCKOUT_DURATION_SECONDS = 60;
 
+    /*function redcap_every_page_top($project_id) {
+        echo $this->getUrl('images/fingerprint.svg');
+        ?>
+        <script>
+            let counter = 0;
+            let interval = setInterval(() => {
+                let link = $('#RCPro-Link');
+                if (link.length === 0) {
+                    console.log(counter);
+                } else {
+                    console.log(link);
+                    clearInterval(interval);
+                    link.closest('div').find('i').replaceWith('<img width="16px" height="16px" src="<?=$this->getUrl('images/fingerprint.svg');?>">');
+                }
+            }, 10);
+            while (counter++ < 100) {
+                
+            }
+        </script>
+        <?php
+    }*/
+
     function redcap_survey_page_top($project_id, $record, $instrument, 
     $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
         $session_id = $_COOKIE[$this::$APPTITLE."_sessid"] ?? $_COOKIE["survey"] ?? $_COOKIE["PHPSESSID"];
@@ -38,7 +60,7 @@ class REDCapPRO extends AbstractExternalModule {
 
         $this->dropTable("USER");
         $this->createTable("USER");
-        $this->createUser("andrew.poppe@yale.edu", password_hash("Password1!", PASSWORD_DEFAULT), "Andrew", "Poppe");
+        $this->createUser("andrew.poppe@yale.edu", "Andrew", "Poppe");
 
         $this->dropTable("LINK");
         $this->createTable("LINK");
@@ -226,7 +248,7 @@ class REDCapPRO extends AbstractExternalModule {
             temp_pw INT(1) DEFAULT 1,
             failed_attempts int DEFAULT 0,
             lockout_ts TIMESTAMP,
-            token VARCHAR(32),
+            token VARCHAR(128),
             token_ts TIMESTAMP,
             token_valid INT(1) DEFAULT 0
         )";
@@ -499,9 +521,9 @@ class REDCapPRO extends AbstractExternalModule {
      * @param string $fname First Name
      * @param string $lname Last Name
      * 
-     * @return void
+     * @return string username of newly created user
      */
-    public function createUser(string $email, string $pw_hash, string $fname, string $lname) {
+    public function createUser(string $email, string $fname, string $lname) {
         $username = $this->createUsername();
         $counter = 0;
         $counterLimit = 90000000;
@@ -513,9 +535,10 @@ class REDCapPRO extends AbstractExternalModule {
             echo "Please contact your REDCap administrator.";
             return;
         }
-        $SQL = "INSERT INTO ".$this::$TABLES["USER"]." (username, email, pw, fname, lname) VALUES (?, ?, ?, ?, ?)";
+        $SQL = "INSERT INTO ".$this::$TABLES["USER"]." (username, email, fname, lname) VALUES (?, ?, ?, ?)";
         try {
-            $result = $this->query($SQL, [$username, $email, $pw_hash, $fname, $lname]);
+            $result = $this->query($SQL, [$username, $email, $fname, $lname]);
+            return $username;
         }
         catch (\Exception $e) {
             return;
@@ -574,6 +597,18 @@ class REDCapPRO extends AbstractExternalModule {
         try {
             $result = $this->query($SQL, [$user_id]);
             return $result->fetch_assoc()["username"];
+        }
+        catch (\Exception $e) {
+            echo $e->getMessage();
+        }
+    }
+
+    public function getUserIdFromUsername($username) {
+        $USER_TABLE = $this->getTable("USER");
+        $SQL = "SELECT id FROM ${USER_TABLE} WHERE username = ?";
+        try {
+            $result = $this->query($SQL, [$username]);
+            return $result->fetch_assoc()["id"];
         }
         catch (\Exception $e) {
             echo $e->getMessage();
@@ -745,10 +780,10 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
-    public function createResetToken($user_id) {
+    public function createResetToken($user_id, int $hours_valid = 1) {
         $USER_TABLE = $this->getTable("USER");
         $token = bin2hex(random_bytes(32));
-        $SQL = "UPDATE ${USER_TABLE} SET token=?,token_ts=DATE_ADD(NOW(), INTERVAL 1 HOUR),token_valid=1 WHERE id=?;";
+        $SQL = "UPDATE ${USER_TABLE} SET token=?,token_ts=DATE_ADD(NOW(), INTERVAL ${hours_valid} HOUR),token_valid=1 WHERE id=?;";
         try {
             $result = $this->query($SQL, [$token,$user_id]);
             if ($result) {
@@ -756,6 +791,32 @@ class REDCapPRO extends AbstractExternalModule {
             } 
         }
         catch (\Exception $e) {
+            return;
+        }
+    }
+
+    public function verifyPasswordResetToken($token) {
+        $USER_TABLE = $this->getTable("USER");
+        $SQL = "SELECT id, username FROM ${USER_TABLE} WHERE token = ? AND token_ts > NOW() AND token_valid = 1;";
+        try {
+            $result = $this->query($SQL, [$token]);
+            $user = $result->fetch_assoc();
+            if ($user) {
+                $SQL2 = "UPDATE ${USER_TABLE} SET token=NULL,token_ts=DATE_SUB(NOW(), INTERVAL 1 HOUR), token_valid=0 WHERE id=?;";
+                $result2 = $this->query($SQL2, [$user["id"]]);
+                if ($result2) {
+                    return $user;
+                } else {
+                    echo "Problem updating user.";
+                    return;
+                }
+            } else {
+                return;
+            }
+        }
+        catch (\Exception $e) {
+            echo "Oops, there was a problem. Try again later.<br>";
+            echo $e->getMessage();
             return;
         }
     }
@@ -774,12 +835,50 @@ class REDCapPRO extends AbstractExternalModule {
         $subject = "REDCapPRO - Password Reset";
         $from = "noreply@REDCapPro.com";
         $body = "<html><body><div>
+        <img src='".$this->getUrl("images/REDCapPROLOGO_4.png")."' alt='img'><br>
         This is your username: ${username}<br>
-        Click <a href='".$this->getUrl("reset-password.php",true)."&token=${token}'>here</a> to set/reset your password.
+        Click <a href='".$this->getUrl("reset-password.php",true)."&t=${token}'>here</a> to set/reset your password.
         </body></html></div>";
 
         try {
             $result = \REDCap::email($to, $from, $subject, $body);
+            return $result;
+        }
+        catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    public function sendNewUserEmail($username, $email, $fname, $lname) {
+        // generate token
+        try {
+            $user_id = $this->getUserIdFromUsername($username);
+            $hours_valid = 24;
+            $token = $this->createResetToken($user_id, $hours_valid);
+        }
+        catch (\Exception $e) {
+            return false;
+        }
+        // create email
+        $subject = "REDCapPRO - Account Created";
+        $from = "noreply@REDCapPro.com";
+        $body = "<html><body><div>
+        <img src='".$this->getUrl("images/REDCapPROLOGO_4.png")."' alt='img'><br>
+        <p>Hello ${fname} ${lname},
+        <br>An account has been created for you in order to take part in a research study.<br>
+        This is your username: <strong>${username}</strong><br>
+        Write it down someplace safe, because you will need to know your username to take part in the study.</p>
+
+        <p>To use your account, first you will need to create a password. 
+        <br>Click <a href='".$this->getUrl("create-password.php",true)."&t=${token}'>this link</a> to create your password.
+        <br>That link will only work for the next $hours_valid hours.
+        </p>
+        <br>
+        <p>If you have any questions, contact a member of the study team.</p>
+        </body></html></div>";
+
+        try {
+            $result = \REDCap::email($email, $from, $subject, $body);
             return $result;
         }
         catch (\Exception $e) {

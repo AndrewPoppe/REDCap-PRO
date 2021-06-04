@@ -18,10 +18,6 @@ echo "<title>".$module::$APPTITLE." - Enroll</title>";
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module->UiShowHeader("Register");
  
-// Define variables and initialize with empty values
-$email = $password = $confirm_password = "";
-$email_err = $password_err = $confirm_password_err = "";
-
 // Track any error
 $any_error = FALSE;
  
@@ -54,55 +50,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
             $email_err = "This email is already associated with an account.";
             $any_error = TRUE;
         } else{
+            //TODO: clean this input first
             $email = $param_email;
-        }
-    }
-    
-    // Validate password
-    if (empty(trim($_POST["REDCapPRO_PW"]))){
-        $password_err = "Please enter a password.";     
-        $any_error = TRUE;
-    } else {
-        $password1 = trim($_POST["REDCapPRO_PW"]);
-        // Validate password strength
-        $pw_len_req   = 8;
-        $uppercase    = preg_match('@[A-Z]@', $password1);
-        $lowercase    = preg_match('@[a-z]@', $password1);
-        $number       = preg_match('@[0-9]@', $password1);
-        $specialChars = preg_match('@[^\w]@', $password1);
-        $goodLength   = strlen($password1) >= $pw_len_req;
-
-        if (!$uppercase || !$lowercase || !$number || !$specialChars || !$goodLength) {
-            $password_err = "Password should be at least ${pw_len_req} characters in length and should include at least one of each of the following: 
-            <br>- upper-case letter
-            <br>- lower-case letter
-            <br>- number
-            <br>- special character";
-            $any_error = TRUE;
-        } else {
-            $password = trim($_POST["REDCapPRO_PW"]);
-        }
-    }
-    
-    // Validate confirm password
-    if (empty(trim($_POST["Confirm_REDCapPRO_PW"]))){
-        $confirm_password_err = "Please confirm password.";     
-        $any_error = TRUE;
-    } else{
-        $confirm_password = trim($_POST["Confirm_REDCapPRO_PW"]);
-        if (empty($password_err) && ($password != $confirm_password)){
-            $confirm_password_err = "Password did not match.";
-            $any_error = TRUE;
         }
     }
     
     // Check input errors before inserting in database
     if (!$any_error){
-        
-        $password_hash = password_hash($password, PASSWORD_DEFAULT);
-
         try {
-            $module->createUser($email, $password_hash, $fname, $lname);
+            $username = $module->createUser($email, $fname, $lname);
+            $module->sendNewUserEmail($username, $email, $fname, $lname);
             header("location: ".$module->getUrl("enroll.php"));
         }
         catch (\Exception $e) {
@@ -117,7 +74,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
 <head>
     <meta charset="UTF-8">
     <title>REDCap PRO - Register</title>
-    <!--<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">-->
     <style>
         .wrapper{ width: 720px; padding: 20px; }
         .register-form {
@@ -151,18 +107,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
                 <span class="invalid-feedback"><?php echo $email_err; ?></span>
             </div>    
             <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="REDCapPRO_PW" class="form-control <?php echo (!empty($password_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $password; ?>">
-                <span class="invalid-feedback"><?php echo $password_err; ?></span>
-            </div>
-            <div class="form-group">
-                <label>Confirm Password</label>
-                <input type="password" name="Confirm_REDCapPRO_PW" class="form-control <?php echo (!empty($confirm_password_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $confirm_password; ?>">
-                <span class="invalid-feedback"><?php echo $confirm_password_err; ?></span>
-            </div>
-            <div class="form-group">
                 <input type="submit" class="btn btn-primary" value="Submit">
-                <!--<input type="reset" class="btn btn-secondary ml-2" value="Reset">-->
             </div>
         </form>
     </div>    

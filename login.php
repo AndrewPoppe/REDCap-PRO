@@ -1,6 +1,7 @@
 <?php
 use \Session;
-$session_id = $_COOKIE["survey"];
+//$session_id = $_COOKIE["survey"];
+$session_id = $_COOKIE[$module::$APPTITLE."_sessid"];
 if (!empty($session_id)) {
     session_id($session_id);
 } 

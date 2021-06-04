@@ -53,9 +53,9 @@
     "links": {
         "project": [
            {
-                "name": "REDCapPRO",
+                "name": "<span id='RCPro-Link'><strong><font>REDCap</font><em><font style='color:#900000;'>PRO</font></em></strong></span>",
                 "key": "redcappro",
-                "icon": "fas fa-receipt",
+                "icon": "fas fa-fingerprint",
                 "url": "home.php?NOAUTH"
            }
         ],
@@ -63,7 +63,7 @@
            {
                 "name": "REDCapPRO",
                 "key": "redcappro",
-                "icon": "fas fa-receipt",
+                "icon": "fas fa-fingerprint",
                 "url": "authenticate.php?NOAUTH",
                 "show-header-and-footer": true
            }

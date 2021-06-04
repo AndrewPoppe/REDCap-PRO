@@ -1,36 +1,42 @@
 <?php
 use \Session;
-$session_id = $_COOKIE["survey"];
+//$session_id = $_COOKIE["survey"];
+$session_id = $_COOKIE[$module::$APPTITLE."_sessid"];
 if (!empty($session_id)) {
     session_id($session_id);
+} else {
+    $module->createSession();
 }
 session_start();
 
+# Parse query string to grab hashed username and token.
+parse_str($_SERVER['QUERY_STRING'], $qstring);
 
-// Check if the user is logged in, otherwise redirect to login page
-if(!isset($_SESSION[$module::$APPTITLE."_loggedin"]) || $_SESSION[$module::$APPTITLE."_loggedin"] !== true) {
-    //$module->createSession();
+// Redirect to login page if we shouldn't be here
+// TODO: do something else
+if (!isset($qstring["t"])) {
     header("location: ".$module->getUrl("login.php", true));
     return;
 }
-
-// If we're not using a temporary password, then we don't need to reset.
-if (isset($_SESSION[$module::$APPTITLE."_temp_pw"]) && $_SESSION[$module::$APPTITLE."_temp_pw"] == 0) {
-    if (isset($_SESSION[$module::$APPTITLE."_survey_url"])) {
-        header("location: ".$_SESSION[$module::$APPTITLE."_survey_url"]);
-    } else {
-        echo "WHERE TO GO?";
-    }
-    return;
-}
-
  
 // Define variables and initialize with empty values
 $new_password = $confirm_password = "";
 $new_password_err = $confirm_password_err = "";
  
+
+// Verify password reset token
+$verified_user = $module->verifyPasswordResetToken($qstring["t"]);
+
+
+
+
+
+
+
+
+
 // Processing form data when form is submitted
-if($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
  
     // Validate token
     if (!$module->validateToken($_POST['token'])) {
@@ -107,28 +113,37 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 $module->UiShowParticipantHeader("Reset Password");
-if ($_SESSION[$module::$APPTITLE."_temp_pw"] == 1) {
-    echo "<p>Please fill out this form to set your password.</p>";
-} else {
-    echo "<p>Please fill out this form to reset your password.</p>";
-}
-?>
-        <form action="<?php $module->getUrl("reset-password.php", true); ?>" method="post"> 
-            <div class="form-group">
-                <label>New Password</label>
-                <input type="password" name="new_password" class="form-control <?php echo (!empty($new_password_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $new_password; ?>">
-                <span class="invalid-feedback"><?php echo $new_password_err; ?></span>
-            </div>
-            <div class="form-group">
-                <label>Confirm Password</label>
-                <input type="password" name="confirm_password" class="form-control <?php echo (!empty($confirm_password_err)) ? 'is-invalid' : ''; ?>">
-                <span class="invalid-feedback"><?php echo $confirm_password_err; ?></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" class="btn btn-primary" value="Submit">
-            </div>
-            <input type="hidden" name="token" value="<?=$_SESSION[$module::$APPTITLE."_token"]?>">
-        </form>
-    </div>    
-</body>
-</html>
+
+if ($verified_user) {
+
+    if ($_SESSION[$module::$APPTITLE."_temp_pw"] == 1) {
+        echo "<p>Please fill out this form to set your password.</p>";
+    } else {
+        echo "<p>Please fill out this form to reset your password.</p>";
+    }
+    ?>
+            <form action="<?= $module->getUrl("reset-password.php", true); ?>" method="post">
+                <div class="form-group">
+                    <span>Username: <span style="color: #900000; font-weight: bold;"><?= $verified_user["username"]; ?></span></span>
+                </div> 
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" name="new_password" class="form-control <?php echo (!empty($new_password_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $new_password; ?>">
+                    <span class="invalid-feedback"><?php echo $new_password_err; ?></span>
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" name="confirm_password" class="form-control <?php echo (!empty($confirm_password_err)) ? 'is-invalid' : ''; ?>">
+                    <span class="invalid-feedback"><?php echo $confirm_password_err; ?></span>
+                </div>
+                <div class="form-group">
+                    <input type="submit" class="btn btn-primary" value="Submit">
+                </div>
+                <input type="hidden" name="token" value="<?=$_SESSION[$module::$APPTITLE."_token"]?>">
+            </form>
+        </div>    
+    </body>
+    </html>
+<?php } else {
+    echo "<div class='red'>Something went wrong. Try requesting a password reset.</div>";
+} 
