@@ -72,7 +72,8 @@
     "no-auth-pages": [
         "home",
         "login",
-        "reset-password"
+        "reset-password",
+        "create-password"
     ],
     "framework-version": 5,
     "compatibility": {

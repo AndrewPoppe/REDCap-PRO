@@ -10,12 +10,20 @@ session_start();
 // Check if the user is already logged in, if yes then redirect then to the survey
 if (isset($_SESSION[$module::$APPTITLE."_loggedin"]) && $_SESSION[$module::$APPTITLE."_loggedin"] === true) {
     $survey_url = $_SESSION[$module::$APPTITLE."_survey_url"];
+    $survey_url_active = $_SESSION[$this::$APPTITLE."_survey_link_active"];
+
     if (empty($survey_url)) {
         // TODO:
         
         echo "NO SURVEY URL";
         return;
     }
+
+    if (empty($survey_url_active) || $survey_url_active !== TRUE) {
+        return;
+    }
+
+    unset($_SESSION[$this::$APPTITLE."_survey_link_active"]);
     header("location: ${survey_url}");
     return;
 } 

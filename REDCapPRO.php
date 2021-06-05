@@ -58,16 +58,18 @@ class REDCapPRO extends AbstractExternalModule {
             $this->createSession();
         }
 
-        $this->dropTable("USER");
+        
+        
+        /*$this->dropTable("USER");
         $this->createTable("USER");
         $this->createUser("andrew.poppe@yale.edu", "Andrew", "Poppe");
 
         $this->dropTable("LINK");
-        $this->createTable("LINK");
+        $this->createTable("LINK");*/
         
-        //$TT = password_hash("Password1!", PASSWORD_DEFAULT);
-        //$this->updatePassword($TT, 3, TRUE);
 
+
+        // Participant is logged in to account
         if (isset($_SESSION[$this::$APPTITLE."_loggedin"]) && $_SESSION[$this::$APPTITLE."_loggedin"] === true) {
 
             if (isset($_SESSION[$this::$APPTITLE."_temp_pw"]) && $_SESSION[$this::$APPTITLE."_temp_pw"] === 1) {
@@ -79,9 +81,13 @@ class REDCapPRO extends AbstractExternalModule {
             \REDCap::logEvent("REDCapPro Survey User Login", "user: ".$_SESSION[$this::$APPTITLE."_username"], NULL, $record, $event_id);
             $this->log("REDCapPro Survey User Login", ["user"=>$_SESSION[$this::$APPTITLE."_username"], "id"=>$_SESSION[$this::$APPTITLE."_user_id"]]);
             return;
+
+        // Participant is not logged into their account
+        // Store cookie to return to survey
         } else {
             $_SESSION[$this::$APPTITLE."_survey_url"] = APP_PATH_SURVEY_FULL."?s=${survey_hash}";
             \Session::savecookie($this::$APPTITLE."_survey_url", APP_PATH_SURVEY_FULL."?s=${survey_hash}", 0, TRUE);
+            $_SESSION[$this::$APPTITLE."_survey_link_active"] = TRUE;
             header("location: ".$this->getUrl("login.php", true)."&s=${survey_hash}");
             $this->exitAfterHook();
         }
@@ -89,8 +95,6 @@ class REDCapPRO extends AbstractExternalModule {
     }
 
     public function createSession() {
-        //session_destroy();
-        //session_start();
         \Session::init();
         \Session::savecookie($this::$APPTITLE."_sessid", session_id(), 0, TRUE);
         $_SESSION[$this::$APPTITLE."_token"] = bin2hex(random_bytes(24));
@@ -487,23 +491,14 @@ class REDCapPRO extends AbstractExternalModule {
     /**
      * @param string $hash Password hash to store
      * @param mixed $uid ID (not username) of user
-     * @param bool $oneTime Whether or not this is a one-time use temporary password
      * 
      * @return void
      */
-    public function updatePassword(string $hash, $uid, bool $oneTime = FALSE) {
+    public function updatePassword(string $hash, $uid) {
         $USER_TABLE = $this->getTable("USER");
-        $temp_pw = ($oneTime === TRUE) ? 1 : 0;
-        $SQL = "UPDATE ${USER_TABLE} SET pw = ?, temp_pw = ? WHERE id = ?;";
-        var_dump($SQL);
-
+        $SQL = "UPDATE ${USER_TABLE} SET pw = ? WHERE id = ?;";
         try {
-            $res = $this->query($SQL, [$hash, $temp_pw, $uid]);
-            var_dump($res);
-            $ok = $this->query("SELECT * FROM ${USER_TABLE}", []);
-            while($row = $ok->fetch_assoc()) {
-                var_dump($row);
-            }
+            $res = $this->query($SQL, [$hash, $uid]);
             return $res;
         }
         catch (\Exception $e) {
