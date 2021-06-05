@@ -72,11 +72,11 @@ class REDCapPRO extends AbstractExternalModule {
         // Participant is logged in to account
         if (isset($_SESSION[$this::$APPTITLE."_loggedin"]) && $_SESSION[$this::$APPTITLE."_loggedin"] === true) {
 
-            if (isset($_SESSION[$this::$APPTITLE."_temp_pw"]) && $_SESSION[$this::$APPTITLE."_temp_pw"] === 1) {
+            /*if (isset($_SESSION[$this::$APPTITLE."_temp_pw"]) && $_SESSION[$this::$APPTITLE."_temp_pw"] === 1) {
                 // Need to set password
                 header("location: ".$this->getUrl("reset-password.php", true));
                 $this->exitAfterHook();
-            }
+            }*/
 
             \REDCap::logEvent("REDCapPro Survey User Login", "user: ".$_SESSION[$this::$APPTITLE."_username"], NULL, $record, $event_id);
             $this->log("REDCapPro Survey User Login", ["user"=>$_SESSION[$this::$APPTITLE."_username"], "id"=>$_SESSION[$this::$APPTITLE."_user_id"]]);
@@ -796,22 +796,24 @@ class REDCapPRO extends AbstractExternalModule {
         try {
             $result = $this->query($SQL, [$token]);
             $user = $result->fetch_assoc();
-            if ($user) {
-                $SQL2 = "UPDATE ${USER_TABLE} SET token=NULL,token_ts=DATE_SUB(NOW(), INTERVAL 1 HOUR), token_valid=0 WHERE id=?;";
-                $result2 = $this->query($SQL2, [$user["id"]]);
-                if ($result2) {
-                    return $user;
-                } else {
-                    echo "Problem updating user.";
-                    return;
-                }
-            } else {
-                return;
-            }
+            return $user;
         }
         catch (\Exception $e) {
             echo "Oops, there was a problem. Try again later.<br>";
             echo $e->getMessage();
+            return;
+        }
+    }
+
+    public function expirePasswordResetToken($user_id) {
+        $USER_TABLE = $this->getTable("USER");
+        $SQL = "UPDATE ${USER_TABLE} SET token=NULL,token_ts=DATE_SUB(NOW(), INTERVAL 1 HOUR), token_valid=0 WHERE id=?;";
+        try {
+            return $this->query($SQL, [$user_id]);
+        }
+        catch (\Exception $e) {
+            $this->log("Error 100 - User id: ${user_id}");
+            echo "Problem updating user.";
             return;
         }
     }

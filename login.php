@@ -1,16 +1,18 @@
 <?php
-use \Session;
-//$session_id = $_COOKIE["survey"];
+
 $session_id = $_COOKIE[$module::$APPTITLE."_sessid"];
 if (!empty($session_id)) {
     session_id($session_id);
 } 
 session_start();
+$module->log("1");
 
 // Check if the user is already logged in, if yes then redirect then to the survey
 if (isset($_SESSION[$module::$APPTITLE."_loggedin"]) && $_SESSION[$module::$APPTITLE."_loggedin"] === true) {
     $survey_url = $_SESSION[$module::$APPTITLE."_survey_url"];
     $survey_url_active = $_SESSION[$this::$APPTITLE."_survey_link_active"];
+    
+    $module->log("2");
 
     if (empty($survey_url)) {
         // TODO:
@@ -31,10 +33,14 @@ if (isset($_SESSION[$module::$APPTITLE."_loggedin"]) && $_SESSION[$module::$APPT
 // Define variables and initialize with empty values
 $username = $password = "";
 $username_err = $password_err = $login_err = "";
- 
+
+
+$module->log("3");
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
+    $module->log("4");
+    
     // Validate token
     if (!$module->validateToken($_POST['token'])) {
         echo "Oops! Something went wrong. Please try again later.";
@@ -55,6 +61,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $password = trim($_POST["password"]);
     }
     
+    $module->log("5");
+
     try {
         // Validate credentials
         if (empty($username_err) && empty($password_err)) {

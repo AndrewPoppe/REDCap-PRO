@@ -1,10 +1,9 @@
 <?php
-use \Session;
+
 $session_id = $_COOKIE[$module::$APPTITLE."_sessid"];
 if (!empty($session_id)) {
     session_id($session_id);
 } else {
-    echo 'NEW SESSION';
     $module->createSession();
 }
 session_start();
@@ -27,12 +26,12 @@ $new_password_err = $confirm_password_err = "";
 // Verify password reset token
 $verified_user = $module->verifyPasswordResetToken($qstring["t"]);
 
-
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
  
     // Validate token
     if (!$module->validateToken($_POST['token'])) {
+        echo "TOKEN<br>";
         echo "Oops! Something went wrong. Please try again later.";
         return;
     }
@@ -83,9 +82,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
         $result = $module->updatePassword($password_hash, $user["id"]);
         if (empty($result) || $result === FALSE) {
+            echo "PASSWORD<br>";
             echo "Oops! Something went wrong. Please try again later.";
             return;
         }
+
+        // Password was successfully set. Expire the token.
+        $module->expirePasswordResetToken($user["id"]);
 
         // Store data in session variables
         $_SESSION["username"] = $user["username"];
