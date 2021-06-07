@@ -948,7 +948,7 @@ class REDCapPRO extends AbstractExternalModule {
         $subject = "REDCapPRO - Password Reset";
         $from = "noreply@REDCapPro.com";
         $body = "<html><body><div>
-        <img src='".$this->getUrl("images/REDCapPROLOGO_4.png")."' alt='img'><br>
+        <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
         This is your username: ${username}<br>
         Click <a href='".$this->getUrl("reset-password.php",true)."&t=${token}'>here</a> to set/reset your password.
         </body></html></div>";
@@ -976,7 +976,7 @@ class REDCapPRO extends AbstractExternalModule {
         $subject = "REDCapPRO - Account Created";
         $from = "noreply@REDCapPro.com";
         $body = "<html><body><div>
-        <img src='".$this->getUrl("images/REDCapPROLOGO_4.png")."' alt='img'><br>
+        <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
         <p>Hello ${fname} ${lname},
         <br>An account has been created for you in order to take part in a research study.<br>
         This is your username: <strong>${username}</strong><br>
@@ -1022,6 +1022,7 @@ class REDCapPRO extends AbstractExternalModule {
                 <head>
                     <meta charset="UTF-8">
                     <title>REDCapPRO '.$title.'</title>
+                    <link rel="shortcut icon" type="image/svg" href="'.$this->getUrl("images/RCPro_Favicon.svg").'"/>
                     <link rel="stylesheet" href="'.$this->getUrl("lib/bootstrap/css/bootstrap.min.css").'">
                     <script src="'.$this->getUrl("lib/bootstrap/js/bootstrap.bundle.min.js").'"></script>
                     <style>
@@ -1035,7 +1036,7 @@ class REDCapPRO extends AbstractExternalModule {
                 <body>
                     <div class="center">
                         <div class="wrapper">
-                            <img id="rcpro-logo" src="'.$this->getUrl("images/REDCapPROLOGO_4.png").'" width="500px"></img>
+                            <img id="rcpro-logo" src="'.$this->getUrl("images/RCPro_Logo.svg").'" width="500px"></img>
                             <hr>
                             <h2>'.$title.'</h2>';
     }
@@ -1069,8 +1070,9 @@ class REDCapPRO extends AbstractExternalModule {
                 outline: none !important;
             }
         </style>
+        <link rel='shortcut icon' type='image/svg' href='".$this->getUrl('images/RCPro_Favicon.svg')."'/>
         <div>
-            <img src='".$this->getUrl("images/REDCapPROLOGO_4.png")."' width='500px'></img>
+            <img src='".$this->getUrl("images/RCPro_Logo.svg")."' width='500px'></img>
             <hr>
             <nav><ul class='nav nav-tabs rcpro-nav'>
                 <li class='nav-item'>
