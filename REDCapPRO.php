@@ -69,7 +69,7 @@ class REDCapPRO extends AbstractExternalModule {
         
 
 
-        // Participant is logged in to account
+        // Participant is logged in to their account
         if (isset($_SESSION[$this::$APPTITLE."_loggedin"]) && $_SESSION[$this::$APPTITLE."_loggedin"] === true) {
 
             /*if (isset($_SESSION[$this::$APPTITLE."_temp_pw"]) && $_SESSION[$this::$APPTITLE."_temp_pw"] === 1) {
@@ -77,6 +77,14 @@ class REDCapPRO extends AbstractExternalModule {
                 header("location: ".$this->getUrl("reset-password.php", true));
                 $this->exitAfterHook();
             }*/
+
+            // Determine whether participant is enrolled in the study.
+            $user_id = $_SESSION[$this::$APPTITLE."_user_id"];
+            if (!$this->enrolledInProject($user_id, $project_id)) {
+                $this->UiShowParticipantHeader("Not Enrolled");
+                echo "<p>You are not currently enrolled in this study.<br>Please contact the study representative.</p>";
+                $this->exitAfterHook();
+            }
 
             \REDCap::logEvent("REDCapPro Survey User Login", "user: ".$_SESSION[$this::$APPTITLE."_username"], NULL, $record, $event_id);
             $this->log("REDCapPro Survey User Login", ["user"=>$_SESSION[$this::$APPTITLE."_username"], "id"=>$_SESSION[$this::$APPTITLE."_user_id"]]);
@@ -96,7 +104,6 @@ class REDCapPRO extends AbstractExternalModule {
 
     public function createSession() {
         \Session::init();
-        \Session::savecookie($this::$APPTITLE."_sessid", session_id(), 0, TRUE);
         $_SESSION[$this::$APPTITLE."_token"] = bin2hex(random_bytes(24));
     }
 
@@ -676,6 +683,28 @@ class REDCapPRO extends AbstractExternalModule {
     }
 
 
+    /**
+     * Determines whether the current participant is enrolled in the project
+     * 
+     * @param mixed $user_id User ID (not username, not record ID)
+     * @param mixed $pid PID of REDCap project
+     * 
+     * @return boolean TRUE if the participant is enrolled
+     */
+    public function enrolledInProject($user_id, $pid) {
+        $LINK_TABLE = $this->getTable("LINK");
+        $project_id = $this->getProjectId($pid);
+        $SQL = "SELECT id from ${LINK_TABLE} WHERE project = ? AND user = ?;";
+        try {
+            $result = $this->query($SQL, [$project_id, $user_id]);
+            return $result->num_rows > 0;
+        }
+        catch (\Exception $e) {
+            return;
+        }
+    }
+
+
     public function addProject($pid) {
         $PROJECT_TABLE = $this->getTable("PROJECT");
         $TESTPROJECTSQL = "INSERT INTO ".$PROJECT_TABLE." (pid) VALUES (?)";
@@ -708,6 +737,14 @@ class REDCapPRO extends AbstractExternalModule {
     }
 
 
+    /**
+     * Get the project ID corresonding with a REDCap PID
+     * 
+     * returns null if REDCap project is not associated with REDCapPRO
+     * @param mixed $pid REDCap PID
+     * 
+     * @return int project ID associated with the PID
+     */
     public function getProjectId($pid) {
         $PROJECT_TABLE = $this->getTable("PROJECT");
         $SQL = "SELECT id FROM " .$PROJECT_TABLE. " WHERE pid = ?";
