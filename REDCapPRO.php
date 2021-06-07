@@ -1022,7 +1022,9 @@ class REDCapPRO extends AbstractExternalModule {
                 <head>
                     <meta charset="UTF-8">
                     <title>REDCapPRO '.$title.'</title>
-                    <link rel="shortcut icon" type="image/svg" href="'.$this->getUrl("images/RCPro_Favicon.svg").'"/>
+                    <link rel="shortcut icon" href="'.$this->getUrl("images/favicon.ico").'"/>
+                    <link rel="icon" type="image/png" sizes="32x32" href="'.$this->getUrl("images/favicon-32x32.png").'">
+                    <link rel="icon" type="image/png" sizes="16x16" href="'.$this->getUrl("images/favicon-16x16.png").'">
                     <link rel="stylesheet" href="'.$this->getUrl("lib/bootstrap/css/bootstrap.min.css").'">
                     <script src="'.$this->getUrl("lib/bootstrap/js/bootstrap.bundle.min.js").'"></script>
                     <style>
@@ -1070,7 +1072,9 @@ class REDCapPRO extends AbstractExternalModule {
                 outline: none !important;
             }
         </style>
-        <link rel='shortcut icon' type='image/svg' href='".$this->getUrl('images/RCPro_Favicon.svg')."'/>
+        <link rel='shortcut icon' href='".$this->getUrl('images/favicon.ico')."'/>
+        <link rel='icon' type='image/png' sizes='32x32' href='".$this->getUrl('images/favicon-32x32.png')."'>
+        <link rel='icon' type='image/png' sizes='16x16' href='".$this->getUrl('images/favicon-16x16.png')."'>
         <div>
             <img src='".$this->getUrl("images/RCPro_Logo.svg")."' width='500px'></img>
             <hr>
