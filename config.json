@@ -3,7 +3,11 @@
     "namespace": "YaleREDCap\\REDCapPRO",
     "description": "Patient Reported Outcomes in REDCap",
     "permissions": [
-        "redcap_survey_page_top"
+        "redcap_survey_page_top",
+        "redcap_module_system_enable",
+        "redcap_module_system_disable",
+        "redcap_module_project_enable",
+        "redcap_module_project_disable"
     ],
     "authors": [
         {

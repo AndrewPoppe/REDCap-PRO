@@ -102,6 +102,56 @@ class REDCapPRO extends AbstractExternalModule {
 
     }
 
+    /**
+     * Hook that is triggered when a module is enabled in Control Center
+     * 
+     * @param mixed $version
+     * 
+     * @return void
+     */
+    function redcap_module_system_enable($version) {
+        $this->initTables();
+    }
+
+    /**
+     * Hook that is triggered when a module is disabled in Control Center
+     * 
+     * @param mixed $version
+     * 
+     * @return void
+     */
+    function redcap_module_system_disable($version) {
+        // Do what?
+    }
+
+    /**
+     * Hook that is triggered when a module is enabled in a Project
+     * 
+     * @param mixed $version
+     * @param mixed $pid
+     * 
+     * @return void
+     */
+    function redcap_module_project_enable($version, $pid) {
+        if (!$this->checkProject($pid)) {
+            $this->addProject($pid);
+        } else {
+            $this->setProjectActive($pid, 1);
+        }
+    }
+
+    /**
+     * Hook that is triggered when a module is disabled in a Project
+     * 
+     * @param mixed $version
+     * @param mixed $pid
+     * 
+     * @return void
+     */
+    function redcap_module_project_disable($version, $project_id) {
+        $this->setProjectActive($project_id, 0);
+    }
+
     public function createSession() {
         \Session::init();
         $_SESSION[$this::$APPTITLE."_token"] = bin2hex(random_bytes(24));
@@ -707,20 +757,49 @@ class REDCapPRO extends AbstractExternalModule {
 
     public function addProject($pid) {
         $PROJECT_TABLE = $this->getTable("PROJECT");
-        $TESTPROJECTSQL = "INSERT INTO ".$PROJECT_TABLE." (pid) VALUES (?)";
+        $SQL = "INSERT INTO ".$PROJECT_TABLE." (pid) VALUES (?)";
         try {
-            $this->query($TESTPROJECTSQL, [$pid]);
+            return $this->query($SQL, [$pid]);
         }
         catch (\Exception $e) {
             echo $e->getMessage();
         }
     }
 
+    /**
+     * Set a project either active or inactive in Project Table
+     * 
+     * @param int $pid PID of project
+     * @param int $active 0 to set inactive, 1 to set active
+     * 
+     * @return 
+     */
+    public function setProjectActive(int $pid, int $active) {
+        $PROJECT_TABLE = $this->getTable("PROJECT");
+        $SQL = "UPDATE ${PROJECT_TABLE} SET active=? WHERE pid=?;";
+        try {
+            return $this->query($SQL, [$active, $pid]);
+        }
+        catch (\Exception $e) {
+            echo $e->getMessage();
+        }
+    }
+
+    /**
+     * Determine whether project exists in Project Table
+     * 
+     * Optionally additionally tests whether the project is currently active.
+     * 
+     * @param mixed $pid
+     * @param  $check_active
+     * 
+     * @return bool
+     */
     public function checkProject($pid, $check_active = FALSE) {
         $PROJECT_TABLE = $this->getTable("PROJECT");
-        $TESTPROJECTSQL = "SELECT * FROM ".$PROJECT_TABLE." WHERE pid = ?";
+        $SQL = "SELECT * FROM ${PROJECT_TABLE} WHERE pid = ?";
         try {
-            $result = $this->query($TESTPROJECTSQL, [$pid]);
+            $result = $this->query($SQL, [$pid]);
             while ($row = $result->fetch_assoc()) {
                 if ($check_active) {
                     return $row["active"] == "1";
