@@ -9,7 +9,7 @@ session_start();
 // Check if the user is already logged in, if yes then redirect then to the survey
 if (isset($_SESSION[$module::$APPTITLE."_loggedin"]) && $_SESSION[$module::$APPTITLE."_loggedin"] === true) {
     $survey_url = $_SESSION[$module::$APPTITLE."_survey_url"];
-    $survey_url_active = $_SESSION[$this::$APPTITLE."_survey_link_active"];
+    $survey_url_active = $_SESSION[$module::$APPTITLE."_survey_link_active"];
     
     if (empty($survey_url)) {
         // TODO:
@@ -22,7 +22,7 @@ if (isset($_SESSION[$module::$APPTITLE."_loggedin"]) && $_SESSION[$module::$APPT
         return;
     }
 
-    unset($_SESSION[$this::$APPTITLE."_survey_link_active"]);
+    unset($_SESSION[$module::$APPTITLE."_survey_link_active"]);
     header("location: ${survey_url}");
     return;
 } 
@@ -61,14 +61,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Check that IP is not locked out
             $ip = $module->getIPAddress();
-            $lockout_ts = $module->checkIpLockedOut($ip);
-            if ($lockout_ts !== FALSE) {
-                $lockout_duration_remaining = $lockout_ts - time();
-                $login_err = "You have been temporarily locked out.<br>You have ${lockout_duration_remaining} seconds left.";
-            }
+            $lockout_ts_ip = $module->checkIpLockedOut($ip);
+            if ($lockout_ts_ip !== FALSE) {
+                $lockout_duration_remaining = $lockout_ts_ip - time();
+                $login_err = "IP: You have been temporarily locked out.<br>You have ${lockout_duration_remaining} seconds left.";
+            
 
             // Check if username exists, if yes then verify password
-            else if (!$module->usernameIsTaken($username)) {
+            } else if (!$module->usernameIsTaken($username)) {
 
                 // Username doesn't exist, display a generic error message
                 $module->incrementFailedIp($ip);
@@ -85,19 +85,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $user = $module->getUser($username);
                 $stored_hash = $module->getHash($user["id"]);
 
-                if (empty($stored_hash)) {
+                // Check that this username is not locked out
+                $lockout_duration_remaining = $module->checkUsernameLockedOut($user["id"]);
+                if ($lockout_duration_remaining !== FALSE && $lockout_duration_remaining !== NULL) {
+                    $login_err = "USER: You have been temporarily locked out.<br>You have ${lockout_duration_remaining} seconds left.";
+                
+                // Check that there is a stored password hash
+                } else if (empty($stored_hash)) {
                     $login_err = "Error: please speak with your study coordinator.";
                 
+                // Verify supplied password is correct
                 } else if (password_verify($password, $stored_hash)) {
-                    // SUCCESSFUL AUTHENTICATION
-
-                    // Check if user is locked out for failed attempts
-
+                    ///////////////////////////////
+                    // SUCCESSFUL AUTHENTICATION //
+                    ///////////////////////////////
+                    
                     // Rehash password if necessary
                     if (password_needs_rehash($stored_hash, PASSWORD_DEFAULT)) {
                         $new_hash = password_hash($password, PASSWORD_DEFAULT);
                         $module->storeHash($new_hash, $user["id"]);
                     }
+
+                    // Reset failed attempts and failed IP
+                    $module->resetFailedIp($ip);
+                    $module->resetFailedLogin($user["id"]);
 
                     // Store data in session variables
                     $_SESSION["username"] = $user["username"];
@@ -128,8 +139,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $module->incrementFailedIp($ip);
                     $attempts = $module->checkAttempts($user["id"], $ip);
                     $remainingAttempts = $module::$LOGIN_ATTEMPTS - $attempts;
-                    $login_err = "Invalid username or password.<br>You have ${remainingAttempts} attempts remaining before being locked out.";
-                    
+                    if ($remainingAttempts <= 0) {
+                        $login_err = "Invalid username or password.<br>You have been locked out for ".$module::$LOCKOUT_DURATION_SECONDS." seconds.";
+                    } else {
+                        $login_err = "Invalid username or password.<br>You have ${remainingAttempts} attempts remaining before being locked out.";
+                    }
                 }
             }
         }

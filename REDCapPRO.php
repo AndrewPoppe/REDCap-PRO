@@ -166,10 +166,33 @@ class REDCapPRO extends AbstractExternalModule {
         $SQL = "UPDATE ${USER_TABLE} SET failed_attempts=failed_attempts+1 WHERE id=?;";
         try {
             $res = $this->query($SQL, [$uid]);
+            
+            // Lockout username if necessary
+            $this->lockoutLogin($uid);
+
             return $res;
         }
         catch (\Exception $e) {
             return;
+        }
+    }
+
+    private function lockoutLogin(int $uid) {
+        $USER_TABLE = $this->getTable("USER");
+        $SQL = "SELECT failed_attempts FROM ${USER_TABLE} WHERE id = ?;";
+        try {
+            $res = $this->query($SQL, [$uid]);
+            $attempts = $res->fetch_assoc()["failed_attempts"];
+            if ($attempts >= $this::$LOGIN_ATTEMPTS) {
+                $SQL2 = "UPDATE ${USER_TABLE} SET lockout_ts = DATE_ADD(NOW(), INTERVAL ? SECOND) WHERE id = ?;";
+                $res2 = $this->query($SQL2, [$this::$LOCKOUT_DURATION_SECONDS, $uid]);
+                return $res2;
+            } else {
+                return TRUE;
+            }
+        }
+        catch (\Exception $e) {
+            return FALSE;
         }
     }
 
@@ -282,10 +305,22 @@ class REDCapPRO extends AbstractExternalModule {
         $SQL = "SELECT failed_attempts FROM ${USER_TABLE} WHERE id=?;";
         try {
             $res = $this->query($SQL, [$uid]);
-            return $res->fetch_assoc["failed_attempts"];
+            return $res->fetch_assoc()["failed_attempts"];
         }
         catch (\Exception $e) {
             return 0;
+        }
+    }
+
+    public function checkUsernameLockedOut(int $uid) {
+        $USER_TABLE = $this->getTable("USER");
+        $SQL = "SELECT UNIX_TIMESTAMP(lockout_ts) - UNIX_TIMESTAMP(NOW()) as lockout_ts FROM ${USER_TABLE} WHERE id=? AND lockout_ts >= NOW();";
+        try {
+            $res = $this->query($SQL, [$uid]);
+            return $res->fetch_assoc()["lockout_ts"];
+        }
+        catch (\Exception $e) {
+            return FALSE;
         }
     }
 
@@ -671,6 +706,9 @@ class REDCapPRO extends AbstractExternalModule {
 
 
     public function getUser(string $username) {
+        if ($username === NULL) {
+            return;
+        }
         $USER_TABLE = $this->getTable("USER");
         $SQL = "SELECT id, username, email, fname, lname, temp_pw FROM ${USER_TABLE} WHERE username = ?";
         try {
