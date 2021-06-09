@@ -216,12 +216,38 @@ class REDCapPRO extends AbstractExternalModule {
         }
         if (isset($ipStat["attempts"])) {
             $ipStat["attempts"]++;
+            if ($ipStat["attempts"] >= $this::$LOGIN_ATTEMPTS) {
+                $ipStat["lockout_ts"] = time() + $this::$LOCKOUT_DURATION_SECONDS;
+            }
         } else {
             $ipStat["attempts"] = 1;
         }
         $ipLockouts[$ip] = $ipStat;
         $this->setSystemSetting('ip_lockouts', json_encode($ipLockouts));
         return $ipStat["attempts"];
+    }
+
+    public function resetFailedIp($ip) {
+        try {
+            if ($this->getSystemSetting('ip_lockouts') === null) {
+                $this->setSystemSetting('ip_lockouts', json_encode(array()));
+            }
+            $ipLockouts = json_decode($this->getSystemSetting('ip_lockouts'), true);
+            if (isset($ipLockouts[$ip])) {
+                $ipStat = $ipLockouts[$ip];
+            } else {
+                $ipStat = array();
+            }
+            $ipStat["attempts"] = 0;
+            $ipStat["lockout_ts"] = NULL;
+            $ipLockouts[$ip] = $ipStat;
+            $this->setSystemSetting('ip_lockouts', json_encode($ipLockouts));
+            return TRUE;
+        }
+        catch (\Exception $e) {
+            $this->log("ERROR: ".$e->getMessage());
+            return FALSE;
+        }
     }
 
     private function checkIpAttempts($ip) { 
@@ -236,6 +262,19 @@ class REDCapPRO extends AbstractExternalModule {
             }
         }
         return 0;
+    }
+
+    public function checkIpLockedOut($ip) {
+        if ($this->getSystemSetting('ip_lockouts') === null) {
+            $this->setSystemSetting('ip_lockouts', json_encode(array()));
+        }
+        $ipLockouts = json_decode($this->getSystemSetting('ip_lockouts'), true);
+        $ipStat = $ipLockouts[$ip];
+        
+        if (isset($ipStat) && $ipStat["lockout_ts"] !== null && $ipStat["lockout_ts"] >= time()) {
+            return $ipStat["lockout_ts"];
+        }
+        return FALSE;
     }
 
     private function checkUsernameAttempts(int $uid) {

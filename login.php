@@ -59,29 +59,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Validate credentials
         if (empty($username_err) && empty($password_err)) {
 
+            // Check that IP is not locked out
+            $ip = $module->getIPAddress();
+            $lockout_ts = $module->checkIpLockedOut($ip);
+            if ($lockout_ts !== FALSE) {
+                $lockout_duration_remaining = $lockout_ts - time();
+                $login_err = "You have been temporarily locked out.<br>You have ${lockout_duration_remaining} seconds left.";
+            }
+
             // Check if username exists, if yes then verify password
-            if (!$module->usernameIsTaken($username)) {
+            else if (!$module->usernameIsTaken($username)) {
 
                 // Username doesn't exist, display a generic error message
                 $module->incrementFailedIp($ip);
                 $attempts = $module->checkAttempts(NULL, $ip);
                 $remainingAttempts = $module::$LOGIN_ATTEMPTS - $attempts;
-                $login_err = "Invalid username or password.<br>You have ${remainingAttempts} attempts remaining before being locked out.";
+                if ($remainingAttempts <= 0) {
+                    $login_err = "Invalid username or password.<br>You have been locked out for ".$module::$LOCKOUT_DURATION_SECONDS." seconds.";
+                } else {
+                    $login_err = "Invalid username or password.<br>You have ${remainingAttempts} attempts remaining before being locked out.";
+                }
 
             } else {
 
                 $user = $module->getUser($username);
                 $stored_hash = $module->getHash($user["id"]);
+
                 if (empty($stored_hash)) {
                     $login_err = "Error: please speak with your study coordinator.";
                 
                 } else if (password_verify($password, $stored_hash)) {
                     // SUCCESSFUL AUTHENTICATION
 
+                    // Check if user is locked out for failed attempts
+
                     // Rehash password if necessary
                     if (password_needs_rehash($stored_hash, PASSWORD_DEFAULT)) {
-                        echo "NEEDS REHASH";
-                        return;
                         $new_hash = password_hash($password, PASSWORD_DEFAULT);
                         $module->storeHash($new_hash, $user["id"]);
                     }
@@ -106,6 +119,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         echo "Please contact your study coordinator.";
                     }
                     return;
+
                 } else {
 
                     // Password is not valid, display a generic error message
