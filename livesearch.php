@@ -24,8 +24,6 @@ while ($row = $result->fetch_assoc()) {
     $lname = $row["lname"];
     $email = $row["email"];
     $id = $row["id"];
-    $url = $module->getUrl("enroll.php");
-    //$hint .= "<a href='${url}&fname=${fname}&lname=${lname}&email=${email}' target='_blank'>${fname} ${lname} - ${email}</a>";
     $hint .= "<div class='searchResult' onclick='populateSelection(\"${fname}\", \"${lname}\", \"${email}\", \"${id}\");'>${fname} ${lname} - ${email}</div>";
 }
 

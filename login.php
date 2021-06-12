@@ -165,7 +165,7 @@ $module->UiShowParticipantHeader("Login");
             }        
             ?>
 
-            <form action="<?php $module->getUrl("login.php", true); ?>" method="post">
+            <form action="<?= $module->getUrl("login.php", true); ?>" method="post">
                 <div class="form-group">
                     <label>Username</label>
                     <input type="text" name="username" class="form-control <?php echo (!empty($username_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $username; ?>">
@@ -181,6 +181,7 @@ $module->UiShowParticipantHeader("Login");
                 </div>
                 <input type="hidden" name="token" value="<?=$_SESSION[$module::$APPTITLE."_token"]?>">
             </form>
+            <a href="<?= $module->getUrl("reset-password.php", true); ?>">Forgot password? Click here.</a>
         </div>
     </div>
 </body>
