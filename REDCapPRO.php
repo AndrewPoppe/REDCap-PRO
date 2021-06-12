@@ -25,27 +25,19 @@ class REDCapPRO extends AbstractExternalModule {
     static $LOGIN_ATTEMPTS = 3;
     static $LOCKOUT_DURATION_SECONDS = 60;
 
-    /*function redcap_every_page_top($project_id) {
-        echo $this->getUrl('images/fingerprint.svg');
+    function redcap_every_page_top($project_id) {
         ?>
         <script>
-            let counter = 0;
-            let interval = setInterval(() => {
-                let link = $('#RCPro-Link');
-                if (link.length === 0) {
-                    console.log(counter);
-                } else {
-                    console.log(link);
-                    clearInterval(interval);
-                    link.closest('div').find('i').replaceWith('<img width="16px" height="16px" src="<?=$this->getUrl('images/fingerprint.svg');?>">');
-                }
-            }, 10);
-            while (counter++ < 100) {
-                
-            }
+            setTimeout(function() {
+                let link = $(`<div>
+				    <img src="<?=$this->getUrl('images/fingerprint_2.png');?>" style="width:16px; height:16px; position:relative; top:-2px"></img>
+                    <a href="<?=$this->getUrl('home.php');?>" target="" data-link-key="redcap_pro-redcappro"><span id="RCPro-Link"><strong><font style="color:black;">REDCap</font><em><font style="color:#900000;">PRO</font></em></strong></span></a>
+			    </div>`);
+                $('#app_panel').find('div.hang').last().after(link);
+            }, 100);
         </script>
         <?php
-    }*/
+    }
 
     function redcap_survey_page_top($project_id, $record, $instrument, 
     $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
