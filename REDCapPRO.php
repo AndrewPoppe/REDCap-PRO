@@ -154,11 +154,19 @@ class REDCapPRO extends AbstractExternalModule {
 
     public function createSession() {
         \Session::init();
+        $this->set_csrf_token();
+    }
+
+    public function set_csrf_token() {
         $_SESSION[$this::$APPTITLE."_token"] = bin2hex(random_bytes(24));
     }
 
-    public function validateToken(string $token) {
-        return hash_equals($_SESSION[$this::$APPTITLE."_token"], $token);
+    public function get_csrf_token() {
+        return $_SESSION[$this::$APPTITLE."_token"];
+    }
+
+    public function validate_csrf_token(string $token) {
+        return hash_equals($this->get_csrf_token(), $token);
     }
 
     public function incrementFailedLogin(int $uid) {

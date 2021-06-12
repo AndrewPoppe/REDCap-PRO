@@ -49,15 +49,20 @@ if ($role > 0) {
     <title>REDCap PRO - Manage</title>
     <style>
         .wrapper { 
-            width: 720px; 
+            display: inline-block; 
             padding: 20px; 
         }
         .manage-form {
-            width: 720px;
             border-radius: 5px;
             border: 1px solid #cccccc;
             padding: 20px;
             box-shadow: 0px 0px 5px #eeeeee;
+        }
+        #RCPRO_Manage_Users tr.even {
+            background-color: #f0f0f0 !important;
+        }
+        #RCPRO_Manage_Users tr.odd {
+            background-color: white !important;
         }
     </style>
 </head>
@@ -79,34 +84,38 @@ if ($role > 0) {
                 </div>
 <?php } else { ?>
                 <div class="form-group">
-                    <table class="table">
+                    <table class="table" id="RCPRO_Manage_Users">
                     <!--<table class="dataTable no-footer" role="grid">-->
-                        <tr>
-                            <th>Username</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Email</th>
-                            <th>Reset Password</th>
-                            <th>Disenroll</th>
-                        </tr>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Email</th>
+                                <th>Reset Password</th>
+                                <th>Disenroll</th>
+                            </tr>
+                        </thead>
+                        <tbody>
 <?php foreach ($participantList as $participant) { ?>
-                        <tr>
-                            <td><?=$participant["username"]?></td>
-                            <td><?=$participant["fname"]?></td>
-                            <td><?=$participant["lname"]?></td>
-                            <td><?=$participant["email"]?></td>
-                            <td><button type="button" class="btn btn-primary" onclick='(function(){
-                                $("#toReset").val("<?=$participant["id"]?>");
-                                $("#toDisenroll").val("");
-                                $("#manage-form").submit();
-                                })();'>Reset</button></td>
-                            <td><button type="button" class="btn btn-secondary" onclick='(function(){
-                                $("#toReset").val("");
-                                $("#toDisenroll").val("<?=$participant["id"]?>");
-                                $("#manage-form").submit();
-                                })();'>Disenroll</button></td>
-                        </tr>
+                            <tr>
+                                <td><?=$participant["username"]?></td>
+                                <td><?=$participant["fname"]?></td>
+                                <td><?=$participant["lname"]?></td>
+                                <td><?=$participant["email"]?></td>
+                                <td><button type="button" class="btn btn-primary" onclick='(function(){
+                                    $("#toReset").val("<?=$participant["id"]?>");
+                                    $("#toDisenroll").val("");
+                                    $("#manage-form").submit();
+                                    })();'>Reset</button></td>
+                                <td><button type="button" class="btn btn-secondary" onclick='(function(){
+                                    $("#toReset").val("");
+                                    $("#toDisenroll").val("<?=$participant["id"]?>");
+                                    $("#manage-form").submit();
+                                    })();'>Disenroll</button></td>
+                            </tr>
 <?php } ?>
+                        </tbody>
                     </table>
                 </div>
                 <input type="hidden" id="toReset" name="toReset">
@@ -115,6 +124,9 @@ if ($role > 0) {
             
 <?php } ?>
     </div>
+    <script>
+        $('#RCPRO_Manage_Users').DataTable();
+    </script>
 </body>
 
 

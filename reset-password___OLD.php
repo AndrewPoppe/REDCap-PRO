@@ -24,6 +24,9 @@ if (isset($_SESSION[$module::$APPTITLE."_temp_pw"]) && $_SESSION[$module::$APPTI
     return;
 }
 
+// set csrf token
+$module->set_csrf_token();
+
  
 // Define variables and initialize with empty values
 $new_password = $confirm_password = "";
@@ -33,7 +36,7 @@ $new_password_err = $confirm_password_err = "";
 if($_SERVER["REQUEST_METHOD"] == "POST") {
  
     // Validate token
-    if (!$module->validateToken($_POST['token'])) {
+    if (!$module->validate_csrf_token($_POST['token'])) {
         echo "Oops! Something went wrong. Please try again later.";
         return;
     }
@@ -127,7 +130,7 @@ if ($_SESSION[$module::$APPTITLE."_temp_pw"] == 1) {
             <div class="form-group">
                 <input type="submit" class="btn btn-primary" value="Submit">
             </div>
-            <input type="hidden" name="token" value="<?=$_SESSION[$module::$APPTITLE."_token"]?>">
+            <input type="hidden" name="token" value="<?=$module->get_csrf_token();?>">
         </form>
     </div>    
 </body>

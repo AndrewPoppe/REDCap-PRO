@@ -36,7 +36,7 @@ $username_err = $password_err = $login_err = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate token
-    if (!$module->validateToken($_POST['token'])) {
+    if (!$module->validate_csrf_token($_POST['token'])) {
         echo "Oops! Something went wrong. Please try again later.";
         return;
     }
@@ -152,6 +152,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo "Oops! Something went wrong. Please try again later.";
     }
 }
+
+// set csrf token
+$module->set_csrf_token();
  
 // This method starts the html doc
 $module->UiShowParticipantHeader("Login");
@@ -179,7 +182,7 @@ $module->UiShowParticipantHeader("Login");
                 <div class="form-group">
                     <input type="submit" class="btn btn-primary" value="Login">
                 </div>
-                <input type="hidden" name="token" value="<?=$_SESSION[$module::$APPTITLE."_token"]?>">
+                <input type="hidden" name="token" value="<?=$module->get_csrf_token();?>">
             </form>
             <a href="<?= $module->getUrl("reset-password.php", true); ?>">Forgot password? Click here.</a>
         </div>

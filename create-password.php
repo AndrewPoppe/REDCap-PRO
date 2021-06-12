@@ -26,11 +26,12 @@ $new_password_err = $confirm_password_err = "";
 // Verify password reset token
 $verified_user = $module->verifyPasswordResetToken($qstring["t"]);
 
+
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
  
     // Validate token
-    if (!$module->validateToken($_POST['token'])) {
+    if (!$module->validate_csrf_token($_POST['token'])) {
         echo "TOKEN<br>";
         echo "Oops! Something went wrong. Please try again later.";
         return;
@@ -110,6 +111,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
+// set csrf token
+$module->set_csrf_token();
+
 $module->UiShowParticipantHeader("Create Password");
 
 if ($verified_user) {
@@ -133,7 +137,7 @@ if ($verified_user) {
                 <div class="form-group">
                     <input type="submit" class="btn btn-primary" value="Submit">
                 </div>
-                <input type="hidden" name="token" value="<?=$_SESSION[$module::$APPTITLE."_token"]?>">
+                <input type="hidden" name="token" value="<?=$module->get_csrf_token();?>">
                 <input type="hidden" name="username" value="<?=$verified_user["username"]?>">
             </form>
         </div>    
