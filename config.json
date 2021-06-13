@@ -72,7 +72,8 @@
         "home",
         "login",
         "reset-password",
-        "create-password"
+        "create-password",
+        "forgot-password"
     ],
     "framework-version": 5,
     "compatibility": {

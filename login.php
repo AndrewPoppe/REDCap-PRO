@@ -184,7 +184,7 @@ $module->UiShowParticipantHeader("Login");
                 </div>
                 <input type="hidden" name="token" value="<?=$module->get_csrf_token();?>">
             </form>
-            <a href="<?= $module->getUrl("reset-password.php", true); ?>">Forgot password? Click here.</a>
+            <a href="<?= $module->getUrl("forgot-password.php", true); ?>">Forgot password? Click here.</a>
         </div>
     </div>
 </body>

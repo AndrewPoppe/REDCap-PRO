@@ -1,7 +1,6 @@
 <?php
-use \Session;
-//$session_id = $_COOKIE["survey"];
-$session_id = $_COOKIE[$module::$APPTITLE."_sessid"];
+
+$session_id = $_COOKIE["survey"] ?? $_COOKIE["PHPSESSID"];
 if (!empty($session_id)) {
     session_id($session_id);
 } else {
@@ -9,12 +8,12 @@ if (!empty($session_id)) {
 }
 session_start();
 
-# Parse query string to grab hashed username and token.
+# Parse query string to grab token.
 parse_str($_SERVER['QUERY_STRING'], $qstring);
 
 // Redirect to login page if we shouldn't be here
 // TODO: do something else
-if (!isset($qstring["t"])) {
+if (!isset($qstring["t"]) && $_SERVER["REQUEST_METHOD"] !== "POST") {
     header("location: ".$module->getUrl("login.php", true));
     return;
 }
@@ -26,8 +25,6 @@ $new_password_err = $confirm_password_err = "";
 
 // Verify password reset token
 $verified_user = $module->verifyPasswordResetToken($qstring["t"]);
-
-
 
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -68,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $any_error = TRUE;
     } else{
         $confirm_password = trim($_POST["confirm_password"]);
-        if (empty($new_password_err) && ($new_password != $confirm_password)){
+        if (empty($new_password_err) && ($new_password !== $confirm_password)){
             $confirm_password_err = "Password did not match.";
             $any_error = TRUE;
         }
@@ -77,15 +74,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Check input errors before updating the database
     if(!$any_error) {
 
+        // Grab all user details
+        $user = $module->getUser($_POST["username"]);
+
         // Update password
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
-        $result = $module->updatePassword($password_hash, $_SESSION[$module::$APPTITLE."_user_id"], FALSE);
-        if (!$result) {
+        $result = $module->updatePassword($password_hash, $user["id"], FALSE);
+        if (empty($result) || $result === FALSE) {
             echo "Oops! Something went wrong. Please try again later.";
             return;
         }
+        
+        // Password was successfully set. Expire the token.
+        $module->expirePasswordResetToken($user["id"]);
 
-        $user = $module->getUser($_SESSION[$module::$APPTITLE."_username"]);
         // Store data in session variables
         $_SESSION["username"] = $user["username"];
         $_SESSION[$module::$APPTITLE."_user_id"] = $user["id"];
@@ -99,29 +101,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if (isset($_SESSION[$module::$APPTITLE."_survey_url"])) {
             header("location: ".$_SESSION[$module::$APPTITLE."_survey_url"]);
         } else {
-            echo "<h2>Password successfully set.</h2>
-            <p>You may now close this tab.</p>";
+            $module->UiShowParticipantHeader("Password Successfully Set");
+            echo "<p>You may now close this tab.</p>";
         }
         return;
     }
 }
 
-
 // set csrf token
 $module->set_csrf_token();
-
 
 $module->UiShowParticipantHeader("Reset Password");
 
 if ($verified_user) {
 
-    if ($_SESSION[$module::$APPTITLE."_temp_pw"] == 1) {
-        echo "<p>Please fill out this form to set your password.</p>";
-    } else {
-        echo "<p>Please fill out this form to reset your password.</p>";
-    }
+    echo "<p>Please fill out this form to reset your password.</p>";
     ?>
-            <form action="<?= $module->getUrl("reset-password.php", true); ?>" method="post">
+            <form action="<?= $module->getUrl("reset-password.php", true)."&t=".$qstring["t"]; ?>" method="post">
                 <div class="form-group">
                     <span>Username: <span style="color: #900000; font-weight: bold;"><?= $verified_user["username"]; ?></span></span>
                 </div> 
@@ -139,6 +135,7 @@ if ($verified_user) {
                     <input type="submit" class="btn btn-primary" value="Submit">
                 </div>
                 <input type="hidden" name="token" value="<?=$module->get_csrf_token();?>">
+                <input type="hidden" name="username" value="<?=$verified_user["username"]?>">
             </form>
         </div>    
     </body>

@@ -88,30 +88,38 @@ if ($role > 0) {
                         <thead>
                             <tr>
                                 <th>Username</th>
+<?php if ($role > 1) { ?>
                                 <th>First Name</th>
                                 <th>Last Name</th>
                                 <th>Email</th>
+<?php } ?>
                                 <th>Reset Password</th>
+<?php if ($role > 1) { ?>
                                 <th>Disenroll</th>
+<?php } ?>
                             </tr>
                         </thead>
                         <tbody>
 <?php foreach ($participantList as $participant) { ?>
                             <tr>
                                 <td><?=$participant["username"]?></td>
+<?php if ($role > 1) { ?>
                                 <td><?=$participant["fname"]?></td>
                                 <td><?=$participant["lname"]?></td>
                                 <td><?=$participant["email"]?></td>
+<?php } ?>
                                 <td><button type="button" class="btn btn-primary" onclick='(function(){
                                     $("#toReset").val("<?=$participant["id"]?>");
                                     $("#toDisenroll").val("");
                                     $("#manage-form").submit();
                                     })();'>Reset</button></td>
+<?php if ($role > 1) { ?>
                                 <td><button type="button" class="btn btn-secondary" onclick='(function(){
                                     $("#toReset").val("");
                                     $("#toDisenroll").val("<?=$participant["id"]?>");
                                     $("#manage-form").submit();
                                     })();'>Disenroll</button></td>
+<?php } ?>
                             </tr>
 <?php } ?>
                         </tbody>

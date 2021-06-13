@@ -368,6 +368,29 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+    public function changeUserRole($username, $oldRole, $newRole) {
+        $roles = array(
+            "3" => $this->getProjectSetting("managers"),
+            "2" => $this->getProjectSetting("monitors"),
+            "1" => $this->getProjectSetting("users")
+        );
+
+        $oldRole = strval($oldRole);
+        $newRole = strval($newRole);
+
+        if (($key = array_search($username, $roles[$oldRole])) !== false) {
+            unset($roles[$oldRole][$key]);
+            $roles[$oldRole] = array_values($roles[$oldRole]);
+        }
+        if ($newRole !== "0") {
+            $roles[$newRole][] = $username;
+        }
+            
+        $this->setProjectSetting("managers", $roles["3"]);
+        $this->setProjectSetting("monitors", $roles["2"]);
+        $this->setProjectSetting("users", $roles["1"]);
+    }
+
 
 
     /**
@@ -722,7 +745,7 @@ class REDCapPRO extends AbstractExternalModule {
             return $result->fetch_assoc();
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
         }
     }
 
@@ -734,7 +757,7 @@ class REDCapPRO extends AbstractExternalModule {
             return $result->fetch_assoc()["username"];
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
         }
     }
 
@@ -746,7 +769,7 @@ class REDCapPRO extends AbstractExternalModule {
             return $result->fetch_assoc()["id"];
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
         }
     }
 
@@ -758,7 +781,7 @@ class REDCapPRO extends AbstractExternalModule {
             return $result->fetch_assoc()["email"];
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
         }
     }
 
@@ -1184,8 +1207,10 @@ class REDCapPRO extends AbstractExternalModule {
                             <a class='nav-link ".($page==="Register" ? "active" : "")."' href='".$this->getUrl("register.php")."'>
                             <i class='fas fa-id-card'></i>
                             Register</a>
-                        </li>
-                        <li class='nav-item'>
+                        </li>";
+        }
+        if ($role > 2) {
+            $header .= "<li class='nav-item'>
                             <a class='nav-link ".($page==="Users" ? "active" : "")."' href='".$this->getUrl("manage-users.php")."'>
                             <i class='fas fa-users'></i>
                             Study Staff</a>

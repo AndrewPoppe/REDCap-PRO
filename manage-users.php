@@ -11,35 +11,36 @@ if ($role >= 3) {
 
     $proj_id = $module->getProjectId($project_id);
 
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        try {
-            $function = empty($_POST["toDisenroll"]) ? "reset" : "disenroll";
-            if ($function === "reset") {
-                $result = $module->sendPasswordResetEmail($_POST["toReset"]);
-                $icon = "success";
-                $msg = "Successfully reset password for participant.";
-            } else {
-                $result = $module->disenrollParticipant($_POST["toDisenroll"], $proj_id);
-                if (!$result) {
-                    $icon = "error";
-                    $msg = "Trouble disenrolling participant.";
-                } else {
-                    $icon = "success";
-                    $msg = "Successfully disenrolled participant from project.";
-                }
-            }
-            $title = $msg;
-        }
-        catch (\Exception $e) {
-            $icon = "error";
-            $title = "Failed to ${function} participant.";
-        }
-    }
-
     // Get list of users
     $project = $module->getProject();
     $userList = $project->getUsers();
 
+
+    // Update roles if requested
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        try {
+            foreach ($userList as $user) {
+                $username = $user->getUsername();
+                $newRole = strval($_POST["role_select_${username}"]);
+                $oldRole = strval($module->getUserRole($username));
+                if (isset($newRole) && $newRole !== $oldRole) {
+                    $module->changeUserRole($username, $oldRole, $newRole);
+                }
+            }
+            ?>
+                <script>
+                    Swal.fire({icon: "success", title:"Roles successfully changed"});
+                </script>
+            <?php
+        }
+        catch (\Exception $e) {
+            ?>
+                <script>
+                    Swal.fire({icon: "error", title:"Error", text:"<?=$e->getMessage();?>"});
+                </script>
+            <?php
+        }
+    }
 
 ?>
 <!DOCTYPE html>
@@ -63,19 +64,37 @@ if ($role >= 3) {
         #RCPRO_Manage_Staff tr.odd {
             background-color: white !important;
         }
+        #infotext {
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: bold;
+            color: #17a2b8;
+        }
+        #infotext:hover {
+            text-shadow: 0px 0px 5px #17a2b8;
+        }
     </style>
 </head>
 <body>
 
-<?php if ($_SERVER["REQUEST_METHOD"] == "POST") { ?>
-    <script>
-        Swal.fire({icon: "<?=$icon?>", title:"<?=$title?>"});
-    </script>
-<?php } ?>
-
     <div class="manageContainer wrapper">
         <h2>Manage Study Staff</h2>
-        <p>Set staff permissions to REDCapPRO</p>
+        <p>Set <span id="infotext" onclick="(function() {
+                    Swal.fire({
+                        icon: 'info',
+                        iconColor: '#17a2b8',
+                        title: 'Staff Roles',
+                        confirmButtonText: 'Got it!',
+                        confirmButtonColor: '#17a2b8',
+                        html: `Staff may have one of the following roles:<br><br>
+                            <div style='text-align:left;'>
+                                <ul>
+                                    <li><strong>Manager:</strong> Highest permissions. Has the ability to grant/revoke staff access. You are a manager if you are reading this.</li>
+                                    <li><strong>Monitor:</strong> Able to view participant identifying information, register participants, enroll/disenroll participants in the study, and initiate password reset.</li>
+                                    <li><strong>User:</strong> Basic access. Can only view usernames and initiate password resets.</li>
+                                </ul><br>
+                                </div>`
+                    })})();">staff permissions</span> to REDCapPRO</p>
         <form class="manage-users-form" id="manage-users-form" action="<?= $module->getUrl("manage-users.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
 <?php if (count($userList) === 0) { ?>
                 <div>
@@ -101,7 +120,7 @@ if ($role >= 3) {
                             <td><?=$username?></td>
                             <td><?=$module->getUserFullname($username)?></td>
                             <td><?=$user->getEmail()?></td>
-                            <td><select class="role_select" id="role_select_<?=$username?>" orig_value="<?=$role?>">
+                            <td><select class="role_select" name="role_select_<?=$username?>" id="role_select_<?=$username?>" orig_value="<?=$role?>" form="manage-users-form">
                                 <option value=0 <?=$role === 0 ? "selected" : "";?>>No Access</option>
                                 <option value=1 <?=$role === 1 ? "selected" : "";?>>Normal User</option>
                                 <option value=2 <?=$role === 2 ? "selected" : "";?>>Monitor</option>
@@ -110,15 +129,15 @@ if ($role >= 3) {
                         </tr>
 <?php } ?>
                     </table>
-                </div>        
-        </form>
-        <button class="btn btn-primary role_select_button" id="role_select_submit" type="submit" disabled>Save Changes</button>
-        <button class="btn btn-secondary role_select_button" id="role_select_cancel" disabled>Cancel</button>    
+                </div>
+            <button class="btn btn-primary role_select_button" id="role_select_submit" type="submit" disabled>Save Changes</button>
+            <button class="btn btn-secondary role_select_button" id="role_select_cancel" disabled>Cancel</button>
+        </form>    
 <?php } ?>
     </div>
     <script>
         (function() {
-            function checkRoles() {
+            function checkRoleChanges() {
                 let changed = false;
                 $('.role_select').each((i, el) => {
                     let val = $(el).val();
@@ -130,9 +149,26 @@ if ($role >= 3) {
                 });
                 return changed;
             }
+
+            $('#role_select_cancel').on('click', (evt) => {
+                evt.preventDefault();
+                $('.role_select').each((i, el) => {
+                    $(el).val($(el).attr('orig_value'));
+                    $('#role_select_submit').attr("disabled", true);
+                    $('#role_select_cancel').attr("disabled", true);
+                });
+            });
+
             $('#RCPRO_Manage_Staff').DataTable();
             $('.role_select').on("change", (evt) => {
-                checkRoles();
+                let changed = checkRoleChanges();
+                if (changed) {
+                    $('#role_select_submit').removeAttr("disabled");
+                    $('#role_select_cancel').removeAttr("disabled");
+                } else {
+                    $('#role_select_submit').attr("disabled", true);
+                    $('#role_select_cancel').attr("disabled", true);
+                }
                 console.log(evt.target.value);
             });
         })();
