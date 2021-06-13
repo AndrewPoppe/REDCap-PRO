@@ -83,7 +83,7 @@ if ($role >= 3) {
                 </div>
 <?php } else { ?>
                 <div class="form-group">
-                    <table class="table" id="RCPRO_Manage_Users">
+                    <table class="table" id="RCPRO_Manage_Staff">
                         <thead>
                             <tr>
                                 <th>Username</th>
@@ -94,26 +94,50 @@ if ($role >= 3) {
                         </thead>
                         <tbody>
 <?php foreach ($userList as $user) { 
-    
+    $username = $user->getUsername();
+    $role = $module->getUserRole($username);
     ?>
                         <tr>
-                            <td><?=$user->getUsername()?></td>
-                            <td><?=$module->getUserFullname($user->getUsername())?></td>
+                            <td><?=$username?></td>
+                            <td><?=$module->getUserFullname($username)?></td>
                             <td><?=$user->getEmail()?></td>
-                            <td>TEST</td>
+                            <td><select class="role_select" id="role_select_<?=$username?>" orig_value="<?=$role?>">
+                                <option value=0 <?=$role === 0 ? "selected" : "";?>>No Access</option>
+                                <option value=1 <?=$role === 1 ? "selected" : "";?>>Normal User</option>
+                                <option value=2 <?=$role === 2 ? "selected" : "";?>>Monitor</option>
+                                <option value=3 <?=$role === 3 ? "selected" : "";?>>Manager</option>
+                            </select></td>
                         </tr>
 <?php } ?>
                     </table>
-                </div>
-                <input type="hidden" id="toReset" name="toReset">
-                <input type="hidden" id="toDisenroll" name="toDisenroll">        
+                </div>        
         </form>
-            
+        <button class="btn btn-primary role_select_button" id="role_select_submit" type="submit" disabled>Save Changes</button>
+        <button class="btn btn-secondary role_select_button" id="role_select_cancel" disabled>Cancel</button>    
 <?php } ?>
     </div>
+    <script>
+        (function() {
+            function checkRoles() {
+                let changed = false;
+                $('.role_select').each((i, el) => {
+                    let val = $(el).val();
+                    let orig_val = $(el).attr('orig_value');
+                    console.log(i,val,orig_val);
+                    if (val !== orig_val) {
+                        changed = true;
+                    }
+                });
+                return changed;
+            }
+            $('#RCPRO_Manage_Staff').DataTable();
+            $('.role_select').on("change", (evt) => {
+                checkRoles();
+                console.log(evt.target.value);
+            });
+        })();
+    </script>
 </body>
-
-
 
 
 <?php
