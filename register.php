@@ -14,7 +14,7 @@ $module->initTables();
 
 
 
-echo "<title>".$module::$APPTITLE." - Enroll</title>";
+echo "<title>".$module::$APPTITLE." - Register</title>";
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module->UiShowHeader("Register");
  

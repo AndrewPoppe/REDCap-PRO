@@ -26,17 +26,23 @@ class REDCapPRO extends AbstractExternalModule {
     static $LOCKOUT_DURATION_SECONDS = 60;
 
     function redcap_every_page_top($project_id) {
-        ?>
-        <script>
-            setTimeout(function() {
-                let link = $(`<div>
-				    <img src="<?=$this->getUrl('images/fingerprint_2.png');?>" style="width:16px; height:16px; position:relative; top:-2px"></img>
-                    <a href="<?=$this->getUrl('home.php');?>" target="" data-link-key="redcap_pro-redcappro"><span id="RCPro-Link"><strong><font style="color:black;">REDCap</font><em><font style="color:#900000;">PRO</font></em></strong></span></a>
-			    </div>`);
-                $('#app_panel').find('div.hang').last().after(link);
-            }, 100);
-        </script>
-        <?php
+        $role = $this->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
+        if (SUPER_USER) {
+            $role = 3;
+        }
+        if ($role > 0) {
+            ?>
+            <script>
+                setTimeout(function() {
+                    let link = $(`<div>
+                        <img src="<?=$this->getUrl('images/fingerprint_2.png');?>" style="width:16px; height:16px; position:relative; top:-2px"></img>
+                        <a href="<?=$this->getUrl('home.php');?>" target="" data-link-key="redcap_pro-redcappro"><span id="RCPro-Link"><strong><font style="color:black;">REDCap</font><em><font style="color:#900000;">PRO</font></em></strong></span></a>
+                    </div>`);
+                    $('#app_panel').find('div.hang').last().after(link);
+                }, 100);
+            </script>
+            <?php
+        }
     }
 
     function redcap_survey_page_top($project_id, $record, $instrument, 
@@ -1190,7 +1196,17 @@ class REDCapPRO extends AbstractExternalModule {
         echo $header;
     }
 
-
+    public function getUserFullname($username) {
+        $SQL = 'SELECT CONCAT(user_firstname, " ", user_lastname) AS name FROM redcap_user_information WHERE username = ?';
+        try {
+            $result = $this->query($SQL, [$username]);
+            return $result->fetch_assoc()["name"];
+        }
+        catch (\Exception $e) {
+            $this->log($e->getMessage());
+            return;
+        }
+    }
 
 
 }

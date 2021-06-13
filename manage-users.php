@@ -3,9 +3,9 @@ $role = $module->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=n
 if (SUPER_USER) {
     $role = 3;
 }
-if ($role > 0) {
+if ($role >= 3) {
     
-    echo "<title>".$module::$APPTITLE." - Users</title>";
+    echo "<title>".$module::$APPTITLE." - Staff</title>";
     require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
     $module->UiShowHeader("Users");
 
@@ -36,9 +36,9 @@ if ($role > 0) {
         }
     }
 
-    // Get list of participants
-    // TODO: seriously... project_id and proj_id... figure something out
-    $participantList = $module->getProjectParticipants($proj_id);
+    // Get list of users
+    $project = $module->getProject();
+    $userList = $project->getUsers();
 
 
 ?>
@@ -46,18 +46,22 @@ if ($role > 0) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>REDCap PRO - Manage</title>
     <style>
         .wrapper { 
-            width: 720px; 
+            display: inline-block; 
             padding: 20px; 
         }
-        .manage-form {
-            width: 720px;
+        .manage-users-form {
             border-radius: 5px;
             border: 1px solid #cccccc;
             padding: 20px;
             box-shadow: 0px 0px 5px #eeeeee;
+        }
+        #RCPRO_Manage_Staff tr.even {
+            background-color: #f0f0f0 !important;
+        }
+        #RCPRO_Manage_Staff tr.odd {
+            background-color: white !important;
         }
     </style>
 </head>
@@ -70,41 +74,33 @@ if ($role > 0) {
 <?php } ?>
 
     <div class="manageContainer wrapper">
-        <h2>Manage Study Participants</h2>
-        <p>Reset passwords, disenroll from study, etc.</p>
-        <form class="manage-form" id="manage-form" action="<?= $module->getUrl("manage.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
-<?php if (count($participantList) === 0) { ?>
+        <h2>Manage Study Staff</h2>
+        <p>Set staff permissions to REDCapPRO</p>
+        <form class="manage-users-form" id="manage-users-form" action="<?= $module->getUrl("manage-users.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
+<?php if (count($userList) === 0) { ?>
                 <div>
-                    <p>No participants have been enrolled in this study</p>
+                    <p>No users have access to this project.</p>
                 </div>
 <?php } else { ?>
                 <div class="form-group">
-                    <table class="table">
-                    <!--<table class="dataTable no-footer" role="grid">-->
+                    <table class="table" id="RCPRO_Manage_Users">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>User Role</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+<?php foreach ($userList as $user) { 
+    
+    ?>
                         <tr>
-                            <th>Username</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Email</th>
-                            <th>Reset Password</th>
-                            <th>Disenroll</th>
-                        </tr>
-<?php foreach ($participantList as $participant) { ?>
-                        <tr>
-                            <td><?=$participant["username"]?></td>
-                            <td><?=$participant["fname"]?></td>
-                            <td><?=$participant["lname"]?></td>
-                            <td><?=$participant["email"]?></td>
-                            <td><button type="button" class="btn btn-primary" onclick='(function(){
-                                $("#toReset").val("<?=$participant["id"]?>");
-                                $("#toDisenroll").val("");
-                                $("#manage-form").submit();
-                                })();'>Reset</button></td>
-                            <td><button type="button" class="btn btn-secondary" onclick='(function(){
-                                $("#toReset").val("");
-                                $("#toDisenroll").val("<?=$participant["id"]?>");
-                                $("#manage-form").submit();
-                                })();'>Disenroll</button></td>
+                            <td><?=$user->getUsername()?></td>
+                            <td><?=$module->getUserFullname($user->getUsername())?></td>
+                            <td><?=$user->getEmail()?></td>
+                            <td>TEST</td>
                         </tr>
 <?php } ?>
                     </table>

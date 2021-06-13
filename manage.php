@@ -85,7 +85,6 @@ if ($role > 0) {
 <?php } else { ?>
                 <div class="form-group">
                     <table class="table" id="RCPRO_Manage_Users">
-                    <!--<table class="dataTable no-footer" role="grid">-->
                         <thead>
                             <tr>
                                 <th>Username</th>
