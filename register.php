@@ -57,13 +57,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
     
     // Check input errors before inserting in database
     if (!$any_error){
+        $icon = $title = $html = "";
         try {
             $username = $module->createUser($email, $fname, $lname);
             $module->sendNewUserEmail($username, $email, $fname, $lname);
-            header("location: ".$module->getUrl("enroll.php"));
+            $icon = "success";
+            $title = "Participant Registered";
         }
         catch (\Exception $e) {
-            echo "Oops! Something went wrong. Please try again later.";
+            $module->log($e->getMessage());
+            $icon = "error";
+            $title = "Error Registering Participant";
+            $html = $e->getMessage();
+        }
+        finally {
+            ?>
+            <script>
+                let success = "<?=$icon?>" === "success";
+                Swal.fire({
+                    icon: "<?=$icon?>",
+                    title: "<?=$title?>",
+                    html: "<?=$body?>"
+                })
+                .then(() => {
+                    if (success) {
+                        window.location.href = "<?=$module->getUrl("register.php");?>";
+                    }
+                });
+            </script>
+            <?php
         }
     }
 }
@@ -82,6 +104,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
             border: 1px solid #cccccc;
             padding: 20px;
             box-shadow: 0px 0px 5px #eeeeee;
+        }
+        button:hover {
+            outline: none !important;
         }
     </style>
 </head>
@@ -107,7 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
                 <span class="invalid-feedback"><?php echo $email_err; ?></span>
             </div>    
             <div class="form-group">
-                <input type="submit" class="btn btn-primary" value="Submit">
+                <button type="submit" class="btn btn-primary" value="Submit">Submit</button>
             </div>
         </form>
     </div>    

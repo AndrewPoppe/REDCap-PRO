@@ -76,6 +76,9 @@ if ($role >= 3) {
         #infotext:hover {
             text-shadow: 0px 0px 5px #17a2b8;
         }
+        button:hover {
+            outline: none !important;
+        }
     </style>
 </head>
 <body>

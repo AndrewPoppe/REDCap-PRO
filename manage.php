@@ -67,6 +67,12 @@ if ($role > 0) {
         table.dataTable tbody td {
             vertical-align: middle;
         }
+        .dt-center {
+            text-align: center;
+        }
+        button:hover {
+            outline: none !important;
+        }
     </style>
 </head>
 <body>
@@ -92,13 +98,13 @@ if ($role > 0) {
                             <tr>
                                 <th>Username</th>
 <?php if ($role > 1) { ?>
-                                <th>First Name</th>
-                                <th>Last Name</th>
+                                <th class="dt-center">First Name</th>
+                                <th class="dt-center">Last Name</th>
                                 <th>Email</th>
 <?php } ?>
-                                <th>Reset Password</th>
+                                <th class="dt-center">Reset Password</th>
 <?php if ($role > 1) { ?>
-                                <th>Disenroll</th>
+                                <th class="dt-center">Disenroll</th>
 <?php } ?>
                             </tr>
                         </thead>
@@ -107,17 +113,17 @@ if ($role > 0) {
                             <tr>
                                 <td><?=$participant["username"]?></td>
 <?php if ($role > 1) { ?>
-                                <td><?=$participant["fname"]?></td>
-                                <td><?=$participant["lname"]?></td>
+                                <td class="dt-center"><?=$participant["fname"]?></td>
+                                <td class="dt-center"><?=$participant["lname"]?></td>
                                 <td><?=$participant["email"]?></td>
 <?php } ?>
-                                <td><button type="button" class="btn btn-primary" onclick='(function(){
+                                <td class="dt-center"><button type="button" class="btn btn-primary" onclick='(function(){
                                     $("#toReset").val("<?=$participant["id"]?>");
                                     $("#toDisenroll").val("");
                                     $("#manage-form").submit();
                                     })();'>Reset</button></td>
 <?php if ($role > 1) { ?>
-                                <td><button type="button" class="btn btn-secondary" onclick='(function(){
+                                <td class="dt-center"><button type="button" class="btn btn-danger" onclick='(function(){
                                     $("#toReset").val("");
                                     $("#toDisenroll").val("<?=$participant["id"]?>");
                                     $("#manage-form").submit();

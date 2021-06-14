@@ -50,6 +50,9 @@ $module->UiShowHeader("Enroll");
             background-color: #0582ff;
             color: white;
         }
+        button:hover {
+            outline: none !important;
+        }
     </style>
 </head>
 <body>
