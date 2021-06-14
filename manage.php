@@ -59,10 +59,13 @@ if ($role > 0) {
             box-shadow: 0px 0px 5px #eeeeee;
         }
         #RCPRO_Manage_Users tr.even {
-            background-color: #f0f0f0 !important;
+            background-color: white !important;
         }
         #RCPRO_Manage_Users tr.odd {
             background-color: white !important;
+        }
+        table.dataTable tbody td {
+            vertical-align: middle;
         }
     </style>
 </head>

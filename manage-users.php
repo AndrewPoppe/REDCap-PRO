@@ -59,10 +59,13 @@ if ($role >= 3) {
             box-shadow: 0px 0px 5px #eeeeee;
         }
         #RCPRO_Manage_Staff tr.even {
-            background-color: #f0f0f0 !important;
+            background-color: white !important;
         }
         #RCPRO_Manage_Staff tr.odd {
             background-color: white !important;
+        }
+        table.dataTable tbody td {
+            vertical-align: middle;
         }
         #infotext {
             cursor: pointer;
@@ -120,7 +123,7 @@ if ($role >= 3) {
                             <td><?=$username?></td>
                             <td><?=$module->getUserFullname($username)?></td>
                             <td><?=$user->getEmail()?></td>
-                            <td><select class="role_select" name="role_select_<?=$username?>" id="role_select_<?=$username?>" orig_value="<?=$role?>" form="manage-users-form">
+                            <td data-order="<?=$role?>"><select class="role_select" name="role_select_<?=$username?>" id="role_select_<?=$username?>" orig_value="<?=$role?>" form="manage-users-form">
                                 <option value=0 <?=$role === 0 ? "selected" : "";?>>No Access</option>
                                 <option value=1 <?=$role === 1 ? "selected" : "";?>>Normal User</option>
                                 <option value=2 <?=$role === 2 ? "selected" : "";?>>Monitor</option>
@@ -131,7 +134,7 @@ if ($role >= 3) {
                     </table>
                 </div>
             <button class="btn btn-primary role_select_button" id="role_select_submit" type="submit" disabled>Save Changes</button>
-            <button class="btn btn-secondary role_select_button" id="role_select_cancel" disabled>Cancel</button>
+            <button class="btn btn-secondary role_select_button" id="role_select_reset" disabled>Reset</button>
         </form>    
 <?php } ?>
     </div>
@@ -150,12 +153,12 @@ if ($role >= 3) {
                 return changed;
             }
 
-            $('#role_select_cancel').on('click', (evt) => {
+            $('#role_select_reset').on('click', (evt) => {
                 evt.preventDefault();
                 $('.role_select').each((i, el) => {
                     $(el).val($(el).attr('orig_value'));
                     $('#role_select_submit').attr("disabled", true);
-                    $('#role_select_cancel').attr("disabled", true);
+                    $('#role_select_reset').attr("disabled", true);
                 });
             });
 
@@ -164,10 +167,10 @@ if ($role >= 3) {
                 let changed = checkRoleChanges();
                 if (changed) {
                     $('#role_select_submit').removeAttr("disabled");
-                    $('#role_select_cancel').removeAttr("disabled");
+                    $('#role_select_reset').removeAttr("disabled");
                 } else {
                     $('#role_select_submit').attr("disabled", true);
-                    $('#role_select_cancel').attr("disabled", true);
+                    $('#role_select_reset').attr("disabled", true);
                 }
                 console.log(evt.target.value);
             });

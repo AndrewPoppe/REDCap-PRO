@@ -1055,8 +1055,15 @@ class REDCapPRO extends AbstractExternalModule {
         $from = "noreply@REDCapPro.com";
         $body = "<html><body><div>
         <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
-        This is your username: ${username}<br>
-        Click <a href='".$this->getUrl("reset-password.php",true)."&t=${token}'>here</a> to set/reset your password.
+        <p>Hello,
+        <br>We have received a request to reset your account password. If you did not make this request, you can ignore this email.<br>
+        <br>To reset your password, click the link below.
+        <br>This is your username: <strong>${username}</strong><br>
+        <br>Click <a href='".$this->getUrl("reset-password.php",true)."&t=${token}'>here</a> to reset your password.
+        <br><em>That link is only valid for the next hour. If you need a new link, click <a href='".$this->getUrl("forgot-password.php",true)."'>here</a>.</em>
+        </p>
+        <br>
+        <p>If you have any questions, contact a member of the study team.</p>
         </body></html></div>";
 
         try {
