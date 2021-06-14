@@ -64,7 +64,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $lockout_ts_ip = $module->checkIpLockedOut($ip);
             if ($lockout_ts_ip !== FALSE) {
                 $lockout_duration_remaining = $lockout_ts_ip - time();
-                $login_err = "IP: You have been temporarily locked out.<br>You have ${lockout_duration_remaining} seconds left.";
+                $login_err = "You have been temporarily locked out.<br>You have ${lockout_duration_remaining} seconds left.";
             
 
             // Check if username exists, if yes then verify password
@@ -88,7 +88,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Check that this username is not locked out
                 $lockout_duration_remaining = $module->checkUsernameLockedOut($user["id"]);
                 if ($lockout_duration_remaining !== FALSE && $lockout_duration_remaining !== NULL) {
-                    $login_err = "USER: You have been temporarily locked out.<br>You have ${lockout_duration_remaining} seconds left.";
+                    $login_err = "You have been temporarily locked out.<br>You have ${lockout_duration_remaining} seconds left.";
                 
                 // Check that there is a stored password hash
                 } else if (empty($stored_hash)) {
@@ -160,7 +160,7 @@ $module->set_csrf_token();
 $module->UiShowParticipantHeader("Login");
 ?>
 
-<p>Please fill in your credentials to login.</p>
+<div style="text-align: center;"><p>Please fill in your credentials to login.</p></div>
 
             <?php 
             if (!empty($login_err)) {
@@ -179,13 +179,29 @@ $module->UiShowParticipantHeader("Login");
                     <input type="password" name="password" class="form-control <?php echo (!empty($password_err)) ? 'is-invalid' : ''; ?>">
                     <span class="invalid-feedback"><?php echo $password_err; ?></span>
                 </div>
-                <div class="form-group">
+                <div class="form-group d-grid">
                     <input type="submit" class="btn btn-primary" value="Login">
                 </div>
                 <input type="hidden" name="token" value="<?=$module->get_csrf_token();?>">
             </form>
-            <a href="<?= $module->getUrl("forgot-password.php", true); ?>">Forgot password? Click here.</a>
+            <hr>
+            <div style="text-align: center;">
+                Forgot 
+                <a href="<?= $module->getUrl("forgot-username.php", true); ?>">Username</a>
+                 or 
+                <a href="<?= $module->getUrl("forgot-password.php", true); ?>">Password</a>?
+            </div>
         </div>
     </div>
+    <style>
+        a {
+            text-decoration: none !important;
+            color: #900000 !important;
+            font-weight: bold !important;
+        }
+        a:hover {
+            text-shadow: 0px 0px 5px #900000;
+        }
+    </style>
 </body>
 </html>

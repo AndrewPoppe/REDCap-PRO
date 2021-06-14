@@ -773,6 +773,18 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+    public function getUserIdFromEmail($email) {
+        $USER_TABLE = $this->getTable("USER");
+        $SQL = "SELECT id FROM ${USER_TABLE} WHERE email = ?";
+        try {
+            $result = $this->query($SQL, [$email]);
+            return $result->fetch_assoc()["id"];
+        }
+        catch (\Exception $e) {
+            $this->log($e->getMessage());
+        }
+    }
+
     public function getEmail($user_id) {
         $USER_TABLE = $this->getTable("USER");
         $SQL = "SELECT email FROM ${USER_TABLE} WHERE id = ?";
@@ -1111,6 +1123,29 @@ class REDCapPRO extends AbstractExternalModule {
             return false;
         }
     }
+
+    public function sendUsernameEmail($email, $username) {
+        $subject = "REDCapPRO - Username";
+        $from = "noreply@REDCapPro.com";
+        $body = "<html><body><div>
+        <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
+        <p>Hello,</p>
+        <p>This is your username: <strong>${username}</strong><br>
+        Write it down someplace safe.</p>
+
+        <p>If you did not request this email, please disregard.<br>If you have any questions, contact a member of the study team.</p>
+        </body></html></div>";
+ 
+        try {
+            $result = \REDCap::email($email, $from, $subject, $body);
+            return $result;
+        }
+        catch (\Exception $e) {
+            $this->log($e->getMessage());
+            return false;
+        }
+
+    }
     
     public function disenrollParticipant($user_id, $proj_id) {
         $LINK_TABLE = $this->getTable("LINK");
@@ -1153,7 +1188,7 @@ class REDCapPRO extends AbstractExternalModule {
                         <div class="wrapper">
                             <img id="rcpro-logo" src="'.$this->getUrl("images/RCPro_Logo.svg").'" width="500px"></img>
                             <hr>
-                            <h2>'.$title.'</h2>';
+                            <div style="text-align: center;"><h2>'.$title.'</h2></div>';
     }
 
     public function UiShowHeader(string $page) {

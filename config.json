@@ -73,7 +73,8 @@
         "login",
         "reset-password",
         "create-password",
-        "forgot-password"
+        "forgot-password",
+        "forgot-username"
     ],
     "framework-version": 5,
     "compatibility": {
