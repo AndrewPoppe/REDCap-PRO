@@ -60,10 +60,10 @@
         ],
         "control-center": [
            {
-                "name": "REDCapPRO",
+                "name": "<img src='https://www.google.com/logos/doodles/2021/doodle-for-google-2021-us-winner-6753651837109220-l.png'><strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em>",
                 "key": "redcappro",
                 "icon": "fas fa-fingerprint",
-                "url": "authenticate.php?NOAUTH",
+                "url": "cc_home.php",
                 "show-header-and-footer": true
            }
         ]

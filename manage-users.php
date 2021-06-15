@@ -5,7 +5,10 @@ if (SUPER_USER) {
 }
 if ($role >= 3) {
     
-    echo "<title>".$module::$APPTITLE." - Staff</title>";
+    echo "<!DOCTYPE html>
+    <html lang='en'>
+    <head>
+    <meta charset='UTF-8'><title>".$module::$APPTITLE." - Staff</title>";
     require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
     $module->UiShowHeader("Users");
 
@@ -43,10 +46,6 @@ if ($role >= 3) {
     }
 
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
     <style>
         .wrapper { 
             display: inline-block; 

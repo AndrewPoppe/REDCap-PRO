@@ -1225,8 +1225,8 @@ class REDCapPRO extends AbstractExternalModule {
         <link rel='icon' type='image/png' sizes='16x16' href='".$this->getUrl('images/favicon-16x16.png')."'>
         <div>
             <img src='".$this->getUrl("images/RCPro_Logo.svg")."' width='500px'></img>
-            <hr>
-            <nav><ul class='nav nav-tabs rcpro-nav'>
+            <br>
+            <nav style='margin-top:20px;'><ul class='nav nav-tabs rcpro-nav'>
                 <li class='nav-item'>
                     <a class='nav-link ".($page==="Home" ? "active" : "")."' aria-current='page' href='".$this->getUrl("home.php")."'>
                     <i class='fas fa-home'></i>
@@ -1260,6 +1260,55 @@ class REDCapPRO extends AbstractExternalModule {
         }
         $header .= "</ul></nav>
             </div>";
+        echo $header;
+    }
+
+    public function UiShowControlCenterHeader(string $page) {
+        $header = "
+        <style>
+            .rcpro-nav a {
+                color: #900000 !important;
+                font-weight: bold !important;
+            }
+            .rcpro-nav a.active:hover {
+                color: #900000 !important;
+                font-weight: bold !important;
+                outline: none !important;
+            }
+            .rcpro-nav a:hover:not(.active), a:focus {
+                color: #900000 !important;
+                font-weight: bold !important;
+                border: 1px solid #c0c0c0 !important;
+                background-color: #e1e1e1 !important;
+                outline: none !important;
+            }
+            .rcpro-nav a:not(.active) {
+                background-color: #f7f6f6 !important;
+                border: 1px solid #e1e1e1 !important;
+                outline: none !important;
+            }
+        </style>
+        <link rel='shortcut icon' href='".$this->getUrl('images/favicon.ico')."'/>
+        <link rel='icon' type='image/png' sizes='32x32' href='".$this->getUrl('images/favicon-32x32.png')."'>
+        <link rel='icon' type='image/png' sizes='16x16' href='".$this->getUrl('images/favicon-16x16.png')."'>
+        <div>
+            <img src='".$this->getUrl("images/RCPro_Logo.svg")."' width='500px'></img>
+            <br>
+            <nav style='margin-top:20px;'><ul class='nav nav-tabs rcpro-nav'>
+                <li class='nav-item'>
+                    <a class='nav-link ".($page==="Home" ? "active" : "")."' aria-current='page' href='".$this->getUrl("cc_home.php")."'>
+                    <i class='fas fa-home'></i>
+                    Home</a>
+                </li>
+                <li class='nav-item'>
+                    <a class='nav-link ".($page==="Manage" ? "active" : "")."' href='".$this->getUrl("cc_manage.php")."'>
+                    <i class='fas fa-users-cog'></i>
+                    Manage Participants</a>
+                </li>
+        ";
+        
+        $header .= "</ul></nav>
+        </div><hr style='margin-top:0px;'>";
         echo $header;
     }
 

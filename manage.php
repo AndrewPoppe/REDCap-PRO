@@ -5,7 +5,10 @@ if (SUPER_USER) {
 }
 if ($role > 0) {
     
-    echo "<title>".$module::$APPTITLE." - Manage</title>";
+    echo "<!DOCTYPE html>
+    <html lang='en'>
+    <head>
+    <meta charset='UTF-8'><title>".$module::$APPTITLE." - Manage</title>";
     require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
     $module->UiShowHeader("Manage");
 
@@ -42,11 +45,6 @@ if ($role > 0) {
 
 
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>REDCap PRO - Manage</title>
     <style>
         .wrapper { 
             display: inline-block; 

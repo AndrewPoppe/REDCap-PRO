@@ -1,5 +1,8 @@
 <?php
-echo "<title>".$module::$APPTITLE." - Menu</title>";
+echo "<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'><title>".$module::$APPTITLE." - Menu</title>";
 
 $role = $module->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
 if (SUPER_USER) {

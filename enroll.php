@@ -8,17 +8,16 @@ if ($role < 2) {
     header("location:".$module->getUrl("home.php"));
 }
 
-echo "<title>".$module::$APPTITLE." - Enroll</title>";
+echo "<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<title>".$module::$APPTITLE." - Enroll</title>";
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module->UiShowHeader("Enroll");
 
 
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>REDCap PRO - Enroll</title>
     <style>
         .wrapper { 
             width: 720px; 

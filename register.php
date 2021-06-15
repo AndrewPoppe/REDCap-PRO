@@ -14,7 +14,10 @@ $module->initTables();
 
 
 
-echo "<title>".$module::$APPTITLE." - Register</title>";
+echo "<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'><title>".$module::$APPTITLE." - Register</title>";
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module->UiShowHeader("Register");
  
@@ -90,12 +93,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
     }
 }
 ?>
- 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>REDCap PRO - Register</title>
     <style>
         .wrapper{ width: 720px; padding: 20px; }
         .register-form {
