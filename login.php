@@ -35,9 +35,12 @@ $username_err = $password_err = $login_err = "";
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
+    # Parse query string
+    parse_str($_SERVER['QUERY_STRING'], $qstring);
+
     // Validate token
     if (!$module->validate_csrf_token($_POST['token'])) {
-        echo "Oops! Something went wrong. Please try again later.";
+        echo "TOKEN: Oops! Something went wrong. Please try again later.";
         return;
     }
  
@@ -126,6 +129,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         header("location: ".$module->getUrl("reset-password.php", true));
                     } else if (isset($_SESSION[$module::$APPTITLE."_survey_url"])) {
                         header("location: ".$_SESSION[$module::$APPTITLE."_survey_url"]);
+                    } else if (isset($qstring["s"])) {
+                        header("location: ".APP_PATH_SURVEY_FULL.$_SERVER['QUERY_STRING']); 
                     } else {
                         echo "Please contact your study coordinator.";
                     }

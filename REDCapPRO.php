@@ -26,6 +26,9 @@ class REDCapPRO extends AbstractExternalModule {
     static $LOCKOUT_DURATION_SECONDS = 60;
 
     function redcap_every_page_top($project_id) {
+        if (strpos($_SERVER["PHP_SELF"], "surveys") !== false) {
+            return;
+        }
         $role = $this->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
         if (SUPER_USER) {
             $role = 3;
@@ -34,10 +37,10 @@ class REDCapPRO extends AbstractExternalModule {
             ?>
             <script>
                 setTimeout(function() {
-                    let link = $(`<div>
-                        <img src="<?=$this->getUrl('images/fingerprint_2.png');?>" style="width:16px; height:16px; position:relative; top:-2px"></img>
-                        <a href="<?=$this->getUrl('home.php');?>" target="" data-link-key="redcap_pro-redcappro"><span id="RCPro-Link"><strong><font style="color:black;">REDCap</font><em><font style="color:#900000;">PRO</font></em></strong></span></a>
-                    </div>`);
+                    let link = $("<div>"+
+                        "<img src='<?=$this->getUrl('images/fingerprint_2.png');?>' style='width:16px; height:16px; position:relative; top:-2px'></img>"+
+                        "<a href='<?=$this->getUrl('home.php');?>' target=' data-link-key='redcap_pro-redcappro'><span id='RCPro-Link'><strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em></strong></span></a>"+
+                    "</div>");
                     $('#app_panel').find('div.hang').last().after(link);
                 }, 100);
             </script>
@@ -86,6 +89,14 @@ class REDCapPRO extends AbstractExternalModule {
 
             \REDCap::logEvent("REDCapPro Survey User Login", "user: ".$_SESSION[$this::$APPTITLE."_username"], NULL, $record, $event_id);
             $this->log("REDCapPro Survey User Login", ["user"=>$_SESSION[$this::$APPTITLE."_username"], "id"=>$_SESSION[$this::$APPTITLE."_user_id"]]);
+            echo "<style>.swal2-timer-progress-bar {background: #900000 !important;}</style>";
+            echo "<script src='".$this->getUrl("rcpro_base.js",true)."'></script>";
+            echo "<script>
+                window.rcpro.logo = '".$this->getUrl("images/RCPro_Favicon.svg")."';
+                window.rcpro.logoutPage = '".$this->getUrl("logout.php", true)."';
+                window.rcpro.logoutWarning();
+                window.rcpro.initTimeout();
+            </script>";
             return;
 
         // Participant is not logged into their account
@@ -1189,6 +1200,10 @@ class REDCapPRO extends AbstractExternalModule {
                             <img id="rcpro-logo" src="'.$this->getUrl("images/RCPro_Logo.svg").'" width="500px"></img>
                             <hr>
                             <div style="text-align: center;"><h2>'.$title.'</h2></div>';
+    }
+
+    public function UiEndParticipantPage() {
+        echo '</div></div></body></html>';
     }
 
     public function UiShowHeader(string $page) {

@@ -71,6 +71,7 @@
     "no-auth-pages": [
         "home",
         "login",
+        "logout",
         "reset-password",
         "create-password",
         "forgot-password",
