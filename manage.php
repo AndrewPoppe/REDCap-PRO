@@ -115,13 +115,13 @@ if ($role > 0) {
                                 <td class="dt-center"><?=$participant["lname"]?></td>
                                 <td><?=$participant["email"]?></td>
 <?php } ?>
-                                <td class="dt-center"><button type="button" class="btn btn-primary" onclick='(function(){
+                                <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
                                     $("#toReset").val("<?=$participant["id"]?>");
                                     $("#toDisenroll").val("");
                                     $("#manage-form").submit();
                                     })();'>Reset</button></td>
 <?php if ($role > 1) { ?>
-                                <td class="dt-center"><button type="button" class="btn btn-danger" onclick='(function(){
+                                <td class="dt-center"><button type="button" class="btn btn-danger btn-sm" onclick='(function(){
                                     $("#toReset").val("");
                                     $("#toDisenroll").val("<?=$participant["id"]?>");
                                     $("#manage-form").submit();
