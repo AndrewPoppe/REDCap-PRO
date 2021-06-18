@@ -39,6 +39,7 @@ class REDCapPRO extends AbstractExternalModule {
                 setTimeout(function() {
                     let link = $("<div>"+
                         "<img src='<?=$this->getUrl('images/fingerprint_2.png');?>' style='width:16px; height:16px; position:relative; top:-2px'></img>"+
+                        "&nbsp;"+
                         "<a href='<?=$this->getUrl('home.php');?>'><span id='RCPro-Link'><strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em></strong></span></a>"+
                     "</div>");
                     $('#app_panel').find('div.hang').last().after(link);
