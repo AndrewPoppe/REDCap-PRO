@@ -89,12 +89,18 @@ class REDCapPRO extends AbstractExternalModule {
 
             \REDCap::logEvent("REDCapPro Survey User Login", "user: ".$_SESSION[$this::$APPTITLE."_username"], NULL, $record, $event_id);
             $this->log("REDCapPro Survey User Login", ["user"=>$_SESSION[$this::$APPTITLE."_username"], "id"=>$_SESSION[$this::$APPTITLE."_user_id"]]);
-            echo "<style>.swal2-timer-progress-bar {background: #900000 !important;}</style>";
+            echo "<style>
+                .swal2-timer-progress-bar {
+                    background: #900000 !important;
+                }
+                button.swal2-confirm:focus {
+                    box-shadow: 0 0 0 3px rgb(144 0 0 / 50%) !important;
+                }
+            </style>";
             echo "<script src='".$this->getUrl("rcpro_base.js",true)."'></script>";
             echo "<script>
                 window.rcpro.logo = '".$this->getUrl("images/RCPro_Favicon.svg")."';
                 window.rcpro.logoutPage = '".$this->getUrl("logout.php", true)."';
-                window.rcpro.logoutWarning();
                 window.rcpro.initTimeout();
             </script>";
             return;

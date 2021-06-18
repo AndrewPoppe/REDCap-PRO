@@ -11,7 +11,14 @@ session_destroy();
 // This method starts the html doc
 $module->UiShowParticipantHeader("Logged Out");
 ?>
-
+<style>
+    .swal2-timer-progress-bar {
+        background: #900000 !important;
+    }
+    button.swal2-confirm:focus {
+        box-shadow: 0 0 0 3px rgb(144 0 0 / 50%) !important;
+    }
+</style>
 <div style="text-align: center;"><p>You may now close this browser tab.</p></div>
 <script src="<?=$module->getUrl("lib/sweetalert/sweetalert2.all.min.js");?>"></script>
 <script>
@@ -24,4 +31,5 @@ $module->UiShowParticipantHeader("Logged Out");
         confirmButtonColor: "#900000"
     });
 </script>
+
 <?php $module->UiEndParticipantPage(); ?>
