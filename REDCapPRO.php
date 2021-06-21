@@ -438,7 +438,7 @@ class REDCapPRO extends AbstractExternalModule {
             $this->query($USERSQL, []);
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
         }
     } 
 
@@ -458,7 +458,7 @@ class REDCapPRO extends AbstractExternalModule {
             $this->query($PROJECTSQL, []);
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
         }
     }
 
@@ -481,7 +481,7 @@ class REDCapPRO extends AbstractExternalModule {
             $this->query($LINKSQL, []);
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
         }
     }
 
@@ -516,7 +516,7 @@ class REDCapPRO extends AbstractExternalModule {
             $this->query($TESTUSERSQL, [$TEST_USER, $pw_hash]);
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
         }
     }
 
@@ -533,7 +533,7 @@ class REDCapPRO extends AbstractExternalModule {
             $this->query($TESTPROJECTSQL, [$TEST_PID]);
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
         }
     }
     
@@ -563,7 +563,7 @@ class REDCapPRO extends AbstractExternalModule {
             $this->query($TESTLINKSQL, [$proj_id, $user_id, "20"]);
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
         }
     }
 
@@ -747,7 +747,7 @@ class REDCapPRO extends AbstractExternalModule {
             return $result->num_rows > 0;
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
         }
     }
 
@@ -816,6 +816,28 @@ class REDCapPRO extends AbstractExternalModule {
     }
 
 
+    public function getAllParticipants() {
+        $USER_TABLE = $this->getTable("USER");
+        
+        // Grab all user IDs
+        $SQL = "SELECT id,username,email,fname,lname,lockout_ts FROM ${USER_TABLE};";
+        try {
+            $result = $this->query($SQL, []);
+            $participants  = array();
+
+            // grab participant details
+            while ($row = $result->fetch_assoc()) {
+                $participants[$row["id"]] = $row;               
+            }
+            return $participants;
+        }
+        catch (\Exception $e) {
+            $this->log($e->getMessage());
+            return;
+        }
+    }
+
+
     /**
      * get array of enrolled participants given a project id
      * 
@@ -844,7 +866,7 @@ class REDCapPRO extends AbstractExternalModule {
             return $participants;
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
             return;
         }
     }
@@ -898,7 +920,7 @@ class REDCapPRO extends AbstractExternalModule {
             return $this->query($SQL, [$pid]);
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
         }
     }
 
@@ -917,7 +939,7 @@ class REDCapPRO extends AbstractExternalModule {
             return $this->query($SQL, [$active, $pid]);
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
         }
     }
 
@@ -946,7 +968,7 @@ class REDCapPRO extends AbstractExternalModule {
             return FALSE;
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
             return;
         }
     }
@@ -968,7 +990,7 @@ class REDCapPRO extends AbstractExternalModule {
             return $result->fetch_assoc()["id"];
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
             return;
         }
     }
@@ -981,7 +1003,7 @@ class REDCapPRO extends AbstractExternalModule {
             return $result->fetch_assoc()["id"];
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
             return;
         }
     }
@@ -1010,7 +1032,7 @@ class REDCapPRO extends AbstractExternalModule {
             return TRUE;
         }
         catch (\Exception $e) {
-            echo $e->getMessage();
+            $this->log($e->getMessage());
             return;
         }
     }
@@ -1052,7 +1074,7 @@ class REDCapPRO extends AbstractExternalModule {
         }
         catch (\Exception $e) {
             echo "Oops, there was a problem. Try again later.<br>";
-            echo $e->getMessage();
+            $this->log($e->getMessage());
             return;
         }
     }

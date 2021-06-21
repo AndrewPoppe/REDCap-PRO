@@ -4,7 +4,8 @@ let rcpro = {
     timeout_minutes: 0.5, //TODO: MAKE THESE MODULE SETTINGS
     warning_minutes: 0.1,
     warningOpen: false,
-    seconds: 0
+    seconds: 0,
+    stop: false
 }
 rcpro.warning_duration = rcpro.timeout_minutes - rcpro.warning_minutes;    
 rcpro.initTimeout = function() {
@@ -12,6 +13,9 @@ rcpro.initTimeout = function() {
     let timeout;
     let events = ["scroll", "click", "keyup", "wheel"];
     let startTimer = function timer() {
+        if (rcpro.stop) {
+            return
+        }
         let newTS = Date.now();
         rcpro.seconds = Math.floor((newTS - lastTS)/1000);
         if (rcpro.seconds >= (rcpro.timeout_minutes*60)) {
@@ -70,6 +74,7 @@ rcpro.logoutWarning = function() {
     });
 };
 rcpro.logout = function () {
+    rcpro.stop = true;
     $('body').html('');
     location.href = rcpro.logoutPage;
 }
