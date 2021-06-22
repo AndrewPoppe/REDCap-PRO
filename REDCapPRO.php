@@ -10,19 +10,19 @@ use ExternalModules\AbstractExternalModule;
 class REDCapPRO extends AbstractExternalModule {
 
     private static $TABLES = array(
-        "USER" => "REDCAP_PRO_USER",
+        "USER"    => "REDCAP_PRO_USER",
         "PROJECT" => "REDCAP_PRO_PROJECT",
-        "LINK" => "REDCAP_PRO_LINK"
+        "LINK"    => "REDCAP_PRO_LINK"
     );
 
     private static $TEST_DATA = array(
         "USER" => 1000,
-        "PW" => "TEST_USER_PW_1000",
-        "PID" => -1
+        "PW"   => "TEST_USER_PW_1000",
+        "PID"  => -1
     );
 
-    static $APPTITLE = "REDCapPRO";
-    static $LOGIN_ATTEMPTS = 3;
+    static $APPTITLE                 = "REDCapPRO";
+    static $LOGIN_ATTEMPTS           = 3;
     static $LOCKOUT_DURATION_SECONDS = 60;
 
     function redcap_every_page_top($project_id) {
@@ -43,7 +43,7 @@ class REDCapPRO extends AbstractExternalModule {
                         "<a href='<?=$this->getUrl('home.php');?>'><span id='RCPro-Link'><strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em></strong></span></a>"+
                     "</div>");
                     $('#app_panel').find('div.hang').last().after(link);
-                }, 100);
+                }, 10);
             </script>
             <?php
         }
@@ -373,7 +373,7 @@ class REDCapPRO extends AbstractExternalModule {
     public function getUserRole($username) {
         $managers = $this->getProjectSetting("managers");
         $monitors = $this->getProjectSetting("monitors");
-        $users = $this->getProjectSetting("users");
+        $users    = $this->getProjectSetting("users");
 
         if (in_array($username, $managers)) {
             return 3;
@@ -468,10 +468,10 @@ class REDCapPRO extends AbstractExternalModule {
      * @return void
      */
     private function createLinkTable() {
-        $LINK_TABLE = $this->getTable("LINK");
+        $LINK_TABLE    = $this->getTable("LINK");
         $PROJECT_TABLE = $this->getTable("PROJECT");
-        $USER_TABLE = $this->getTable("USER");
-        $LINKSQL = "CREATE TABLE ".$LINK_TABLE." (
+        $USER_TABLE    = $this->getTable("USER");
+        $LINKSQL       = "CREATE TABLE ".$LINK_TABLE." (
             id INT PRIMARY KEY AUTO_INCREMENT,
             project INT NOT NULL REFERENCES ".$PROJECT_TABLE."(id),
             user INT NOT NULL REFERENCES ".$USER_TABLE."(id),
@@ -509,10 +509,10 @@ class REDCapPRO extends AbstractExternalModule {
      */
     private function createTestUser() {
         try {
-            $USER_TABLE = $this->getTable("USER");
+            $USER_TABLE  = $this->getTable("USER");
             $TESTUSERSQL = "INSERT INTO ".$USER_TABLE." (username, pw) VALUES (?, ?)";
-            $TEST_USER = $this::$TEST_DATA["USER"];
-            $pw_hash = password_hash($this::$TEST_DATA["PW"], PASSWORD_DEFAULT);
+            $TEST_USER   = $this::$TEST_DATA["USER"];
+            $pw_hash     = password_hash($this::$TEST_DATA["PW"], PASSWORD_DEFAULT);
             $this->query($TESTUSERSQL, [$TEST_USER, $pw_hash]);
         }
         catch (\Exception $e) {
@@ -526,8 +526,8 @@ class REDCapPRO extends AbstractExternalModule {
      * @return void
      */
     private function createTestProject() {
-        $PROJECT_TABLE = $this->getTable("PROJECT");
-        $TEST_PID = $this::$TEST_DATA["PID"];
+        $PROJECT_TABLE  = $this->getTable("PROJECT");
+        $TEST_PID       = $this::$TEST_DATA["PID"];
         $TESTPROJECTSQL = "INSERT INTO ".$PROJECT_TABLE." (pid) VALUES (?)";
         try {
             $this->query($TESTPROJECTSQL, [$TEST_PID]);
@@ -543,23 +543,23 @@ class REDCapPRO extends AbstractExternalModule {
      * @return void
      */
     private function createTestLink() {
-        $LINK_TABLE = $this->getTable("LINK");
-        $USER_TABLE = $this->getTable("USER");
+        $LINK_TABLE    = $this->getTable("LINK");
+        $USER_TABLE    = $this->getTable("USER");
         $PROJECT_TABLE = $this->getTable("PROJECT");
 
-        $TEST_PID = $this::$TEST_DATA["PID"];
+        $TEST_PID  = $this::$TEST_DATA["PID"];
         $TEST_USER = $this::$TEST_DATA["USER"];
         
         $GETPROJECTSQL = "SELECT id FROM ${PROJECT_TABLE} WHERE pid = ?;";
-        $GETUSERSQL = "SELECT id FROM ${USER_TABLE} WHERE username = ?;"; 
+        $GETUSERSQL    = "SELECT id FROM ${USER_TABLE} WHERE username = ?;";
 
         $TESTLINKSQL = "INSERT INTO ".$LINK_TABLE." 
         (project, user, record_id) VALUES (?, ?, ?)";
         try {
             $projectResult = $this->query($GETPROJECTSQL, [$TEST_PID]);
-            $proj_id = $projectResult->fetch_assoc()["id"];
-            $userResult = $this->query($GETUSERSQL, [$TEST_USER]);
-            $user_id = $userResult->fetch_assoc()["id"];
+            $proj_id       = $projectResult->fetch_assoc()["id"];
+            $userResult    = $this->query($GETUSERSQL, [$TEST_USER]);
+            $user_id       = $userResult->fetch_assoc()["id"];
             $this->query($TESTLINKSQL, [$proj_id, $user_id, "20"]);
         }
         catch (\Exception $e) {
@@ -594,7 +594,7 @@ class REDCapPRO extends AbstractExternalModule {
      */
     public function tableExists(string $TYPE) {
         $TABLE = $this->getTable($TYPE);
-        $res = $this->query('SHOW TABLES LIKE "'.$TABLE.'"', []);
+        $res   = $this->query('SHOW TABLES LIKE "'.$TABLE.'"', []);
         return $res->num_rows > 0;
     }
 
@@ -697,8 +697,8 @@ class REDCapPRO extends AbstractExternalModule {
      * @return string username of newly created user
      */
     public function createUser(string $email, string $fname, string $lname) {
-        $username = $this->createUsername();
-        $counter = 0;
+        $username     = $this->createUsername();
+        $counter      = 0;
         $counterLimit = 90000000;
         while ($this->usernameIsTaken($username) && $counter < $counterLimit) {
             $username = $this->createUsername();
@@ -741,7 +741,7 @@ class REDCapPRO extends AbstractExternalModule {
      */
     public function usernameIsTaken(string $username) {
         $USER_TABLE = $this->getTable("USER");
-        $SQL = "SELECT id FROM ${USER_TABLE} WHERE username = ?";
+        $SQL        = "SELECT id FROM ${USER_TABLE} WHERE username = ?";
         try {
             $result = $this->query($SQL, [$username]);
             return $result->num_rows > 0;
@@ -1095,8 +1095,8 @@ class REDCapPRO extends AbstractExternalModule {
     public function sendPasswordResetEmail($user_id) {
         // generate token
         try {
-            $token = $this->createResetToken($user_id);
-            $to = $this->getEmail($user_id);
+            $token    = $this->createResetToken($user_id);
+            $to       = $this->getEmail($user_id);
             $username = $this->getUserName($user_id);
         }
         catch (\Exception $e) {
@@ -1130,17 +1130,17 @@ class REDCapPRO extends AbstractExternalModule {
     public function sendNewUserEmail($username, $email, $fname, $lname) {
         // generate token
         try {
-            $user_id = $this->getUserIdFromUsername($username);
+            $user_id     = $this->getUserIdFromUsername($username);
             $hours_valid = 24;
-            $token = $this->createResetToken($user_id, $hours_valid);
+            $token       = $this->createResetToken($user_id, $hours_valid);
         }
         catch (\Exception $e) {
             return false;
         }
         // create email
         $subject = "REDCapPRO - Account Created";
-        $from = "noreply@REDCapPro.com";
-        $body = "<html><body><div>
+        $from    = "noreply@REDCapPro.com";
+        $body    = "<html><body><div>
         <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
         <p>Hello ${fname} ${lname},
         <br>An account has been created for you in order to take part in a research study.<br>
@@ -1166,8 +1166,8 @@ class REDCapPRO extends AbstractExternalModule {
 
     public function sendUsernameEmail($email, $username) {
         $subject = "REDCapPRO - Username";
-        $from = "noreply@REDCapPro.com";
-        $body = "<html><body><div>
+        $from    = "noreply@REDCapPro.com";
+        $body    = "<html><body><div>
         <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
         <p>Hello,</p>
         <p>This is your username: <strong>${username}</strong><br>
@@ -1189,8 +1189,8 @@ class REDCapPRO extends AbstractExternalModule {
     
     public function disenrollParticipant($user_id, $proj_id) {
         $LINK_TABLE = $this->getTable("LINK");
-        $link_id = $this->getLinkId($user_id, $proj_id);
-        $SQL = "DELETE FROM ${LINK_TABLE} WHERE id = ?;";
+        $link_id    = $this->getLinkId($user_id, $proj_id);
+        $SQL        = "DELETE FROM ${LINK_TABLE} WHERE id = ?;";
         try {
             $result = $this->query($SQL, [$link_id]);
             return $result;
@@ -1214,7 +1214,7 @@ class REDCapPRO extends AbstractExternalModule {
                     <link rel="icon" type="image/png" sizes="32x32" href="'.$this->getUrl("images/favicon-32x32.png").'">
                     <link rel="icon" type="image/png" sizes="16x16" href="'.$this->getUrl("images/favicon-16x16.png").'">
                     <link rel="stylesheet" href="'.$this->getUrl("lib/bootstrap/css/bootstrap.min.css").'">
-                    <script src="'.$this->getUrl("lib/bootstrap/js/bootstrap.bundle.min.js").'"></script>
+                    <script async src="'.$this->getUrl("lib/bootstrap/js/bootstrap.bundle.min.js").'"></script>
                     <style>
                         body { font: 14px sans-serif; }
                         .wrapper { width: 360px; padding: 20px; }
