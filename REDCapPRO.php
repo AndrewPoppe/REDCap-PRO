@@ -1069,13 +1069,11 @@ class REDCapPRO extends AbstractExternalModule {
         $SQL = "SELECT id, username FROM ${USER_TABLE} WHERE token = ? AND token_ts > NOW() AND token_valid = 1;";
         try {
             $result = $this->query($SQL, [$token]);
-            $user = $result->fetch_assoc();
-            return $user;
+            return $result->fetch_assoc();
         }
         catch (\Exception $e) {
-            echo "Oops, there was a problem. Try again later.<br>";
             $this->log($e->getMessage());
-            return;
+            return NULL;
         }
     }
 
