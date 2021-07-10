@@ -1,12 +1,7 @@
 <?php
 
-$session_id = $_COOKIE["survey"] ?? $_COOKIE["PHPSESSID"];
-if (!empty($session_id)) {
-    session_id($session_id);
-} else {
-    $module->createSession();
-}
-session_start();
+# Initialize authentication session on page
+$module->$AUTH->init();
 
 # Parse query string to grab token.
 parse_str($_SERVER['QUERY_STRING'], $qstring);

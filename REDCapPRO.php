@@ -1,8 +1,10 @@
 <?php
 namespace YaleREDCap\REDCapPRO;
 
-
 use ExternalModules\AbstractExternalModule;
+use YaleREDCap\REDCapPRO\Auth;
+
+require_once(dirname(__FILE__)."/Auth.php");
 
 /**
  * Main EM Class
@@ -25,7 +27,19 @@ class REDCapPRO extends AbstractExternalModule {
     static $LOGIN_ATTEMPTS           = 3;
     static $LOCKOUT_DURATION_SECONDS = 60;
 
+    static $AUTH;
+    
+    function __construct() {
+        parent::__construct();
+        $this::$AUTH = new Auth($this::$APPTITLE);
+    }
+
     function redcap_every_page_top($project_id) {
+
+        echo "<br>TEST";
+        //$this::$AUTH::yell();
+        var_dump($this::$AUTH);
+
         if (strpos($_SERVER["PHP_SELF"], "surveys") !== false) {
             return;
         }
@@ -168,22 +182,7 @@ class REDCapPRO extends AbstractExternalModule {
         $this->setProjectActive($project_id, 0);
     }
 
-    public function createSession() {
-        \Session::init();
-        $this->set_csrf_token();
-    }
-
-    public function set_csrf_token() {
-        $_SESSION[$this::$APPTITLE."_token"] = bin2hex(random_bytes(24));
-    }
-
-    public function get_csrf_token() {
-        return $_SESSION[$this::$APPTITLE."_token"];
-    }
-
-    public function validate_csrf_token(string $token) {
-        return hash_equals($this->get_csrf_token(), $token);
-    }
+    
 
     public function incrementFailedLogin(int $uid) {
         $USER_TABLE = $this->getTable("USER");
