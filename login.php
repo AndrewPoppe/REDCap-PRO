@@ -1,10 +1,7 @@
 <?php
 
-$session_id = $_COOKIE["survey"] ?? $_COOKIE["PHPSESSID"];
-if (!empty($session_id)) {
-    session_id($session_id);
-} 
-session_start();
+// Initialize Authentication
+$module::$AUTH::init();
 
 // Check if the user is already logged in, if yes then redirect then to the survey
 if (isset($_SESSION[$module::$APPTITLE."_loggedin"]) && $_SESSION[$module::$APPTITLE."_loggedin"] === true) {
@@ -39,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     parse_str($_SERVER['QUERY_STRING'], $qstring);
 
     // Validate token
-    if (!$module->validate_csrf_token($_POST['token'])) {
+    if (!$module::$AUTH::validate_csrf_token($_POST['token'])) {
         echo "TOKEN: Oops! Something went wrong. Please try again later.";
         return;
     }
@@ -159,7 +156,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // set csrf token
-$module->set_csrf_token();
+$module::$AUTH::set_csrf_token();
  
 // This method starts the html doc
 $module->UiShowParticipantHeader("Login");
@@ -187,7 +184,7 @@ $module->UiShowParticipantHeader("Login");
                 <div class="form-group d-grid">
                     <input type="submit" class="btn btn-primary" value="Login">
                 </div>
-                <input type="hidden" name="token" value="<?=$module->get_csrf_token();?>">
+                <input type="hidden" name="token" value="<?=$module::$AUTH::get_csrf_token();?>">
             </form>
             <hr>
             <div style="text-align: center;">

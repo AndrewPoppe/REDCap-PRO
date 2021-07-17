@@ -2,9 +2,6 @@
 namespace YaleREDCap\REDCapPRO;
 
 use ExternalModules\AbstractExternalModule;
-use YaleREDCap\REDCapPRO\Auth;
-
-require_once(dirname(__FILE__)."/Auth.php");
 
 /**
  * Main EM Class
@@ -36,10 +33,6 @@ class REDCapPRO extends AbstractExternalModule {
 
     function redcap_every_page_top($project_id) {
 
-        echo "<br>TEST";
-        //$this::$AUTH::yell();
-        var_dump($this::$AUTH);
-
         if (strpos($_SERVER["PHP_SELF"], "surveys") !== false) {
             return;
         }
@@ -66,13 +59,9 @@ class REDCapPRO extends AbstractExternalModule {
     function redcap_survey_page_top($project_id, $record, $instrument, 
     $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
         $session_id = $_COOKIE[$this::$APPTITLE."_sessid"] ?? $_COOKIE["survey"] ?? $_COOKIE["PHPSESSID"];
-        if (!empty($session_id)) {
-            session_id($session_id);
-        }
-        session_start();
-        if (!isset($_SESSION[$this::$APPTITLE."_loggedin"]) || $_SESSION[$this::$APPTITLE."_loggedin"] !== TRUE) {
-            $this->createSession();
-        }
+        
+        // Initialize Authentication
+        $this::$AUTH::init();
 
         
         
@@ -1367,3 +1356,50 @@ class REDCapPRO extends AbstractExternalModule {
 
 
 }
+
+/**
+ * Authorization class
+ */
+class Auth {
+
+    public static $APPTITLE;
+
+    public function yell() {
+        echo "Loaded Auth for: ".self::$APPTITLE;
+    }
+    
+    function __construct($title = null) {
+        self::$APPTITLE = $title;
+    }
+
+
+    public function init() {
+        $session_id = $_COOKIE["survey"] ?? $_COOKIE["PHPSESSID"];
+        if (!empty($session_id)) {
+            session_id($session_id);
+        } else {
+            self::createSession();
+        }
+        session_start();
+    }
+
+    function createSession() {
+        \Session::init();
+        self::set_csrf_token();
+    }
+
+    function set_csrf_token() {
+        $_SESSION[self::$APPTITLE."_token"] = bin2hex(random_bytes(24));
+    }
+
+    function get_csrf_token() {
+        return $_SESSION[self::$APPTITLE."_token"];
+    }
+
+    function validate_csrf_token(string $token) {
+        return hash_equals(self::get_csrf_token(), $token);
+    }
+
+}
+
+?>

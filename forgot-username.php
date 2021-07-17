@@ -1,16 +1,18 @@
 <?php
 
+# Initialize authentication session on page
+$module::$AUTH::init();
+
 $module->UiShowParticipantHeader("Forgot Username?");
 
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
  
     // Validate token
-    // TODO: DO THIS
-    /*if (!$module->validate_csrf_token($_POST['token'])) {
+    if (!$module::$AUTH::validate_csrf_token($_POST['token'])) {
         echo "Oops! Something went wrong. Please try again later.";
         return;
-    }*/
+    }
 
     $err = null;
 
@@ -33,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 } 
 
     // set csrf token
-    $module->set_csrf_token();
+    $module::$AUTH::set_csrf_token();
 
     echo '<div style="text-align: center;"><p>Provide the email address associated with your account.</p></div>';
     ?>
@@ -46,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <div class="form-group d-grid">
                     <input type="submit" class="btn btn-primary" value="Submit">
                 </div>
-                <input type="hidden" name="token" value="<?=$module->get_csrf_token();?>">
+                <input type="hidden" name="token" value="<?=$module::$AUTH::get_csrf_token();?>">
             </form>
             <hr>
             <div style="text-align: center;"> 
