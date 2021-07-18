@@ -63,25 +63,8 @@ class REDCapPRO extends AbstractExternalModule {
         // Initialize Authentication
         $this::$AUTH::init();
 
-        
-        
-        /*$this->dropTable("USER");
-        $this->createTable("USER");
-        $this->createUser("andrew.poppe@yale.edu", "Andrew", "Poppe");
-
-        $this->dropTable("LINK");
-        $this->createTable("LINK");*/
-        
-
-
         // Participant is logged in to their account
         if (isset($_SESSION[$this::$APPTITLE."_loggedin"]) && $_SESSION[$this::$APPTITLE."_loggedin"] === true) {
-
-            /*if (isset($_SESSION[$this::$APPTITLE."_temp_pw"]) && $_SESSION[$this::$APPTITLE."_temp_pw"] === 1) {
-                // Need to set password
-                header("location: ".$this->getUrl("reset-password.php", true));
-                $this->exitAfterHook();
-            }*/
 
             // Determine whether participant is enrolled in the study.
             $user_id = $_SESSION[$this::$APPTITLE."_user_id"];
@@ -221,16 +204,7 @@ class REDCapPRO extends AbstractExternalModule {
     }
 
     public function getIPAddress() {
-        $ip = $_SERVER['REMOTE_ADDR'];   
-        /*if(!empty($_SERVER['HTTP_CLIENT_IP'])) {  
-            $ip = $_SERVER['HTTP_CLIENT_IP'];  
-        } 
-        
-        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {  
-            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];  
-        } else {  
-             
-        }*/  
+        $ip = $_SERVER['REMOTE_ADDR'];
         return $ip;  
     }  
 
@@ -499,8 +473,8 @@ class REDCapPRO extends AbstractExternalModule {
         try {
             $USER_TABLE  = $this->getTable("USER");
             $TESTUSERSQL = "INSERT INTO ".$USER_TABLE." (username, pw) VALUES (?, ?)";
-            $TEST_USER   = $this::$TEST_DATA["USER"];
-            $pw_hash     = password_hash($this::$TEST_DATA["PW"], PASSWORD_DEFAULT);
+            $TEST_USER   = self::$TEST_DATA["USER"];
+            $pw_hash     = password_hash(self::$TEST_DATA["PW"], PASSWORD_DEFAULT);
             $this->query($TESTUSERSQL, [$TEST_USER, $pw_hash]);
         }
         catch (\Exception $e) {
@@ -515,7 +489,7 @@ class REDCapPRO extends AbstractExternalModule {
      */
     private function createTestProject() {
         $PROJECT_TABLE  = $this->getTable("PROJECT");
-        $TEST_PID       = $this::$TEST_DATA["PID"];
+        $TEST_PID       = self::$TEST_DATA["PID"];
         $TESTPROJECTSQL = "INSERT INTO ".$PROJECT_TABLE." (pid) VALUES (?)";
         try {
             $this->query($TESTPROJECTSQL, [$TEST_PID]);
@@ -535,8 +509,8 @@ class REDCapPRO extends AbstractExternalModule {
         $USER_TABLE    = $this->getTable("USER");
         $PROJECT_TABLE = $this->getTable("PROJECT");
 
-        $TEST_PID  = $this::$TEST_DATA["PID"];
-        $TEST_USER = $this::$TEST_DATA["USER"];
+        $TEST_PID  = self::$TEST_DATA["PID"];
+        $TEST_USER = self::$TEST_DATA["USER"];
         
         $GETPROJECTSQL = "SELECT id FROM ${PROJECT_TABLE} WHERE pid = ?;";
         $GETUSERSQL    = "SELECT id FROM ${USER_TABLE} WHERE username = ?;";

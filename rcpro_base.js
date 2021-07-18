@@ -25,7 +25,6 @@ rcpro.initTimeout = function() {
             rcpro.warningOpen = true;
             rcpro.logoutWarning();
         }
-        //console.log("Tick:",rcpro.seconds);
         timeout = setTimeout(timer, 1000);
     }
     let resetTimer = function() {
