@@ -1,12 +1,7 @@
 <?php
 
-$role = $module->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
-if (SUPER_USER) {
-    $role = 3;
-}
-if ($role < 2) {
-    header("location:".$module->getUrl("home.php"));
-}
+// Initialize Authentication
+$module::$AUTH::init();
 
 echo "<!DOCTYPE html>
 <html lang='en'>
@@ -58,102 +53,92 @@ $module->UiShowHeader("Enroll");
     <div class="wrapper">
         <h2>Enroll a Participant</h2>
         <p>Search for a participant by email or name, and enroll the selected participant in this project.</p>
-
-        <?php if ($_SERVER["REQUEST_METHOD"] !== "POST"){ ?>
-            <script>
-                function showResult(str) {
-                    if (str.length < 3) {
-                        document.getElementById("searchResults").innerHTML="";
-                        return;
+        <script>
+            function showResult(str) {
+                if (str.length < 3) {
+                    document.getElementById("searchResults").innerHTML="";
+                    return;
+                }
+                var xmlhttp=new XMLHttpRequest();
+                xmlhttp.onreadystatechange=function() {
+                    if (this.readyState==4 && this.status==200) {
+                        document.getElementById("searchResults").innerHTML=this.responseText;
                     }
-                    var xmlhttp=new XMLHttpRequest();
-                    xmlhttp.onreadystatechange=function() {
-                        if (this.readyState==4 && this.status==200) {
-                            document.getElementById("searchResults").innerHTML=this.responseText;
-                        }
-                    }
-                    xmlhttp.open("GET","<?=$module->getUrl("livesearch.php")?>&q="+str,true);
-                    xmlhttp.send();
                 }
-                function populateSelection(fname,lname,email,id) {
-                    $("#fname").val(fname);
-                    $("#lname").val(lname);
-                    $("#email").val(email);
-                    $("#id").val(id);
-                    $("#enroll-form").hide();
-                    $("#confirm-form").show();
-                }
-                function resetForm() {
-                    $('#REDCapPRO_Search').val("");
-                    showResult("");
-                    $("#enroll-form").show();
-                    $("#confirm-form").hide();
-                }
-            </script>
-            <form class="enroll-form" id="enroll-form">
-                <div class="form-group">
-                    <div id="searchContainer">
-                        <label>Search</label>
-                        <input type="text" name="REDCapPRO_Search" id="REDCapPRO_Search" class="form-control" onkeyup="showResult(this.value)">
-                        <div class="searchResults" id="searchResults"></div>
-                    </div>
+                xmlhttp.open("GET","<?=$module->getUrl("livesearch.php")?>&q="+str,true);
+                xmlhttp.send();
+            }
+            function populateSelection(fname,lname,email,id) {
+                $("#fname").val(fname);
+                $("#lname").val(lname);
+                $("#email").val(email);
+                $("#id").val(id);
+                $("#enroll-form").hide();
+                $("#confirm-form").show();
+            }
+            function resetForm() {
+                $('#REDCapPRO_Search').val("");
+                showResult("");
+                $("#enroll-form").show();
+                $("#confirm-form").hide();
+            }
+        </script>
+        <form class="enroll-form" id="enroll-form">
+            <div class="form-group">
+                <div id="searchContainer">
+                    <label>Search</label>
+                    <input type="text" name="REDCapPRO_Search" id="REDCapPRO_Search" class="form-control" onkeyup="showResult(this.value)">
+                    <div class="searchResults" id="searchResults"></div>
                 </div>
-            </form>
-            <form class="confirm-form" name="confirm-form" id="confirm-form" action="<?= $module->getUrl("enroll.php");?>" method="POST" enctype="multipart/form-data" target="_self" style="display:none;">
-                <div class="form-group">
-                    <div class="selection" id="selectionContainer">
-                        <div class="mb-3 row">
-                            <label for="fname" class="col-sm-3 col-form-label">First Name:</label>
-                            <div class="col-sm-9">
-                                <input type="text" id="fname" name="fname" class="form-control-plaintext" disabled readonly>
-                            </div>
-                        </div>
-                        <div class="mb-3 row">
-                            <label for="lname" class="col-sm-3 col-form-label">Last Name:</label>
-                            <div class="col-sm-9">
-                                <input type="text" id="lname" name="lname" class="form-control-plaintext" disabled readonly>
-                            </div>
-                        </div>
-                        <div class="mb-3 row">
-                            <label for="email" class="col-sm-3 col-form-label">Email:</label>
-                            <div class="col-sm-9">
-                                <input type="text" id="email" name="email" class="form-control-plaintext" disabled readonly>
-                            </div>
-                        </div>
-                        <input type="text" id="id" name="id" class="form-control" readonly hidden>
-                        <div>
-                            <hr>
-                            <button type="submit" class="btn btn-primary">Enroll Participant</button>
-                            <button type="button" onclick="(function() { resetForm(); return false;})()" class="btn btn-secondary">Cancel</button>
+            </div>
+        </form>
+        <form class="confirm-form" name="confirm-form" id="confirm-form" action="<?= $module->getUrl("enroll.php");?>" method="POST" enctype="multipart/form-data" target="_self" style="display:none;">
+            <div class="form-group">
+                <div class="selection" id="selectionContainer">
+                    <div class="mb-3 row">
+                        <label for="fname" class="col-sm-3 col-form-label">First Name:</label>
+                        <div class="col-sm-9">
+                            <input type="text" id="fname" name="fname" class="form-control-plaintext" disabled readonly>
                         </div>
                     </div>
+                    <div class="mb-3 row">
+                        <label for="lname" class="col-sm-3 col-form-label">Last Name:</label>
+                        <div class="col-sm-9">
+                            <input type="text" id="lname" name="lname" class="form-control-plaintext" disabled readonly>
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label for="email" class="col-sm-3 col-form-label">Email:</label>
+                        <div class="col-sm-9">
+                            <input type="text" id="email" name="email" class="form-control-plaintext" disabled readonly>
+                        </div>
+                    </div>
+                    <input type="text" id="id" name="id" class="form-control" readonly hidden>
+                    <div>
+                        <hr>
+                        <button type="submit" class="btn btn-primary">Enroll Participant</button>
+                        <button type="button" onclick="(function() { resetForm(); return false;})()" class="btn btn-secondary">Cancel</button>
+                    </div>
                 </div>
-            </form> 
+            </div>
+        </form> 
 
-            
-
-
-
-
-        <?php } else {
+        <?php 
             if (isset($_POST["id"]) && isset($project_id)) {
                 $user_id = $_POST["id"];
                 $result = $module->enrollParticipant($user_id, $pid);
 
                 if ($result === -1) {
-                    echo "USER ALREADY ENROLLED IN THIS PROJECT.";
+                    echo "<script>Swal.fire({'title':'This user is already enrolled in this project', 'icon':'info'});</script>";
                 }
-                if ($result === TRUE) {
-                    echo "USER SUCCESSFULLY ENROLLED.";
+                else if ($result === TRUE) {
+                    echo "<script>Swal.fire({'title':'The user was successfully enrolled in this project', 'icon':'success'});</script>";
+                } 
+                else if (!$result) {
+                    echo "<script>Swal.fire({'title':'There was a problem enrolling this user in this project', 'icon':'error'});</script>";
                 }
             }
         ?>
-            <div>
-                <?=$success;?>
-            </div>
-
-        <?php }?>
-
     </div>    
 </body>
 </html>

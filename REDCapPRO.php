@@ -630,7 +630,7 @@ class REDCapPRO extends AbstractExternalModule {
 
     /**
      * @param string $hash Password hash to store
-     * @param mixed $uid ID (not username) of user
+     * @param mixed $uid ID (not username) of participant
      * 
      * @return void
      */
@@ -639,10 +639,14 @@ class REDCapPRO extends AbstractExternalModule {
         $SQL = "UPDATE ${USER_TABLE} SET pw = ? WHERE id = ?;";
         try {
             $res = $this->query($SQL, [$hash, $uid]);
+            $this->log("Password Updated", [
+                "rcpro_user_id" => $uid
+            ]);
             return $res;
         }
         catch (\Exception $e) {
-            return;
+            $this->logError('Password Update Failed', $e);
+            return NULL;
         }
     }
 
@@ -660,6 +664,9 @@ class REDCapPRO extends AbstractExternalModule {
      */
     public function createUser(string $email, string $fname, string $lname) {
         $username     = $this->createUsername();
+        $email_clean  = \REDCap::escapeHtml($email);
+        $fname_clean  = \REDCap::escapeHtml($fname);
+        $lname_clean  = \REDCap::escapeHtml($lname);
         $counter      = 0;
         $counterLimit = 90000000;
         while ($this->usernameIsTaken($username) && $counter < $counterLimit) {
@@ -672,11 +679,22 @@ class REDCapPRO extends AbstractExternalModule {
         }
         $SQL = "INSERT INTO ".$this::$TABLES["USER"]." (username, email, fname, lname) VALUES (?, ?, ?, ?)";
         try {
-            $result = $this->query($SQL, [$username, $email, $fname, $lname]);
+            $result = $this->query($SQL, [$username, $email_clean, $fname_clean, $lname_clean]);
+            if (!$result) {
+                throw new \Exception("Failed to create new participant.");
+            }
+            $SQL2 = "SELECT id FROM ".$this::$TABLES['USER']." WHERE username = ?";
+            $result2 = $this->query($SQL2, $username);
+            $id = $result2->fetch_assoc()["id"];
+            $this->log("Participant Created", [
+                "rcpro_user_id"  => $id,
+                "rcpro_username" => $username
+            ]);
             return $username;
         }
         catch (\Exception $e) {
-            return;
+            $this->logError("Participant Creation Failed", $e);
+            return NULL;
         }
     }
 
@@ -970,6 +988,12 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+    /**
+     * @param mixed $user_id
+     * @param mixed $pid
+     * 
+     * @return [type]
+     */
     public function enrollParticipant($user_id, $pid) {
         // If project does not exist, create it.
         if (!$this->checkProject($pid)) {
@@ -985,17 +1009,27 @@ class REDCapPRO extends AbstractExternalModule {
         return $this->createLink($user_id, $proj_id);
     }
 
+    /**
+     * @param mixed $user_id
+     * @param mixed $proj_id
+     * 
+     * @return [type]
+     */
     private function createLink($user_id, $proj_id) {
         $LINK_TABLE = $this->getTable("LINK");
         $SQL = "INSERT INTO ".$LINK_TABLE." 
         (user, project) VALUES (?, ?)";
         try {
             $this->query($SQL, [$user_id, $proj_id]);
+            $this->log("Participant Enrolled", [
+                "rcpro_proj_id" => $proj_id,
+                "rcpro_user_id" => $user_id
+            ]);
             return TRUE;
         }
         catch (\Exception $e) {
-            $this->log($e->getMessage());
-            return;
+            $this->logError("Participant Enrollment Failed", $e);
+            return NULL;
         }
     }
 
@@ -1026,6 +1060,11 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+    /**
+     * @param mixed $token
+     * 
+     * @return [type]
+     */
     public function verifyPasswordResetToken($token) {
         $USER_TABLE = $this->getTable("USER");
         $SQL = "SELECT id, username FROM ${USER_TABLE} WHERE token = ? AND token_ts > NOW() AND token_valid = 1;";
@@ -1044,6 +1083,11 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+    /**
+     * @param mixed $user_id id of participant
+     * 
+     * @return bool|null
+     */
     public function expirePasswordResetToken($user_id) {
         $USER_TABLE = $this->getTable("USER");
         $SQL = "UPDATE ${USER_TABLE} SET token=NULL,token_ts=DATE_SUB(NOW(), INTERVAL 1 HOUR), token_valid=0 WHERE id=?;";
@@ -1052,8 +1096,8 @@ class REDCapPRO extends AbstractExternalModule {
         }
         catch (\Exception $e) {
             $this->log("Error 100 - User id: ${user_id}");
-            echo "Problem updating user.";
-            return;
+            $this->logError("Problem expiring password reset token.", $e);
+            return NULL;
         }
     }
 

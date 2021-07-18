@@ -33,11 +33,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     // Validate password
-    if (empty(trim($_POST["new_password"]))) {
+    $new_password = trim($_POST["new_password"]);
+    if (empty($new_password)) {
         $new_password_err = "Please enter your new password.";     
         $any_error = TRUE;
     } else {
-        $new_password = trim($_POST["new_password"]);
         // Validate password strength
         $pw_len_req   = 8;
         $uppercase    = preg_match('@[A-Z]@', $new_password);
@@ -51,17 +51,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <br>- upper-case letter
             <br>- lower-case letter
             <br>- number
-            <br>- special character";
+            <br>- special character (non-alphanumeric)";
             $any_error = TRUE;
         } 
     }
     
     // Validate confirm password
-    if (empty(trim($_POST["confirm_password"]))){
+    $confirm_password = trim($_POST["confirm_password"]);
+    if (empty($confirm_password)){
         $confirm_password_err = "Please confirm the password.";     
         $any_error = TRUE;
     } else{
-        $confirm_password = trim($_POST["confirm_password"]);
         if (empty($new_password_err) && ($new_password !== $confirm_password)){
             $confirm_password_err = "Password did not match.";
             $any_error = TRUE;
@@ -95,12 +95,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $_SESSION[$module::$APPTITLE."_temp_pw"] = $user["temp_pw"];
         $_SESSION[$module::$APPTITLE."_loggedin"] = true;
 
-        if (isset($_SESSION[$module::$APPTITLE."_survey_url"])) {
-            header("location: ".$_SESSION[$module::$APPTITLE."_survey_url"]);
-        } else {
-            $module->UiShowParticipantHeader("Password Successfully Set");
-            echo "<p>You may now close this tab.</p>";
-        }
+        $module->UiShowParticipantHeader("Password Successfully Set");
+        echo "<p>You may now close this tab.</p>";
+        $module->UiEndParticipantPage();
         return;
     }
 }
@@ -114,7 +111,7 @@ if ($verified_user) {
 
     echo "<p>Please fill out this form to create your password.</p>";
     ?>
-            <form action="<?= $module->getUrl("create-password.php", true)."&t=".$qstring["t"]; ?>" method="post">
+            <form action="<?= $module->getUrl("create-password.php", true)."&t=".urlencode($qstring["t"]); ?>" method="post">
                 <div class="form-group">
                     <span>Username: <span style="color: #900000; font-weight: bold;"><?= $verified_user["username"]; ?></span></span>
                 </div> 
