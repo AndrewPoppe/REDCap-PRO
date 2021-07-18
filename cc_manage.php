@@ -11,25 +11,15 @@
     $module->UiShowControlCenterHeader("Manage");
     
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        var_dump($_POST);
         try {
             $function = empty($_POST["toDisenroll"]) ? "reset" : "disenroll";
             if ($function === "reset") {
-                /*$result = $module->sendPasswordResetEmail($_POST["toReset"]);
+                $result = $module->sendPasswordResetEmail($_POST["toReset"]);
                 $icon = "success";
                 $msg = "Successfully reset password for participant.";
-                */
             } else {
-                list($user, $project) = $_POST["toDisenroll"];
-                /*$result = $module->disenrollParticipant($_POST["toDisenroll"], $proj_id);
-                if (!$result) {
-                    $icon = "error";
-                    $msg = "Trouble disenrolling participant.";
-                } else {
-                    $icon = "success";
-                    $msg = "Successfully disenrolled participant from project.";
-                }*/
-                echo $user, $project;
+                $icon = "error";
+                $title = "No information provided.";
             }
             $title = $msg;
         }
@@ -89,24 +79,25 @@
 <?php } else { ?>
                 <div class="form-group">
                     <table class="table" id="RCPRO_Manage_Users">
+                        <caption>Manage REDCapPRO Participants</caption>
                         <thead>
                             <tr>
-                                <th>Username</th>
-                                <th class="dt-center">First Name</th>
-                                <th class="dt-center">Last Name</th>
-                                <th>Email</th>
-                                <th class="dt-center">Reset Password</th>
+                                <th id="uname">Username</th>
+                                <th id="fname" class="dt-center">First Name</th>
+                                <th id="lname" class="dt-center">Last Name</th>
+                                <th id="email">Email</th>
+                                <th id="resetpwbutton" class="dt-center">Reset Password</th>
                             </tr>
                         </thead>
                         <tbody>
 <?php foreach ($participants as $participant) { ?>
                             <tr>
-                                <td><?=$participant["username"]?></td>
-                                <td class="dt-center"><?=$participant["fname"]?></td>
-                                <td class="dt-center"><?=$participant["lname"]?></td>
-                                <td><?=$participant["email"]?></td>
+                                <td><?=\REDCap::escapeHtml($participant["username"])?></td>
+                                <td class="dt-center"><?=\REDCap::escapeHtml($participant["fname"])?></td>
+                                <td class="dt-center"><?=\REDCap::escapeHtml($participant["lname"])?></td>
+                                <td><?=\REDCap::escapeHtml($participant["email"])?></td>
                                 <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
-                                    $("#toReset").val("<?=$participant["id"]?>");
+                                    $("#toReset").val("<?=\REDCap::escapeHtml($participant["id"])?>");
                                     $("#toDisenroll").val("");
                                     $("#manage-form").submit();
                                     })();'>Reset</button></td>

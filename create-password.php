@@ -1,12 +1,7 @@
 <?php
 
-$session_id = $_COOKIE["survey"] ?? $_COOKIE["PHPSESSID"];
-if (!empty($session_id)) {
-    session_id($session_id);
-} else {
-    $module->createSession();
-}
-session_start();
+// Initialize Authentication
+$module::$AUTH::init();
 
 # Parse query string to grab token.
 parse_str($_SERVER['QUERY_STRING'], $qstring);
@@ -31,7 +26,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
  
     // Validate token
     if (!$module::$AUTH::validate_csrf_token($_POST['token'])) {
-        echo "Oops! Something went wrong. Please try again later.";
+        $module->UiShowParticipantHeader('Error');
+        echo "<div style='text-align: center;'>Oops! Something went wrong.<br>Do you have multiple tabs open?</div>";
+        $module->UiEndParticipantPage();
         return;
     }
 

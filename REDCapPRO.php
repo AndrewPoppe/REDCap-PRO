@@ -1031,10 +1031,15 @@ class REDCapPRO extends AbstractExternalModule {
         $SQL = "SELECT id, username FROM ${USER_TABLE} WHERE token = ? AND token_ts > NOW() AND token_valid = 1;";
         try {
             $result = $this->query($SQL, [$token]);
-            return $result->fetch_assoc();
+            $result_array = $result->fetch_assoc();
+            $this->log("Password Token Verified", [
+                'rcpro_user_id'  => $result_array['id'],
+                'rcpro_username' => $result_array['username']
+            ]);
+            return $result_array;
         }
         catch (\Exception $e) {
-            $this->log($e->getMessage());
+            $this->logError("Password Token Verification Failed", $e);
             return NULL;
         }
     }
@@ -1328,6 +1333,23 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+    /**
+     * Logs errors thrown during operation
+     * 
+     * @param string $message
+     * @param \Exception $e
+     * 
+     * @return void
+     */
+    public function logError(string $message, \Exception $e) {
+        $this->log($message, [
+            "error_code"=>$e->getCode(),
+            "error_message"=>$e->getMessage(),
+            "error_file"=>$e->getFile(),
+            "error_line"=>$e->getLine(),
+            "error_string"=>$e->__toString()
+        ]);
+    }
 
 }
 
