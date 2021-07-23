@@ -43,11 +43,11 @@ rcpro.initTimeout = function() {
 };
     
 rcpro.logoutWarning = function() {
+    let timerInterval;
     return Swal.fire({
         imageUrl: rcpro.logo,
         imageWidth: '150px',
         html: `<strong>Due to inactivity, you will be logged out in <b></b></strong><br>Click the button below to continue on this page.`,
-        //allowOutsideClick: false,
         confirmButtonText: "Continue on this page",
         confirmButtonColor: "#900000",
         onOpen: () => {
@@ -68,8 +68,6 @@ rcpro.logoutWarning = function() {
             rcpro.warningOpen = false;
             clearInterval(timerInterval)
         }
-        //timer: rcpro.warning_duration * 60000,
-        //timerProgressBar: true
     });
 };
 rcpro.logout = function () {

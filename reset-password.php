@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     } else {
         $new_password = trim($_POST["new_password"]);
         // Validate password strength
-        $pw_len_req   = 8;
+        $pw_len_req   = 8; // TODO: Make this a module setting?
         $uppercase    = preg_match('@[A-Z]@', $new_password);
         $lowercase    = preg_match('@[a-z]@', $new_password);
         $number       = preg_match('@[0-9]@', $new_password);
@@ -76,9 +76,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
         $result = $module->updatePassword($password_hash, $user["id"], FALSE);
         if (empty($result) || $result === FALSE) {
+            $module->log("Password Update Failed", ["rcpro_user_id"=>$user["id"]]);
             echo "Oops! Something went wrong. Please try again later.";
             return;
         }
+        $module->log("Password Update Successful", [
+            "rcpro_user_id"  => $user["id"],
+            "rcpro_username" => $user["username"]
+        ]);
         
         // Password was successfully set. Expire the token.
         $module->expirePasswordResetToken($user["id"]);

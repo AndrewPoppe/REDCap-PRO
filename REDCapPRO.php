@@ -14,12 +14,7 @@ class REDCapPRO extends AbstractExternalModule {
         "LINK"    => "REDCAP_PRO_LINK"
     );
 
-    private static $TEST_DATA = array(
-        "USER" => 1000,
-        "PW"   => "TEST_USER_PW_1000",
-        "PID"  => -1
-    );
-
+    
     static $APPTITLE                 = "REDCapPRO";
     static $LOGIN_ATTEMPTS           = 3;
     static $LOCKOUT_DURATION_SECONDS = 60;
@@ -32,14 +27,10 @@ class REDCapPRO extends AbstractExternalModule {
     }
 
     function redcap_every_page_top($project_id) {
-
         if (strpos($_SERVER["PHP_SELF"], "surveys") !== false) {
             return;
         }
-        $role = $this->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
-        if (SUPER_USER) {
-            $role = 3;
-        }
+        $role = SUPER_USER ? 3 : $this->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
         if ($role > 0) {
             ?>
             <script>
@@ -107,7 +98,6 @@ class REDCapPRO extends AbstractExternalModule {
                 window.rcpro.logoutPage = '".$this->getUrl("logout.php", true)."';
                 window.rcpro.initTimeout();
             </script>";
-            return;
 
         // Participant is not logged into their account
         // Store cookie to return to survey
@@ -140,7 +130,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return void
      */
     function redcap_module_system_disable($version) {
-        // Do what?
+        // TODO: Do what?
     }
 
     /**
@@ -173,64 +163,100 @@ class REDCapPRO extends AbstractExternalModule {
 
     
 
-    public function incrementFailedLogin(int $uid) {
+    /**
+     * Increments the number of failed attempts at login for the provided id
+     * 
+     * @param int $rcpro_user_id - id key into user table
+     * 
+     * @return BOOL|NULL
+     */
+    public function incrementFailedLogin(int $rcpro_user_id) {
         $USER_TABLE = $this->getTable("USER");
         $SQL = "UPDATE ${USER_TABLE} SET failed_attempts=failed_attempts+1 WHERE id=?;";
         try {
-            $res = $this->query($SQL, [$uid]);
+            $res = $this->query($SQL, [$rcpro_user_id]);
             
             // Lockout username if necessary
-            $this->lockoutLogin($uid);
-
+            $this->lockoutLogin($rcpro_user_id);
             return $res;
         }
         catch (\Exception $e) {
-            return;
+            $this->logError("Error incrementing failed login", $e);
+            return NULL;
         }
     }
 
-    private function lockoutLogin(int $uid) {
+    /**
+     * This both tests whether a user should be locked out based on the number
+     * of failed login attempts and does the locking out.
+     * 
+     * @param int $rcpro_user_id - id key into user table
+     * 
+     * @return BOOL|NULL
+     */
+    private function lockoutLogin(int $rcpro_user_id) {
         $USER_TABLE = $this->getTable("USER");
         $SQL = "SELECT failed_attempts FROM ${USER_TABLE} WHERE id = ?;";
         try {
-            $res = $this->query($SQL, [$uid]);
+            $res = $this->query($SQL, [$rcpro_user_id]);
             $attempts = $res->fetch_assoc()["failed_attempts"];
             if ($attempts >= $this::$LOGIN_ATTEMPTS) {
                 $SQL2 = "UPDATE ${USER_TABLE} SET lockout_ts = DATE_ADD(NOW(), INTERVAL ? SECOND) WHERE id = ?;";
-                $res2 = $this->query($SQL2, [$this::$LOCKOUT_DURATION_SECONDS, $uid]);
+                $res2 = $this->query($SQL2, [$this::$LOCKOUT_DURATION_SECONDS, $rcpro_user_id]);
+                $status = $res2 ? "Successful" : "Failed";
+                $this->log("Login Lockout ${status}", [
+                    "rcpro_user_id" => $rcpro_user_id
+                ]);
                 return $res2;
             } else {
                 return TRUE;
             }
         }
         catch (\Exception $e) {
+            $this->logError("Error doing login lockout", $e);
             return FALSE;
         }
     }
 
-    public function resetFailedLogin(int $uid) {
+    /**
+     * Resets the count of failed login attempts for the given id
+     * 
+     * @param int $rcpro_user_id - id key into user table
+     * 
+     * @return [type]
+     */
+    public function resetFailedLogin(int $rcpro_user_id) {
         $USER_TABLE = $this->getTable("USER");
         $SQL = "UPDATE ${USER_TABLE} SET failed_attempts=0 WHERE id=?;";
         try {
-            $res = $this->query($SQL, [$uid]);
-            return $res;
+            return $this->query($SQL, [$rcpro_user_id]);
         }
         catch (\Exception $e) {
-            return;
+            $this->logError("Error resetting failed login count", $e);
+            return NULL;
         }
     }
 
+    /**
+     * Gets the IP address in an easy way
+     * 
+     * @return string - the ip address
+     */
     public function getIPAddress() {
-        $ip = $_SERVER['REMOTE_ADDR'];
-        return $ip;  
+        return $_SERVER['REMOTE_ADDR'];
     }  
 
     /**
-     * @param mixed $ip Client IP address
+     * Increments the number of failed login attempts for the given ip address
+     * 
+     * It also detects whether the ip should be locked out based on the number
+     * of failed attempts and then does the locking.
+     * 
+     * @param string $ip Client IP address
      * 
      * @return int number of attempts INCLUDING current attempt
      */
-    public function incrementFailedIp($ip) {
+    public function incrementFailedIp(string $ip) {
         if ($this->getSystemSetting('ip_lockouts') === null) {
             $this->setSystemSetting('ip_lockouts', json_encode(array()));
         }
@@ -244,6 +270,10 @@ class REDCapPRO extends AbstractExternalModule {
             $ipStat["attempts"]++;
             if ($ipStat["attempts"] >= $this::$LOGIN_ATTEMPTS) {
                 $ipStat["lockout_ts"] = time() + $this::$LOCKOUT_DURATION_SECONDS;
+                $this->log("Locked out IP address", [
+                    "rcpro_ip"   => $ip,
+                    "lockout_ts" => $ipStat["lockout_ts"]
+                ]);
             }
         } else {
             $ipStat["attempts"] = 1;
@@ -253,7 +283,14 @@ class REDCapPRO extends AbstractExternalModule {
         return $ipStat["attempts"];
     }
 
-    public function resetFailedIp($ip) {
+    /**
+     * Resets the failed login attempt count for the given ip address
+     * 
+     * @param string $ip Client IP address
+     * 
+     * @return bool Whether or not the reset succeeded
+     */
+    public function resetFailedIp(string $ip) {
         try {
             if ($this->getSystemSetting('ip_lockouts') === null) {
                 $this->setSystemSetting('ip_lockouts', json_encode(array()));
@@ -271,12 +308,19 @@ class REDCapPRO extends AbstractExternalModule {
             return TRUE;
         }
         catch (\Exception $e) {
-            $this->log("ERROR: ".$e->getMessage());
+            $this->logError("IP Login Attempt Reset Failed", $e);
             return FALSE;
         }
     }
 
-    private function checkIpAttempts($ip) { 
+    /**
+     * Checks the number of failed login attempts for the given ip address
+     * 
+     * @param string $ip Client IP address
+     * 
+     * @return int number of failed login attempts for the given ip
+     */
+    private function checkIpAttempts(string $ip) { 
         if ($this->getSystemSetting('ip_lockouts') === null) {
             $this->setSystemSetting('ip_lockouts', json_encode(array()));
         }
@@ -290,7 +334,14 @@ class REDCapPRO extends AbstractExternalModule {
         return 0;
     }
 
-    public function checkIpLockedOut($ip) {
+    /**
+     * Determines whether given ip is currently locked out
+     * 
+     * @param string $ip Client IP address
+     * 
+     * @return bool whether ip is locked out
+     */
+    public function checkIpLockedOut(string $ip) {
         if ($this->getSystemSetting('ip_lockouts') === null) {
             $this->setSystemSetting('ip_lockouts', json_encode(array()));
         }
@@ -303,26 +354,42 @@ class REDCapPRO extends AbstractExternalModule {
         return FALSE;
     }
 
-    private function checkUsernameAttempts(int $uid) {
+    /**
+     * Gets number of failed login attempts for the given user by id
+     * 
+     * @param int $rcpro_user_id - id key into user table
+     * 
+     * @return int number of failed login attempts
+     */
+    private function checkUsernameAttempts(int $rcpro_user_id) {
         $USER_TABLE = $this->getTable("USER");
         $SQL = "SELECT failed_attempts FROM ${USER_TABLE} WHERE id=?;";
         try {
-            $res = $this->query($SQL, [$uid]);
+            $res = $this->query($SQL, [$rcpro_user_id]);
             return $res->fetch_assoc()["failed_attempts"];
         }
         catch (\Exception $e) {
+            $this->logError("Failed to check username attempts", $e);
             return 0;
         }
     }
 
-    public function checkUsernameLockedOut(int $uid) {
+    /**
+     * Checks whether given user (by id) is locked out
+     * 
+     * @param int $rcpro_user_id - id key into user table
+     * 
+     * @return bool whether user is locked out
+     */
+    public function checkUsernameLockedOut(int $rcpro_user_id) {
         $USER_TABLE = $this->getTable("USER");
         $SQL = "SELECT UNIX_TIMESTAMP(lockout_ts) - UNIX_TIMESTAMP(NOW()) as lockout_ts FROM ${USER_TABLE} WHERE id=? AND lockout_ts >= NOW();";
         try {
-            $res = $this->query($SQL, [$uid]);
+            $res = $this->query($SQL, [$rcpro_user_id]);
             return $res->fetch_assoc()["lockout_ts"];
         }
         catch (\Exception $e) {
+            $this->logError("Failed to check username lockout", $e);
             return FALSE;
         }
     }
@@ -332,24 +399,32 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * This checks both by username and by ip, and returns the larger
      * 
-     * @param int|null $uid
+     * @param int|null $rcpro_user_id
      * @param mixed $ip
      * 
      * @return int number of consecutive attempts
      */
-    public function checkAttempts($uid, $ip) {
-        if ($uid === null) {
+    public function checkAttempts($rcpro_user_id, $ip) {
+        if ($rcpro_user_id === null) {
             $usernameAttempts = 0;
         } else {
-            $usernameAttempts = $this->checkUsernameAttempts($uid);
+            $usernameAttempts = $this->checkUsernameAttempts($rcpro_user_id);
         }
         $ipAttempts = $this->checkIpAttempts($ip);
         return max($usernameAttempts, $ipAttempts);
     }
 
-    // SETTINGS
+    ////////////////////
+    ///// SETTINGS /////
+    ////////////////////
 
-    public function getUserRole($username) {
+    /**
+     * Gets the REDCapPRO role for the given REDCap user
+     * @param string $username REDCap username
+     * 
+     * @return int role
+     */
+    public function getUserRole(string $username) {
         $managers = $this->getProjectSetting("managers");
         $monitors = $this->getProjectSetting("monitors");
         $users    = $this->getProjectSetting("users");
@@ -365,7 +440,16 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
-    public function changeUserRole($username, $oldRole, $newRole) {
+    /**
+     * Updates the role of the given REDCap user 
+     * 
+     * @param string $username
+     * @param string $oldRole
+     * @param string $newRole
+     * 
+     * @return void
+     */
+    public function changeUserRole(string $username, string $oldRole, string $newRole) {
         $roles = array(
             "3" => $this->getProjectSetting("managers"),
             "2" => $this->getProjectSetting("monitors"),
@@ -417,7 +501,7 @@ class REDCapPRO extends AbstractExternalModule {
             $this->query($USERSQL, []);
         }
         catch (\Exception $e) {
-            $this->log($e->getMessage());
+            $this->logError("Error Creating User Table", $e);
         }
     } 
 
@@ -437,7 +521,7 @@ class REDCapPRO extends AbstractExternalModule {
             $this->query($PROJECTSQL, []);
         }
         catch (\Exception $e) {
-            $this->log($e->getMessage());
+            $this->logError("Error Creating Project Table", $e);
         }
     }
 
@@ -460,7 +544,7 @@ class REDCapPRO extends AbstractExternalModule {
             $this->query($LINKSQL, []);
         }
         catch (\Exception $e) {
-            $this->log($e->getMessage());
+            $this->logError("Error Creating Link Table", $e);
         }
     }
 
@@ -478,88 +562,6 @@ class REDCapPRO extends AbstractExternalModule {
             $this->createProjectTable();
         } else if ($TYPE === "LINK") {
             $this->createLinkTable();
-        }
-    }
-
-    /**
-     * Create a test record in the USER table
-     * 
-     * @return void
-     */
-    private function createTestUser() {
-        try {
-            $USER_TABLE  = $this->getTable("USER");
-            $TESTUSERSQL = "INSERT INTO ".$USER_TABLE." (username, pw) VALUES (?, ?)";
-            $TEST_USER   = self::$TEST_DATA["USER"];
-            $pw_hash     = password_hash(self::$TEST_DATA["PW"], PASSWORD_DEFAULT);
-            $this->query($TESTUSERSQL, [$TEST_USER, $pw_hash]);
-        }
-        catch (\Exception $e) {
-            $this->log($e->getMessage());
-        }
-    }
-
-    /**
-     * Create a test record in the PROJECT table
-     * 
-     * @return void
-     */
-    private function createTestProject() {
-        $PROJECT_TABLE  = $this->getTable("PROJECT");
-        $TEST_PID       = self::$TEST_DATA["PID"];
-        $TESTPROJECTSQL = "INSERT INTO ".$PROJECT_TABLE." (pid) VALUES (?)";
-        try {
-            $this->query($TESTPROJECTSQL, [$TEST_PID]);
-        }
-        catch (\Exception $e) {
-            $this->log($e->getMessage());
-        }
-    }
-    
-    /**
-     * Create a test record in the LINK table
-     * 
-     * @return void
-     */
-    private function createTestLink() {
-        $LINK_TABLE    = $this->getTable("LINK");
-        $USER_TABLE    = $this->getTable("USER");
-        $PROJECT_TABLE = $this->getTable("PROJECT");
-
-        $TEST_PID  = self::$TEST_DATA["PID"];
-        $TEST_USER = self::$TEST_DATA["USER"];
-        
-        $GETPROJECTSQL = "SELECT id FROM ${PROJECT_TABLE} WHERE pid = ?;";
-        $GETUSERSQL    = "SELECT id FROM ${USER_TABLE} WHERE username = ?;";
-
-        $TESTLINKSQL = "INSERT INTO ".$LINK_TABLE." 
-        (project, user, record_id) VALUES (?, ?, ?)";
-        try {
-            $projectResult = $this->query($GETPROJECTSQL, [$TEST_PID]);
-            $proj_id       = $projectResult->fetch_assoc()["id"];
-            $userResult    = $this->query($GETUSERSQL, [$TEST_USER]);
-            $user_id       = $userResult->fetch_assoc()["id"];
-            $this->query($TESTLINKSQL, [$proj_id, $user_id, "20"]);
-        }
-        catch (\Exception $e) {
-            $this->log($e->getMessage());
-        }
-    }
-
-    /**
-     * Create a test record in the given table.
-     * 
-     * @param string $TYPE USER, PROJECT, or LINK
-     * 
-     * @return void
-     */
-    public function createTestData(string $TYPE) {
-        if ($TYPE === "USER") {
-            $this->createTestUser();
-        } else if ($TYPE === "PROJECT") {
-            $this->createTestProject();
-        } else if ($TYPE === "LINK") {
-            $this->createTestLink();
         }
     }
 
@@ -1119,36 +1121,44 @@ class REDCapPRO extends AbstractExternalModule {
     }
 
     public function sendPasswordResetEmail($user_id) {
-        // generate token
         try {
+            // generate token
             $token    = $this->createResetToken($user_id);
             $to       = $this->getEmail($user_id);
             $username = $this->getUserName($user_id);
-        }
-        catch (\Exception $e) {
-            return false;
-        }
-        // create email
-        $subject = "REDCapPRO - Password Reset";
-        $from = "noreply@REDCapPro.com";
-        $body = "<html><body><div>
-        <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
-        <p>Hello,
-        <br>We have received a request to reset your account password. If you did not make this request, you can ignore this email.<br>
-        <br>To reset your password, click the link below.
-        <br>This is your username: <strong>${username}</strong><br>
-        <br>Click <a href='".$this->getUrl("reset-password.php",true)."&t=${token}'>here</a> to reset your password.
-        <br><em>That link is only valid for the next hour. If you need a new link, click <a href='".$this->getUrl("forgot-password.php",true)."'>here</a>.</em>
-        </p>
-        <br>
-        <p>If you have any questions, contact a member of the study team.</p>
-        </body></html></div>";
+            $username_clean = \REDCap::escapeHtml($username);
+        
+            // create email
+            $subject = "REDCapPRO - Password Reset";
+            $from = "noreply@REDCapPro.com";
+            $body = "<html><body><div>
+            <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
+            <p>Hello,
+            <br>We have received a request to reset your account password. If you did not make this request, you can ignore this email.<br>
+            <br>To reset your password, click the link below.
+            <br>This is your username: <strong>${username_clean}</strong><br>
+            <br>Click <a href='".$this->getUrl("reset-password.php",true)."&t=${token}'>here</a> to reset your password.
+            <br><em>That link is only valid for the next hour. If you need a new link, click <a href='".$this->getUrl("forgot-password.php",true)."'>here</a>.</em>
+            </p>
+            <br>
+            <p>If you have any questions, contact a member of the study team.</p>
+            </body></html></div>";
 
-        try {
             $result = \REDCap::email($to, $from, $subject, $body);
-            return $result;
+            $status = $result ? "Sent" : "Failed to send";
+            $this->log("Password Reset Email - ${status}", [
+                "rcpro_user_id"  => $user_id,
+                "rcpro_username" => $username_clean,
+                "rcpro_email"    => $to,
+                "redcap_user"    => USERID,
+                "redcap_project" => PROJECT_ID
+            ]);
         }
         catch (\Exception $e) {
+            $this->log("Password Reset Failed", [
+                "rcpro_user_id" => $user_id
+            ]);
+            $this->logError("Password Reset Error", $e);
             return false;
         }
     }
@@ -1219,10 +1229,19 @@ class REDCapPRO extends AbstractExternalModule {
         $SQL        = "DELETE FROM ${LINK_TABLE} WHERE id = ?;";
         try {
             $result = $this->query($SQL, [$link_id]);
+            $status = $result ? "Successful" : "Failed";
+            $this->log("Disenrolled Participant - ${status}", [
+                "rcpro_user_id" => $user_id,
+                "rcpro_project_id" => $proj_id,
+                "rcpro_link_id" => $link_id,
+                "redcap_user" => USERID,
+                "redcap_project" => PROJECT_ID
+            ]);
             return $result;
         }
         catch (\Exception $e) {
-            return;
+            $this->logError("Disenrolled Participant - Error", $e);
+            return NULL;
         }
     }
 
@@ -1457,6 +1476,103 @@ class Auth {
         return hash_equals(self::get_csrf_token(), $token);
     }
 
+}
+
+class TestHelper {
+
+    private static $TEST_DATA = array(
+        "USER" => 1000,
+        "PW"   => "TEST_USER_PW_1000",
+        "PID"  => -1
+    );
+
+    private static $module;
+
+    function __construct($module = null) {
+        self::$module = $module;
+    }
+
+    /**
+     * Create a test record in the USER table
+     * 
+     * @return void
+     */
+    private function createTestUser() {
+        try {
+            $USER_TABLE  = self::$module->getTable("USER");
+            $TESTUSERSQL = "INSERT INTO ".$USER_TABLE." (username, pw) VALUES (?, ?)";
+            $TEST_USER   = self::$TEST_DATA["USER"];
+            $pw_hash     = password_hash(self::$TEST_DATA["PW"], PASSWORD_DEFAULT);
+            self::$module->query($TESTUSERSQL, [$TEST_USER, $pw_hash]);
+        }
+        catch (\Exception $e) {
+            self::$module->log($e->getMessage());
+        }
+    }
+
+    /**
+     * Create a test record in the PROJECT table
+     * 
+     * @return void
+     */
+    private function createTestProject() {
+        $PROJECT_TABLE  = self::$module->getTable("PROJECT");
+        $TEST_PID       = self::$TEST_DATA["PID"];
+        $TESTPROJECTSQL = "INSERT INTO ".$PROJECT_TABLE." (pid) VALUES (?)";
+        try {
+            self::$module->query($TESTPROJECTSQL, [$TEST_PID]);
+        }
+        catch (\Exception $e) {
+            self::$module->log($e->getMessage());
+        }
+    }
+    
+    /**
+     * Create a test record in the LINK table
+     * 
+     * @return void
+     */
+    private function createTestLink() {
+        $LINK_TABLE    = self::$module->getTable("LINK");
+        $USER_TABLE    = self::$module->getTable("USER");
+        $PROJECT_TABLE = self::$module->getTable("PROJECT");
+
+        $TEST_PID  = self::$TEST_DATA["PID"];
+        $TEST_USER = self::$TEST_DATA["USER"];
+        
+        $GETPROJECTSQL = "SELECT id FROM ${PROJECT_TABLE} WHERE pid = ?;";
+        $GETUSERSQL    = "SELECT id FROM ${USER_TABLE} WHERE username = ?;";
+
+        $TESTLINKSQL = "INSERT INTO ".$LINK_TABLE." 
+        (project, user, record_id) VALUES (?, ?, ?)";
+        try {
+            $projectResult = self::$module->query($GETPROJECTSQL, [$TEST_PID]);
+            $proj_id       = $projectResult->fetch_assoc()["id"];
+            $userResult    = self::$module->query($GETUSERSQL, [$TEST_USER]);
+            $user_id       = $userResult->fetch_assoc()["id"];
+            self::$module->query($TESTLINKSQL, [$proj_id, $user_id, "20"]);
+        }
+        catch (\Exception $e) {
+            self::$module->log($e->getMessage());
+        }
+    }
+
+    /**
+     * Create a test record in the given table.
+     * 
+     * @param string $TYPE USER, PROJECT, or LINK
+     * 
+     * @return void
+     */
+    public function createTestData(string $TYPE) {
+        if ($TYPE === "USER") {
+            self::$module->createTestUser();
+        } else if ($TYPE === "PROJECT") {
+            self::$module->createTestProject();
+        } else if ($TYPE === "LINK") {
+            self::$module->createTestLink();
+        }
+    }
 }
 
 ?>

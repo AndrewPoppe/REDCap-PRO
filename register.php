@@ -18,7 +18,7 @@ echo "<!DOCTYPE html>
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module->UiShowHeader("Register");
  
-// Track any error
+// Track all errors
 $any_error = FALSE;
  
 // Processing form data when form is submitted
@@ -26,18 +26,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
 
     // Validate Name
     $fname = trim($_POST["REDCapPRO_FName"]);
-    if (empty($fname)) {
+    $fname_clean = \REDCap::escapeHtml($fname);
+    if (empty($fname_clean)) {
         $fname_err = "Please enter a first name for this participant.";
         $any_error = TRUE;
     }
     $lname = trim($_POST["REDCapPRO_LName"]);
-    if (empty($lname)) {
+    $lname_clean = \REDCap::escapeHtml($lname);
+    if (empty($lname_clean)) {
         $lname_err = "Please enter a last name for this participant.";
         $any_error = TRUE;
     }
  
     // Validate email
-    $param_email = trim($_POST["REDCapPRO_Email"]);
+    $param_email = \REDCap::escapeHtml(trim($_POST["REDCapPRO_Email"]));
     if (empty($param_email) || !filter_var($param_email, FILTER_VALIDATE_EMAIL)) {
         $email_err = "Please enter a valid email address.";
         $any_error = TRUE;
@@ -50,22 +52,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
             $email_err = "This email is already associated with an account.";
             $any_error = TRUE;
         } else{
-            //TODO: clean this input first
+            // Everything looks good
             $email = $param_email;
         }
     }
     
-    // Check input errors before inserting in database
+    // Check for input errors before inserting in database
     if (!$any_error){
         $icon = $title = $html = "";
         try {
-            $username = $module->createUser($email, $fname, $lname);
-            $module->sendNewUserEmail($username, $email, $fname, $lname);
+            $username = $module->createUser($email, $fname_clean, $lname_clean);
+            $module->sendNewUserEmail($username, $email, $fname_clean, $lname_clean);
             $icon = "success";
             $title = "Participant Registered";
+            $module->log("Participant Registered", [
+                "rcpro_username" => $username,
+                "redcap_user" => USERID,
+                "redcap_project" => PROJECT_ID
+            ]);
         }
         catch (\Exception $e) {
-            $module->log($e->getMessage());
+            $module->logError("Error creating participant", $e);
             $icon = "error";
             $title = "Error Registering Participant";
             $html = $e->getMessage();
@@ -112,12 +119,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
         <form class="register-form" action="<?= $module->getUrl("register.php"); ?>" method="POST" enctype="multipart/form-data" target="_self" >
             <div class="form-group">
                 <label>First Name</label>
-                <input type="text" name="REDCapPRO_FName" class="form-control <?php echo (!empty($fname_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $fname; ?>">
+                <input type="text" name="REDCapPRO_FName" class="form-control <?php echo (!empty($fname_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $fname_clean; ?>">
                 <span class="invalid-feedback"><?php echo $fname_err; ?></span>
             </div> 
             <div class="form-group">
                 <label>Last Name</label>
-                <input type="text" name="REDCapPRO_LName" class="form-control <?php echo (!empty($lname_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $lname; ?>">
+                <input type="text" name="REDCapPRO_LName" class="form-control <?php echo (!empty($lname_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $lname_clean; ?>">
                 <span class="invalid-feedback"><?php echo $lname_err; ?></span>
             </div> 
             <div class="form-group">

@@ -25,7 +25,7 @@ $module->UiShowParticipantHeader("Logged Out");
     Swal.fire({
         imageUrl: "<?= $module->getUrl("images/RCPro_Favicon.svg") ?>",
         imageWidth: '150px',
-        html: '<strong>Due to inactivity, you have been logged out.</strong>',
+        html: '<strong>You have been logged out due to inactivity.</strong>',
         allowOutsideClick: false,
         confirmButtonText: "OK",
         confirmButtonColor: "#900000"

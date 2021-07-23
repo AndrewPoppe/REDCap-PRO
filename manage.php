@@ -9,7 +9,7 @@ if ($role > 0) {
     require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
     $module->UiShowHeader("Manage");
 
-    $proj_id = $module->getProjectId($project_id);
+    $rcpro_proj_id = $module->getProjectId($project_id);
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         try {
@@ -19,7 +19,7 @@ if ($role > 0) {
                 $icon = "success";
                 $msg = "Successfully reset password for participant.";
             } else {
-                $result = $module->disenrollParticipant($_POST["toDisenroll"], $proj_id);
+                $result = $module->disenrollParticipant($_POST["toDisenroll"], $rcpro_proj_id);
                 if (!$result) {
                     $icon = "error";
                     $msg = "Trouble disenrolling participant.";
@@ -37,9 +37,8 @@ if ($role > 0) {
     }
 
     // Get list of participants
-    // TODO: seriously... project_id and proj_id... figure something out
-    $participantList = $module->getProjectParticipants($proj_id);
-
+    // TODO: seriously... project_id and rcpro_proj_id... figure something out
+    $participantList = $module->getProjectParticipants($rcpro_proj_id);
 
 ?>
     <style>
@@ -82,58 +81,63 @@ if ($role > 0) {
         <h2>Manage Study Participants</h2>
         <p>Reset passwords, disenroll from study, etc.</p>
         <form class="manage-form" id="manage-form" action="<?= $module->getUrl("manage.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
-<?php if (count($participantList) === 0) { ?>
+            <?php if (count($participantList) === 0) { ?>
                 <div>
                     <p>No participants have been enrolled in this study</p>
                 </div>
-<?php } else { ?>
+            <?php } else { ?>
                 <div class="form-group">
                     <table class="table" id="RCPRO_Manage_Users">
+                        <caption>Study Participants</caption>
                         <thead>
                             <tr>
-                                <th>Username</th>
-<?php if ($role > 1) { ?>
-                                <th class="dt-center">First Name</th>
-                                <th class="dt-center">Last Name</th>
-                                <th>Email</th>
-<?php } ?>
-                                <th class="dt-center">Reset Password</th>
-<?php if ($role > 1) { ?>
-                                <th class="dt-center">Disenroll</th>
-<?php } ?>
+                                <th id="rcpro_username">Username</th>
+                                <?php if ($role > 1) { ?>
+                                    <th id="rcpro_fname" class="dt-center">First Name</th>
+                                    <th id="rcpro_lname" class="dt-center">Last Name</th>
+                                    <th id="rcpro_email" >Email</th>
+                                <?php } ?>
+                                <th id="rcpro_resetpw" class="dt-center">Reset Password</th>
+                                <?php if ($role > 1) { ?>
+                                    <th id="rcpro_disenroll" class="dt-center">Disenroll</th>
+                                <?php } ?>
                             </tr>
                         </thead>
                         <tbody>
-<?php foreach ($participantList as $participant) { ?>
-                            <tr>
-                                <td><?=$participant["username"]?></td>
-<?php if ($role > 1) { ?>
-                                <td class="dt-center"><?=$participant["fname"]?></td>
-                                <td class="dt-center"><?=$participant["lname"]?></td>
-                                <td><?=$participant["email"]?></td>
-<?php } ?>
-                                <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
-                                    $("#toReset").val("<?=$participant["id"]?>");
-                                    $("#toDisenroll").val("");
-                                    $("#manage-form").submit();
-                                    })();'>Reset</button></td>
-<?php if ($role > 1) { ?>
-                                <td class="dt-center"><button type="button" class="btn btn-danger btn-sm" onclick='(function(){
-                                    $("#toReset").val("");
-                                    $("#toDisenroll").val("<?=$participant["id"]?>");
-                                    $("#manage-form").submit();
-                                    })();'>Disenroll</button></td>
-<?php } ?>
-                            </tr>
-<?php } ?>
+                            <?php foreach ($participantList as $participant) { 
+                                $username_clean = \REDCap::escapeHtml($participant["username"]);
+                                $fname_clean    = \REDCap::escapeHtml($participant["fname"]);
+                                $lname_clean    = \REDCap::escapeHtml($participant["lname"]);
+                                $email_clean    = \REDCap::escapeHtml($participant["email"]);     
+                                ?>
+                                <tr>
+                                    <td><?=$username_clean?></td>
+                                    <?php if ($role > 1) { ?>
+                                        <td class="dt-center"><?=$fname_clean?></td>
+                                        <td class="dt-center"><?=$lname_clean?></td>
+                                        <td><?=$email_clean?></td>
+                                    <?php } ?>
+                                    <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
+                                        $("#toReset").val("<?=$participant["id"]?>");
+                                        $("#toDisenroll").val("");
+                                        $("#manage-form").submit();
+                                        })();'>Reset</button></td>
+                                    <?php if ($role > 1) { ?>
+                                        <td class="dt-center"><button type="button" class="btn btn-danger btn-sm" onclick='(function(){
+                                            $("#toReset").val("");
+                                            $("#toDisenroll").val("<?=$participant["id"]?>");
+                                            $("#manage-form").submit();
+                                            })();'>Disenroll</button></td>
+                                    <?php } ?>
+                                </tr>
+                            <?php } ?>
                         </tbody>
                     </table>
                 </div>
                 <input type="hidden" id="toReset" name="toReset">
-                <input type="hidden" id="toDisenroll" name="toDisenroll">        
+                <input type="hidden" id="toDisenroll" name="toDisenroll">
+            <?php } ?>        
         </form>
-            
-<?php } ?>
     </div>
     <script>
         $('#RCPRO_Manage_Users').DataTable();
