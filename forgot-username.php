@@ -10,6 +10,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
  
     // Validate token
     if (!$module::$AUTH::validate_csrf_token($_POST['token'])) {
+        $module->log("Invalid CSRF Token");
         echo "Oops! Something went wrong. Please try again later.";
         return;
     }
@@ -20,12 +21,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (empty(trim($_POST["email"]))) {
         $err = "Please enter your email address.";     
     } else {
-        $email = trim($_POST["email"]);
+        $email = \REDCap::escapeHtml(trim($_POST["email"]));
         // Check input errors before sending reset email
         if(!$err) {
             $user_id = $module->getUserIdFromEmail($email);
             if (!empty($user_id)) {
                 $username = $module->getUserName($user_id);
+                $module->log("Username Reminder Email Sent", [
+                    "rcpro_user_id"  => $user_id,
+                    "rcpro_username" => $username
+                ]);
                 $module->sendUsernameEmail($email, $username);
             }
             echo "If a user account associated with the supplied email address exists, an email with the account's username was sent to that email address.";

@@ -58,7 +58,6 @@ class REDCapPRO extends AbstractExternalModule {
 
     function redcap_survey_page_top($project_id, $record, $instrument, 
     $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
-        $session_id = $_COOKIE[$this::$APPTITLE."_sessid"] ?? $_COOKIE["survey"] ?? $_COOKIE["PHPSESSID"];
         
         // Initialize Authentication
         $this::$AUTH::init();
@@ -74,8 +73,26 @@ class REDCapPRO extends AbstractExternalModule {
                 $this->exitAfterHook();
             }
 
-            \REDCap::logEvent("REDCapPro Survey User Login", "user: ".$_SESSION[$this::$APPTITLE."_username"], NULL, $record, $event_id);
-            $this->log("REDCapPro Survey User Login", ["user"=>$_SESSION[$this::$APPTITLE."_username"], "id"=>$_SESSION[$this::$APPTITLE."_user_id"]]);
+            \REDCap::logEvent(
+                "REDCapPro Survey Accessed",                                        // action description
+                "REDCapPRO User: ".$_SESSION[$this::$APPTITLE."_username"]."\n".
+                "Instrument: ${instrument}\n",                                      // changes made
+                NULL,                                                               // sql
+                $record,                                                            // record
+                $event_id,                                                          // event
+                $project_id                                                         // project id
+            );
+            $this->log("REDCapPro Survey Accessed", [
+                "rcpro_username" => $_SESSION[$this::$APPTITLE."_username"],
+                "rcpro_user_id"  => $_SESSION[$this::$APPTITLE."_user_id"],
+                "record" => $record,
+                "event" => $event_id,
+                "project" => $project_id,
+                "instrument" => $instrument,
+                "survey_hash" => $survey_hash,
+                "response_id" => $response_id,
+                "repeat_instance" => $repeat_instance
+            ]);
             echo "<style>
                 .swal2-timer-progress-bar {
                     background: #900000 !important;
@@ -98,7 +115,7 @@ class REDCapPRO extends AbstractExternalModule {
             $_SESSION[$this::$APPTITLE."_survey_url"] = APP_PATH_SURVEY_FULL."?s=${survey_hash}";
             \Session::savecookie($this::$APPTITLE."_survey_url", APP_PATH_SURVEY_FULL."?s=${survey_hash}", 0, TRUE);
             $_SESSION[$this::$APPTITLE."_survey_link_active"] = TRUE;
-            header("location: ".$this->getUrl("login.php", true)."&s=${survey_hash}");
+            header("location: ".$this->getUrl("login.php", true)."&s=${survey_hash}"); // TODO: Does hash need to be in querystring? Consider removing if not necessary
             $this->exitAfterHook();
         }
 

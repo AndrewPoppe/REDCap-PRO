@@ -1,8 +1,5 @@
 <?php
-$role = $module->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
-if (SUPER_USER) {
-    $role = 3;
-}
+$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
 if ($role >= 3) {
     
     echo "<!DOCTYPE html>
@@ -108,31 +105,36 @@ if ($role >= 3) {
 <?php } else { ?>
                 <div class="form-group">
                     <table class="table" id="RCPRO_Manage_Staff">
+                        <caption></caption>
                         <thead>
                             <tr>
-                                <th>Username</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>User Role</th>
+                                <th id="rcpro_username">Username</th>
+                                <th id="rcpro_name">Name</th>
+                                <th id="rcpro_email">Email</th>
+                                <th id="rcpro_role">User Role</th>
                             </tr>
                         </thead>
                         <tbody>
-<?php foreach ($userList as $user) { 
-    $username = $user->getUsername();
-    $role = $module->getUserRole($username);
-    ?>
-                        <tr>
-                            <td><?=$username?></td>
-                            <td><?=$module->getUserFullname($username)?></td>
-                            <td><?=$user->getEmail()?></td>
-                            <td data-order="<?=$role?>"><select class="role_select" name="role_select_<?=$username?>" id="role_select_<?=$username?>" orig_value="<?=$role?>" form="manage-users-form">
-                                <option value=0 <?=$role === 0 ? "selected" : "";?>>No Access</option>
-                                <option value=1 <?=$role === 1 ? "selected" : "";?>>Normal User</option>
-                                <option value=2 <?=$role === 2 ? "selected" : "";?>>Monitor</option>
-                                <option value=3 <?=$role === 3 ? "selected" : "";?>>Manager</option>
-                            </select></td>
-                        </tr>
-<?php } ?>
+                            <?php foreach ($userList as $user) { 
+                                $username       = $user->getUsername();
+                                $username_clean = \REDCap::escapeHtml($username);
+                                $fullname_clean = \REDCap::escapeHtml($module->getUserFullname($username));
+                                $email_clean    = \REDCap::escapeHtml($user->getEmail());
+                                $role           = $module->getUserRole($username);
+                                ?>
+                                <tr>
+                                    <td><?=$username_clean?></td>
+                                    <td><?=$fullname_clean?></td>
+                                    <td><?=$email_clean?></td>
+                                    <td data-order="<?=$role?>"><select class="role_select" name="role_select_<?=$username_clean?>" id="role_select_<?=$username_clean?>" orig_value="<?=$role?>" form="manage-users-form">
+                                        <option value=0 <?=$role === 0 ? "selected" : "";?>>No Access</option>
+                                        <option value=1 <?=$role === 1 ? "selected" : "";?>>Normal User</option>
+                                        <option value=2 <?=$role === 2 ? "selected" : "";?>>Monitor</option>
+                                        <option value=3 <?=$role === 3 ? "selected" : "";?>>Manager</option>
+                                    </select></td>
+                                </tr>
+                            <?php } ?>
+                        </tbody>
                     </table>
                 </div>
             <button class="btn btn-primary role_select_button" id="role_select_submit" type="submit" disabled>Save Changes</button>
@@ -174,7 +176,6 @@ if ($role >= 3) {
                     $('#role_select_submit').attr("disabled", true);
                     $('#role_select_reset').attr("disabled", true);
                 }
-                console.log(evt.target.value);
             });
         })();
     </script>

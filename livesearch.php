@@ -1,11 +1,8 @@
 <?php
 
-$role = $module->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
-if (SUPER_USER) {
-    $role = 3;
-}
+$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
 if ($role < 2) {
-    die();
+    exit();
 }
 
 $q = $_GET["q"];
@@ -22,7 +19,9 @@ try {
     $result = $module->query($SQL, [$wq, $wq, $wq]);
 }
 catch (\Exception $e) {
+    $module->logError("Error performing livesearch.", $e);
     echo $e->getMessage();
+    exit();
 }
 
 

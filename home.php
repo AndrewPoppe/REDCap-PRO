@@ -4,23 +4,17 @@ echo "<!DOCTYPE html>
 <head>
 <meta charset='UTF-8'><title>".$module::$APPTITLE." - Menu</title>";
 
-$role = $module->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
-if (SUPER_USER) {
-    $role = 3;
-}
+$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
 if ($role > 0) {
 
-require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->UiShowHeader("Home");
+    require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+    $module->UiShowHeader("Home");
 
 
-?>
-<div class="infoContainer">
-    <h2>Placeholder welcome text...</h2>
-</div>
-
-
-
+    ?>
+    <div class="infoContainer">
+        <h2>Placeholder welcome text...</h2>
+    </div>
 
 
 
@@ -30,6 +24,9 @@ $module->UiShowHeader("Home");
 
 
 
-<?php
-include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+
+
+
+    <?php
+    include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
 }

@@ -10,6 +10,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
  
     // Validate token
     if (!$module::$AUTH::validate_csrf_token($_POST['token'])) {
+        $module->log("Invalid CSRF Token");
         echo "Oops! Something went wrong. Please try again later.";
         return;
     }
@@ -20,11 +21,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (empty(trim($_POST["username"]))) {
         $err = "Please enter your username.";     
     } else {
-        $username = trim($_POST["username"]);
+        $username = \REDCap::escapeHtml(trim($_POST["username"]));
         // Check input errors before sending reset email
         if(!$err) {
             $user_id = $module->getUserIdFromUsername($username);
             if (!empty($user_id)) {
+                $module->log("Password Reset Email Sent", [
+                    "rcpro_user_id"  => $user_id,
+                    "rcpro_username" => $username
+                ]);
                 $module->sendPasswordResetEmail($user_id);
             }
             echo "If a user account exists with the supplied username, a password reset email was sent to the email address associated with that account.";

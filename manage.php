@@ -1,8 +1,5 @@
 <?php
-$role = $module->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
-if (SUPER_USER) {
-    $role = 3;
-}
+$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
 if ($role > 0) {
     
     echo "<!DOCTYPE html>
