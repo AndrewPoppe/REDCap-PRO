@@ -7,14 +7,7 @@ use ExternalModules\AbstractExternalModule;
  * Main EM Class
  */
 class REDCapPRO extends AbstractExternalModule {
-
-    private static $TABLES = array(
-        "USER"    => "REDCAP_PRO_USER",
-        "PROJECT" => "REDCAP_PRO_PROJECT",
-        "LINK"    => "REDCAP_PRO_LINK"
-    );
-
-    
+ 
     static $APPTITLE                 = "REDCapPRO";
     static $LOGIN_ATTEMPTS           = 3;
     static $LOCKOUT_DURATION_SECONDS = 60;
@@ -119,7 +112,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return void
      */
     function redcap_module_system_enable($version) {
-        $this->initTables();
+        // TODO: Do what?
     }
 
     /**
@@ -429,15 +422,17 @@ class REDCapPRO extends AbstractExternalModule {
         $monitors = $this->getProjectSetting("monitors");
         $users    = $this->getProjectSetting("users");
 
+        $result = 0;
+
         if (in_array($username, $managers)) {
-            return 3;
+            $result = 3;
         } else if (in_array($username, $monitors)) {
-            return 2;
+            $result = 2;
         } else if (in_array($username, $users)) {
-            return 1;
-        } else {
-            return 0;
+            $result = 1;
         }
+
+        return $result;
     }
 
     /**
@@ -478,7 +473,7 @@ class REDCapPRO extends AbstractExternalModule {
         Instead of creating a user table, we'll use the built-in log table (and log parameters table)
 
         So, there will be a message called "PARTICIPANT" 
-        The log_id will be the id of the participant
+        The log_id will be the id of the participant (rcpro_participant_id)
         The log's timestamp will act as the creation time
         and the parameters will be:
             * username              - the coded username for this participant
@@ -493,36 +488,6 @@ class REDCapPRO extends AbstractExternalModule {
             * token_ts              - timestamp the token is valid until (php DateTime converted to unix timestamp)
             * token_valid           - bool? 0/1? what is best here?
     */
-    /**
-     * Create a table of the USER Type
-     * 
-     * @return void
-     */
-    private function createUserTable() {
-        $USER_TABLE = $this->getTable("USER");
-        $USERSQL = "CREATE TABLE ".$USER_TABLE." (
-            id int NOT NULL PRIMARY KEY AUTO_INCREMENT,
-            username VARCHAR(20) NOT NULL UNIQUE,
-            email VARCHAR(50) NOT NULL UNIQUE, 
-            fname VARCHAR(50) NOT NULL, 
-            lname VARCHAR(50) NOT NULL, 
-            pw VARCHAR(512) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_modified_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
-            temp_pw INT(1) DEFAULT 1,
-            failed_attempts int DEFAULT 0,
-            lockout_ts TIMESTAMP,
-            token VARCHAR(128),
-            token_ts TIMESTAMP,
-            token_valid INT(1) DEFAULT 0
-        )";
-        try {
-            $this->query($USERSQL, []);
-        }
-        catch (\Exception $e) {
-            $this->logError("Error Creating User Table", $e);
-        }
-    } 
 
     /*
         Insteam of a Project table:
@@ -533,94 +498,19 @@ class REDCapPRO extends AbstractExternalModule {
             * pid               - REDCap project id for this project
             * active            - whether the project is active or not. bool? 0/1?
     */
-    /**
-     * Create a table of the PROJECT Type
-     * 
-     * @return void
-     */
-    private function createProjectTable() {
-        $PROJECT_TABLE = $this->getTable("PROJECT");
-        $PROJECTSQL = "CREATE TABLE ".$PROJECT_TABLE." (
-            id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-            pid INT NOT NULL,
-            active INT(1) DEFAULT 1
-        )";
-        try {
-            $this->query($PROJECTSQL, []);
-        }
-        catch (\Exception $e) {
-            $this->logError("Error Creating Project Table", $e);
-        }
-    }
 
-    /**
-     * Create a table of the LINK Type
-     * 
-     * @return void
-     */
-    private function createLinkTable() {
-        $LINK_TABLE    = $this->getTable("LINK");
-        $PROJECT_TABLE = $this->getTable("PROJECT");
-        $USER_TABLE    = $this->getTable("USER");
-        $LINKSQL       = "CREATE TABLE ".$LINK_TABLE." (
-            id INT PRIMARY KEY AUTO_INCREMENT,
-            project INT NOT NULL REFERENCES ".$PROJECT_TABLE."(id),
-            user INT NOT NULL REFERENCES ".$USER_TABLE."(id),
-            record_id VARCHAR(50)
-        )";
-        try {
-            $this->query($LINKSQL, []);
-        }
-        catch (\Exception $e) {
-            $this->logError("Error Creating Link Table", $e);
-        }
-    }
+    /*
+        Instead of a Link table:
+        There will be a message called LINK
+        The log_id will serve as the link id
+        The timestamp will be the creation timestamp
+        The parameters will be:
+            * project           - rcpro_project_id (int)
+            * participant       - rcpro_participant_id (int)
+            * active            - bool? 0/1? This is whether the participant is enrolled 
+                                  (i.e., if the link is active)
+    */
 
-    /**
-     * Create a table of the given type
-     * 
-     * @param string $TYPE USER, PROJECT, or LINK
-     * 
-     * @return void
-     */
-    public function createTable(string $TYPE) {
-        if ($TYPE === "USER") {
-            $this->createUserTable();
-        } else if ($TYPE === "PROJECT") {
-            $this->createProjectTable();
-        } else if ($TYPE === "LINK") {
-            $this->createLinkTable();
-        }
-    }
-
-
-    /**
-     * Determine whether table of given type already exists.
-     * 
-     * @param string $TYPE USER, PROJECT, or LINK
-     * 
-     * @return boolean True if it exists, False if not
-     */
-    public function tableExists(string $TYPE) {
-        $TABLE = $this->getTable($TYPE);
-        $res   = $this->query('SHOW TABLES LIKE "'.$TABLE.'"', []);
-        return $res->num_rows > 0;
-    }
-
-    /**
-     * Remove a table.
-     * 
-     * This shouldn't be needed much.
-     * 
-     * @param string $TYPE USER, PROJECT, or LINK
-     * 
-     * @return void
-     */
-    public function dropTable(string $TYPE) {
-        $TABLE = $this->getTable($TYPE);
-        $SQL = "DROP TABLE ".$TABLE.";";
-        $this->query($SQL, []);
-    }
 
     /**
      * Get table name given a type of table
@@ -633,29 +523,17 @@ class REDCapPRO extends AbstractExternalModule {
         return $this::$TABLES[$TYPE];
     }
 
-    public function initTables() {
-        $types = ["USER", "PROJECT", "LINK"];
-        foreach ($types as $type) {
-            if (!$this->tableExists($type)) {
-                $this->createTable($type);
-            }
-        }
-    }
-
-
-
 
     /**
-     * Get hashed password from USER database.
+     * Get hashed password for participant.
      * 
      * @param string $uid ID (not username) of user 
      * 
      * @return string hashed password
      */
-    public function getHash(string $uid) {
-        $USER_TABLE = $this->getTable("USER");
+    public function getHash(string $rcpro_participant_id) {
         try {
-            $res = $this->query("SELECT pw FROM ${USER_TABLE} WHERE id = ?", [$uid]);
+            $res = $this->query("SELECT pw FROM ${USER_TABLE} WHERE id = ?", [$rcpro_participant_id]);
             return $res->fetch_assoc()['pw'];
         }
         catch (\Exception $e) {
