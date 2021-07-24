@@ -474,6 +474,25 @@ class REDCapPRO extends AbstractExternalModule {
 
 
 
+    /*
+        Instead of creating a user table, we'll use the built-in log table (and log parameters table)
+
+        So, there will be a message called "PARTICIPANT" 
+        The log_id will be the id of the participant
+        The log's timestamp will act as the creation time
+        and the parameters will be:
+            * username              - the coded username for this participant
+            * email                 - email address
+            * fname                 - first name
+            * lname                 - last name
+            * pw (hashed)           - hashed password
+            * last_modified_ts      - timstamp of any updates to this log (php DateTime converted to unix timestamp)
+            * failed_attempts       - number of failed login attempts for this username (not ip)
+            * lockout_ts            - timestamp that a lockout will end (php DateTime converted to unix timestamp)
+            * token                 - password set/reset token
+            * token_ts              - timestamp the token is valid until (php DateTime converted to unix timestamp)
+            * token_valid           - bool? 0/1? what is best here?
+    */
     /**
      * Create a table of the USER Type
      * 
@@ -505,6 +524,15 @@ class REDCapPRO extends AbstractExternalModule {
         }
     } 
 
+    /*
+        Insteam of a Project table:
+        There will be a message called PROJECT
+        The log_id will serve as the rcpro_project_id
+        The timestamp will be the creation timestamp
+        The parameters will be:
+            * pid               - REDCap project id for this project
+            * active            - whether the project is active or not. bool? 0/1?
+    */
     /**
      * Create a table of the PROJECT Type
      * 
