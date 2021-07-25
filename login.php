@@ -93,7 +93,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // --> USERNAME EXISTS
             } else {
 
-                $user = $module->getUser($username);
+                $user = $module->getParticipant($username);
                 $stored_hash = $module->getHash($user["id"]);
 
                 // Check that this username is not locked out

@@ -351,7 +351,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return int number of failed login attempts
      */
     private function checkUsernameAttempts(int $rcpro_participant_id) {
-        $SQL = "SELECT failed_attempts WHERE log_id = ? AND project_id <> FALSE;";
+        $SQL = "SELECT failed_attempts WHERE message = 'PARTICIPANT' AND log_id = ? AND project_id <> FALSE;";
         try {
             $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $res->fetch_assoc()["failed_attempts"];
@@ -372,7 +372,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return int number of seconds of lockout left
      */
     public function getUsernameLockoutDuration(int $rcpro_participant_id) {
-        $SQL = "SELECT lockout_ts WHERE log_id = ? AND project_id <> FALSE;";
+        $SQL = "SELECT lockout_ts WHERE message = 'PARTICIPANT' AND log_id = ? AND project_id <> FALSE;";
         try {
             $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
             $lockout_ts = intval($res->fetch_assoc()["lockout_ts"]);
@@ -473,7 +473,7 @@ class REDCapPRO extends AbstractExternalModule {
         The log_id will be the id of the participant (rcpro_participant_id)
         The log's timestamp will act as the creation time
         and the parameters will be:
-            * username              - the coded username for this participant
+            * rcpro_username              - the coded username for this participant
             * email                 - email address
             * fname                 - first name
             * lname                 - last name
@@ -517,13 +517,12 @@ class REDCapPRO extends AbstractExternalModule {
      */
     public function getHash(int $rcpro_participant_id) {
         try {
-            $SQL = "SELECT 'pw' WHERE log_id = ? AND project_id <> FALSE;";
+            $SQL = "SELECT 'pw' WHERE message = 'PARTICIPANT' AND log_id = ? AND project_id <> FALSE;";
             $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $res->fetch_assoc()['pw'];
         }
         catch (\Exception $e) {
             $this->logError("Error fetching password hash", $e);
-            return NULL;
         }
     }
 
@@ -544,7 +543,6 @@ class REDCapPRO extends AbstractExternalModule {
         }
         catch (\Exception $e) {
             $this->logError("Error storing password hash", $e);
-            return NULL;
         }
     }
 
@@ -575,8 +573,8 @@ class REDCapPRO extends AbstractExternalModule {
             return NULL;
         }
         try {
-            $result = $this->log("PARTICIPANT", [
-                "username"         => $username,
+            $id = $this->log("PARTICIPANT", [
+                "rcpro_username"   => $username,
                 "email"            => $email_clean,
                 "fname"            => $fname_clean,
                 "lname"            => $lname_clean,
@@ -588,14 +586,9 @@ class REDCapPRO extends AbstractExternalModule {
                 "token_ts"         => time(),
                 "token_valid"      => 0
             ]);
-            if (!$result) {
-                $this->log('Failed to create participant', [
-                    "username" => $username
-                ]);
-            } else { // BOOKMARK: continue here
-            $SQL2 = "SELECT id FROM ".$this::$TABLES['USER']." WHERE username = ?";
-            $result2 = $this->query($SQL2, $username);
-            $id = $result2->fetch_assoc()["id"];
+            if (!$id) {
+                throw new REDCapProException(["rcpro_username" => $username]);
+            } 
             $this->log("Participant Created", [
                 "rcpro_user_id"  => $id,
                 "rcpro_username" => $username
@@ -604,7 +597,6 @@ class REDCapPRO extends AbstractExternalModule {
         }
         catch (\Exception $e) {
             $this->logError("Participant Creation Failed", $e);
-            return NULL;
         }
     }
 
@@ -627,137 +619,176 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @param string $username
      * 
-     * @return boolean True if taken, False if free 
+     * @return boolean|NULL True if taken, False if free, NULL if error 
      */
     public function usernameIsTaken(string $username) {
-        $USER_TABLE = $this->getTable("USER");
-        $SQL        = "SELECT id FROM ${USER_TABLE} WHERE username = ?";
+        $SQL = "message = 'PARTICIPANT' AND rcpro_username = ?";
         try {
-            $result = $this->query($SQL, [$username]);
-            return $result->num_rows > 0;
+            $result = $this->countLogs($SQL, [$username]);
+            return $result > 0;
         }
         catch (\Exception $e) {
-            $this->log($e->getMessage());
-        }
-    }
-
-
-    public function getUser(string $username) {
-        if ($username === NULL) {
-            return;
-        }
-        $USER_TABLE = $this->getTable("USER");
-        $SQL = "SELECT id, username, email, fname, lname, temp_pw FROM ${USER_TABLE} WHERE username = ?";
-        try {
-            $result = $this->query($SQL, [$username]);
-            return $result->fetch_assoc();
-        }
-        catch (\Exception $e) {
-            $this->log($e->getMessage());
-        }
-    }
-
-    public function getUserName($user_id) {
-        $USER_TABLE = $this->getTable("USER");
-        $SQL = "SELECT username FROM ${USER_TABLE} WHERE id = ?";
-        try {
-            $result = $this->query($SQL, [$user_id]);
-            return $result->fetch_assoc()["username"];
-        }
-        catch (\Exception $e) {
-            $this->log($e->getMessage());
-        }
-    }
-
-    public function getUserIdFromUsername($username) {
-        $USER_TABLE = $this->getTable("USER");
-        $SQL = "SELECT id FROM ${USER_TABLE} WHERE username = ?";
-        try {
-            $result = $this->query($SQL, [$username]);
-            return $result->fetch_assoc()["id"];
-        }
-        catch (\Exception $e) {
-            $this->log($e->getMessage());
-        }
-    }
-
-    public function getUserIdFromEmail($email) {
-        $USER_TABLE = $this->getTable("USER");
-        $SQL = "SELECT id FROM ${USER_TABLE} WHERE email = ?";
-        try {
-            $result = $this->query($SQL, [$email]);
-            return $result->fetch_assoc()["id"];
-        }
-        catch (\Exception $e) {
-            $this->log($e->getMessage());
-        }
-    }
-
-    public function getEmail($user_id) {
-        $USER_TABLE = $this->getTable("USER");
-        $SQL = "SELECT email FROM ${USER_TABLE} WHERE id = ?";
-        try {
-            $result = $this->query($SQL, [$user_id]);
-            return $result->fetch_assoc()["email"];
-        }
-        catch (\Exception $e) {
-            $this->log($e->getMessage());
-        }
-    }
-
-
-    public function getAllParticipants() {
-        $USER_TABLE = $this->getTable("USER");
-        
-        // Grab all user IDs
-        $SQL = "SELECT id,username,email,fname,lname,lockout_ts FROM ${USER_TABLE};";
-        try {
-            $result = $this->query($SQL, []);
-            $participants  = array();
-
-            // grab participant details
-            while ($row = $result->fetch_assoc()) {
-                $participants[$row["id"]] = $row;               
-            }
-            return $participants;
-        }
-        catch (\Exception $e) {
-            $this->log($e->getMessage());
-            return;
+            $this->logError("Error checking if username is taken", $e);
         }
     }
 
 
     /**
-     * get array of enrolled participants given a project id
+     * Returns an array with participant information given a username
      * 
-     * @param string $proj_id Project ID (not REDCap PID!)
+     * @param string $username
      * 
-     * @return [type]
+     * @return array|NULL user information
      */
-    public function getProjectParticipants(string $proj_id) {
-        $LINK_TABLE = $this->getTable("LINK");
-        $USER_TABLE = $this->getTable("USER");
-
-        // Grab all user IDs
-        $SQL = "SELECT user FROM ${LINK_TABLE} WHERE project = ?;";
+    public function getParticipant(string $username) {
+        if ($username === NULL) {
+            return NULL;
+        }
+        $SQL = "SELECT log_id, rcpro_username, email, fname, lname WHERE message = 'PARTICIPANT' AND rcpro_username = ? AND project_id <> FALSE";
         try {
-            $result = $this->query($SQL, [$proj_id]);
+            $result = $this->queryLogs($SQL, [$username]);
+            return $result->fetch_assoc();
+        }
+        catch (\Exception $e) {
+            $this->logError("Error fetching participant information", $e);
+        }
+    }
+
+    /**
+     * Fetch username for given participant id
+     * 
+     * @param int $rcpro_participant_id - participant id
+     * 
+     * @return string|NULL username
+     */
+    public function getUserName(int $rcpro_participant_id) {
+        $SQL = "SELECT rcpro_username WHERE message = 'PARTICIPANT' AND id = ? AND project_id <> FALSE";
+        try {
+            $result = $this->queryLogs($SQL, [$rcpro_participant_id]);
+            return $result->fetch_assoc()["rcpro_username"];
+        }
+        catch (\Exception $e) {
+            $this->logError("Error fetching username", $e);
+        }
+    }
+
+    /**
+     * Fetch participant id corresponding with given username
+     * 
+     * @param string $username
+     * 
+     * @return int|NULL RCPRO participant id
+     */
+    public function getParticipantIdFromUsername(string $username) {
+        $SQL = "SELECT log_id WHERE message = 'PARTICIPANT' AND rcpro_username = ? AND project_id <> FALSE";
+        try {
+            $result = $this->queryLogs($SQL, [$username]);
+            return $result->fetch_assoc()["log_id"];
+        }
+        catch (\Exception $e) {
+            $this->logError("Error fetching id from username", $e);
+        }
+    }
+
+    /**
+     * Fetch participant id corresponding with given email
+     * 
+     * @param string $email
+     * 
+     * @return int|NULL RCPRO participant id
+     */
+    public function getParticipantIdFromEmail(string $email) {
+        $SQL = "SELECT log_id WHERE message = 'PARTICIPANT' AND email = ? AND project_id <> FALSE";
+        try {
+            $result = $this->queryLogs($SQL, [$email]);
+            return $result->fetch_assoc()["log_id"];
+        }
+        catch (\Exception $e) {
+            $this->logError("Error fetching id from email", $e);
+        }
+    }
+
+    /**
+     * Fetch email corresponding with given participant id
+     * 
+     * @param int $rcpro_participant_id
+     * 
+     * @return string|NULL email address
+     */
+    public function getEmail(int $rcpro_participant_id) {
+        $SQL = "SELECT email WHERE message = 'PARTICIPANT' AND log_id = ? AND project_id <> FALSE";
+        try {
+            $result = $this->queryLogs($SQL, [$rcpro_participant_id]);
+            return $result->fetch_assoc()["email"];
+        }
+        catch (\Exception $e) {
+            $this->logError("Error fetching email address", $e);
+        }
+    }
+
+    /**
+     * Fetch the full name of a participant
+     * 
+     * @param string $username
+     * 
+     * @return string full name
+     */
+    public function getParticipantFullname(string $username) {
+        try {
+            $participant = $this->getParticipant($username);
+            return $participant["fname"]." ".$participant["lname"];
+        }
+        catch (\Exception $e) {
+            $this->logError("Error getting full name", $e);
+        }
+    }
+
+    /**
+     * Grabs all registered participants
+     * 
+     * @return array|NULL of user arrays or null if error
+     */
+    public function getAllParticipants() {
+        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts WHERE message = 'PARTICIPANT' AND project_id <> FALSE";
+        try {
+            $result = $this->queryLogs($SQL, []);
             $participants  = array();
 
-            // TODO: rename "USER" table ... it holds participants...
             // grab participant details
             while ($row = $result->fetch_assoc()) {
-                $participantSQL = "SELECT id,username,email,fname,lname,temp_pw,lockout_ts FROM ${USER_TABLE} WHERE id = ?;";
-                $participantResult = $this->query($participantSQL, [$row["user"]]);
-                $participant = $participantResult->fetch_assoc();
-                $participants[$row["user"]] = $participant;               
+                $participants[$row["log_id"]] = $row;               
             }
             return $participants;
         }
         catch (\Exception $e) {
-            $this->log($e->getMessage());
-            return;
+            $this->logError("Error fetching participants", $e);
+        }
+    }
+
+
+    /**
+     * get array of active enrolled participants given a rcpro project id
+     * 
+     * @param string $rcpro_project_id Project ID (not REDCap PID!)
+     * 
+     * @return array|NULL participants enrolled in given study
+     */
+    public function getProjectParticipants(string $rcpro_project_id) {
+        $SQL = "SELECT rcpro_participant_id WHERE message = 'LINK' AND rcpro_project_id = ? AND active = 1 AND project_id <> FALSE";
+        try {
+            $result = $this->queryLogs($SQL, [$rcpro_project_id]);
+            $participants  = array();
+
+            while ($row = $result->fetch_assoc()) {
+                $participantSQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts WHERE message = 'PARTICIPANT' AND log_id = ? AND project_id <> FALSE";
+                $participantResult = $this->queryLogs($participantSQL, [$row["rcpro_participant_id"]]);
+                $participant = $participantResult->fetch_assoc();
+                $participants[$row["rcpro_participant_id"]] = $participant;               
+            }
+            return $participants;
+        }
+        catch (\Exception $e) {
+            $this->logError("Error fetching project participants", $e);
         }
     }
 
@@ -769,14 +800,13 @@ class REDCapPRO extends AbstractExternalModule {
      * @return boolean True if email already exists, False if not
      */
     public function checkEmailExists(string $email) {
-        $USER_TABLE = $this->getTable("USER");
-        $SQL = "SELECT id FROM " .$USER_TABLE. " WHERE email = ?";
+        $SQL = "message = 'PARTICIPANT' AND email = ? AND project_id <> FALSE";
         try {
-            $result = $this->query($SQL, [$email]);
-            return $result->num_rows > 0;
+            $result = $this->countLogs($SQL, [$email]);
+            return $result > 0;
         } 
         catch (\Exception $e) {
-            return;
+            $this->logError("Error checking if email exists", $e);
         }
     }
 
@@ -784,33 +814,40 @@ class REDCapPRO extends AbstractExternalModule {
     /**
      * Determines whether the current participant is enrolled in the project
      * 
-     * @param mixed $user_id User ID (not username, not record ID)
-     * @param mixed $pid PID of REDCap project
+     * @param int $rcpro_participant_id
+     * @param int $pid PID of REDCap project
      * 
      * @return boolean TRUE if the participant is enrolled
      */
-    public function enrolledInProject($user_id, $pid) {
-        $LINK_TABLE = $this->getTable("LINK");
-        $project_id = $this->getProjectId($pid);
-        $SQL = "SELECT id from ${LINK_TABLE} WHERE project = ? AND user = ?;";
+    public function enrolledInProject(int $rcpro_participant_id, int $pid) {
+        $rcpro_project_id = $this->getProjectId($pid);
+        $SQL = "message = 'LINK' AND rcpro_project_id = ? AND rcpro_participant_id = ? AND project_id <> FALSE";
         try {
-            $result = $this->query($SQL, [$project_id, $user_id]);
-            return $result->num_rows > 0;
+            $result = $this->countLogs($SQL, [$rcpro_project_id, $rcpro_participant_id]);
+            return $result > 0;
         }
         catch (\Exception $e) {
-            return;
+            $this->logError("Error checking that participant is enrolled", $e);
         }
     }
 
 
-    public function addProject($pid) {
-        $PROJECT_TABLE = $this->getTable("PROJECT");
-        $SQL = "INSERT INTO ".$PROJECT_TABLE." (pid) VALUES (?)";
+    /**
+     * Adds a project entry to table
+     * 
+     * @param int $pid - REDCap project PID
+     * 
+     * @return boolean success
+     */
+    public function addProject(int $pid) {
         try {
-            return $this->query($SQL, [$pid]);
+            return $this->log("PROJECT", [
+                "pid"    => $pid,
+                "active" => 1
+            ]);
         }
         catch (\Exception $e) {
-            $this->log($e->getMessage());
+            $this->logError("Error creating project entry", $e);
         }
     }
 
@@ -820,16 +857,16 @@ class REDCapPRO extends AbstractExternalModule {
      * @param int $pid PID of project
      * @param int $active 0 to set inactive, 1 to set active
      * 
-     * @return 
+     * @return boolean success
      */
     public function setProjectActive(int $pid, int $active) {
-        $PROJECT_TABLE = $this->getTable("PROJECT");
-        $SQL = "UPDATE ${PROJECT_TABLE} SET active=? WHERE pid=?;";
+        $rcpro_project_id = $this->getProjectId($pid);
+        $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
         try {
-            return $this->query($SQL, [$active, $pid]);
+            return $this->query($SQL, [$active, $rcpro_project_id]);
         }
         catch (\Exception $e) {
-            $this->log($e->getMessage());
+            $this->logError("Error setting project active status", $e);
         }
     }
 
@@ -838,28 +875,23 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * Optionally additionally tests whether the project is currently active.
      * 
-     * @param mixed $pid
-     * @param  $check_active
+     * @param int $pid - REDCap Project PID
+     * @param bool $check_active - Whether or not to additionally check whether active
      * 
      * @return bool
      */
-    public function checkProject($pid, $check_active = FALSE) {
-        $PROJECT_TABLE = $this->getTable("PROJECT");
-        $SQL = "SELECT * FROM ${PROJECT_TABLE} WHERE pid = ?";
+    public function checkProject(int $pid, bool $check_active = FALSE) {
+        $SQL = "SELECT active WHERE pid = ? and message = 'PROJECT' and project_id <> FALSE";
         try {
-            $result = $this->query($SQL, [$pid]);
-            while ($row = $result->fetch_assoc()) {
-                if ($check_active) {
-                    return $row["active"] == "1";
-                } else {
-                    return TRUE;
-                }
+            $result = $this->queryLogs($SQL, [$pid]);
+            if ($result->num_rows == 0) {
+                return FALSE;
             }
-            return FALSE;
+            $row = $result->fetch_assoc();
+            return $check_active ? $row["active"] == "1" : TRUE;
         }
         catch (\Exception $e) {
-            $this->log($e->getMessage());
-            return;
+            $this->logError("Error checking project", $e);
         }
     }
 
@@ -868,155 +900,252 @@ class REDCapPRO extends AbstractExternalModule {
      * Get the project ID corresonding with a REDCap PID
      * 
      * returns null if REDCap project is not associated with REDCapPRO
-     * @param mixed $pid REDCap PID
+     * @param int $pid REDCap PID
      * 
-     * @return int project ID associated with the PID
+     * @return int rcpro project ID associated with the PID
      */
-    public function getProjectId($pid) {
-        $PROJECT_TABLE = $this->getTable("PROJECT");
-        $SQL = "SELECT id FROM " .$PROJECT_TABLE. " WHERE pid = ?";
+    public function getProjectId(int $pid) {
+        $SQL = "SELECT log_id WHERE message = 'PROJECT' AND pid = ? AND project_id <> FALSE";
         try {
-            $result = $this->query($SQL, [$pid]);
-            return $result->fetch_assoc()["id"];
+            $result = $this->queryLogs($SQL, [$pid]);
+            return $result->fetch_assoc()["log_id"];
         }
         catch (\Exception $e) {
-            $this->log($e->getMessage());
-            return;
-        }
-    }
-
-    public function getLinkId($user_id, $proj_id) {
-        $LINK_TABLE = $this->getTable("LINK");
-        $SQL = "SELECT id FROM ${LINK_TABLE} WHERE user = ? AND project = ?;";
-        try {
-            $result = $this->query($SQL, [$user_id, $proj_id]);
-            return $result->fetch_assoc()["id"];
-        }
-        catch (\Exception $e) {
-            $this->log($e->getMessage());
-            return;
+            $this->logError("Error fetching project id from pid", $e);
         }
     }
 
     /**
-     * @param mixed $user_id
+     * Fetch link id given participant and project id's
+     * 
+     * @param int $rcpro_participant_id
+     * @param int $rcpro_project_id
+     * 
+     * @return int link id
+     */
+    public function getLinkId(int $rcpro_participant_id, int $rcpro_project_id) {
+        $SQL = "SELECT log_id WHERE message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND project_id <> FALSE";
+        try {
+            $result = $this->query($SQL, [$rcpro_participant_id, $rcpro_project_id]);
+            return $result->fetch_assoc()["log_id"];
+        }
+        catch (\Exception $e) {
+            $this->logError("Error fetching link id", $e);
+        }
+    }
+
+    /**
+     * Enrolls a participant in a project
+     * 
+     * @param mixed $rcpro_participant_id
      * @param mixed $pid
      * 
-     * @return [type]
+     * @return int -1 if already enrolled, bool otherwise
      */
-    public function enrollParticipant($user_id, $pid) {
+    public function enrollParticipant(int $rcpro_participant_id, int $pid) {
         // If project does not exist, create it.
         if (!$this->checkProject($pid)) {
             $this->addProject($pid);
         }
-        $proj_id = $this->getProjectID($pid);
+        $rcpro_project_id = $this->getProjectID($pid);
 
         // Check that user is not already enrolled in this project
-        if ($this->userEnrolled($user_id, $proj_id)) {
+        if ($this->participantEnrolled($rcpro_participant_id, $rcpro_project_id)) {
             return -1;
         }
 
-        return $this->createLink($user_id, $proj_id);
+        // If there is already a link between this participant and project,
+        // then activate it, otherwise create the link
+        if ($this->linkAlreadyExists($rcpro_participant_id, $rcpro_project_id)) {
+            return $this->setLinkActiveStatus($rcpro_participant_id, $rcpro_project_id, 1);
+        } else {
+            return $this->createLink($rcpro_participant_id, $rcpro_project_id);
+        }
     }
 
     /**
-     * @param mixed $user_id
-     * @param mixed $proj_id
+     * Creates link between participant and project 
      * 
-     * @return [type]
+     * @param int $rcpro_participant_id
+     * @param int $rcpro_project_id
+     * 
+     * @return bool success or failure
      */
-    private function createLink($user_id, $proj_id) {
-        $LINK_TABLE = $this->getTable("LINK");
-        $SQL = "INSERT INTO ".$LINK_TABLE." 
-        (user, project) VALUES (?, ?)";
+    private function createLink(int $rcpro_participant_id, int $rcpro_project_id) {
         try {
-            $this->query($SQL, [$user_id, $proj_id]);
-            $this->log("Participant Enrolled", [
-                "rcpro_proj_id" => $proj_id,
-                "rcpro_user_id" => $user_id
+            $this->log("LINK", [
+                "rcpro_project_id"     => $rcpro_project_id,
+                "rcpro_participant_id" => $rcpro_participant_id,
+                "active"               => 1
             ]);
             return TRUE;
         }
         catch (\Exception $e) {
-            $this->logError("Participant Enrollment Failed", $e);
-            return NULL;
-        }
-    }
-
-    private function userEnrolled($user_id, $proj_id) {
-        $LINK_TABLE = $this->getTable("LINK");
-        $SQL = "SELECT * FROM ${LINK_TABLE} WHERE user = ? AND project = ?;";
-        try {
-            $result = $this->query($SQL, [$user_id, $proj_id]);
-            return $result->num_rows > 0;
-        }
-        catch (\Exception $e) {
-            return;
-        }
-    }
-
-    public function createResetToken($user_id, int $hours_valid = 1) {
-        $USER_TABLE = $this->getTable("USER");
-        $token = bin2hex(random_bytes(32));
-        $SQL = "UPDATE ${USER_TABLE} SET token=?,token_ts=DATE_ADD(NOW(), INTERVAL ${hours_valid} HOUR),token_valid=1 WHERE id=?;";
-        try {
-            $result = $this->query($SQL, [$token,$user_id]);
-            if ($result) {
-                return $token;
-            } 
-        }
-        catch (\Exception $e) {
-            return;
+            $this->logError("Error enrolling participant", $e);
+            return FALSE;
         }
     }
 
     /**
-     * @param mixed $token
+     * Set a link as active or inactive
+     * 
+     * @param int $rcpro_participant_id
+     * @param int $rcpro_project_id
+     * @param int $active                   - 0 for inactive, 1 for active
+     * 
+     * @return
+     */
+    private function setLinkActiveStatus(int $rcpro_participant_id, int $rcpro_project_id, int $active) {
+        $link_id = $this->getLinkId($rcpro_participant_id, $rcpro_project_id);
+        $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
+        try {
+            return $this->query($SQL, [$active, $link_id]);
+        }
+        catch (\Exception $e) {
+            $this->logError("Error setting link activity", $e);
+        }
+    }
+
+    /**
+     * Checks whether participant is enrolled in given project
+     * 
+     * @param int $rcpro_participant_id
+     * @param int $rcpro_project_id
+     * 
+     * @return bool
+     */
+    private function participantEnrolled(int $rcpro_participant_id, int $rcpro_project_id) {
+        $SQL = "message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND active = 1 AND project_id <> FALSE";
+        try {
+            $result = $this->countLogs($SQL, [$rcpro_participant_id, $rcpro_project_id]);
+            return $result > 0;
+        }
+        catch (\Exception $e) {
+            $this->logError("Error enrolling participant", $e);
+        }
+    }
+
+    /**
+     * Checks whether a link exists at all between participant and project - whether or not it is active
+     * 
+     * @param int $rcpro_participant_id
+     * @param int $rcpro_project_id
+     * 
+     * @return bool
+     */
+    private function linkAlreadyExists(int $rcpro_participant_id, int $rcpro_project_id) {
+        $SQL = "message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND project_id <> FALSE";
+        try {
+            $result = $this->countLogs($SQL, [$rcpro_participant_id, $rcpro_project_id]);
+            return $result > 0;
+        }
+        catch (\Exception $e) {
+            $this->logError("Error checking if link exists", $e);
+        }
+    }
+
+    /**
+     * Removes participant from project.
+     * 
+     * @param mixed $rcpro_participant_id
+     * @param mixed $rcpro_project_id
      * 
      * @return [type]
      */
-    public function verifyPasswordResetToken($token) {
-        $USER_TABLE = $this->getTable("USER");
-        $SQL = "SELECT id, username FROM ${USER_TABLE} WHERE token = ? AND token_ts > NOW() AND token_valid = 1;";
+    public function disenrollParticipant($rcpro_participant_id, $rcpro_project_id) {
         try {
-            $result = $this->query($SQL, [$token]);
-            $result_array = $result->fetch_assoc();
-            $this->log("Password Token Verified", [
-                'rcpro_user_id'  => $result_array['id'],
-                'rcpro_username' => $result_array['username']
-            ]);
-            return $result_array;
+            return $this->setLinkActiveStatus($rcpro_participant_id, $rcpro_project_id, 0);
         }
         catch (\Exception $e) {
-            $this->logError("Password Token Verification Failed", $e);
-            return NULL;
+            $this->logError("Error Disenrolling Participant", $e);
+        }
+    }
+
+    
+
+    /**
+     * Create and store token for resetting participant's password
+     * 
+     * @param mixed $rcpro_participant_id
+     * @param int $hours_valid - how long should the token be valid for
+     * 
+     * @return string token
+     */
+    public function createResetToken($rcpro_participant_id, int $hours_valid = 1) {
+        $token = bin2hex(random_bytes(32));
+        $token_ts = time() + ($hours_valid*60*60);
+        $SQL1 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'token'";
+        $SQL2 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'token_ts'";
+        $SQL3 = "UPDATE redcap_external_modules_log_parameters SET value = 1 WHERE log_id = ? AND name = 'token_valid'";
+        try {
+            $result1 = $this->query($SQL1, [$token, $rcpro_participant_id]);
+            $result2 = $this->query($SQL2, [$token_ts, $rcpro_participant_id]);
+            $result3 = $this->query($SQL3, [$rcpro_participant_id]);
+            if (!$result1 || !$result2 || $result3) {
+                throw new REDCapProException(["rcpro_participant_id"=>$rcpro_participant_id]);
+            }
+            return $token;
+        }
+        catch (\Exception $e) {
+            $this->logError("Error creating reset token", $e);
         }
     }
 
     /**
-     * @param mixed $user_id id of participant
+     * Verify that the supplied password reset token is valid.
      * 
-     * @return bool|null
+     * @param string $token
+     * 
+     * @return array with participant id and username
      */
-    public function expirePasswordResetToken($user_id) {
-        $USER_TABLE = $this->getTable("USER");
-        $SQL = "UPDATE ${USER_TABLE} SET token=NULL,token_ts=DATE_SUB(NOW(), INTERVAL 1 HOUR), token_valid=0 WHERE id=?;";
+    public function verifyPasswordResetToken(string $token) {
+        $SQL = "SELECT log_id, rcpro_username WHERE message = 'PARTICIPANT' AND token = ? AND token_ts > ? AND token_valid = 1 AND project_id <> FALSE";
         try {
-            return $this->query($SQL, [$user_id]);
+            $result = $this->queryLogs($SQL, [$token, time()]);
+            if ($result->num_rows > 0) {
+                $result_array = $result->fetch_assoc();
+                $this->log("Password Token Verified", [
+                    'rcpro_participant_id'  => $result_array['log_id'],
+                    'rcpro_username' => $result_array['rcpro_username']
+                ]);
+                return $result_array;
+            } 
         }
         catch (\Exception $e) {
-            $this->log("Error 100 - User id: ${user_id}");
-            $this->logError("Problem expiring password reset token.", $e);
-            return NULL;
+            $this->logError("Error verifying password reset token", $e);
         }
     }
 
-    public function sendPasswordResetEmail($user_id) {
+    /**
+     * Sets the password reset token as invalid/expired
+     * 
+     * @param mixed $rcpro_participant_id id of participant
+     * 
+     * @return bool|null success or failure
+     */
+    public function expirePasswordResetToken($rcpro_participant_id) {
+        $SQL = "UPDATE redcap_external_modules_log_parameters SET value = 0 WHERE log_id = ? AND name = 'token_valid'";
+        try {
+            return $this->query($SQL, [$rcpro_participant_id]);
+        }
+        catch (\Exception $e) {
+            $this->logError("Error expiring password reset token.", $e);
+        }
+    }
+
+    /**
+     * Send an email with a link for the participant to reset their email
+     * 
+     * @param mixed $rcpro_participant_id
+     * 
+     * @return void
+     */
+    public function sendPasswordResetEmail($rcpro_participant_id) {
         try {
             // generate token
-            $token    = $this->createResetToken($user_id);
-            $to       = $this->getEmail($user_id);
-            $username = $this->getUserName($user_id);
+            $token    = $this->createResetToken($rcpro_participant_id);
+            $to       = $this->getEmail($rcpro_participant_id);
+            $username = $this->getUserName($rcpro_participant_id);
             $username_clean = \REDCap::escapeHtml($username);
         
             // create email
@@ -1038,7 +1167,7 @@ class REDCapPRO extends AbstractExternalModule {
             $result = \REDCap::email($to, $from, $subject, $body);
             $status = $result ? "Sent" : "Failed to send";
             $this->log("Password Reset Email - ${status}", [
-                "rcpro_user_id"  => $user_id,
+                "rcpro_participant_id"  => $rcpro_participant_id,
                 "rcpro_username" => $username_clean,
                 "rcpro_email"    => $to,
                 "redcap_user"    => USERID,
@@ -1047,51 +1176,65 @@ class REDCapPRO extends AbstractExternalModule {
         }
         catch (\Exception $e) {
             $this->log("Password Reset Failed", [
-                "rcpro_user_id" => $user_id
+                "rcpro_participant_id" => $rcpro_participant_id
             ]);
-            $this->logError("Password Reset Error", $e);
-            return false;
+            $this->logError("Error sending password reset email", $e);
         }
     }
 
-    public function sendNewUserEmail($username, $email, $fname, $lname) {
+    /**
+     * Send new user email to set password
+     * 
+     * This acts as an email verification process as well
+     * 
+     * @param string $username
+     * @param string $email
+     * @param string $fname
+     * @param string $lname
+     * 
+     * @return bool|NULL
+     */
+    public function sendNewUserEmail(string $username, string $email, string $fname, string $lname) {
         // generate token
         try {
-            $user_id     = $this->getUserIdFromUsername($username);
-            $hours_valid = 24;
-            $token       = $this->createResetToken($user_id, $hours_valid);
+            $rcpro_participant_id = $this->getParticipantIdFromUsername($username);
+            $hours_valid          = 24;
+            $token                = $this->createResetToken($rcpro_participant_id, $hours_valid);
+        
+            // create email
+            $subject = "REDCapPRO - Account Created";
+            $from    = "noreply@REDCapPro.com";
+            $body    = "<html><body><div>
+            <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
+            <p>Hello ${fname} ${lname},
+            <br>An account has been created for you in order to take part in a research study.<br>
+            This is your username: <strong>${username}</strong><br>
+            Write it down someplace safe, because you will need to know your username to take part in the study.</p>
+
+            <p>To use your account, first you will need to create a password. 
+            <br>Click <a href='".$this->getUrl("create-password.php",true)."&t=${token}'>this link</a> to create your password.
+            <br>That link will only work for the next $hours_valid hours.
+            </p>
+            <br>
+            <p>If you have any questions, contact a member of the study team.</p>
+            </body></html></div>";
+
+            return \REDCap::email($email, $from, $subject, $body);
         }
         catch (\Exception $e) {
-            return false;
-        }
-        // create email
-        $subject = "REDCapPRO - Account Created";
-        $from    = "noreply@REDCapPro.com";
-        $body    = "<html><body><div>
-        <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
-        <p>Hello ${fname} ${lname},
-        <br>An account has been created for you in order to take part in a research study.<br>
-        This is your username: <strong>${username}</strong><br>
-        Write it down someplace safe, because you will need to know your username to take part in the study.</p>
-
-        <p>To use your account, first you will need to create a password. 
-        <br>Click <a href='".$this->getUrl("create-password.php",true)."&t=${token}'>this link</a> to create your password.
-        <br>That link will only work for the next $hours_valid hours.
-        </p>
-        <br>
-        <p>If you have any questions, contact a member of the study team.</p>
-        </body></html></div>";
-
-        try {
-            $result = \REDCap::email($email, $from, $subject, $body);
-            return $result;
-        }
-        catch (\Exception $e) {
-            return false;
+            $this->logError("Error sending new user email", $e);
         }
     }
 
-    public function sendUsernameEmail($email, $username) {
+    /**
+     * Sends an email that just contains the participant's username.
+     * 
+     * @param string $email
+     * @param string $username
+     * 
+     * @return bool|NULL success or failure
+     */
+    public function sendUsernameEmail(string $email, string $username) {
         $subject = "REDCapPRO - Username";
         $from    = "noreply@REDCapPro.com";
         $body    = "<html><body><div>
@@ -1104,41 +1247,18 @@ class REDCapPRO extends AbstractExternalModule {
         </body></html></div>";
  
         try {
-            $result = \REDCap::email($email, $from, $subject, $body);
-            return $result;
+            return \REDCap::email($email, $from, $subject, $body);
         }
         catch (\Exception $e) {
-            $this->log($e->getMessage());
-            return false;
+            $this->log("Error sending username email", $e);
         }
 
     }
     
-    public function disenrollParticipant($user_id, $proj_id) {
-        $LINK_TABLE = $this->getTable("LINK");
-        $link_id    = $this->getLinkId($user_id, $proj_id);
-        $SQL        = "DELETE FROM ${LINK_TABLE} WHERE id = ?;";
-        try {
-            $result = $this->query($SQL, [$link_id]);
-            $status = $result ? "Successful" : "Failed";
-            $this->log("Disenrolled Participant - ${status}", [
-                "rcpro_user_id" => $user_id,
-                "rcpro_project_id" => $proj_id,
-                "rcpro_link_id" => $link_id,
-                "redcap_user" => USERID,
-                "redcap_project" => PROJECT_ID
-            ]);
-            return $result;
-        }
-        catch (\Exception $e) {
-            $this->logError("Disenrolled Participant - Error", $e);
-            return NULL;
-        }
-    }
 
-    
-
-
+    /*-------------------------------------*\
+    |             UI FORMATTING             |
+    \*-------------------------------------*/
 
     public function UiShowParticipantHeader(string $title) {
         echo '<!DOCTYPE html>
@@ -1292,17 +1412,7 @@ class REDCapPRO extends AbstractExternalModule {
         echo $header;
     }
 
-    public function getUserFullname($username) {
-        $SQL = 'SELECT CONCAT(user_firstname, " ", user_lastname) AS name FROM redcap_user_information WHERE username = ?';
-        try {
-            $result = $this->query($SQL, [$username]);
-            return $result->fetch_assoc()["name"];
-        }
-        catch (\Exception $e) {
-            $this->log($e->getMessage());
-            return;
-        }
-    }
+
 
     /**
      * Logs errors thrown during operation
@@ -1313,15 +1423,18 @@ class REDCapPRO extends AbstractExternalModule {
      * @return void
      */
     public function logError(string $message, \Exception $e) {
-        $this->log($message, [
+        $params = [
             "error_code"=>$e->getCode(),
             "error_message"=>$e->getMessage(),
             "error_file"=>$e->getFile(),
             "error_line"=>$e->getLine(),
             "error_string"=>$e->__toString()
-        ]);
+        ];
+        if (isset($e->rcpro)) {
+            $params = array_merge($params, $e->rcpro);
+        }
+        $this->log($message, $params);
     }
-
 }
 
 /**
@@ -1369,100 +1482,10 @@ class Auth {
 
 }
 
-class TestHelper {
-
-    private static $TEST_DATA = array(
-        "USER" => 1000,
-        "PW"   => "TEST_USER_PW_1000",
-        "PID"  => -1
-    );
-
-    private static $module;
-
-    function __construct($module = null) {
-        self::$module = $module;
-    }
-
-    /**
-     * Create a test record in the USER table
-     * 
-     * @return void
-     */
-    private function createTestUser() {
-        try {
-            $USER_TABLE  = self::$module->getTable("USER");
-            $TESTUSERSQL = "INSERT INTO ".$USER_TABLE." (username, pw) VALUES (?, ?)";
-            $TEST_USER   = self::$TEST_DATA["USER"];
-            $pw_hash     = password_hash(self::$TEST_DATA["PW"], PASSWORD_DEFAULT);
-            self::$module->query($TESTUSERSQL, [$TEST_USER, $pw_hash]);
-        }
-        catch (\Exception $e) {
-            self::$module->log($e->getMessage());
-        }
-    }
-
-    /**
-     * Create a test record in the PROJECT table
-     * 
-     * @return void
-     */
-    private function createTestProject() {
-        $PROJECT_TABLE  = self::$module->getTable("PROJECT");
-        $TEST_PID       = self::$TEST_DATA["PID"];
-        $TESTPROJECTSQL = "INSERT INTO ".$PROJECT_TABLE." (pid) VALUES (?)";
-        try {
-            self::$module->query($TESTPROJECTSQL, [$TEST_PID]);
-        }
-        catch (\Exception $e) {
-            self::$module->log($e->getMessage());
-        }
-    }
-    
-    /**
-     * Create a test record in the LINK table
-     * 
-     * @return void
-     */
-    private function createTestLink() {
-        $LINK_TABLE    = self::$module->getTable("LINK");
-        $USER_TABLE    = self::$module->getTable("USER");
-        $PROJECT_TABLE = self::$module->getTable("PROJECT");
-
-        $TEST_PID  = self::$TEST_DATA["PID"];
-        $TEST_USER = self::$TEST_DATA["USER"];
-        
-        $GETPROJECTSQL = "SELECT id FROM ${PROJECT_TABLE} WHERE pid = ?;";
-        $GETUSERSQL    = "SELECT id FROM ${USER_TABLE} WHERE username = ?;";
-
-        $TESTLINKSQL = "INSERT INTO ".$LINK_TABLE." 
-        (project, user, record_id) VALUES (?, ?, ?)";
-        try {
-            $projectResult = self::$module->query($GETPROJECTSQL, [$TEST_PID]);
-            $proj_id       = $projectResult->fetch_assoc()["id"];
-            $userResult    = self::$module->query($GETUSERSQL, [$TEST_USER]);
-            $user_id       = $userResult->fetch_assoc()["id"];
-            self::$module->query($TESTLINKSQL, [$proj_id, $user_id, "20"]);
-        }
-        catch (\Exception $e) {
-            self::$module->log($e->getMessage());
-        }
-    }
-
-    /**
-     * Create a test record in the given table.
-     * 
-     * @param string $TYPE USER, PROJECT, or LINK
-     * 
-     * @return void
-     */
-    public function createTestData(string $TYPE) {
-        if ($TYPE === "USER") {
-            self::$module->createTestUser();
-        } else if ($TYPE === "PROJECT") {
-            self::$module->createTestProject();
-        } else if ($TYPE === "LINK") {
-            self::$module->createTestLink();
-        }
+class REDCapProException extends \Exception {
+    public $rcpro = NULL; 
+    public function __construct($rcpro = NULL) {
+        $this->rcpro = $rcpro;
     }
 }
 

@@ -70,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if(!$any_error) {
 
         // Grab all user details
-        $user = $module->getUser($_POST["username"]);
+        $user = $module->getParticipant($_POST["username"]);
 
         // Update password
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
