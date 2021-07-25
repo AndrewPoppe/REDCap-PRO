@@ -74,16 +74,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         // Update password
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
-        $result = $module->updatePassword($password_hash, $user["id"], FALSE);
+        $result = $module->storeHash($password_hash, $user["id"]);
         if (empty($result) || $result === FALSE) {
-            $module->log("Password Update Failed", ["rcpro_user_id"=>$user["id"]]);
             echo "Oops! Something went wrong. Please try again later.";
             return;
         }
-        $module->log("Password Update Successful", [
-            "rcpro_user_id"  => $user["id"],
-            "rcpro_username" => $user["username"]
-        ]);
         
         // Password was successfully set. Expire the token.
         $module->expirePasswordResetToken($user["id"]);

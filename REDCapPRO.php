@@ -159,18 +159,17 @@ class REDCapPRO extends AbstractExternalModule {
     /**
      * Increments the number of failed attempts at login for the provided id
      * 
-     * @param int $rcpro_user_id - id key into user table
+     * @param int $rcpro_participant_id - id key for participant
      * 
      * @return BOOL|NULL
      */
-    public function incrementFailedLogin(int $rcpro_user_id) {
-        $USER_TABLE = $this->getTable("USER");
-        $SQL = "UPDATE ${USER_TABLE} SET failed_attempts=failed_attempts+1 WHERE id=?;";
+    public function incrementFailedLogin(int $rcpro_participant_id) {
+        $SQL = "UPDATE redcap_external_modules_log_parameters SET value = value+1 WHERE log_id = ? AND name = 'failed_attempts'";
         try {
-            $res = $this->query($SQL, [$rcpro_user_id]);
+            $res = $this->query($SQL, [$rcpro_participant_id]);
             
             // Lockout username if necessary
-            $this->lockoutLogin($rcpro_user_id);
+            $this->lockoutLogin($rcpro_participant_id);
             return $res;
         }
         catch (\Exception $e) {
@@ -183,24 +182,22 @@ class REDCapPRO extends AbstractExternalModule {
      * This both tests whether a user should be locked out based on the number
      * of failed login attempts and does the locking out.
      * 
-     * @param int $rcpro_user_id - id key into user table
+     * @param int $rcpro_participant_id - id key for participant
      * 
      * @return BOOL|NULL
      */
-    private function lockoutLogin(int $rcpro_user_id) {
-        $USER_TABLE = $this->getTable("USER");
-        $SQL = "SELECT failed_attempts FROM ${USER_TABLE} WHERE id = ?;";
+    private function lockoutLogin(int $rcpro_participant_id) {
         try {
-            $res = $this->query($SQL, [$rcpro_user_id]);
-            $attempts = $res->fetch_assoc()["failed_attempts"];
+            $attempts = $this->checkUsernameAttempts($rcpro_participant_id);
             if ($attempts >= $this::$LOGIN_ATTEMPTS) {
-                $SQL2 = "UPDATE ${USER_TABLE} SET lockout_ts = DATE_ADD(NOW(), INTERVAL ? SECOND) WHERE id = ?;";
-                $res2 = $this->query($SQL2, [$this::$LOCKOUT_DURATION_SECONDS, $rcpro_user_id]);
-                $status = $res2 ? "Successful" : "Failed";
+                $lockout_ts = time() + $this::$LOCKOUT_DURATION_SECONDS;
+                $SQL = "UPDATE redcap_external_modules_log_parameters SET lockout_ts = ? WHERE log_id = ?;";
+                $res = $this->query($SQL, [$lockout_ts, $rcpro_participant_id]);
+                $status = $res ? "Successful" : "Failed";
                 $this->log("Login Lockout ${status}", [
-                    "rcpro_user_id" => $rcpro_user_id
+                    "rcpro_participant_id" => $rcpro_participant_id
                 ]);
-                return $res2;
+                return $res;
             } else {
                 return TRUE;
             }
@@ -214,15 +211,14 @@ class REDCapPRO extends AbstractExternalModule {
     /**
      * Resets the count of failed login attempts for the given id
      * 
-     * @param int $rcpro_user_id - id key into user table
+     * @param int $rcpro_participant_id - id key for participant
      * 
-     * @return [type]
+     * @return BOOL|NULL
      */
-    public function resetFailedLogin(int $rcpro_user_id) {
-        $USER_TABLE = $this->getTable("USER");
-        $SQL = "UPDATE ${USER_TABLE} SET failed_attempts=0 WHERE id=?;";
+    public function resetFailedLogin(int $rcpro_participant_id) {
+        $SQL = "UPDATE redcap_external_modules_log_parameters SET value=0 WHERE log_id=? AND name='failed_attempts';";
         try {
-            return $this->query($SQL, [$rcpro_user_id]);
+            return $this->query($SQL, [$rcpro_participant_id]);
         }
         catch (\Exception $e) {
             $this->logError("Error resetting failed login count", $e);
@@ -350,15 +346,14 @@ class REDCapPRO extends AbstractExternalModule {
     /**
      * Gets number of failed login attempts for the given user by id
      * 
-     * @param int $rcpro_user_id - id key into user table
+     * @param int $rcpro_participant_id - id key for participant
      * 
      * @return int number of failed login attempts
      */
-    private function checkUsernameAttempts(int $rcpro_user_id) {
-        $USER_TABLE = $this->getTable("USER");
-        $SQL = "SELECT failed_attempts FROM ${USER_TABLE} WHERE id=?;";
+    private function checkUsernameAttempts(int $rcpro_participant_id) {
+        $SQL = "SELECT failed_attempts WHERE log_id = ?;";
         try {
-            $res = $this->query($SQL, [$rcpro_user_id]);
+            $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $res->fetch_assoc()["failed_attempts"];
         }
         catch (\Exception $e) {
@@ -370,20 +365,22 @@ class REDCapPRO extends AbstractExternalModule {
     /**
      * Checks whether given user (by id) is locked out
      * 
-     * @param int $rcpro_user_id - id key into user table
+     * Returns the remaining lockout time in seconds for this participant
      * 
-     * @return bool whether user is locked out
+     * @param int $rcpro_participant_id - id key for participant
+     * 
+     * @return int number of seconds of lockout left
      */
-    public function checkUsernameLockedOut(int $rcpro_user_id) {
-        $USER_TABLE = $this->getTable("USER");
-        $SQL = "SELECT UNIX_TIMESTAMP(lockout_ts) - UNIX_TIMESTAMP(NOW()) as lockout_ts FROM ${USER_TABLE} WHERE id=? AND lockout_ts >= NOW();";
+    public function getUsernameLockoutDuration(int $rcpro_participant_id) {
+        $SQL = "SELECT lockout_ts WHERE log_id = ?;";
         try {
-            $res = $this->query($SQL, [$rcpro_user_id]);
-            return $res->fetch_assoc()["lockout_ts"];
+            $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
+            $lockout_ts = intval($res->fetch_assoc()["lockout_ts"]);
+            return max($lockout_ts - time(), 0);
         }
         catch (\Exception $e) {
             $this->logError("Failed to check username lockout", $e);
-            return FALSE;
+            return 0;
         }
     }
 
@@ -392,16 +389,16 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * This checks both by username and by ip, and returns the larger
      * 
-     * @param int|null $rcpro_user_id
+     * @param int|null $rcpro_participant_id
      * @param mixed $ip
      * 
      * @return int number of consecutive attempts
      */
-    public function checkAttempts($rcpro_user_id, $ip) {
-        if ($rcpro_user_id === null) {
+    public function checkAttempts($rcpro_participant_id, $ip) {
+        if ($rcpro_participant_id === null) {
             $usernameAttempts = 0;
         } else {
-            $usernameAttempts = $this->checkUsernameAttempts($rcpro_user_id);
+            $usernameAttempts = $this->checkUsernameAttempts($rcpro_participant_id);
         }
         $ipAttempts = $this->checkIpAttempts($ip);
         return max($usernameAttempts, $ipAttempts);
@@ -511,66 +508,42 @@ class REDCapPRO extends AbstractExternalModule {
                                   (i.e., if the link is active)
     */
 
-
-    /**
-     * Get table name given a type of table
-     * 
-     * @param string $TYPE USER, PROJECT, or LINK
-     * 
-     * @return string Table name
-     */
-    public function getTable(string $TYPE) {
-        return $this::$TABLES[$TYPE];
-    }
-
-
     /**
      * Get hashed password for participant.
      * 
-     * @param string $uid ID (not username) of user 
+     * @param int $rcpro_participant_id - id key for participant
      * 
-     * @return string hashed password
+     * @return string|NULL hashed password or null
      */
-    public function getHash(string $rcpro_participant_id) {
+    public function getHash(int $rcpro_participant_id) {
         try {
-            $res = $this->query("SELECT pw FROM ${USER_TABLE} WHERE id = ?", [$rcpro_participant_id]);
+            $SQL = "SELECT 'pw' WHERE log_id = ?;";
+            $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $res->fetch_assoc()['pw'];
         }
         catch (\Exception $e) {
-            return;
+            $this->logError("Error fetching password hash", $e);
+            return NULL;
         }
     }
-
-    public function storeHash(string $hash, $uid) {
-        $USER_TABLE = $this->getTable("USER");
-        try {
-            $res = $this->query("UPDATE ${USER_TABLE} SET pw = ? WHERE id = ?", [$hash, $uid]);
-            return $res;
-        }
-        catch (\Exception $e) {
-            return;
-        }
-    }
-
 
     /**
-     * @param string $hash Password hash to store
-     * @param mixed $uid ID (not username) of participant
+     * Stores hashed password for the given participant id
      * 
-     * @return void
+     * @param string $hash - hashed password
+     * @param int $rcpro_participant_id - id key for participant
+     * 
+     * @return bool|NULL success/failure/null
      */
-    public function updatePassword(string $hash, $uid) {
-        $USER_TABLE = $this->getTable("USER");
-        $SQL = "UPDATE ${USER_TABLE} SET pw = ? WHERE id = ?;";
+    public function storeHash(string $hash, int $rcpro_participant_id) {
         try {
-            $res = $this->query($SQL, [$hash, $uid]);
-            $this->log("Password Updated", [
-                "rcpro_user_id" => $uid
-            ]);
+            $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'pw';";
+            $res = $this->query($SQL, [$hash, $rcpro_participant_id]);
+            $this->log("Password Hash Stored", ["rcpro_participant_id" => $rcpro_participant_id]);
             return $res;
         }
         catch (\Exception $e) {
-            $this->logError('Password Update Failed', $e);
+            $this->logError("Error storing password hash", $e);
             return NULL;
         }
     }
@@ -581,7 +554,6 @@ class REDCapPRO extends AbstractExternalModule {
      * In so doing, it creates a unique username.
      * 
      * @param string $email Email Address
-     * @param string $pw_hash Hashed password
      * @param string $fname First Name
      * @param string $lname Last Name
      * 
@@ -602,6 +574,7 @@ class REDCapPRO extends AbstractExternalModule {
             echo "Please contact your REDCap administrator.";
             return;
         }
+        // BOOKMARK: Start here
         $SQL = "INSERT INTO ".$this::$TABLES["USER"]." (username, email, fname, lname) VALUES (?, ?, ?, ?)";
         try {
             $result = $this->query($SQL, [$username, $email_clean, $fname_clean, $lname_clean]);

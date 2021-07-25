@@ -76,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         // Update password
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
-        $result = $module->updatePassword($password_hash, $user["id"]);
+        $result = $module->storeHash($password_hash, $user["id"]);
         if (empty($result) || $result === FALSE) {
             echo "Oops! Something went wrong. Please try again later.";
             return;

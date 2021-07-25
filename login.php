@@ -97,7 +97,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $stored_hash = $module->getHash($user["id"]);
 
                 // Check that this username is not locked out
-                $lockout_duration_remaining = $module->checkUsernameLockedOut($user["id"]);
+                $lockout_duration_remaining = $module->getUsernameLockoutDuration($user["id"]);
                 if ($lockout_duration_remaining !== FALSE && $lockout_duration_remaining !== NULL) {
                     // --> Username is locked out
                     $login_err = "You have been temporarily locked out.<br>You have ${lockout_duration_remaining} seconds left.";
