@@ -7,30 +7,16 @@ if ($role < 2) {
 
 $q = $_GET["q"];
 $wq = "%${q}%";
-$table = $module->getTable("USER");
 
 
-$SQL = "SELECT fname, lname, email, id FROM ${table}". 
-" WHERE fname LIKE ?
-OR lname LIKE ?
-OR email LIKE ?";
-
-try {
-    $result = $module->query($SQL, [$wq, $wq, $wq]);
-}
-catch (\Exception $e) {
-    $module->logError("Error performing livesearch.", $e);
-    echo $e->getMessage();
-    exit();
-}
-
+$result = $module->searchParticipants($wq);
 
 $hint = "";
 while ($row = $result->fetch_assoc()) {
     $fname = \REDCap::escapeHtml($row["fname"]);
     $lname = \REDCap::escapeHtml($row["lname"]);
     $email = \REDCap::escapeHtml($row["email"]);
-    $id = \REDCap::escapeHtml($row["id"]);
+    $id = \REDCap::escapeHtml($row["log_id"]);
     $hint .= "<div class='searchResult' onclick='populateSelection(\"${fname}\", \"${lname}\", \"${email}\", \"${id}\");'>${fname} ${lname} - ${email}</div>";
 }
 

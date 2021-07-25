@@ -93,18 +93,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // --> USERNAME EXISTS
             } else {
 
-                $user = $module->getParticipant($username);
-                $stored_hash = $module->getHash($user["id"]);
+                $participant = $module->getParticipant($username);
+                $stored_hash = $module->getHash($participant["log_id"]);
 
                 // Check that this username is not locked out
-                $lockout_duration_remaining = $module->getUsernameLockoutDuration($user["id"]);
+                $lockout_duration_remaining = $module->getUsernameLockoutDuration($participant["log_id"]);
                 if ($lockout_duration_remaining !== FALSE && $lockout_duration_remaining !== NULL) {
                     // --> Username is locked out
                     $login_err = "You have been temporarily locked out.<br>You have ${lockout_duration_remaining} seconds left.";
                     $module->log("Login Attempted - Username Locked Out", [
                         "rcpro_ip"       => $ip,
                         "rcpro_username" => $username,
-                        "rcpro_user_id"  => $user["id"]
+                        "rcpro_participant_id"  => $participant["log_id"]
                     ]);
 
                 // Check that there is a stored password hash
@@ -112,7 +112,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // --> No password hash exists
                     // TODO: Give option to resend password email?
                     $module->log("No password hash stored.", [
-                        "rcpro_user_id" => $user["id"],
+                        "rcpro_participant_id" => $participant["log_id"],
                         "rcpro_username" => $username
                     ]);
                     $login_err = "Error: you have not set up your password. Please speak with your study coordinator.";
@@ -128,34 +128,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $module->log("Login Successful", [
                         "rcpro_ip"       => $ip,
                         "rcpro_username" => $username,
-                        "rcpro_user_id"  => $user["id"]
+                        "rcpro_participant_id"  => $participant["log_id"]
                     ]);
                     
                     // Rehash password if necessary
                     if (password_needs_rehash($stored_hash, PASSWORD_DEFAULT)) {
                         $new_hash = password_hash($password, PASSWORD_DEFAULT);
-                        $module->storeHash($new_hash, $user["id"]);
+                        $module->storeHash($new_hash, $participant["log_id"]);
                     }
 
                     // Reset failed attempts and failed IP
                     $module->resetFailedIp($ip);
-                    $module->resetFailedLogin($user["id"]);
+                    $module->resetFailedLogin($participant["log_id"]);
 
                     // Store data in session variables
-                    $_SESSION["username"] = $user["username"];
-                    $_SESSION[$module::$APPTITLE."_user_id"] = $user["id"];
-                    $_SESSION[$module::$APPTITLE."_username"] = $user["username"];
-                    $_SESSION[$module::$APPTITLE."_email"] = $user["email"];
-                    $_SESSION[$module::$APPTITLE."_fname"] = $user["fname"];
-                    $_SESSION[$module::$APPTITLE."_lname"] = $user["lname"];
-                    $_SESSION[$module::$APPTITLE."_temp_pw"] = $user["temp_pw"];
+                    $_SESSION["username"] = $participant["rcpro_username"];
+                    $_SESSION[$module::$APPTITLE."_user_id"] = $participant["log_id"];
+                    $_SESSION[$module::$APPTITLE."_username"] = $participant["rcpro_username"];
+                    $_SESSION[$module::$APPTITLE."_email"] = $participant["email"];
+                    $_SESSION[$module::$APPTITLE."_fname"] = $participant["fname"];
+                    $_SESSION[$module::$APPTITLE."_lname"] = $participant["lname"];
                     $_SESSION[$module::$APPTITLE."_loggedin"] = true;
                     
                     // Redirect user to appropriate page
-                    if ($user["temp_pw"] === 1 && FALSE) {
-                        // TODO: Change this condition to test whether password needs to be changed based on time?
-                        header("location: ".$module->getUrl("reset-password.php", true));
-                    } else if (isset($_SESSION[$module::$APPTITLE."_survey_url"])) {
+                    if (isset($_SESSION[$module::$APPTITLE."_survey_url"])) {
                         header("location: ".$_SESSION[$module::$APPTITLE."_survey_url"]);
                     } else if (isset($qstring["s"])) {
                         header("location: ".APP_PATH_SURVEY_FULL.$_SERVER['QUERY_STRING']); 
@@ -171,18 +167,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $module->log("Login Unsuccessful - Incorrect Password", [
                         "rcpro_ip"       => $ip,
                         "rcpro_username" => $username,
-                        "rcpro_user_id"  => $user["id"]
+                        "rcpro_participant_id"  => $participant["log_id"]
                     ]);
-                    $module->incrementFailedLogin($user["id"]);
+                    $module->incrementFailedLogin($participant["log_id"]);
                     $module->incrementFailedIp($ip);
-                    $attempts = $module->checkAttempts($user["id"], $ip);
+                    $attempts = $module->checkAttempts($participant["log_id"], $ip);
                     $remainingAttempts = $module::$LOGIN_ATTEMPTS - $attempts;
                     if ($remainingAttempts <= 0) {
                         $login_err = "Invalid username or password.<br>You have been locked out for ".$module::$LOCKOUT_DURATION_SECONDS." seconds.";
                         $module->log("USERNAME LOCKOUT", [
                             "rcpro_ip"       => $ip,
                             "rcpro_username" => $username,
-                            "rcpro_user_id"  => $user["id"]
+                            "rcpro_participant_id"  => $participant["log_id"]
                         ]);
                     } else {
                         $login_err = "Invalid username or password.<br>You have ${remainingAttempts} attempts remaining before being locked out.";

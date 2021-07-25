@@ -10,7 +10,7 @@ if ($role > 0) {
     require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
     $module->UiShowHeader("Manage");
 
-    $rcpro_proj_id = $module->getProjectId($project_id);
+    $rcpro_project_id = $module->getProjectId($project_id);
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         try {
@@ -20,7 +20,7 @@ if ($role > 0) {
                 $icon = "success";
                 $msg = "Successfully reset password for participant.";
             } else {
-                $result = $module->disenrollParticipant($_POST["toDisenroll"], $rcpro_proj_id);
+                $result = $module->disenrollParticipant($_POST["toDisenroll"], $rcpro_project_id);
                 if (!$result) {
                     $icon = "error";
                     $msg = "Trouble disenrolling participant.";
@@ -38,8 +38,7 @@ if ($role > 0) {
     }
 
     // Get list of participants
-    // TODO: seriously... project_id and rcpro_proj_id... figure something out
-    $participantList = $module->getProjectParticipants($rcpro_proj_id);
+    $participantList = $module->getProjectParticipants($rcpro_project_id);
 
 ?>
     <style>
@@ -106,7 +105,7 @@ if ($role > 0) {
                         </thead>
                         <tbody>
                             <?php foreach ($participantList as $participant) { 
-                                $username_clean = \REDCap::escapeHtml($participant["username"]);
+                                $username_clean = \REDCap::escapeHtml($participant["rcpro_username"]);
                                 $fname_clean    = \REDCap::escapeHtml($participant["fname"]);
                                 $lname_clean    = \REDCap::escapeHtml($participant["lname"]);
                                 $email_clean    = \REDCap::escapeHtml($participant["email"]);     
@@ -119,14 +118,14 @@ if ($role > 0) {
                                         <td><?=$email_clean?></td>
                                     <?php } ?>
                                     <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
-                                        $("#toReset").val("<?=$participant["id"]?>");
+                                        $("#toReset").val("<?=$participant["log_id"]?>");
                                         $("#toDisenroll").val("");
                                         $("#manage-form").submit();
                                         })();'>Reset</button></td>
                                     <?php if ($role > 1) { ?>
                                         <td class="dt-center"><button type="button" class="btn btn-danger btn-sm" onclick='(function(){
                                             $("#toReset").val("");
-                                            $("#toDisenroll").val("<?=$participant["id"]?>");
+                                            $("#toDisenroll").val("<?=$participant["log_id"]?>");
                                             $("#manage-form").submit();
                                             })();'>Disenroll</button></td>
                                     <?php } ?>

@@ -92,12 +92,12 @@
                         <tbody>
 <?php foreach ($participants as $participant) { ?>
                             <tr>
-                                <td><?=\REDCap::escapeHtml($participant["username"])?></td>
+                                <td><?=\REDCap::escapeHtml($participant["rcpro_username"])?></td>
                                 <td class="dt-center"><?=\REDCap::escapeHtml($participant["fname"])?></td>
                                 <td class="dt-center"><?=\REDCap::escapeHtml($participant["lname"])?></td>
                                 <td><?=\REDCap::escapeHtml($participant["email"])?></td>
                                 <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
-                                    $("#toReset").val("<?=\REDCap::escapeHtml($participant["id"])?>");
+                                    $("#toReset").val("<?=\REDCap::escapeHtml($participant["log_id"])?>");
                                     $("#toDisenroll").val("");
                                     $("#manage-form").submit();
                                     })();'>Reset</button></td>

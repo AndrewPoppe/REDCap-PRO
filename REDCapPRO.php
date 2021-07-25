@@ -578,11 +578,11 @@ class REDCapPRO extends AbstractExternalModule {
                 "email"            => $email_clean,
                 "fname"            => $fname_clean,
                 "lname"            => $lname_clean,
-                "pw"               => NULL,
+                "pw"               => "",
                 "last_modified_ts" => time(),
                 "lockout_ts"       => time(),
                 "failed_attempts"  => 0,
-                "token"            => NULL,
+                "token"            => "",
                 "token_ts"         => time(),
                 "token_valid"      => 0
             ]);
@@ -727,19 +727,22 @@ class REDCapPRO extends AbstractExternalModule {
     }
 
     /**
-     * Fetch the full name of a participant
+     * Use provided search string to find registered participants
      * 
-     * @param string $username
+     * @param string $search_term - text to search for
      * 
-     * @return string full name
+     * @return 
      */
-    public function getParticipantFullname(string $username) {
+    public function searchParticipants(string $search_term) {
+        $SQL = "SELECT fname, lname, email, log_id 
+                WHERE message = 'PARTICIPANT' 
+                AND project_id <> FALSE 
+                AND (fname LIKE ? OR lname LIKE ? OR email LIKE ?)";
         try {
-            $participant = $this->getParticipant($username);
-            return $participant["fname"]." ".$participant["lname"];
+            return $this->queryLogs($SQL, [$search_term, $search_term, $search_term]);
         }
-        catch (\Exception $e) {
-            $this->logError("Error getting full name", $e);
+        catch(\Exception $e) {
+            $this->logError("Error performing livesearch", $e);
         }
     }
 
@@ -926,7 +929,7 @@ class REDCapPRO extends AbstractExternalModule {
     public function getLinkId(int $rcpro_participant_id, int $rcpro_project_id) {
         $SQL = "SELECT log_id WHERE message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND project_id <> FALSE";
         try {
-            $result = $this->query($SQL, [$rcpro_participant_id, $rcpro_project_id]);
+            $result = $this->queryLogs($SQL, [$rcpro_participant_id, $rcpro_project_id]);
             return $result->fetch_assoc()["log_id"];
         }
         catch (\Exception $e) {
@@ -937,8 +940,8 @@ class REDCapPRO extends AbstractExternalModule {
     /**
      * Enrolls a participant in a project
      * 
-     * @param mixed $rcpro_participant_id
-     * @param mixed $pid
+     * @param int $rcpro_participant_id
+     * @param int $pid
      * 
      * @return int -1 if already enrolled, bool otherwise
      */
@@ -957,7 +960,14 @@ class REDCapPRO extends AbstractExternalModule {
         // If there is already a link between this participant and project,
         // then activate it, otherwise create the link
         if ($this->linkAlreadyExists($rcpro_participant_id, $rcpro_project_id)) {
-            return $this->setLinkActiveStatus($rcpro_participant_id, $rcpro_project_id, 1);
+            $result = $this->setLinkActiveStatus($rcpro_participant_id, $rcpro_project_id, 1);
+            if ($result) {
+                $this->log("Enrolled Participant", [
+                    "rcpro_participant_id" => $rcpro_participant_id,
+                    "rcpro_project_id" => $rcpro_project_id
+                ]);
+            }
+            return $result;
         } else {
             return $this->createLink($rcpro_participant_id, $rcpro_project_id);
         }
@@ -1021,7 +1031,7 @@ class REDCapPRO extends AbstractExternalModule {
             return $result > 0;
         }
         catch (\Exception $e) {
-            $this->logError("Error enrolling participant", $e);
+            $this->logError("Error checking participant enrollment", $e);
         }
     }
 
@@ -1054,7 +1064,14 @@ class REDCapPRO extends AbstractExternalModule {
      */
     public function disenrollParticipant($rcpro_participant_id, $rcpro_project_id) {
         try {
-            return $this->setLinkActiveStatus($rcpro_participant_id, $rcpro_project_id, 0);
+            $result = $this->setLinkActiveStatus($rcpro_participant_id, $rcpro_project_id, 0);
+            if ($result) {
+                $this->log("Disenrolled Participant", [
+                    "rcpro_participant_id" => $rcpro_participant_id,
+                    "rcpro_project_id" => $rcpro_project_id
+                ]);
+            }
+            return $result;
         }
         catch (\Exception $e) {
             $this->logError("Error Disenrolling Participant", $e);
@@ -1081,7 +1098,7 @@ class REDCapPRO extends AbstractExternalModule {
             $result1 = $this->query($SQL1, [$token, $rcpro_participant_id]);
             $result2 = $this->query($SQL2, [$token_ts, $rcpro_participant_id]);
             $result3 = $this->query($SQL3, [$rcpro_participant_id]);
-            if (!$result1 || !$result2 || $result3) {
+            if (!$result1 || !$result2 || !$result3) {
                 throw new REDCapProException(["rcpro_participant_id"=>$rcpro_participant_id]);
             }
             return $token;
@@ -1183,7 +1200,7 @@ class REDCapPRO extends AbstractExternalModule {
     }
 
     /**
-     * Send new user email to set password
+     * Send new participant email to set password
      * 
      * This acts as an email verification process as well
      * 
@@ -1194,7 +1211,7 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return bool|NULL
      */
-    public function sendNewUserEmail(string $username, string $email, string $fname, string $lname) {
+    public function sendNewParticipantEmail(string $username, string $email, string $fname, string $lname) {
         // generate token
         try {
             $rcpro_participant_id = $this->getParticipantIdFromUsername($username);
@@ -1434,6 +1451,25 @@ class REDCapPRO extends AbstractExternalModule {
             $params = array_merge($params, $e->rcpro);
         }
         $this->log($message, $params);
+    }
+
+    /**
+     * Gets the full name of REDCap user with given username
+     * 
+     * @param string $username
+     * 
+     * @return string|null Full Name
+     */
+    public function getUserFullname(string $username) {
+        $SQL = 'SELECT CONCAT(user_firstname, " ", user_lastname) AS name FROM redcap_user_information WHERE username = ?';
+        try {
+            $result = $this->query($SQL, [$username]);
+            return $result->fetch_assoc()["name"];
+        }
+        catch (\Exception $e) {
+            $this->log($e->getMessage());
+            return;
+        }
     }
 }
 

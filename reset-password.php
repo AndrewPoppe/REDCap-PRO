@@ -19,7 +19,7 @@ $new_password_err = $confirm_password_err = "";
  
 
 // Verify password reset token
-$verified_user = $module->verifyPasswordResetToken($qstring["t"]);
+$verified_participant = $module->verifyPasswordResetToken($qstring["t"]);
 
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -70,34 +70,33 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if(!$any_error) {
 
         // Grab all user details
-        $user = $module->getParticipant($_POST["username"]);
+        $participant = $module->getParticipant($_POST["username"]);
 
         // Update password
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
-        $result = $module->storeHash($password_hash, $user["id"]);
+        $result = $module->storeHash($password_hash, $participant["log_id"]);
         if (empty($result) || $result === FALSE) {
             echo "Oops! Something went wrong. Please try again later.";
             return;
         }
         
         // Password was successfully set. Expire the token.
-        $module->expirePasswordResetToken($user["id"]);
+        $module->expirePasswordResetToken($participant["log_id"]);
 
         // Store data in session variables
-        $_SESSION["username"] = $user["username"];
-        $_SESSION[$module::$APPTITLE."_user_id"] = $user["id"];
-        $_SESSION[$module::$APPTITLE."_username"] = $user["username"];
-        $_SESSION[$module::$APPTITLE."_email"] = $user["email"];
-        $_SESSION[$module::$APPTITLE."_fname"] = $user["fname"];
-        $_SESSION[$module::$APPTITLE."_lname"] = $user["lname"];
-        $_SESSION[$module::$APPTITLE."_temp_pw"] = $user["temp_pw"];
+        $_SESSION["username"] = $participant["rcpro_username"];
+        $_SESSION[$module::$APPTITLE."_user_id"] = $participant["log_id"];
+        $_SESSION[$module::$APPTITLE."_username"] = $participant["rcpro_username"];
+        $_SESSION[$module::$APPTITLE."_email"] = $participant["email"];
+        $_SESSION[$module::$APPTITLE."_fname"] = $participant["fname"];
+        $_SESSION[$module::$APPTITLE."_lname"] = $participant["lname"];
         $_SESSION[$module::$APPTITLE."_loggedin"] = true;
 
         if (isset($_SESSION[$module::$APPTITLE."_survey_url"])) {
             header("location: ".$_SESSION[$module::$APPTITLE."_survey_url"]);
         } else {
-            $module->UiShowParticipantHeader("Password Successfully Set");
-            echo "<p>You may now close this tab.</p>";
+            $module->UiShowParticipantHeader("Password Successfully Reset");
+            echo "<div style='text-align:center;'><p>You may now close this tab.</p></div>";
         }
         return;
     }
@@ -108,13 +107,13 @@ $module::$AUTH::set_csrf_token();
 
 $module->UiShowParticipantHeader("Reset Password");
 
-if ($verified_user) {
+if ($verified_participant) {
 
     echo "<p>Please fill out this form to reset your password.</p>";
     ?>
             <form action="<?= $module->getUrl("reset-password.php", true)."&t=".$qstring["t"]; ?>" method="post">
                 <div class="form-group">
-                    <span>Username: <span style="color: #900000; font-weight: bold;"><?= $verified_user["username"]; ?></span></span>
+                    <span>Username: <span style="color: #900000; font-weight: bold;"><?= $verified_participant["rcpro_username"]; ?></span></span>
                 </div> 
                 <div class="form-group">
                     <label>New Password</label>
@@ -130,7 +129,7 @@ if ($verified_user) {
                     <input type="submit" class="btn btn-primary" value="Submit">
                 </div>
                 <input type="hidden" name="token" value="<?=$module::$AUTH::get_csrf_token();?>">
-                <input type="hidden" name="username" value="<?=$verified_user["username"]?>">
+                <input type="hidden" name="username" value="<?=$verified_participant["rcpro_username"]?>">
             </form>
         </div>    
     </body>

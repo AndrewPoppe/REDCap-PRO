@@ -24,13 +24,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $username = \REDCap::escapeHtml(trim($_POST["username"]));
         // Check input errors before sending reset email
         if(!$err) {
-            $user_id = $module->getParticipantIdFromUsername($username);
-            if (!empty($user_id)) {
+            $rcpro_participant_id = $module->getParticipantIdFromUsername($username);
+            if (!empty($rcpro_participant_id)) {
                 $module->log("Password Reset Email Sent", [
-                    "rcpro_user_id"  => $user_id,
+                    "rcpro_participant_id"  => $rcpro_participant_id,
                     "rcpro_username" => $username
                 ]);
-                $module->sendPasswordResetEmail($user_id);
+                $module->sendPasswordResetEmail($rcpro_participant_id);
             }
             echo "If a user account exists with the supplied username, a password reset email was sent to the email address associated with that account.";
         }

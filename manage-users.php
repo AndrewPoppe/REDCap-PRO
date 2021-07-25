@@ -118,7 +118,7 @@ if ($role >= 3) {
                             <?php foreach ($userList as $user) { 
                                 $username       = $user->getUsername();
                                 $username_clean = \REDCap::escapeHtml($username);
-                                $fullname_clean = \REDCap::escapeHtml($module->getParticipantFullname($username));
+                                $fullname_clean = \REDCap::escapeHtml($module->getUserFullname($username));
                                 $email_clean    = \REDCap::escapeHtml($user->getEmail());
                                 $role           = $module->getUserRole($username);
                                 ?>

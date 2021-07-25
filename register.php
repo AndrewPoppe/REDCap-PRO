@@ -5,11 +5,6 @@ if ($role < 2) {
     header("location:".$module->getUrl("home.php"));
 }
 
-// Initialize tables if necesary
-$module->initTables();
-
-
-
 
 echo "<!DOCTYPE html>
 <html lang='en'>
@@ -61,8 +56,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
     if (!$any_error){
         $icon = $title = $html = "";
         try {
-            $username = $module->createUser($email, $fname_clean, $lname_clean);
-            $module->sendNewUserEmail($username, $email, $fname_clean, $lname_clean);
+            $username = $module->createParticipant($email, $fname_clean, $lname_clean);
+            $module->sendNewParticipantEmail($username, $email, $fname_clean, $lname_clean);
             $icon = "success";
             $title = "Participant Registered";
             $module->log("Participant Registered", [
