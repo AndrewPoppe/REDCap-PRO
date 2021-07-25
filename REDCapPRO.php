@@ -351,7 +351,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return int number of failed login attempts
      */
     private function checkUsernameAttempts(int $rcpro_participant_id) {
-        $SQL = "SELECT failed_attempts WHERE log_id = ?;";
+        $SQL = "SELECT failed_attempts WHERE log_id = ? AND project_id <> FALSE;";
         try {
             $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $res->fetch_assoc()["failed_attempts"];
@@ -372,7 +372,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return int number of seconds of lockout left
      */
     public function getUsernameLockoutDuration(int $rcpro_participant_id) {
-        $SQL = "SELECT lockout_ts WHERE log_id = ?;";
+        $SQL = "SELECT lockout_ts WHERE log_id = ? AND project_id <> FALSE;";
         try {
             $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
             $lockout_ts = intval($res->fetch_assoc()["lockout_ts"]);
@@ -517,7 +517,7 @@ class REDCapPRO extends AbstractExternalModule {
      */
     public function getHash(int $rcpro_participant_id) {
         try {
-            $SQL = "SELECT 'pw' WHERE log_id = ?;";
+            $SQL = "SELECT 'pw' WHERE log_id = ? AND project_id <> FALSE;";
             $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $res->fetch_assoc()['pw'];
         }
@@ -549,7 +549,7 @@ class REDCapPRO extends AbstractExternalModule {
     }
 
     /**
-     * Adds user entry into table.
+     * Adds participant entry into log table.
      * 
      * In so doing, it creates a unique username.
      * 
@@ -557,9 +557,9 @@ class REDCapPRO extends AbstractExternalModule {
      * @param string $fname First Name
      * @param string $lname Last Name
      * 
-     * @return string username of newly created user
+     * @return string username of newly created participant
      */
-    public function createUser(string $email, string $fname, string $lname) {
+    public function createParticipant(string $email, string $fname, string $lname) {
         $username     = $this->createUsername();
         $email_clean  = \REDCap::escapeHtml($email);
         $fname_clean  = \REDCap::escapeHtml($fname);
@@ -572,15 +572,27 @@ class REDCapPRO extends AbstractExternalModule {
         }
         if ($counter >= $counterLimit) {
             echo "Please contact your REDCap administrator.";
-            return;
+            return NULL;
         }
-        // BOOKMARK: Start here
-        $SQL = "INSERT INTO ".$this::$TABLES["USER"]." (username, email, fname, lname) VALUES (?, ?, ?, ?)";
         try {
-            $result = $this->query($SQL, [$username, $email_clean, $fname_clean, $lname_clean]);
+            $result = $this->log("PARTICIPANT", [
+                "username"         => $username,
+                "email"            => $email_clean,
+                "fname"            => $fname_clean,
+                "lname"            => $lname_clean,
+                "pw"               => NULL,
+                "last_modified_ts" => time(),
+                "lockout_ts"       => time(),
+                "failed_attempts"  => 0,
+                "token"            => NULL,
+                "token_ts"         => time(),
+                "token_valid"      => 0
+            ]);
             if (!$result) {
-                throw new \Exception("Failed to create new participant.");
-            }
+                $this->log('Failed to create participant', [
+                    "username" => $username
+                ]);
+            } else { // BOOKMARK: continue here
             $SQL2 = "SELECT id FROM ".$this::$TABLES['USER']." WHERE username = ?";
             $result2 = $this->query($SQL2, $username);
             $id = $result2->fetch_assoc()["id"];

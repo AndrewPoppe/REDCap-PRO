@@ -4,10 +4,10 @@
 //$SQL = "UPDATE redcap_external_modules_log_parameters SET value = value+1 WHERE log_id = ? AND name = 'failed_attempts'";
 //$module->query($SQL, [1413]);
 
-/*$result = $module->queryLogs("select failed_attempts where log_id = 1413");
+$result = $module->queryLogs("select failed_attempts where log_id = 1413 and project_id <> FALSE");
 while($row = $result->fetch_assoc()) {
     var_dump($row);
-}*/
+}
 echo date_create()->modify('+60 seconds')->format('U');
 
 
