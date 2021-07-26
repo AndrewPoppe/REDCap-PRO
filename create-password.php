@@ -86,13 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $module->expirePasswordResetToken($participant["log_id"]);
 
         // Store data in session variables
-        $_SESSION["username"] = $participant["rcpro_username"];
-        $_SESSION[$module::$APPTITLE."_user_id"] = $participant["log_id"];
-        $_SESSION[$module::$APPTITLE."_username"] = $participant["rcpro_username"];
-        $_SESSION[$module::$APPTITLE."_email"] = $participant["email"];
-        $_SESSION[$module::$APPTITLE."_fname"] = $participant["fname"];
-        $_SESSION[$module::$APPTITLE."_lname"] = $participant["lname"];
-        $_SESSION[$module::$APPTITLE."_loggedin"] = true;
+        $module::$AUTH::set_login_values($participant);
 
         $module->UiShowParticipantHeader("Password Successfully Set");
         echo "<div style='text-align:center;'><p>You may now close this tab.</p></div>";

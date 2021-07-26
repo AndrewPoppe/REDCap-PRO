@@ -47,11 +47,11 @@ class REDCapPRO extends AbstractExternalModule {
         $this::$AUTH::init();
 
         // Participant is logged in to their account
-        if (isset($_SESSION[$this::$APPTITLE."_loggedin"]) && $_SESSION[$this::$APPTITLE."_loggedin"] === true) {
+        if ($this::$AUTH::is_logged_in()) {
 
             // Determine whether participant is enrolled in the study.
-            $user_id = $_SESSION[$this::$APPTITLE."_user_id"];
-            if (!$this->enrolledInProject($user_id, $project_id)) {
+            $rcpro_participant_id = $this::$AUTH::get_participant_id();
+            if (!$this->enrolledInProject($rcpro_participant_id, $project_id)) {
                 $this->UiShowParticipantHeader("Not Enrolled");
                 echo "<p style='text-align:center;'>You are not currently enrolled in this study.<br>Please contact the study representative.</p>";
                 $this->exitAfterHook();
@@ -59,7 +59,7 @@ class REDCapPRO extends AbstractExternalModule {
 
             \REDCap::logEvent(
                 "REDCapPro Survey Accessed",                                        // action description
-                "REDCapPRO User: ".$_SESSION[$this::$APPTITLE."_username"]."\n".
+                "REDCapPRO User: ".$this::$AUTH::get_username()."\n".
                 "Instrument: ${instrument}\n",                                      // changes made
                 NULL,                                                               // sql
                 $record,                                                            // record
@@ -67,8 +67,8 @@ class REDCapPRO extends AbstractExternalModule {
                 $project_id                                                         // project id
             );
             $this->log("REDCapPro Survey Accessed", [
-                "rcpro_username" => $_SESSION[$this::$APPTITLE."_username"],
-                "rcpro_user_id"  => $_SESSION[$this::$APPTITLE."_user_id"],
+                "rcpro_username" => $this::$AUTH::get_username(),
+                "rcpro_user_id"  => $this::$AUTH::get_participant_id(),
                 "record" => $record,
                 "event" => $event_id,
                 "project" => $project_id,
@@ -95,10 +95,10 @@ class REDCapPRO extends AbstractExternalModule {
         // Participant is not logged into their account
         // Store cookie to return to survey
         } else {
-            $_SESSION[$this::$APPTITLE."_survey_url"] = APP_PATH_SURVEY_FULL."?s=${survey_hash}";
+            $this::$AUTH::set_survey_url(APP_PATH_SURVEY_FULL."?s=${survey_hash}");
             \Session::savecookie($this::$APPTITLE."_survey_url", APP_PATH_SURVEY_FULL."?s=${survey_hash}", 0, TRUE);
-            $_SESSION[$this::$APPTITLE."_survey_link_active"] = TRUE;
-            header("location: ".$this->getUrl("login.php", true)."&s=${survey_hash}"); // TODO: Does hash need to be in querystring? Consider removing if not necessary
+            $this::$AUTH::set_survey_active_state(TRUE);
+            header("location: ".$this->getUrl("login.php", true)."&s=${survey_hash}");
             $this->exitAfterHook();
         }
 
@@ -1529,15 +1529,10 @@ class REDCapPRO extends AbstractExternalModule {
 class Auth {
 
     public static $APPTITLE;
-
-    public function yell() {
-        echo "Loaded Auth for: ".self::$APPTITLE;
-    }
     
     function __construct($title = null) {
         self::$APPTITLE = $title;
     }
-
 
     public function init() {
         $session_id = $_COOKIE["survey"] ?? $_COOKIE["PHPSESSID"];
@@ -1565,6 +1560,61 @@ class Auth {
     function validate_csrf_token(string $token) {
         return hash_equals(self::get_csrf_token(), $token);
     }
+
+    // --- THESE DEAL WITH SESSION VALUES --- \\
+
+    // TESTS 
+    function is_logged_in() {
+        return isset($_SESSION[self::$APPTITLE."_loggedin"]) && $_SESSION[self::$APPTITLE."_loggedin"] === true;
+    }
+
+    function is_survey_url_set() {
+        return isset($_SESSION[self::$APPTITLE."_survey_url"]);
+    }
+    
+    function is_survey_link_active() {
+        return $_SESSION[self::$APPTITLE."_survey_link_active"];
+    }
+
+    // GETS
+    
+    function get_survey_url() {
+        return $_SESSION[self::$APPTITLE."_survey_url"];
+    }
+    
+    function get_participant_id() {
+        return $_SESSION[self::$APPTITLE."_participant_id"];
+    }
+
+    function get_username() {
+        $_SESSION[self::$APPTITLE."_username"];
+    }
+
+    // SETS
+
+    function deactivate_survey_link() {
+        unset($_SESSION[self::$APPTITLE."_survey_link_active"]);
+    }
+
+    function set_survey_url($url) {
+        $_SESSION[self::$APPTITLE."_survey_url"] = $url;
+    }
+
+    function set_survey_active_state($state) {
+        $_SESSION[self::$APPTITLE."_survey_link_active"] = $state;
+    }
+
+    function set_login_values($participant) {
+        $_SESSION["username"] = $participant["rcpro_username"];
+        $_SESSION[self::$APPTITLE."_participant_id"] = $participant["log_id"];
+        $_SESSION[self::$APPTITLE."_username"] = $participant["rcpro_username"];
+        $_SESSION[self::$APPTITLE."_email"] = $participant["email"];
+        $_SESSION[self::$APPTITLE."_fname"] = $participant["fname"];
+        $_SESSION[self::$APPTITLE."_lname"] = $participant["lname"];
+        $_SESSION[self::$APPTITLE."_loggedin"] = true;
+    }
+
+    
 
 }
 

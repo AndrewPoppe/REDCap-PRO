@@ -4,13 +4,12 @@
 $module::$AUTH::init();
 
 // Check if the user is already logged in, if yes then redirect then to the survey
-if (isset($_SESSION[$module::$APPTITLE."_loggedin"]) && $_SESSION[$module::$APPTITLE."_loggedin"] === true) {
-    $survey_url = $_SESSION[$module::$APPTITLE."_survey_url"];
-    $survey_url_active = $_SESSION[$module::$APPTITLE."_survey_link_active"];
+if ($module::$AUTH::is_logged_in()) {
+    $survey_url = $module::$AUTH::get_survey_url();
+    $survey_url_active = $module::$AUTH::is_survey_link_active();
     
     if (empty($survey_url)) {
         // TODO:
-        
         echo "NO SURVEY URL";
         return;
     }
@@ -19,7 +18,7 @@ if (isset($_SESSION[$module::$APPTITLE."_loggedin"]) && $_SESSION[$module::$APPT
         return;
     }
 
-    unset($_SESSION[$module::$APPTITLE."_survey_link_active"]);
+    $module::$AUTH::deactivate_survey_link();
     header("location: ${survey_url}");
     return;
 } 
@@ -142,17 +141,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $module->resetFailedLogin($participant["log_id"]);
 
                     // Store data in session variables
-                    $_SESSION["username"] = $participant["rcpro_username"];
-                    $_SESSION[$module::$APPTITLE."_user_id"] = $participant["log_id"];
-                    $_SESSION[$module::$APPTITLE."_username"] = $participant["rcpro_username"];
-                    $_SESSION[$module::$APPTITLE."_email"] = $participant["email"];
-                    $_SESSION[$module::$APPTITLE."_fname"] = $participant["fname"];
-                    $_SESSION[$module::$APPTITLE."_lname"] = $participant["lname"];
-                    $_SESSION[$module::$APPTITLE."_loggedin"] = true;
+                    $module::$AUTH::set_login_values($participant);
                     
                     // Redirect user to appropriate page
-                    if (isset($_SESSION[$module::$APPTITLE."_survey_url"])) {
-                        header("location: ".$_SESSION[$module::$APPTITLE."_survey_url"]);
+                    if ($module::$AUTH::is_survey_url_set()) {
+                        header("location: ".$module::$AUTH::get_survey_url());
                     } else if (isset($qstring["s"])) {
                         header("location: ".APP_PATH_SURVEY_FULL.$_SERVER['QUERY_STRING']); 
                     } else {
