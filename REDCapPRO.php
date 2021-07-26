@@ -112,7 +112,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return void
      */
     function redcap_module_system_enable($version) {
-        // TODO: Do what?
+        $this->log($this::$APPTITLE." - Enabled");
     }
 
     /**
@@ -123,7 +123,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return void
      */
     function redcap_module_system_disable($version) {
-        // TODO: Do what?
+        $this->log($this::$APPTITLE." - Disabled");
     }
 
     /**
@@ -868,7 +868,14 @@ class REDCapPRO extends AbstractExternalModule {
         $rcpro_project_id = $this->getProjectIdFromPID($pid);
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
         try {
-            return $this->query($SQL, [$active, $rcpro_project_id]);
+            $result = $this->query($SQL, [$active, $rcpro_project_id]);
+            if ($result) {
+                $this->log("Project Status Set", [
+                    "redcap_project"   => $pid,
+                    "rcpro_project_id" => $rcpro_project_id,
+                    "active_status"    => $active
+                ]);
+            }
         }
         catch (\Exception $e) {
             $this->logError("Error setting project active status", $e);
