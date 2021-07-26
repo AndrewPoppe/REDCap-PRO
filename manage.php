@@ -14,26 +14,59 @@ if ($role > 0) {
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         try {
-            $function = empty($_POST["toDisenroll"]) ? "reset" : "disenroll";
-            if ($function === "reset") {
+            $function = NULL;
+            // DISENROLL THE PARTICIPANT FROM THE STUDY
+            if (!empty($_POST["toDisenroll"])) {
+                $function = "disenroll participant";
+                if ($role <= 1) {
+                    $icon = "error";
+                    $title = "You do not have the required role to do that.";
+                } else {
+                    $result = $module->disenrollParticipant($_POST["toDisenroll"], $rcpro_project_id);
+                    if (!$result) {
+                        $icon = "error";
+                        $title = "Trouble disenrolling participant.";
+                    } else {
+                        $icon = "success";
+                        $title = "Successfully disenrolled participant from project.";
+                    }
+                }
+
+            // SEND A PASSWORD RESET EMAIL
+            } else if (!empty($_POST["toReset"])) {
+                $function = "send password reset email";
                 $result = $module->sendPasswordResetEmail($_POST["toReset"]);
-                $icon = "success";
-                $msg = "Successfully reset password for participant.";
-            } else {
-                $result = $module->disenrollParticipant($_POST["toDisenroll"], $rcpro_project_id);
                 if (!$result) {
                     $icon = "error";
-                    $msg = "Trouble disenrolling participant.";
+                    $title = "Trouble sending password reset email.";
                 } else {
                     $icon = "success";
-                    $msg = "Successfully disenrolled participant from project.";
+                    $title = "Successfully reset password for participant.";
+                }
+
+            // CHANGE THE PARTICIPANT'S EMAIL ADDRESS
+            } else if (!empty($_POST["toChangeEmail"])) {
+                $function = "change participant's email address";
+                if ($role <= 2) {
+                    $icon = "error";
+                    $title = "You do not have the required role to do that.";
+                } else {
+                    $newEmail = $_POST["newEmail"];
+                    $result = $module->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
+                    if (!$result) {
+                        $icon = "error";
+                        $title = "Trouble changing participant's email address.";
+                    } else {
+                        $icon = "success";
+                        $title = "Successfully changed participant's email address.";
+                    }
                 }
             }
-            $title = $msg;
         }
         catch (\Exception $e) {
             $icon = "error";
-            $title = "Failed to ${function} participant.";
+            $title = "Failed to ${function}.";
+            $module->logError("Error attempting to ${function}", $e);
         }
     }
 
@@ -98,6 +131,9 @@ if ($role > 0) {
                                     <th id="rcpro_email" >Email</th>
                                 <?php } ?>
                                 <th id="rcpro_resetpw" class="dt-center">Reset Password</th>
+                                <?php if ($role > 2) { ?>
+                                    <th id="rcpro_changeemail" class="dt-center">Change Email Address</th>
+                                <?php } ?>
                                 <?php if ($role > 1) { ?>
                                     <th id="rcpro_disenroll" class="dt-center">Disenroll</th>
                                 <?php } ?>
@@ -120,14 +156,33 @@ if ($role > 0) {
                                     <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
                                         $("#toReset").val("<?=$participant["log_id"]?>");
                                         $("#toDisenroll").val("");
+                                        $("#toChangeEmail").val("");
                                         $("#manage-form").submit();
                                         })();'>Reset</button></td>
+                                    <?php if ($role > 2) { ?>
+                                        <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
+                                            $("#toReset").val("");
+                                            $("#toDisenroll").val("");
+                                            $("#toChangeEmail").val("<?=$participant["log_id"]?>");
+                                            Swal.fire({
+                                                title: "Enter the new email address",
+                                                input: "email",
+                                                inputPlaceholder: "Enter the new email address"
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    $("#newEmail").val(result.value); 
+                                                    $("#manage-form").submit();
+                                                }
+                                            });
+                                            })();'>Change Email</button></td>
+                                    <?php } ?>
                                     <?php if ($role > 1) { ?>
                                         <td class="dt-center"><button type="button" class="btn btn-danger btn-sm" onclick='(function(){
                                             $("#toReset").val("");
                                             $("#toDisenroll").val("<?=$participant["log_id"]?>");
+                                            $("#toChangeEmail").val("");
                                             $("#manage-form").submit();
-                                            })();'>Disenroll</button></td>
+                                        })();'>Disenroll</button></td>
                                     <?php } ?>
                                 </tr>
                             <?php } ?>
@@ -135,6 +190,8 @@ if ($role > 0) {
                     </table>
                 </div>
                 <input type="hidden" id="toReset" name="toReset">
+                <input type="hidden" id="toChangeEmail" name="toChangeEmail">
+                <input type="hidden" id="newEmail" name="newEmail">
                 <input type="hidden" id="toDisenroll" name="toDisenroll">
             <?php } ?>        
         </form>

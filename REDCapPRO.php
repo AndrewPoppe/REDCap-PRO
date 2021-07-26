@@ -1199,6 +1199,7 @@ class REDCapPRO extends AbstractExternalModule {
                 "redcap_user"    => USERID,
                 "redcap_project" => PROJECT_ID
             ]);
+            return $result;
         }
         catch (\Exception $e) {
             $this->log("Password Reset Failed", [
@@ -1276,11 +1277,67 @@ class REDCapPRO extends AbstractExternalModule {
             return \REDCap::email($email, $from, $subject, $body);
         }
         catch (\Exception $e) {
-            $this->log("Error sending username email", $e);
+            $this->logError("Error sending username email", $e);
         }
-
     }
-    
+
+    /**
+     * Updates the email address for the given participant
+     * 
+     * It then sends a confirmation email to the new address, cc'ing the old
+     * 
+     * @param int $rcpro_participant_id
+     * @param string $new_email - email address that 
+     * 
+     * @return bool|NULL
+     */
+    public function changeEmailAddress(int $rcpro_participant_id, string $new_email) {
+        $current_email = $this->getEmail($rcpro_participant_id);
+        $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'email'";
+        try {
+            $result = $this->query($SQL, [$new_email, $rcpro_participant_id]);
+            if ($result) {
+                $this->log("Changed Email Address", [
+                    "rcpro_participant_id" => $rcpro_participant_id,
+                    "old_email" => $current_email,
+                    "new_email" => $new_email
+                ]);
+                $username = $this->getUserName($rcpro_participant_id);
+                return $this->sendEmailUpdateEmail($username, $new_email, $current_email);
+            } else {
+                throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
+            }
+        }
+        catch (\Exception $e) {
+            $this->logError("Error changing email address", $e);
+        }
+    }
+
+    public function sendEmailUpdateEmail(string $username, string $new_email, string $old_email) {
+        $subject = "REDCapPRO - Email Address Changed";
+        $from    = "noreply@REDCapPro.com";
+        $old_email_clean = \REDCap::escapeHtml($old_email);
+        $new_email_clean = \REDCap::escapeHtml($new_email);
+        $body    = "<html><body><div>
+        <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
+        <p>Hello,</p>
+        <p>Your email for username <strong>${username}</strong> was just changed.<br>
+            <ul>
+                <li><strong>Old email:</strong> ${old_email_clean}</li>
+                <li><strong>New email:</strong> ${new_email_clean}</li>
+            </ul>
+        </p>
+
+        <p><strong>If you did not request this change, please contact a member of the study team!</strong></p>
+        </body></html></div>";
+ 
+        try {
+            return \REDCap::email($new_email, $from, $subject, $body, $old_email);
+        }
+        catch (\Exception $e) {
+            $this->logError("Error sending email reset email", $e);
+        }
+    }
 
     /*-------------------------------------*\
     |             UI FORMATTING             |
