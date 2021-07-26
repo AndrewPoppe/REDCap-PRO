@@ -376,11 +376,13 @@ class REDCapPRO extends AbstractExternalModule {
         try {
             $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
             $lockout_ts = intval($res->fetch_assoc()["lockout_ts"]);
-            return max($lockout_ts - time(), 0);
+            $time_remaining = $lockout_ts - time();
+            if ($time_remaining > 0) {
+                return $time_remaining;
+            }
         }
         catch (\Exception $e) {
             $this->logError("Failed to check username lockout", $e);
-            return 0;
         }
     }
 
@@ -517,7 +519,7 @@ class REDCapPRO extends AbstractExternalModule {
      */
     public function getHash(int $rcpro_participant_id) {
         try {
-            $SQL = "SELECT 'pw' WHERE message = 'PARTICIPANT' AND log_id = ? AND project_id <> FALSE;";
+            $SQL = "SELECT pw WHERE message = 'PARTICIPANT' AND log_id = ? AND project_id <> FALSE;";
             $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $res->fetch_assoc()['pw'];
         }
@@ -1467,8 +1469,7 @@ class REDCapPRO extends AbstractExternalModule {
             return $result->fetch_assoc()["name"];
         }
         catch (\Exception $e) {
-            $this->log($e->getMessage());
-            return;
+            $this->logError("Error getting user full name", $e);
         }
     }
 }
