@@ -662,7 +662,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return string|NULL username
      */
     public function getUserName(int $rcpro_participant_id) {
-        $SQL = "SELECT rcpro_username WHERE message = 'PARTICIPANT' AND id = ? AND project_id <> FALSE";
+        $SQL = "SELECT rcpro_username WHERE message = 'PARTICIPANT' AND log_id = ? AND project_id <> FALSE";
         try {
             $result = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $result->fetch_assoc()["rcpro_username"];
