@@ -33,27 +33,27 @@
             "super-users-only":true
         },
         {
-            "key": "monitors-info",
-            "name": "<font style='font-size:large; font-weight:bold;'>Monitors</font>",
-            "type": "descriptive"
-        },
-        {
-            "key": "monitors",
-            "name": "<strong>Select Monitor Accounts:</strong><br>These accounts have the ability to register/enroll/disenroll etc. participants, including the ability to view names and emails of all registered participants",
-            "type": "user-list",
-            "repeatable": true
-        },
-        {
             "key": "users-info",
             "name": "<font style='font-size:large; font-weight:bold;'>Users</font>",
             "type": "descriptive"
         },
         {
             "key": "users",
-            "name": "<strong>Select Normal Users:</strong><br>These accounts can perform very basic management of participant accounts (basically just send password reset emails). They cannot view names or emails of participants",
+            "name": "<strong>Select Normal Users:</strong><br>These accounts have the ability to register/enroll/disenroll etc. participants, including the ability to view names and emails of all registered participants",
             "type": "user-list",
             "repeatable": true
-        }  
+        },
+        {
+            "key": "monitors-info",
+            "name": "<font style='font-size:large; font-weight:bold;'>Monitors</font>",
+            "type": "descriptive"
+        },
+        {
+            "key": "monitors",
+            "name": "<strong>Select Monitor Accounts:</strong><br>These accounts can perform very basic management of participant accounts (basically just send password reset emails). They cannot view names or emails of participants",
+            "type": "user-list",
+            "repeatable": true
+        }
     ],
     "links": {
         "project": [

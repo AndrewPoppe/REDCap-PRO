@@ -23,7 +23,7 @@ class REDCapPRO extends AbstractExternalModule {
         if (strpos($_SERVER["PHP_SELF"], "surveys") !== false) {
             return;
         }
-        $role = SUPER_USER ? 3 : $this->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
+        $role = SUPER_USER ? 3 : $this->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
         if ($role > 0) {
             ?>
             <script>
@@ -418,16 +418,16 @@ class REDCapPRO extends AbstractExternalModule {
      */
     public function getUserRole(string $username) {
         $managers = $this->getProjectSetting("managers");
-        $monitors = $this->getProjectSetting("monitors");
         $users    = $this->getProjectSetting("users");
-
+        $monitors = $this->getProjectSetting("monitors");
+        
         $result = 0;
 
         if (in_array($username, $managers)) {
             $result = 3;
-        } else if (in_array($username, $monitors)) {
-            $result = 2;
         } else if (in_array($username, $users)) {
+            $result = 2;
+        } else if (in_array($username, $monitors)) {
             $result = 1;
         }
 
@@ -446,8 +446,8 @@ class REDCapPRO extends AbstractExternalModule {
     public function changeUserRole(string $username, string $oldRole, string $newRole) {
         $roles = array(
             "3" => $this->getProjectSetting("managers"),
-            "2" => $this->getProjectSetting("monitors"),
-            "1" => $this->getProjectSetting("users")
+            "2" => $this->getProjectSetting("users"),
+            "1" => $this->getProjectSetting("monitors")
         );
 
         $oldRole = strval($oldRole);
@@ -462,8 +462,8 @@ class REDCapPRO extends AbstractExternalModule {
         }
             
         $this->setProjectSetting("managers", $roles["3"]);
-        $this->setProjectSetting("monitors", $roles["2"]);
-        $this->setProjectSetting("users", $roles["1"]);
+        $this->setProjectSetting("users", $roles["2"]);
+        $this->setProjectSetting("monitors", $roles["1"]);
     }
 
 
@@ -1311,10 +1311,7 @@ class REDCapPRO extends AbstractExternalModule {
     }
 
     public function UiShowHeader(string $page) {
-        $role = $this->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
-        if (SUPER_USER) {
-            $role = 3;
-        }
+        $role = SUPER_USER ? 3 : $this->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
         $header = "
         <style>
             .rcpro-nav a {

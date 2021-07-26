@@ -1,5 +1,5 @@
 <?php
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
+$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role >= 3) {
     
     echo "<!DOCTYPE html>
@@ -92,8 +92,8 @@ if ($role >= 3) {
                             <div style='text-align:left;'>
                                 <ul>
                                     <li><strong>Manager:</strong> Highest permissions. Has the ability to grant/revoke staff access. You are a manager if you are reading this.</li>
-                                    <li><strong>Monitor:</strong> Able to view participant identifying information, register participants, enroll/disenroll participants in the study, and initiate password reset.</li>
-                                    <li><strong>User:</strong> Basic access. Can only view usernames and initiate password resets.</li>
+                                    <li><strong>User:</strong> Able to view participant identifying information, register participants, enroll/disenroll participants in the study, and initiate password reset.</li>
+                                    <li><strong>Monitor:</strong> Basic access. Can only view usernames and initiate password resets.</li>
                                 </ul><br>
                                 </div>`
                     })})();">staff permissions</span> to REDCapPRO</p>
@@ -128,8 +128,8 @@ if ($role >= 3) {
                                     <td><?=$email_clean?></td>
                                     <td data-order="<?=$role?>"><select class="role_select" name="role_select_<?=$username_clean?>" id="role_select_<?=$username_clean?>" orig_value="<?=$role?>" form="manage-users-form">
                                         <option value=0 <?=$role === 0 ? "selected" : "";?>>No Access</option>
-                                        <option value=1 <?=$role === 1 ? "selected" : "";?>>Normal User</option>
-                                        <option value=2 <?=$role === 2 ? "selected" : "";?>>Monitor</option>
+                                        <option value=1 <?=$role === 1 ? "selected" : "";?>>Monitor</option>
+                                        <option value=2 <?=$role === 2 ? "selected" : "";?>>Normal User</option>
                                         <option value=3 <?=$role === 3 ? "selected" : "";?>>Manager</option>
                                     </select></td>
                                 </tr>

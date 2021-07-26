@@ -4,7 +4,7 @@ echo "<!DOCTYPE html>
 <head>
 <meta charset='UTF-8'><title>".$module::$APPTITLE." - Menu</title>";
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=monitor, 1=user, 0=not found
+$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role > 0) {
 
     require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
