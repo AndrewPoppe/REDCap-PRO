@@ -10,7 +10,7 @@ if ($role > 0) {
     require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
     $module->UiShowHeader("Manage");
 
-    $rcpro_project_id = $module->getProjectId($project_id);
+    $rcpro_project_id = $module->getProjectIdFromPID($project_id);
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         try {

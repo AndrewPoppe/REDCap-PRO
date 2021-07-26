@@ -825,7 +825,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return boolean TRUE if the participant is enrolled
      */
     public function enrolledInProject(int $rcpro_participant_id, int $pid) {
-        $rcpro_project_id = $this->getProjectId($pid);
+        $rcpro_project_id = $this->getProjectIdFromPID($pid);
         $SQL = "message = 'LINK' AND rcpro_project_id = ? AND rcpro_participant_id = ? AND project_id <> FALSE";
         try {
             $result = $this->countLogs($SQL, [$rcpro_project_id, $rcpro_participant_id]);
@@ -865,7 +865,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return boolean success
      */
     public function setProjectActive(int $pid, int $active) {
-        $rcpro_project_id = $this->getProjectId($pid);
+        $rcpro_project_id = $this->getProjectIdFromPID($pid);
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
         try {
             return $this->query($SQL, [$active, $rcpro_project_id]);
@@ -909,7 +909,7 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return int rcpro project ID associated with the PID
      */
-    public function getProjectId(int $pid) {
+    public function getProjectIdFromPID(int $pid) {
         $SQL = "SELECT log_id WHERE message = 'PROJECT' AND pid = ? AND project_id <> FALSE";
         try {
             $result = $this->queryLogs($SQL, [$pid]);
@@ -952,7 +952,7 @@ class REDCapPRO extends AbstractExternalModule {
         if (!$this->checkProject($pid)) {
             $this->addProject($pid);
         }
-        $rcpro_project_id = $this->getProjectID($pid);
+        $rcpro_project_id = $this->getProjectIdFromPID($pid);
 
         // Check that user is not already enrolled in this project
         if ($this->participantEnrolled($rcpro_participant_id, $rcpro_project_id)) {
@@ -1468,6 +1468,58 @@ class REDCapPRO extends AbstractExternalModule {
         catch (\Exception $e) {
             $this->logError("Error getting user full name", $e);
         }
+    }
+
+    /**
+     * Make sure settings meet certain conditions.
+     * 
+     * This is called when a user clicks "Save" in either system or project
+     * configuration.
+     * 
+     * @param array $settings Array of settings user is trying to set
+     * 
+     * @return string|null if not null, the error message to show to user
+     */
+    function validateSettings(array $settings) {
+
+        $managers = $users = $monitors = array();
+        $message = NULL;
+
+        // project-level settings
+        if ($this->getProjectId()) {
+            if (count($settings["managers"]) > 0) {
+                foreach ($settings["managers"] as $i=>$manager) {
+                    if (in_array($manager, $managers)) {
+                        $message = "This user ($manager) is already a manager";
+                    }
+                    array_push($managers, $manager);
+                }
+            }
+            if (count($settings["users"]) > 0) {
+                foreach ($settings["users"] as $i=>$user) {
+                    if (in_array($user, $users)) {
+                        $message = "This user ($user) is already a user";
+                    }
+                    array_push($users, $user);
+                    if (in_array($user, $managers)) {
+                        $message = "This user ($user) cannot have multiple roles";
+                    }
+                }
+            }
+            if (count($settings["monitors"]) > 0) {
+                foreach ($settings["monitors"] as $i=>$monitor) {
+                    if (in_array($monitor, $monitors)) {
+                        $message = "This user ($monitor) is already a monitor";
+                    }
+                    array_push($monitors, $monitor);
+                    if (in_array($monitor, $managers) || in_array($monitor, $users)) {
+                        $message = "This user ($monitor) cannot have multiple roles";
+                    }
+                    
+                }
+            }
+        }
+        return $message;
     }
 }
 

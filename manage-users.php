@@ -9,7 +9,7 @@ if ($role >= 3) {
     require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
     $module->UiShowHeader("Users");
 
-    $proj_id = $module->getProjectId($project_id);
+    $proj_id = $module->getProjectIdFromPID($project_id);
 
     // Get list of users
     $project = $module->getProject();
