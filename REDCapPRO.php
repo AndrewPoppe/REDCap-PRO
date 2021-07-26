@@ -53,7 +53,7 @@ class REDCapPRO extends AbstractExternalModule {
             $user_id = $_SESSION[$this::$APPTITLE."_user_id"];
             if (!$this->enrolledInProject($user_id, $project_id)) {
                 $this->UiShowParticipantHeader("Not Enrolled");
-                echo "<p>You are not currently enrolled in this study.<br>Please contact the study representative.</p>";
+                echo "<p style='text-align:center;'>You are not currently enrolled in this study.<br>Please contact the study representative.</p>";
                 $this->exitAfterHook();
             }
 
@@ -624,7 +624,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return boolean|NULL True if taken, False if free, NULL if error 
      */
     public function usernameIsTaken(string $username) {
-        $SQL = "message = 'PARTICIPANT' AND rcpro_username = ?";
+        $SQL = "message = 'PARTICIPANT' AND rcpro_username = ? AND project_id <> FALSE";
         try {
             $result = $this->countLogs($SQL, [$username]);
             return $result > 0;
