@@ -120,7 +120,7 @@ if ($role > 0) {
                 </div>
             <?php } else { ?>
                 <div class="form-group">
-                    <table class="table" id="RCPRO_Manage_Users">
+                    <table class="table" id="RCPRO_Manage_Users" style="width:100%;">
                         <caption>Study Participants</caption>
                         <thead>
                             <tr>
@@ -174,7 +174,8 @@ if ($role > 0) {
                                                     $("#manage-form").submit();
                                                 }
                                             });
-                                            })();'>Change Email</button></td>
+                                            })();'>Change Email</button>
+                                        </td>
                                     <?php } ?>
                                     <?php if ($role > 1) { ?>
                                         <td class="dt-center"><button type="button" class="btn btn-danger btn-sm" onclick='(function(){

@@ -12,20 +12,37 @@
     
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         try {
-            $function = empty($_POST["toDisenroll"]) ? "reset" : "disenroll";
-            if ($function === "reset") {
+            $function = NULL;
+            // SEND A PASSWORD RESET EMAIL
+            if (!empty($_POST["toReset"])) {
+                $function = "send password reset email";
                 $result = $module->sendPasswordResetEmail($_POST["toReset"]);
-                $icon = "success";
-                $msg = "Successfully reset password for participant.";
-            } else {
-                $icon = "error";
-                $title = "No information provided.";
+                if (!$result) {
+                    $icon = "error";
+                    $title = "Trouble sending password reset email.";
+                } else {
+                    $icon = "success";
+                    $title = "Successfully reset password for participant.";
+                }
+
+            // CHANGE THE PARTICIPANT'S EMAIL ADDRESS
+            } else if (!empty($_POST["toChangeEmail"])) {
+                $function = "change participant's email address";
+                $newEmail = $_POST["newEmail"];
+                $result = $module->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
+                if (!$result) {
+                    $icon = "error";
+                    $title = "Trouble changing participant's email address.";
+                } else {
+                    $icon = "success";
+                    $title = "Successfully changed participant's email address.";
+                }
             }
-            $title = $msg;
         }
         catch (\Exception $e) {
             $icon = "error";
-            $title = "Failed to ${function} participant.";
+            $title = "Failed to ${function}.";
+            $module->logError("Error attempting to ${function}", $e);
         }
     }
 
@@ -87,6 +104,7 @@
                                 <th id="lname" class="dt-center">Last Name</th>
                                 <th id="email">Email</th>
                                 <th id="resetpwbutton" class="dt-center">Reset Password</th>
+                                <th id="rcpro_changeemail" class="dt-center">Change Email Address</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -100,13 +118,32 @@
                                     $("#toReset").val("<?=\REDCap::escapeHtml($participant["log_id"])?>");
                                     $("#toDisenroll").val("");
                                     $("#manage-form").submit();
-                                    })();'>Reset</button></td>
+                                    })();'>Reset</button>
+                                </td>
+                                <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
+                                    $("#toReset").val("");
+                                    $("#toDisenroll").val("");
+                                    $("#toChangeEmail").val("<?=$participant["log_id"]?>");
+                                    Swal.fire({
+                                        title: "Enter the new email address",
+                                        input: "email",
+                                        inputPlaceholder: "Enter the new email address"
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            $("#newEmail").val(result.value); 
+                                            $("#manage-form").submit();
+                                        }
+                                    });
+                                    })();'>Change</button>
+                                </td>
                             </tr>
 <?php } ?>
                         </tbody>
                     </table>
                 </div>
                 <input type="hidden" id="toReset" name="toReset">
+                <input type="hidden" id="toChangeEmail" name="toChangeEmail">
+                <input type="hidden" id="newEmail" name="newEmail">
                 <input type="hidden" id="toDisenroll" name="toDisenroll">        
         </form>
             
