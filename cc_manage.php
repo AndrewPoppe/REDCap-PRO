@@ -29,13 +29,18 @@
             } else if (!empty($_POST["toChangeEmail"])) {
                 $function = "change participant's email address";
                 $newEmail = $_POST["newEmail"];
-                $result = $module->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
-                if (!$result) {
+                if ($module->checkEmailExists($newEmail)) {
                     $icon = "error";
-                    $title = "Trouble changing participant's email address.";
+                    $title = "The provided email address is already associated with a REDCapPRO account.";
                 } else {
-                    $icon = "success";
-                    $title = "Successfully changed participant's email address.";
+                    $result = $module->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
+                    if (!$result) {
+                        $icon = "error";
+                        $title = "Trouble changing participant's email address.";
+                    } else {
+                        $icon = "success";
+                        $title = "Successfully changed participant's email address.";
+                    }
                 }
             }
         }
@@ -108,32 +113,41 @@
                             </tr>
                         </thead>
                         <tbody>
-<?php foreach ($participants as $participant) { ?>
+                            <?php foreach ($participants as $participant) { 
+                                $username_clean = \REDCap::escapeHtml($participant["rcpro_username"]);
+                                $fname_clean    = \REDCap::escapeHtml($participant["fname"]);
+                                $lname_clean    = \REDCap::escapeHtml($participant["lname"]);
+                                $email_clean    = \REDCap::escapeHtml($participant["email"]);
+                            ?>
                             <tr>
-                                <td><?=\REDCap::escapeHtml($participant["rcpro_username"])?></td>
-                                <td class="dt-center"><?=\REDCap::escapeHtml($participant["fname"])?></td>
-                                <td class="dt-center"><?=\REDCap::escapeHtml($participant["lname"])?></td>
-                                <td><?=\REDCap::escapeHtml($participant["email"])?></td>
+                                <td><?=$username_clean?></td>
+                                <td class="dt-center"><?=$fname_clean?></td>
+                                <td class="dt-center"><?=$lname_clean?></td>
+                                <td><?=$email_clean?></td>
                                 <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
-                                    $("#toReset").val("<?=\REDCap::escapeHtml($participant["log_id"])?>");
+                                    $("#toReset").val("<?=$participant["log_id"]?>");
                                     $("#toDisenroll").val("");
+                                    $("#toChangeEmail").val("");
                                     $("#manage-form").submit();
                                     })();'>Reset</button>
                                 </td>
                                 <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
-                                    $("#toReset").val("");
-                                    $("#toDisenroll").val("");
-                                    $("#toChangeEmail").val("<?=$participant["log_id"]?>");
                                     Swal.fire({
-                                        title: "Enter the new email address",
-                                        input: "email",
-                                        inputPlaceholder: "Enter the new email address"
-                                    }).then((result) => {
-                                        if (result.isConfirmed) {
-                                            $("#newEmail").val(result.value); 
-                                            $("#manage-form").submit();
-                                        }
-                                    });
+                                        title: "Enter the new email address for <?="${fname_clean} ${lname_clean}"?>",
+                                            input: "email",
+                                            inputPlaceholder: "<?=$email_clean?>",
+                                            confirmButtonText: "Change Email",
+                                            showCancelButton: true,
+                                            confirmButtonColor: "#900000"
+                                        }).then((result) => {
+                                            if (result.isConfirmed) {
+                                                $("#toReset").val("");
+                                                $("#toDisenroll").val("");
+                                                $("#toChangeEmail").val("<?=$participant["log_id"]?>");
+                                                $("#newEmail").val(result.value); 
+                                                $("#manage-form").submit();
+                                            }
+                                        });
                                     })();'>Change</button>
                                 </td>
                             </tr>

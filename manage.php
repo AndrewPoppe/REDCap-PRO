@@ -52,13 +52,18 @@ if ($role > 0) {
                     $title = "You do not have the required role to do that.";
                 } else {
                     $newEmail = $_POST["newEmail"];
-                    $result = $module->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
-                    if (!$result) {
+                    if ($module->checkEmailExists($newEmail)) {
                         $icon = "error";
-                        $title = "Trouble changing participant's email address.";
+                        $title = "The provided email address is already associated with a REDCapPRO account.";
                     } else {
-                        $icon = "success";
-                        $title = "Successfully changed participant's email address.";
+                        $result = $module->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
+                        if (!$result) {
+                            $icon = "error";
+                            $title = "Trouble changing participant's email address.";
+                        } else {
+                            $icon = "success";
+                            $title = "Successfully changed participant's email address.";
+                        }
                     }
                 }
             }
@@ -161,15 +166,18 @@ if ($role > 0) {
                                         })();'>Reset</button></td>
                                     <?php if ($role > 2) { ?>
                                         <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
-                                            $("#toReset").val("");
-                                            $("#toDisenroll").val("");
-                                            $("#toChangeEmail").val("<?=$participant["log_id"]?>");
                                             Swal.fire({
-                                                title: "Enter the new email address",
+                                                title: "Enter the new email address for <?="${fname_clean} ${lname_clean}"?>",
                                                 input: "email",
-                                                inputPlaceholder: "Enter the new email address"
+                                                inputPlaceholder: "<?=$email_clean?>",
+                                                confirmButtonText: "Change Email",
+                                                showCancelButton: true,
+                                                confirmButtonColor: "#900000"
                                             }).then((result) => {
                                                 if (result.isConfirmed) {
+                                                    $("#toReset").val("");
+                                                    $("#toDisenroll").val("");
+                                                    $("#toChangeEmail").val("<?=$participant["log_id"]?>");
                                                     $("#newEmail").val(result.value); 
                                                     $("#manage-form").submit();
                                                 }
@@ -179,10 +187,20 @@ if ($role > 0) {
                                     <?php } ?>
                                     <?php if ($role > 1) { ?>
                                         <td class="dt-center"><button type="button" class="btn btn-danger btn-sm" onclick='(function(){
-                                            $("#toReset").val("");
-                                            $("#toDisenroll").val("<?=$participant["log_id"]?>");
-                                            $("#toChangeEmail").val("");
-                                            $("#manage-form").submit();
+                                            
+                                            Swal.fire({
+                                                title: "Are you sure you want to remove <?="${fname_clean} ${lname_clean}"?> from this project?",
+                                                confirmButtonText: "Remove Participant",
+                                                showCancelButton: true,
+                                                confirmButtonColor: "#900000"
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    $("#toReset").val("");
+                                                    $("#toDisenroll").val("<?=$participant["log_id"]?>");
+                                                    $("#toChangeEmail").val("");
+                                                    $("#manage-form").submit();
+                                                }
+                                            });
                                         })();'>Disenroll</button></td>
                                     <?php } ?>
                                 </tr>
