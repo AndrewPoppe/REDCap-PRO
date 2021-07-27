@@ -7,7 +7,6 @@ $module::$AUTH::init();
 parse_str($_SERVER['QUERY_STRING'], $qstring);
 
 // Redirect to login page if we shouldn't be here
-// TODO: do something else
 if (!isset($qstring["t"]) && $_SERVER["REQUEST_METHOD"] !== "POST") {
     header("location: ".$module->getUrl("login.php", true));
     return;
@@ -37,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     } else {
         $new_password = trim($_POST["new_password"]);
         // Validate password strength
-        $pw_len_req   = 8; // TODO: Make this a module setting?
+        $pw_len_req   = 8;
         $uppercase    = preg_match('@[A-Z]@', $new_password);
         $lowercase    = preg_match('@[a-z]@', $new_password);
         $number       = preg_match('@[0-9]@', $new_password);

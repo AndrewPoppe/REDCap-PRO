@@ -11,6 +11,8 @@ class REDCapPRO extends AbstractExternalModule {
     static $APPTITLE                 = "REDCapPRO";
     static $LOGIN_ATTEMPTS           = 3;
     static $LOCKOUT_DURATION_SECONDS = 60;
+    static $LOGOUT_WARNING_MINUTES   = 1;
+    static $LOGOUT_MINUTES           = 5;  
 
     static $AUTH;
     
@@ -89,6 +91,8 @@ class REDCapPRO extends AbstractExternalModule {
             echo "<script>
                 window.rcpro.logo = '".$this->getUrl("images/RCPro_Favicon.svg")."';
                 window.rcpro.logoutPage = '".$this->getUrl("logout.php", true)."';
+                window.rcpro.timeout_minutes = ".$this::$LOGOUT_MINUTES.";
+                window.rcpro.warning_minutes = ".$this::$LOGOUT_WARNING_MINUTES.";
                 window.rcpro.initTimeout();
             </script>";
 
@@ -729,6 +733,37 @@ class REDCapPRO extends AbstractExternalModule {
     }
 
     /**
+     * Fetches all the projects that the provided participant is enrolled in
+     * 
+     * This includes active and inactive projects
+     * 
+     * @param int $rcpro_participant_id
+     * 
+     * @return array array of arrays, each corresponding with a project
+     */
+    public function getParticipantProjects(int $rcpro_participant_id) {
+        $SQL = "SELECT rcpro_project_id, active WHERE rcpro_participant_id = ? AND message = 'LINK' AND project_id <> FALSE";
+        $projects = array();
+        try {
+            $result = $this->queryLogs($SQL, [$rcpro_participant_id]);
+            if (!$result) {
+                throw new REDCapProException(["rcpro_participant_id"=>$rcpro_participant_id]);
+            }
+            while ($row = $result->fetch_assoc()) {
+                array_push($projects, [
+                    "rcpro_project_id" => $row["rcpro_project_id"],
+                    "active"           => $row["active"],
+                    "redcap_pid"       => $this->getPidFromProjectId($row["rcpro_project_id"])
+                ]);
+            }
+            return $projects;
+        }
+        catch (\Exception $e) {
+            $this->logError("Error fetching participant's projects", $e);
+        }
+    }
+
+    /**
      * Use provided search string to find registered participants
      * 
      * @param string $search_term - text to search for
@@ -924,6 +959,24 @@ class REDCapPRO extends AbstractExternalModule {
         }
         catch (\Exception $e) {
             $this->logError("Error fetching project id from pid", $e);
+        }
+    }
+
+    /**
+     * Get the REDCap PID corresponding with a project ID
+     * 
+     * @param int $rcpro_project_id - rcpro project id
+     * 
+     * @return int REDCap PID associated with rcpro project id
+     */
+    public function getPidFromProjectId(int $rcpro_project_id) {
+        $SQL = "SELECT pid WHERE message = 'PROJECT' AND log_id = ? AND project_id <> FALSE";
+        try {
+            $result = $this->queryLogs($SQL, [$rcpro_project_id]);
+            return $result->fetch_assoc()["pid"];
+        }
+        catch (\Exception $e) {
+            $this->logError("Error fetching pid from project id", $e);
         }
     }
 

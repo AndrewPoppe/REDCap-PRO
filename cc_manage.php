@@ -1,6 +1,18 @@
 <?php
 
 
+function createProjectsCell(array $projects) {
+    global $module;
+    $result = "<td  class='dt-center'>";
+    foreach ($projects as $project) {
+        $pid              = trim($project["redcap_pid"]);
+        $url = $module->getUrl("manage.php?pid=${pid}");
+        $result .= "<div><a class='rcpro_project_link' href='${url}'>PID: ${pid}</a></div>";
+    }
+    $result .= "</td>";
+    return $result;
+}
+
 ?>
 <!DOCTYPE html>
     <?php
@@ -55,7 +67,7 @@
     $participants = $module->getAllParticipants();
     
     ?>
-
+    <script src="<?=$module->getUrl("lib/sweetalert/sweetalert2.all.min.js");?>"></script>
     <style>
         .wrapper { 
             display: inline-block; 
@@ -81,6 +93,15 @@
         }
         button:hover {
             outline: none !important;
+        }
+        .rcpro_project_link {
+            color: #000090 !important;
+            font-weight: bold !important;
+        }
+        .rcpro_project_link:hover {
+            color: #900000 !important;
+            font-weight: bold !important;
+            cursor: pointer !important;
         }
     </style>
 
@@ -108,22 +129,26 @@
                                 <th id="fname" class="dt-center">First Name</th>
                                 <th id="lname" class="dt-center">Last Name</th>
                                 <th id="email">Email</th>
+                                <th id="projects" class="dt-center">Enrolled Projects</th>
                                 <th id="resetpwbutton" class="dt-center">Reset Password</th>
                                 <th id="rcpro_changeemail" class="dt-center">Change Email Address</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($participants as $participant) { 
-                                $username_clean = \REDCap::escapeHtml($participant["rcpro_username"]);
-                                $fname_clean    = \REDCap::escapeHtml($participant["fname"]);
-                                $lname_clean    = \REDCap::escapeHtml($participant["lname"]);
-                                $email_clean    = \REDCap::escapeHtml($participant["email"]);
+                                $username_clean       = \REDCap::escapeHtml($participant["rcpro_username"]);
+                                $fname_clean          = \REDCap::escapeHtml($participant["fname"]);
+                                $lname_clean          = \REDCap::escapeHtml($participant["lname"]);
+                                $email_clean          = \REDCap::escapeHtml($participant["email"]);
+                                $rcpro_participant_id = intval($participant["log_id"]);
+                                $projects_array       = $module->getParticipantProjects($rcpro_participant_id);
                             ?>
                             <tr>
                                 <td><?=$username_clean?></td>
                                 <td class="dt-center"><?=$fname_clean?></td>
                                 <td class="dt-center"><?=$lname_clean?></td>
                                 <td><?=$email_clean?></td>
+                                <?=createProjectsCell($projects_array);?>
                                 <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
                                     $("#toReset").val("<?=$participant["log_id"]?>");
                                     $("#toDisenroll").val("");

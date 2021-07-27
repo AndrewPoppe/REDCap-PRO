@@ -7,7 +7,6 @@ $module::$AUTH::init();
 parse_str($_SERVER['QUERY_STRING'], $qstring);
 
 // Redirect to login page if we shouldn't be here
-// TODO: do something else
 if (!isset($qstring["t"]) && $_SERVER["REQUEST_METHOD"] !== "POST") {
     header("location: ".$module->getUrl("login.php", true));
     return;

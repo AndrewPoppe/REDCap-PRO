@@ -1,8 +1,8 @@
 let rcpro = {
     logo:"",
     logoutPage:"",
-    timeout_minutes: 0.5, //TODO: MAKE THESE MODULE SETTINGS
-    warning_minutes: 0.1,
+    timeout_minutes: 0,
+    warning_minutes: 0,
     warningOpen: false,
     seconds: 0,
     stop: false

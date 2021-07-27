@@ -8,13 +8,7 @@ if ($module::$AUTH::is_logged_in()) {
     $survey_url = $module::$AUTH::get_survey_url();
     $survey_url_active = $module::$AUTH::is_survey_link_active();
     
-    if (empty($survey_url)) {
-        // TODO:
-        echo "NO SURVEY URL";
-        return;
-    }
-
-    if (empty($survey_url_active) || $survey_url_active !== TRUE) {
+    if (empty($survey_url) || empty($survey_url_active) || $survey_url_active !== TRUE) {
         return;
     }
 

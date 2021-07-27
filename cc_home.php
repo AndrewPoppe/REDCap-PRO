@@ -9,9 +9,12 @@
     <title>REDCapPRO Home</title>
 </head>
 <body>
-    
     <?php
     $module->UiShowControlCenterHeader("Home");
+
+    //$projects = $module->getAllProjects
+
+
     ?>
 
 </body>
