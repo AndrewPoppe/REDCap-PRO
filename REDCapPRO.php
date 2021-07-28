@@ -119,28 +119,6 @@ class REDCapPRO extends AbstractExternalModule {
     }
 
     /**
-     * Hook that is triggered when a module is enabled in Control Center
-     * 
-     * @param mixed $version
-     * 
-     * @return void
-     */
-    function redcap_module_system_enable($version) {
-        $this->log($this::$APPTITLE." - Enabled");
-    }
-
-    /**
-     * Hook that is triggered when a module is disabled in Control Center
-     * 
-     * @param mixed $version
-     * 
-     * @return void
-     */
-    function redcap_module_system_disable($version) {
-        $this->log($this::$APPTITLE." - Disabled");
-    }
-
-    /**
      * Hook that is triggered when a module is enabled in a Project
      * 
      * @param mixed $version
