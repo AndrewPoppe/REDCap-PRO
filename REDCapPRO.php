@@ -55,7 +55,14 @@ class REDCapPRO extends AbstractExternalModule {
             $rcpro_participant_id = $this::$AUTH::get_participant_id();
             if (!$this->enrolledInProject($rcpro_participant_id, $project_id)) {
                 $this->UiShowParticipantHeader("Not Enrolled");
-                echo "<p style='text-align:center;'>You are not currently enrolled in this study.<br>Please contact the study representative.</p>";
+                echo "<p style='text-align:center;'>You are not currently enrolled in this study.<br>";
+                $study_contact = $this->getContactPerson("REDCapPRO - Not Enrolled");
+                if (!isset($study_contact["name"])) {
+                    echo "Please contact your study coordinator.";
+                } else {
+                    echo "Please contact your study coordinator:<br>".$study_contact["info"];
+                }
+                echo "</p>";
                 $this->exitAfterHook();
             }
 
@@ -468,6 +475,55 @@ class REDCapPRO extends AbstractExternalModule {
         $this->setProjectSetting("managers", $roles["3"]);
         $this->setProjectSetting("users", $roles["2"]);
         $this->setProjectSetting("monitors", $roles["1"]);
+    }
+
+    /**
+     * Gets project contact person's details
+     * 
+     * @return array of contact details
+     */
+    public function getContactPerson(string $subject = NULL) {
+        $name  = $this->getProjectSetting("pc-name");
+        $email = $this->getProjectSetting("pc-email");
+        $phone = $this->getProjectSetting("pc-phone");
+
+        $name_string = "<strong>Name:</strong> $name";
+        $email_string = isset($email) ? $this->createEmailLink($email, $subject) : "";
+        $phone_string = isset($phone) ? "<br><strong>Phone:</strong> $phone" : "";
+        $info  = "${name_string} ${email_string} ${phone_string}";
+                
+        return [
+            "name" => $name,
+            "email"=> $email,
+            "phone"=> $phone,
+            "info" => $info,
+            "name_string" => $name_string,
+            "email_string"=> $email_string,
+            "phone_string"=> $phone_string
+        ];
+    }
+
+    /**
+     * @param string $email
+     * @param string|null $subject
+     * 
+     * @return [type]
+     */
+    public function createEmailLink(string $email, ?string $subject) {
+        if (!isset($subject)) {
+            $subject = "REDCapPRO Inquiry";
+        }
+        $body = "";
+        if ($this::$AUTH::is_logged_in()) {
+            $username = $this::$AUTH::get_username();
+            $body .= "REDCapPRO Username: ${username}\n";
+        }
+        if (PROJECT_ID) {
+            $body .= "Project ID: ".PROJECT_ID;
+            $body .= "\nProject Title: ".\REDCap::getProjectTitle();
+        }
+        $link = "mailto:${email}?subject=".rawurlencode($subject)."&body=".rawurlencode($body);
+        return "<br><strong>Email:</strong> <a href='${link}'>$email</a>";
     }
 
 
@@ -1239,9 +1295,18 @@ class REDCapPRO extends AbstractExternalModule {
             <br>Click <a href='".$this->getUrl("reset-password.php",true)."&t=${token}'>here</a> to reset your password.
             <br><em>That link is only valid for the next hour. If you need a new link, click <a href='".$this->getUrl("forgot-password.php",true)."'>here</a>.</em>
             </p>
-            <br>
-            <p>If you have any questions, contact a member of the study team.</p>
-            </body></html></div>";
+            <br>";
+            if (defined("PROJECT_ID")) {
+                $study_contact = $this->getContactPerson("REDCapPRO - Reset Password");
+                if (!isset($study_contact["name"])) {
+                    $body .= "<p>If you have any questions, contact a member of the study team.</p>";
+                } else {
+                    $body .= "<p>If you have any questions, contact a member of the study team:<br>".$study_contact["info"]."</p>";
+                }
+            } else {
+                $body .= "<p>If you have any questions, contact a member of the study team.</p>";
+            }
+            $body .= "</body></html></div>";
 
             $result = \REDCap::email($to, $from, $subject, $body);
             $status = $result ? "Sent" : "Failed to send";
@@ -1295,9 +1360,18 @@ class REDCapPRO extends AbstractExternalModule {
             <br>Click <a href='".$this->getUrl("create-password.php",true)."&t=${token}'>this link</a> to create your password.
             <br>That link will only work for the next $hours_valid hours.
             </p>
-            <br>
-            <p>If you have any questions, contact a member of the study team.</p>
-            </body></html></div>";
+            <br>";
+            if (defined("PROJECT_ID")) {
+                $study_contact = $this->getContactPerson("REDCapPRO - Username Inquiry");
+                if (!isset($study_contact["name"])) {
+                    $body .= "<p>If you have any questions, contact a member of the study team.</p>";
+                } else {
+                    $body .= "<p>If you have any questions, contact a member of the study team:<br>".$study_contact["info"]."</p>";
+                }
+            } else {
+                $body .= "<p>If you have any questions, contact a member of the study team.</p>";
+            }
+            $body .= "</body></html></div>";
 
             return \REDCap::email($email, $from, $subject, $body);
         }
@@ -1323,8 +1397,18 @@ class REDCapPRO extends AbstractExternalModule {
         <p>This is your username: <strong>${username}</strong><br>
         Write it down someplace safe.</p>
 
-        <p>If you did not request this email, please disregard.<br>If you have any questions, contact a member of the study team.</p>
-        </body></html></div>";
+        <p>If you did not request this email, please disregard.<br>";
+        if (defined("PROJECT_ID")) {
+            $study_contact = $this->getContactPerson("REDCapPRO - Username Inquiry");
+            if (!isset($study_contact["name"])) {
+                $body .= "If you have any questions, contact a member of the study team.</p>";
+            } else {
+                $body .= "If you have any questions, contact a member of the study team:<br>".$study_contact["info"]."</p>";
+            }
+        } else {
+            $body .= "If you have any questions, contact a member of the study team.</p>";
+        }
+        $body .= "</body></html></div>";
  
         try {
             return \REDCap::email($email, $from, $subject, $body);
@@ -1379,10 +1463,18 @@ class REDCapPRO extends AbstractExternalModule {
                 <li><strong>Old email:</strong> ${old_email_clean}</li>
                 <li><strong>New email:</strong> ${new_email_clean}</li>
             </ul>
-        </p>
-
-        <p><strong>If you did not request this change, please contact a member of the study team!</strong></p>
-        </body></html></div>";
+        </p>";
+        if (defined("PROJECT_ID")) {
+            $study_contact = $this->getContactPerson("REDCapPRO - Reset Password");
+            if (!isset($study_contact["name"])) {
+                $body .= "<p><strong>If you did not request this change, please contact a member of the study team!</strong></p>";
+            } else {
+                $body .= "<p><strong>If you did not request this change, please contact a member of the study team!</strong><br>".$study_contact["info"]."</p>";
+            }
+        } else {
+            $body .= "<p><strong>If you did not request this change, please contact a member of the study team!</strong></p>";
+        }
+        $body .= "</body></html></div>";
  
         try {
             return \REDCap::email($new_email, $from, $subject, $body, $old_email);
@@ -1704,7 +1796,7 @@ class Auth {
     }
 
     function get_username() {
-        $_SESSION[self::$APPTITLE."_username"];
+        return $_SESSION[self::$APPTITLE."_username"];
     }
 
     // SETS

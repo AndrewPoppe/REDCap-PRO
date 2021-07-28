@@ -143,7 +143,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     } else if (isset($qstring["s"])) {
                         header("location: ".APP_PATH_SURVEY_FULL.$_SERVER['QUERY_STRING']); 
                     } else {
-                        echo "Please contact your study coordinator.";
+                        $study_contact = $module->getContactPerson();
+                        if (!isset($study_contact["name"])) {
+                            echo "Please contact your study coordinator.";
+                        } else {
+                            echo "Please contact your study coordinator:<br>".$study_contact["info"];
+                        }
                     }
                     return;
 

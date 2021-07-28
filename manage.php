@@ -15,6 +15,7 @@ if ($role > 0) {
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         try {
             $function = NULL;
+            $showConfirm = false;
             // DISENROLL THE PARTICIPANT FROM THE STUDY
             if (!empty($_POST["toDisenroll"])) {
                 $function = "disenroll participant";
@@ -106,12 +107,13 @@ if ($role > 0) {
             outline: none !important;
         }
     </style>
+    <script src="<?=$module->getUrl("lib/sweetalert/sweetalert2.all.min.js");?>"></script>
 </head>
 <body>
 
 <?php if ($_SERVER["REQUEST_METHOD"] == "POST") { ?>
     <script>
-        Swal.fire({icon: "<?=$icon?>", title:"<?=$title?>"});
+        Swal.fire({icon: "<?=$icon?>", title:"<?=$title?>", showConfirmButton:"<?=$showConfirm?>"});
     </script>
 <?php } ?>
 
@@ -189,8 +191,11 @@ if ($role > 0) {
                                         <td class="dt-center"><button type="button" class="btn btn-danger btn-sm" onclick='(function(){
                                             
                                             Swal.fire({
+                                                icon: "warning",
+                                                iconColor: "#900000",
                                                 title: "Are you sure you want to remove <?="${fname_clean} ${lname_clean}"?> from this project?",
                                                 confirmButtonText: "Remove Participant",
+                                                allowEnterKey: false,
                                                 showCancelButton: true,
                                                 confirmButtonColor: "#900000"
                                             }).then((result) => {

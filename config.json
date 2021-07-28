@@ -1,6 +1,6 @@
 {
-    "name": "REDCapPRO",
-    "namespace": "YaleREDCap\\REDCapPRO",
+    "name"       : "REDCapPRO",
+    "namespace"  : "YaleREDCap\\REDCapPRO",
     "description": "Patient Reported Outcomes in REDCap",
     "permissions": [
         "redcap_survey_page_top",
@@ -12,8 +12,8 @@
     ],
     "authors": [
         {
-            "name": "Andrew Poppe",
-            "email": "andrew.poppe@yale.edu",
+            "name"       : "Andrew Poppe",
+            "email"      : "andrew.poppe@yale.edu",
             "institution": "Yale Center for Clinical Investigation"
         }
     ],
@@ -21,38 +21,41 @@
     ],
     "project-settings": [
         {
-            "key": "managers-info",
-            "name": "<font style='font-size:large; font-weight:bold; color: #900000'>Managers</font>",
+            "key" : "primary-contact",
+            "name": "<font style='font-size:large; font-weight:bold; color: #000000'>Study Contact for Participants</font>",
             "type": "descriptive"
         },
         {
-            "key": "managers",
-            "name": "<strong><font style='color: #900000'>Select Manager Accounts:</font></strong><br>These accounts will have the ability to edit user permissions in this module. (this setting is only available to super users)",
-            "type": "user-list",
-            "repeatable": true,
-            "super-users-only":true
+            "key"     : "pc-name",
+            "name"    : "Name",
+            "required": true,
+            "type"    : "text"
         },
         {
-            "key": "users-info",
-            "name": "<font style='font-size:large; font-weight:bold;'>Users</font>",
-            "type": "descriptive"
+            "key"     : "pc-email",
+            "name"    : "Email",
+            "required": false,
+            "type"    : "email"
         },
         {
-            "key": "users",
-            "name": "<strong>Select Normal Users:</strong><br>These accounts have the ability to register/enroll/disenroll etc. participants, including the ability to view names and emails of all registered participants",
-            "type": "user-list",
-            "repeatable": true
+            "key"       : "pc-phone",
+            "name"      : "Phone number",
+            "required"  : false,
+            "type"      : "text",
+            "validation": "phone"
         },
         {
-            "key": "monitors-info",
-            "name": "<font style='font-size:large; font-weight:bold;'>Monitors</font>",
-            "type": "descriptive"
+            "key"             : "managers-info",
+            "name"            : "<font style='font-size:large; font-weight:bold; color: #900000'>Managers</font>",
+            "type"            : "descriptive",
+            "super-users-only": true
         },
         {
-            "key": "monitors",
-            "name": "<strong>Select Monitor Accounts:</strong><br>These accounts can perform very basic management of participant accounts (basically just send password reset emails). They cannot view names or emails of participants",
-            "type": "user-list",
-            "repeatable": true
+            "key"             : "managers",
+            "name"            : "<strong><font style='color: #900000'>Select Manager Accounts:</font></strong><br>These accounts will have the ability to edit user permissions in this module. (this setting is only available to super users)",
+            "type"            : "user-list",
+            "repeatable"      : true,
+            "super-users-only": true
         }
     ],
     "links": {
@@ -60,10 +63,10 @@
         ],
         "control-center": [
            {
-                "name": "<strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em>",
-                "key": "redcappro",
-                "icon": "fas fa-fingerprint",
-                "url": "cc_home.php",
+                "name"                  : "<strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em>",
+                "key"                   : "redcappro",
+                "icon"                  : "fas fa-fingerprint",
+                "url"                   : "cc_home.php",
                 "show-header-and-footer": true
            }
         ]
@@ -79,8 +82,8 @@
     ],
     "framework-version": 5,
     "compatibility": {
-        "php-version-min": "7.3.0",
-        "php-version-max": "",
+        "php-version-min"   : "7.3.0",
+        "php-version-max"   : "",
         "redcap-version-min": "9.10.0",
         "redcap-version-max": ""
      }
