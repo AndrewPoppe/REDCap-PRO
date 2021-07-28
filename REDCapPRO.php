@@ -64,7 +64,7 @@ class REDCapPRO extends AbstractExternalModule {
             }
 
             \REDCap::logEvent(
-                "REDCapPro Survey Accessed",                                        // action description
+                "REDCapPRO Survey Accessed",                                        // action description
                 "REDCapPRO User: ".$this::$AUTH::get_username()."\n".
                 "Instrument: ${instrument}\n",                                      // changes made
                 NULL,                                                               // sql
@@ -72,7 +72,7 @@ class REDCapPRO extends AbstractExternalModule {
                 $event_id,                                                          // event
                 $project_id                                                         // project id
             );
-            $this->log("REDCapPro Survey Accessed", [
+            $this->log("REDCapPRO Survey Accessed", [
                 "rcpro_username" => $this::$AUTH::get_username(),
                 "rcpro_user_id"  => $this::$AUTH::get_participant_id(),
                 "record" => $record,
@@ -1288,7 +1288,7 @@ class REDCapPRO extends AbstractExternalModule {
         
             // create email
             $subject = "REDCapPRO - Password Reset";
-            $from = "noreply@REDCapPro.com";
+            $from = "noreply@REDCapPRO.com";
             $body = "<html><body><div>
             <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
             <p>Hello,
@@ -1351,7 +1351,7 @@ class REDCapPRO extends AbstractExternalModule {
         
             // create email
             $subject = "REDCapPRO - Account Created";
-            $from    = "noreply@REDCapPro.com";
+            $from    = "noreply@REDCapPRO.com";
             $body    = "<html><body><div>
             <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
             <p>Hello ${fname} ${lname},
@@ -1393,7 +1393,7 @@ class REDCapPRO extends AbstractExternalModule {
      */
     public function sendUsernameEmail(string $email, string $username) {
         $subject = "REDCapPRO - Username";
-        $from    = "noreply@REDCapPro.com";
+        $from    = "noreply@REDCapPRO.com";
         $body    = "<html><body><div>
         <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
         <p>Hello,</p>
@@ -1455,7 +1455,7 @@ class REDCapPRO extends AbstractExternalModule {
 
     public function sendEmailUpdateEmail(string $username, string $new_email, string $old_email) {
         $subject = "REDCapPRO - Email Address Changed";
-        $from    = "noreply@REDCapPro.com";
+        $from    = "noreply@REDCapPRO.com";
         $old_email_clean = \REDCap::escapeHtml($old_email);
         $new_email_clean = \REDCap::escapeHtml($new_email);
         $body    = "<html><body><div>
