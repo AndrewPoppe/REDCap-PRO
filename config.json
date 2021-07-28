@@ -18,6 +18,36 @@
         }
     ],
     "system-settings": [
+        {
+            "key": "warning-time",
+            "name": "<strong>Warning Time</strong>:<br>Number of minutes to wait before warning participant of inactivity timeout (default is 1 minute)",
+            "type": "text",
+            "validation": "number"
+        },
+        {
+            "key": "timeout-time",
+            "name": "<strong>Timeout Time</strong>:<br>Number of minutes to wait before logging participant out due to inactivity (default is 5 minutes)",
+            "type": "text",
+            "validation": "number"
+        },
+        {
+            "key": "password-length",
+            "name": "<strong>Password Length</strong>:<br>Minimum length of password (default is 8 characters)",
+            "type": "text",
+            "validation": "integer"
+        },
+        {
+            "key": "login-attempts",
+            "name": "<strong>Login Attempts</strong>:<br>Number of failed login attempts before being locked out (default is 3 attempts)",
+            "type": "text",
+            "validation": "integer"
+        },
+        {
+            "key": "lockout-seconds",
+            "name": "<strong>Lockout Duration</strong>:<br>Length of a lockout due to failed login attempts, in seconds (default is 300 seconds)",
+            "type": "text",
+            "validation": "integer"
+        }
     ],
     "project-settings": [
         {

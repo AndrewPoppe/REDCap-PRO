@@ -71,13 +71,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Username doesn't exist, display a generic error message
                 $module->incrementFailedIp($ip);
                 $attempts = $module->checkAttempts(NULL, $ip);
-                $remainingAttempts = $module::$LOGIN_ATTEMPTS - $attempts;
+                $remainingAttempts = $module::$SETTINGS::getLoginAttempts() - $attempts;
                 $module->log("Login Attempted - Username does not exist", [
                     "rcpro_ip"       => $ip,
                     "rcpro_username" => $username
                 ]);
                 if ($remainingAttempts <= 0) {
-                    $login_err = "Invalid username or password.<br>You have been locked out for ".$module::$LOCKOUT_DURATION_SECONDS." seconds.";
+                    $login_err = "Invalid username or password.<br>You have been locked out for ".$module::$SETTINGS::getLockoutDurationSeconds()." seconds.";
                     $module->log("IP LOCKOUT", ["rcpro_ip" => $ip]);
                 } else {
                     $login_err = "Invalid username or password.<br>You have ${remainingAttempts} attempts remaining before being locked out.";
@@ -164,9 +164,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $module->incrementFailedLogin($participant["log_id"]);
                     $module->incrementFailedIp($ip);
                     $attempts = $module->checkAttempts($participant["log_id"], $ip);
-                    $remainingAttempts = $module::$LOGIN_ATTEMPTS - $attempts;
+                    $remainingAttempts = $module::$SETTINGS::getLoginAttempts() - $attempts;
                     if ($remainingAttempts <= 0) {
-                        $login_err = "Invalid username or password.<br>You have been locked out for ".$module::$LOCKOUT_DURATION_SECONDS." seconds.";
+                        $login_err = "Invalid username or password.<br>You have been locked out for ".$module::$SETTINGS::getLockoutDurationSeconds()." seconds.";
                         $module->log("USERNAME LOCKOUT", [
                             "rcpro_ip"       => $ip,
                             "rcpro_username" => $username,

@@ -8,17 +8,14 @@ use ExternalModules\AbstractExternalModule;
  */
 class REDCapPRO extends AbstractExternalModule {
  
-    static $APPTITLE                 = "REDCapPRO";
-    static $LOGIN_ATTEMPTS           = 3;
-    static $LOCKOUT_DURATION_SECONDS = 60;
-    static $LOGOUT_WARNING_MINUTES   = 1;
-    static $LOGOUT_MINUTES           = 5;  
-
+    static $APPTITLE = "REDCapPRO";
     static $AUTH;
+    static $SETTINGS;
     
     function __construct() {
         parent::__construct();
         $this::$AUTH = new Auth($this::$APPTITLE);
+        $this::$SETTINGS = new ProjectSettings($this);
     }
 
     function redcap_every_page_top($project_id) {
@@ -33,7 +30,7 @@ class REDCapPRO extends AbstractExternalModule {
                     let link = $("<div>"+
                         "<img src='<?=$this->getUrl('images/fingerprint_2.png');?>' style='width:16px; height:16px; position:relative; top:-2px'></img>"+
                         "&nbsp;"+
-                        "<a href='<?=$this->getUrl('home.php');?>'><span id='RCPro-Link'><strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em></strong></span></a>"+
+                        "<a href='<?=$this->getUrl('manage.php');?>'><span id='RCPro-Link'><strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em></strong></span></a>"+
                     "</div>");
                     $('#app_panel').find('div.hang').last().after(link);
                 }, 10);
@@ -104,8 +101,8 @@ class REDCapPRO extends AbstractExternalModule {
             echo "<script>
                 window.rcpro.logo = '".$this->getUrl("images/RCPro_Favicon.svg")."';
                 window.rcpro.logoutPage = '".$this->getUrl("logout.php", true)."';
-                window.rcpro.timeout_minutes = ".$this::$LOGOUT_MINUTES.";
-                window.rcpro.warning_minutes = ".$this::$LOGOUT_WARNING_MINUTES.";
+                window.rcpro.timeout_minutes = ".$this::$SETTINGS::getTimeoutMinutes().";
+                window.rcpro.warning_minutes = ".$this::$SETTINGS::getTimeoutWarningMinutes().";
                 window.rcpro.initTimeout();
             </script>";
 
@@ -206,8 +203,8 @@ class REDCapPRO extends AbstractExternalModule {
     private function lockoutLogin(int $rcpro_participant_id) {
         try {
             $attempts = $this->checkUsernameAttempts($rcpro_participant_id);
-            if ($attempts >= $this::$LOGIN_ATTEMPTS) {
-                $lockout_ts = time() + $this::$LOCKOUT_DURATION_SECONDS;
+            if ($attempts >= $this::$SETTINGS::getLoginAttempts()) {
+                $lockout_ts = time() + $this::$SETTINGS::getLockoutDurationSeconds();
                 $SQL = "UPDATE redcap_external_modules_log_parameters SET lockout_ts = ? WHERE log_id = ?;";
                 $res = $this->query($SQL, [$lockout_ts, $rcpro_participant_id]);
                 $status = $res ? "Successful" : "Failed";
@@ -274,8 +271,8 @@ class REDCapPRO extends AbstractExternalModule {
         }
         if (isset($ipStat["attempts"])) {
             $ipStat["attempts"]++;
-            if ($ipStat["attempts"] >= $this::$LOGIN_ATTEMPTS) {
-                $ipStat["lockout_ts"] = time() + $this::$LOCKOUT_DURATION_SECONDS;
+            if ($ipStat["attempts"] >= $this::$SETTINGS::getLoginAttempts()) {
+                $ipStat["lockout_ts"] = time() + $this::$SETTINGS::getLockoutDurationSeconds();
                 $this->log("Locked out IP address", [
                     "rcpro_ip"   => $ip,
                     "lockout_ts" => $ipStat["lockout_ts"]
@@ -1733,6 +1730,22 @@ class REDCapPRO extends AbstractExternalModule {
                     
                 }
             }
+        } else {
+            if (isset($settings["warning-time"]) && $settings["warning-time"] <= 0) {
+                $message = "The warning time must be a positive number.";
+            }
+            if (isset($settings["timeout-time"]) && $settings["timeout-time"] <= 0) {
+                $message = "The timeout time must be a positive number.";
+            }
+            if (isset($settings["password-length"]) && $settings["password-length"] < 8) {
+                $message = "The minimum password length must be a positive integer greater than or equal to 8.";
+            }
+            if (isset($settings["login-attempts"]) && $settings["login-attempts"] < 1) {
+                $message = "The minimum setting for login attempts is 1.";
+            }
+            if (isset($settings["lockout-seconds"]) && $settings["lockout-seconds"] < 0) {
+                $message = "The minimum lockout duration is 0 seconds.";
+            }
         }
         return $message;
     }
@@ -1832,6 +1845,60 @@ class Auth {
     
 
 }
+
+class ProjectSettings {
+    public static $module;
+    
+    function __construct($module) {
+        self::$module = $module;
+    }
+ 
+    public function getTimeoutWarningMinutes() {
+        $result = self::$module->getSystemSetting("warning-time");
+        if (!floatval($result)) {
+            // DEFAULT TO 1 MINUTE IF NOT SET
+            $result = 1;
+        }
+        return $result;
+    }
+
+    public function getTimeoutMinutes() {
+        $result = self::$module->getSystemSetting("timeout-time");
+        if (!floatval($result)) {
+            // DEFAULT TO 5 MINUTES IF NOT SET
+            $result = 5;
+        }
+        return $result;
+    }
+
+    public function getPasswordLength() {
+        $result = self::$module->getSystemSetting("password-length");
+        if (!intval($result)) {
+            // DEFAULT TO 8 CHARACTERS IF NOT SET
+            $result = 8;
+        }
+        return $result;
+    }
+    
+    public function getLoginAttempts() {
+        $result = self::$module->getSystemSetting("login-attempts");
+        if (!intval($result)) {
+            // DEFAULT TO 3 ATTEMPTS IF NOT SET
+            $result = 3;
+        }
+        return $result;
+    }
+
+    public function getLockoutDurationSeconds() {
+        $result = self::$module->getSystemSetting("lockout-seconds");
+        if (!intval($result)) {
+            // DEFAULT TO 300 SECONDS IF NOT SET
+            $result = 300;
+        }
+        return $result;
+    }
+}
+
 
 class REDCapProException extends \Exception {
     public $rcpro = NULL; 

@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $any_error = TRUE;
     } else {
         // Validate password strength
-        $pw_len_req   = 8;
+        $pw_len_req   = $module::$SETTINGS::getPasswordLength();
         $uppercase    = preg_match('@[A-Z]@', $new_password);
         $lowercase    = preg_match('@[a-z]@', $new_password);
         $number       = preg_match('@[0-9]@', $new_password);
