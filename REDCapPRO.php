@@ -93,6 +93,12 @@ class REDCapPRO extends AbstractExternalModule {
                 button.swal2-confirm:focus {
                     box-shadow: 0 0 0 3px rgb(144 0 0 / 50%) !important;
                 }
+                body.swal2-shown > [aria-hidden='true'] {
+                    filter: blur(10px);
+                }
+                body > * {
+                    transition: 0.1s filter linear;
+                }
             </style>";
             echo "<script src='".$this->getUrl("rcpro_base.js",true)."'></script>";
             echo "<script>
