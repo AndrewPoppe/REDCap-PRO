@@ -30,7 +30,7 @@ class REDCapPRO extends AbstractExternalModule {
                     let link = $("<div>"+
                         "<img src='<?=$this->getUrl('images/fingerprint_2.png');?>' style='width:16px; height:16px; position:relative; top:-2px'></img>"+
                         "&nbsp;"+
-                        "<a href='<?=$this->getUrl('manage.php');?>'><span id='RCPro-Link'><strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em></strong></span></a>"+
+                        "<a href='<?=$this->getUrl('home.php');?>'><span id='RCPro-Link'><strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em></strong></span></a>"+
                     "</div>");
                     $('#app_panel').find('div.hang').last().after(link);
                 }, 10);
@@ -343,7 +343,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return int number of failed login attempts
      */
     private function checkUsernameAttempts(int $rcpro_participant_id) {
-        $SQL = "SELECT failed_attempts WHERE message = 'PARTICIPANT' AND log_id = ? AND project_id <> FALSE;";
+        $SQL = "SELECT failed_attempts WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $res->fetch_assoc()["failed_attempts"];
@@ -364,7 +364,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return int number of seconds of lockout left
      */
     public function getUsernameLockoutDuration(int $rcpro_participant_id) {
-        $SQL = "SELECT lockout_ts WHERE message = 'PARTICIPANT' AND log_id = ? AND project_id <> FALSE;";
+        $SQL = "SELECT lockout_ts WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL);";
         try {
             $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
             $lockout_ts = intval($res->fetch_assoc()["lockout_ts"]);
@@ -560,7 +560,7 @@ class REDCapPRO extends AbstractExternalModule {
      */
     public function getHash(int $rcpro_participant_id) {
         try {
-            $SQL = "SELECT pw WHERE message = 'PARTICIPANT' AND log_id = ? AND project_id <> FALSE;";
+            $SQL = "SELECT pw WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL);";
             $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $res->fetch_assoc()['pw'];
         }
@@ -665,7 +665,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return boolean|NULL True if taken, False if free, NULL if error 
      */
     public function usernameIsTaken(string $username) {
-        $SQL = "message = 'PARTICIPANT' AND rcpro_username = ? AND project_id <> FALSE";
+        $SQL = "message = 'PARTICIPANT' AND rcpro_username = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->countLogs($SQL, [$username]);
             return $result > 0;
@@ -687,7 +687,7 @@ class REDCapPRO extends AbstractExternalModule {
         if ($username === NULL) {
             return NULL;
         }
-        $SQL = "SELECT log_id, rcpro_username, email, fname, lname WHERE message = 'PARTICIPANT' AND rcpro_username = ? AND project_id <> FALSE";
+        $SQL = "SELECT log_id, rcpro_username, email, fname, lname WHERE message = 'PARTICIPANT' AND rcpro_username = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$username]);
             return $result->fetch_assoc();
@@ -705,7 +705,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return string|NULL username
      */
     public function getUserName(int $rcpro_participant_id) {
-        $SQL = "SELECT rcpro_username WHERE message = 'PARTICIPANT' AND log_id = ? AND project_id <> FALSE";
+        $SQL = "SELECT rcpro_username WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $result->fetch_assoc()["rcpro_username"];
@@ -723,7 +723,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return int|NULL RCPRO participant id
      */
     public function getParticipantIdFromUsername(string $username) {
-        $SQL = "SELECT log_id WHERE message = 'PARTICIPANT' AND rcpro_username = ? AND project_id <> FALSE";
+        $SQL = "SELECT log_id WHERE message = 'PARTICIPANT' AND rcpro_username = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$username]);
             return $result->fetch_assoc()["log_id"];
@@ -741,7 +741,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return int|NULL RCPRO participant id
      */
     public function getParticipantIdFromEmail(string $email) {
-        $SQL = "SELECT log_id WHERE message = 'PARTICIPANT' AND email = ? AND project_id <> FALSE";
+        $SQL = "SELECT log_id WHERE message = 'PARTICIPANT' AND email = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$email]);
             return $result->fetch_assoc()["log_id"];
@@ -759,7 +759,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return string|NULL email address
      */
     public function getEmail(int $rcpro_participant_id) {
-        $SQL = "SELECT email WHERE message = 'PARTICIPANT' AND log_id = ? AND project_id <> FALSE";
+        $SQL = "SELECT email WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $result->fetch_assoc()["email"];
@@ -779,7 +779,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return array array of arrays, each corresponding with a project
      */
     public function getParticipantProjects(int $rcpro_participant_id) {
-        $SQL = "SELECT rcpro_project_id, active WHERE rcpro_participant_id = ? AND message = 'LINK' AND project_id <> FALSE";
+        $SQL = "SELECT rcpro_project_id, active WHERE rcpro_participant_id = ? AND message = 'LINK' AND (project_id IS NULL OR project_id IS NOT NULL)";
         $projects = array();
         try {
             $result = $this->queryLogs($SQL, [$rcpro_participant_id]);
@@ -810,7 +810,7 @@ class REDCapPRO extends AbstractExternalModule {
     public function searchParticipants(string $search_term) {
         $SQL = "SELECT fname, lname, email, log_id, rcpro_username 
                 WHERE message = 'PARTICIPANT' 
-                AND project_id <> FALSE 
+                AND (project_id IS NULL OR project_id IS NOT NULL) 
                 AND (fname LIKE ? OR lname LIKE ? OR email LIKE ? OR rcpro_username LIKE ?)";
         try {
             return $this->queryLogs($SQL, [$search_term, $search_term, $search_term, $search_term]);
@@ -826,7 +826,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return array|NULL of user arrays or null if error
      */
     public function getAllParticipants() {
-        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts WHERE message = 'PARTICIPANT' AND project_id <> FALSE";
+        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts WHERE message = 'PARTICIPANT' AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, []);
             $participants  = array();
@@ -851,13 +851,13 @@ class REDCapPRO extends AbstractExternalModule {
      * @return array|NULL participants enrolled in given study
      */
     public function getProjectParticipants(string $rcpro_project_id) {
-        $SQL = "SELECT rcpro_participant_id WHERE message = 'LINK' AND rcpro_project_id = ? AND active = 1 AND project_id <> FALSE";
+        $SQL = "SELECT rcpro_participant_id WHERE message = 'LINK' AND rcpro_project_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$rcpro_project_id]);
             $participants  = array();
 
             while ($row = $result->fetch_assoc()) {
-                $participantSQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts WHERE message = 'PARTICIPANT' AND log_id = ? AND project_id <> FALSE";
+                $participantSQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
                 $participantResult = $this->queryLogs($participantSQL, [$row["rcpro_participant_id"]]);
                 $participant = $participantResult->fetch_assoc();
                 $participants[$row["rcpro_participant_id"]] = $participant;               
@@ -877,7 +877,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return boolean True if email already exists, False if not
      */
     public function checkEmailExists(string $email) {
-        $SQL = "message = 'PARTICIPANT' AND email = ? AND project_id <> FALSE";
+        $SQL = "message = 'PARTICIPANT' AND email = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->countLogs($SQL, [$email]);
             return $result > 0;
@@ -898,7 +898,7 @@ class REDCapPRO extends AbstractExternalModule {
      */
     public function enrolledInProject(int $rcpro_participant_id, int $pid) {
         $rcpro_project_id = $this->getProjectIdFromPID($pid);
-        $SQL = "message = 'LINK' AND rcpro_project_id = ? AND rcpro_participant_id = ? AND project_id <> FALSE";
+        $SQL = "message = 'LINK' AND rcpro_project_id = ? AND rcpro_participant_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->countLogs($SQL, [$rcpro_project_id, $rcpro_participant_id]);
             return $result > 0;
@@ -965,7 +965,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return bool
      */
     public function checkProject(int $pid, bool $check_active = FALSE) {
-        $SQL = "SELECT active WHERE pid = ? and message = 'PROJECT' and project_id <> FALSE";
+        $SQL = "SELECT active WHERE pid = ? and message = 'PROJECT' and (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$pid]);
             if ($result->num_rows == 0) {
@@ -989,7 +989,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return int rcpro project ID associated with the PID
      */
     public function getProjectIdFromPID(int $pid) {
-        $SQL = "SELECT log_id WHERE message = 'PROJECT' AND pid = ? AND project_id <> FALSE";
+        $SQL = "SELECT log_id WHERE message = 'PROJECT' AND pid = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$pid]);
             return $result->fetch_assoc()["log_id"];
@@ -1007,7 +1007,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return int REDCap PID associated with rcpro project id
      */
     public function getPidFromProjectId(int $rcpro_project_id) {
-        $SQL = "SELECT pid WHERE message = 'PROJECT' AND log_id = ? AND project_id <> FALSE";
+        $SQL = "SELECT pid WHERE message = 'PROJECT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$rcpro_project_id]);
             return $result->fetch_assoc()["pid"];
@@ -1026,7 +1026,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return int link id
      */
     public function getLinkId(int $rcpro_participant_id, int $rcpro_project_id) {
-        $SQL = "SELECT log_id WHERE message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND project_id <> FALSE";
+        $SQL = "SELECT log_id WHERE message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$rcpro_participant_id, $rcpro_project_id]);
             return $result->fetch_assoc()["log_id"];
@@ -1124,7 +1124,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return bool
      */
     private function participantEnrolled(int $rcpro_participant_id, int $rcpro_project_id) {
-        $SQL = "message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND active = 1 AND project_id <> FALSE";
+        $SQL = "message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->countLogs($SQL, [$rcpro_participant_id, $rcpro_project_id]);
             return $result > 0;
@@ -1143,7 +1143,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return bool
      */
     private function linkAlreadyExists(int $rcpro_participant_id, int $rcpro_project_id) {
-        $SQL = "message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND project_id <> FALSE";
+        $SQL = "message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->countLogs($SQL, [$rcpro_participant_id, $rcpro_project_id]);
             return $result > 0;
@@ -1215,7 +1215,7 @@ class REDCapPRO extends AbstractExternalModule {
      * @return array with participant id and username
      */
     public function verifyPasswordResetToken(string $token) {
-        $SQL = "SELECT log_id, rcpro_username WHERE message = 'PARTICIPANT' AND token = ? AND token_ts > ? AND token_valid = 1 AND project_id <> FALSE";
+        $SQL = "SELECT log_id, rcpro_username WHERE message = 'PARTICIPANT' AND token = ? AND token_ts > ? AND token_valid = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$token, time()]);
             if ($result->num_rows > 0) {
@@ -1562,6 +1562,11 @@ class REDCapPRO extends AbstractExternalModule {
                             <a class='nav-link ".($page==="Users" ? "active" : "")."' href='".$this->getUrl("manage-users.php")."'>
                             <i class='fas fa-users'></i>
                             Study Staff</a>
+                        </li>
+                        <li class='nav-item'>
+                            <a class='nav-link ".($page==="Logs" ? "active" : "")."' href='".$this->getUrl("logs.php")."'>
+                            <i class='fas fa-list'></i>
+                            Logs</a>
                         </li>";
         }
         $header .= "</ul></nav>
@@ -1610,6 +1615,11 @@ class REDCapPRO extends AbstractExternalModule {
                     <a class='nav-link ".($page==="Manage" ? "active" : "")."' href='".$this->getUrl("cc_manage.php")."'>
                     <i class='fas fa-users-cog'></i>
                     Manage Participants</a>
+                </li>
+                <li class='nav-item'>
+                    <a class='nav-link ".($page==="Logs" ? "active" : "")."' href='".$this->getUrl("cc_logs.php")."'>
+                    <i class='fas fa-list'></i>
+                    Logs</a>
                 </li>
         ";
         

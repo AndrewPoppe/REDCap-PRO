@@ -5,7 +5,6 @@ if ($role < 2) {
     header("location:".$module->getUrl("home.php"));
 }
 
-
 echo "<!DOCTYPE html>
 <html lang='en'>
 <head>

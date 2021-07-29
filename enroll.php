@@ -1,7 +1,9 @@
 <?php
 
-// Initialize Authentication
-$module::$AUTH::init();
+$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+if ($role < 2) {
+    header("location:".$module->getUrl("home.php"));
+}
 
 echo "<!DOCTYPE html>
 <html lang='en'>
@@ -53,6 +55,7 @@ $module->UiShowHeader("Enroll");
     <div class="wrapper">
         <h2>Enroll a Participant</h2>
         <p>Search for a participant by email , name, or username, and enroll the selected participant in this project.</p>
+        <p><em>If the participant does not have an account, you can register them </em><strong><a href="<?=$module->getUrl("register.php");?>">here</a></strong>.</p>
         <script>
             function showResult(str) {
                 if (str.length < 3) {
