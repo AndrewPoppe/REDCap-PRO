@@ -808,12 +808,12 @@ class REDCapPRO extends AbstractExternalModule {
      * @return 
      */
     public function searchParticipants(string $search_term) {
-        $SQL = "SELECT fname, lname, email, log_id 
+        $SQL = "SELECT fname, lname, email, log_id, rcpro_username 
                 WHERE message = 'PARTICIPANT' 
                 AND project_id <> FALSE 
-                AND (fname LIKE ? OR lname LIKE ? OR email LIKE ?)";
+                AND (fname LIKE ? OR lname LIKE ? OR email LIKE ? OR rcpro_username LIKE ?)";
         try {
-            return $this->queryLogs($SQL, [$search_term, $search_term, $search_term]);
+            return $this->queryLogs($SQL, [$search_term, $search_term, $search_term, $search_term]);
         }
         catch(\Exception $e) {
             $this->logError("Error performing livesearch", $e);

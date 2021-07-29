@@ -19,7 +19,7 @@ $module->UiShowHeader("Enroll");
             padding: 20px; 
         }
         .enroll-form {
-            width: 360px;
+            width: 540px;
             border-radius: 5px;
             border: 1px solid #cccccc;
             padding: 20px;
@@ -52,7 +52,7 @@ $module->UiShowHeader("Enroll");
 <body>
     <div class="wrapper">
         <h2>Enroll a Participant</h2>
-        <p>Search for a participant by email or name, and enroll the selected participant in this project.</p>
+        <p>Search for a participant by email , name, or username, and enroll the selected participant in this project.</p>
         <script>
             function showResult(str) {
                 if (str.length < 3) {
@@ -68,11 +68,12 @@ $module->UiShowHeader("Enroll");
                 xmlhttp.open("GET","<?=$module->getUrl("livesearch.php")?>&q="+str,true);
                 xmlhttp.send();
             }
-            function populateSelection(fname,lname,email,id) {
+            function populateSelection(fname,lname,email,id,username) {
                 $("#fname").val(fname);
                 $("#lname").val(lname);
                 $("#email").val(email);
                 $("#id").val(id);
+                $("#username").val(username);
                 $("#enroll-form").hide();
                 $("#confirm-form").show();
             }
@@ -95,6 +96,12 @@ $module->UiShowHeader("Enroll");
         <form class="confirm-form" name="confirm-form" id="confirm-form" action="<?= $module->getUrl("enroll.php");?>" method="POST" enctype="multipart/form-data" target="_self" style="display:none;">
             <div class="form-group">
                 <div class="selection" id="selectionContainer">
+                    <div class="mb-3 row">
+                        <label for="username" class="col-sm-3 col-form-label">Username:</label>
+                        <div class="col-sm-9">
+                            <input type="text" id="username" name="username" class="form-control-plaintext" disabled readonly>
+                        </div>
+                    </div>
                     <div class="mb-3 row">
                         <label for="fname" class="col-sm-3 col-form-label">First Name:</label>
                         <div class="col-sm-9">
