@@ -70,7 +70,7 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns));
         padding: 20px;
         margin-left:auto; 
         margin-right:auto;
-        width: 100% !important;
+        width: 95% !important;
     }
     #RCPRO_Logs tr.even {
         background-color: white !important;
@@ -128,6 +128,7 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns));
         overflow: hidden;
         height: 0px;
         width: 100%;
+        display: none;
     }
     #logs {
         border-radius: 5px;
@@ -187,6 +188,12 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns));
     </div>
     <script>
 		(function($, window, document) {	
+            Swal.fire({
+                title: "Loading Logs...",
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 			$(document).ready( function () {
 				$('#RCPRO_Logs').DataTable({
 					//pageLength: 1000,
@@ -239,7 +246,8 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns));
 				});
 
 				$('#logs').removeClass('dataTableParentHidden');
-				
+                Swal.close();
+                
 				$('#RCPRO_Logs').DataTable().on( 'buttons-action', function ( e, buttonApi, dataTable, node, config ) {
 					const text = buttonApi.text();
 					if (text.search(/Panes|Builder/)) {

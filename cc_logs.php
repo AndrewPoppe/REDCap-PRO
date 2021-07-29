@@ -85,6 +85,7 @@ if (!SUPER_USER) {
             overflow: hidden;
             height: 0px;
             width: 100%;
+            display: none;
         }
         #logs {
             border-radius: 5px;
@@ -161,7 +162,6 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns)." WHERE projec
 
 <body>
     <div class="logsContainer wrapper">
-        <h2>REDCapPRO Logs</h2>
         <div id="logs" class="dataTableParentHidden">
             <table class="table" id="RCPRO_Logs" style="width:100%;">
                 <caption>REDCapPRO Logs</caption>
@@ -189,8 +189,14 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns)." WHERE projec
         </div>
     </div>
     <script>
-		(function($, window, document) {	
-			$(document).ready( function () {
+		(function($, window, document) {
+            Swal.fire({
+                title: "Loading Logs...",
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+			$(document).ready( function () { 
 				$('#RCPRO_Logs').DataTable({
 					//pageLength: 1000,
 					dom: 'lBfrtip',
@@ -242,6 +248,7 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns)." WHERE projec
 				});
 
 				$('#logs').removeClass('dataTableParentHidden');
+                Swal.close();
 				
 				$('#RCPRO_Logs').DataTable().on( 'buttons-action', function ( e, buttonApi, dataTable, node, config ) {
 					const text = buttonApi.text();
