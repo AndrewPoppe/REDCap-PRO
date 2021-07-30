@@ -29,7 +29,11 @@ if ($role < 3) {
         background-color: white !important;
     }
     #RCPRO_Logs tr.odd {
-        background-color: white !important;
+        background-color: #f9f9f9 !important;
+    }
+    #RCPRO_Logs tr:hover {
+        background-color: #ddd !important;
+        cursor: pointer;
     }
     table.dataTable tbody td {
         vertical-align: middle;
@@ -43,19 +47,8 @@ if ($role < 3) {
     table {
         border-collapse: collapse;
     }
-    table.dataTable tbody tr.even {
-        background-color: #f2f2f2;
-    }
     button.dt-button {
         padding: .1em .2em;
-    }
-    table.dataTable tr.dtrg-group.dtrg-level-0 td {
-        background-color: #00356b;
-        color: #f9f9f9;
-    }
-    table.dataTable tr.dtrg-group.dtrg-level-1 td {
-        background-color: #ccc;
-        font-weight: bold;
     }
     div.dt-buttons {
         margin-left: 10px;
@@ -183,7 +176,7 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns));
             <div id="loading" class="loader"></div>
         </div>
         <div id="logs" class="dataTableParentHidden">
-            <table class="table" id="RCPRO_Logs" style="width:100%;">
+            <table class="table compact hover" id="RCPRO_Logs" style="width:100%;">
                 <caption>REDCapPRO Study Logs</caption>
                 <thead>
                     <tr>
@@ -197,10 +190,18 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns));
                 <tbody>
                     <?php 
                     while ($row = $tableData->fetch_assoc()) {
-                        echo "<tr>";
+                        $tds = "";
+                        $allData = "<div style=\\\"display: block; text-align:left;\\\"><ul>";
                         foreach ($columns as $column) {
-                            echo "<td>$row[$column]</td>";
+                            $value = str_replace("\n","\\n", addslashes(\REDCap::escapeHtml($row[$column])));
+                            $tds .= "<td>$value</td>";
+                            if ($value != "") {
+                                $allData .= "<li><strong>${column}</strong>: $value</li>";
+                            }   
                         }
+                        $allData .= "</ul></div>";
+                        echo "<tr onclick='(function() {Swal.fire({html:\"". $allData ."\"})})()'>";
+                        echo $tds;
                         echo "</tr>";
                     }
                     ?>
@@ -221,6 +222,9 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns));
                         return JSON.parse( localStorage.getItem( 'DataTables_' + settings.sInstance ) )
                     },
 					colReorder: true,
+                    "columnDefs": [
+                        //{ "visible": false, "targets": [4,10,12,13,14,15,16,17,19,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35] }
+                    ],
 					buttons: [
 						{
 							extend: 'searchPanes',
@@ -255,7 +259,8 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns));
 					],
 					scrollX: true,
 					scrollY: '50vh',
-					scrollCollapse: true
+					scrollCollapse: true,
+                    pageLength: 100
 				});
 
 				$('#logs').removeClass('dataTableParentHidden');
@@ -267,6 +272,7 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns));
 						$('.dt-button-collection').draggable();
 					}
 				});
+                $('#RCPRO_Logs').DataTable().columns.adjust().draw();
 			});
 		}(window.jQuery, window, document));
     </script>

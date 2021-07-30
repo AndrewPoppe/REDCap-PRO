@@ -32,7 +32,11 @@ if (!SUPER_USER) {
             background-color: white !important;
         }
         #RCPRO_Logs tr.odd {
-            background-color: white !important;
+            background-color: #f9f9f9 !important;
+        }
+        #RCPRO_Logs tr:hover {
+            background-color: #ddd !important;
+            cursor: pointer;
         }
         table.dataTable tbody td {
             vertical-align: middle;
@@ -134,6 +138,7 @@ if (!SUPER_USER) {
     <?php
 
 $columns = [
+    "log_id",
     "timestamp",
     "message",
     "ui_id",
@@ -174,7 +179,7 @@ $columns = [
     "token_valid"
 ];
 
-$tableData = $module->queryLogs("SELECT ".implode(", ", $columns)." WHERE project_id IS NULL OR project_id IS NOT NULL");
+$tableData = $module->queryLogs("SELECT ".implode(', ', $columns));
 
 ?>
 
@@ -184,7 +189,7 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns)." WHERE projec
             <div id="loading" class="loader"></div>
         </div>
         <div id="logs" class="dataTableParentHidden">
-            <table class="table" id="RCPRO_Logs" style="width:100%;">
+            <table class="table compact hover" id="RCPRO_Logs" style="width:100%;">
                 <caption>REDCapPRO Logs</caption>
                 <thead>
                     <tr>
@@ -198,10 +203,18 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns)." WHERE projec
                 <tbody>
                     <?php 
                     while ($row = $tableData->fetch_assoc()) {
-                        echo "<tr>";
+                        $tds = "";
+                        $allData = "<div style=\\\"display: block; text-align:left;\\\"><ul>";
                         foreach ($columns as $column) {
-                            echo "<td>$row[$column]</td>";
+                            $value = str_replace("\n","\\n", addslashes(\REDCap::escapeHtml($row[$column])));
+                            $tds .= "<td>$value</td>";
+                            if ($value != "") {
+                                $allData .= "<li><strong>${column}</strong>: $value</li>";
+                            }   
                         }
+                        $allData .= "</ul></div>";
+                        echo "<tr onclick='(function() {Swal.fire({html:\"". $allData ."\"})})()'>";
+                        echo $tds;
                         echo "</tr>";
                     }
                     ?>
@@ -269,6 +282,7 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns)." WHERE projec
 						$('.dt-button-collection').draggable();
 					}
 				});
+                $('#RCPRO_Logs').DataTable().columns.adjust().draw();
 			});
 		}(window.jQuery, window, document));
 		</script>
