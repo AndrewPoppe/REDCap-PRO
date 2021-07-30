@@ -74,14 +74,16 @@ if (!SUPER_USER) {
             background-color: #fff !important;
         }
         div.dtsp-panesContainer tr.selected {
-            background-color: #809ab5 !important;
+        background-color: #900000 !important;
+        color: #f9f9f9;
         }
         div.dtsp-panesContainer tr:hover {
             background-color: #aaa !important;
             cursor: pointer;
         }
         div.dtsp-panesContainer tr.selected:hover {
-            background-color: #406890 !important;
+            background-color: #ffbfbf !important;
+            color: black;
             cursor: pointer;
         }
         div.dataTableParentHidden {
@@ -126,7 +128,7 @@ if (!SUPER_USER) {
             border-radius: 50%;
             width: 120px;
             height: 120px;
-            animation: spin 2s linear infinite;
+            animation: spin 1s linear infinite;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -213,7 +215,7 @@ $tableData = $module->queryLogs("SELECT ".implode(', ', $columns));
                             }   
                         }
                         $allData .= "</ul></div>";
-                        echo "<tr onclick='(function() {Swal.fire({html:\"". $allData ."\"})})()'>";
+                        echo "<tr onclick='(function() {Swal.fire({confirmButtonColor:\"#900000\", allowEnterKey: false, html:\"". $allData ."\"})})()'>";
                         echo $tds;
                         echo "</tr>";
                     }
