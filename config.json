@@ -5,6 +5,7 @@
     "permissions": [
         "redcap_survey_page_top",
         "redcap_every_page_top",
+        "redcap_data_entry_form",
         "redcap_module_project_enable",
         "redcap_module_project_disable"
     ],

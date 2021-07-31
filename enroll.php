@@ -38,12 +38,12 @@ $module->UiShowHeader("Enroll");
             cursor: pointer;
             padding: 5px;
             margin-top: 5px;
-            background-color: #d1e8ff;
+            background-color: #ddd;
             border-radius: 5px;
             color: black;
         }
         .searchResult:hover {
-            background-color: #0582ff;
+            background-color: #900000;
             color: white;
         }
         button:hover {
