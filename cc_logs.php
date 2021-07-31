@@ -181,7 +181,7 @@ $columns = [
     "token_valid"
 ];
 
-$tableData = $module->queryLogs("SELECT ".implode(', ', $columns));
+$tableData = $module->queryLogs("SELECT ".implode(', ', $columns)." AND (project_id IS NULL OR project_id IS NOT NULL)");
 
 ?>
 
