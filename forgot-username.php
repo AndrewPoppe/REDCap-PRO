@@ -28,8 +28,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if (!empty($rcpro_participant_id)) {
                 $username = $module->getUserName($rcpro_participant_id);
                 $module->log("Username Reminder Email Sent", [
-                    "rcpro_participant_id"  => $rcpro_participant_id,
-                    "rcpro_username" => $username
+                    "rcpro_participant_id" => $rcpro_participant_id,
+                    "rcpro_username"       => $username
                 ]);
                 $module->sendUsernameEmail($email, $username);
             }

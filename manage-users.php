@@ -149,7 +149,6 @@ if ($role >= 3) {
                 $('.role_select').each((i, el) => {
                     let val = $(el).val();
                     let orig_val = $(el).attr('orig_value');
-                    console.log(i,val,orig_val);
                     if (val !== orig_val) {
                         changed = true;
                     }

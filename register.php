@@ -61,8 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
             $title = "Participant Registered";
             $module->log("Participant Registered", [
                 "rcpro_username" => $username,
-                "redcap_user" => USERID,
-                "redcap_project" => PROJECT_ID
+                "redcap_user"    => USERID
             ]);
         }
         catch (\Exception $e) {

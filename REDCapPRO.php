@@ -73,14 +73,13 @@ class REDCapPRO extends AbstractExternalModule {
                 $project_id                                                         // project id
             );
             $this->log("REDCapPRO Survey Accessed", [
-                "rcpro_username" => $this::$AUTH::get_username(),
-                "rcpro_user_id"  => $this::$AUTH::get_participant_id(),
-                "record" => $record,
-                "event" => $event_id,
-                "project" => $project_id,
-                "instrument" => $instrument,
-                "survey_hash" => $survey_hash,
-                "response_id" => $response_id,
+                "rcpro_username"  => $this::$AUTH::get_username(),
+                "rcpro_user_id"   => $this::$AUTH::get_participant_id(),
+                "record"          => $record,
+                "event"           => $event_id,
+                "instrument"      => $instrument,
+                "survey_hash"     => $survey_hash,
+                "response_id"     => $response_id,
                 "repeat_instance" => $repeat_instance
             ]);
             echo "<style>
@@ -200,7 +199,8 @@ class REDCapPRO extends AbstractExternalModule {
                 $res = $this->query($SQL, [$lockout_ts, $rcpro_participant_id]);
                 $status = $res ? "Successful" : "Failed";
                 $this->log("Login Lockout ${status}", [
-                    "rcpro_participant_id" => $rcpro_participant_id
+                    "rcpro_participant_id" => $rcpro_participant_id,
+                    "rcpro_username"       => $this->getUserName($rcpro_participant_id)
                 ]);
                 return $res;
             } else {
@@ -594,7 +594,10 @@ class REDCapPRO extends AbstractExternalModule {
         try {
             $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'pw';";
             $res = $this->query($SQL, [$hash, $rcpro_participant_id]);
-            $this->log("Password Hash Stored", ["rcpro_participant_id" => $rcpro_participant_id]);
+            $this->log("Password Hash Stored", [
+                "rcpro_participant_id" => $rcpro_participant_id,
+                "rcpro_username"       => $this->getUserName($rcpro_participant_id)
+            ]);
             return $res;
         }
         catch (\Exception $e) {
@@ -640,14 +643,16 @@ class REDCapPRO extends AbstractExternalModule {
                 "failed_attempts"  => 0,
                 "token"            => "",
                 "token_ts"         => time(),
-                "token_valid"      => 0
+                "token_valid"      => 0,
+                "redcap_user"      => USERID
             ]);
             if (!$id) {
                 throw new REDCapProException(["rcpro_username" => $username]);
             } 
             $this->log("Participant Created", [
                 "rcpro_user_id"  => $id,
-                "rcpro_username" => $username
+                "rcpro_username" => $username,
+                "redcap_user"    => USERID
             ]);
             return $username;
         }
@@ -932,8 +937,9 @@ class REDCapPRO extends AbstractExternalModule {
     public function addProject(int $pid) {
         try {
             return $this->log("PROJECT", [
-                "pid"    => $pid,
-                "active" => 1
+                "pid"         => $pid,
+                "active"      => 1,
+                "redcap_user" => USERID
             ]);
         }
         catch (\Exception $e) {
@@ -956,9 +962,9 @@ class REDCapPRO extends AbstractExternalModule {
             $result = $this->query($SQL, [$active, $rcpro_project_id]);
             if ($result) {
                 $this->log("Project Status Set", [
-                    "redcap_project"   => $pid,
                     "rcpro_project_id" => $rcpro_project_id,
-                    "active_status"    => $active
+                    "active_status"    => $active,
+                    "redcap_user"      => USERID
                 ]);
             }
         }
@@ -1076,7 +1082,9 @@ class REDCapPRO extends AbstractExternalModule {
             if ($result) {
                 $this->log("Enrolled Participant", [
                     "rcpro_participant_id" => $rcpro_participant_id,
-                    "rcpro_project_id" => $rcpro_project_id
+                    "rcpro_username"       => $this->getUserName($rcpro_participant_id),
+                    "rcpro_project_id"     => $rcpro_project_id,
+                    "redcap_user"          => USERID
                 ]);
             }
             return $result;
@@ -1098,7 +1106,14 @@ class REDCapPRO extends AbstractExternalModule {
             $this->log("LINK", [
                 "rcpro_project_id"     => $rcpro_project_id,
                 "rcpro_participant_id" => $rcpro_participant_id,
-                "active"               => 1
+                "active"               => 1,
+                "redcap_user"          => USERID
+            ]);
+            $this->log("Enrolled Participant", [
+                "rcpro_participant_id" => $rcpro_participant_id,
+                "rcpro_username"       => $this->getUserName($rcpro_participant_id),
+                "rcpro_project_id"     => $rcpro_project_id,
+                "redcap_user"          => USERID
             ]);
             return TRUE;
         }
@@ -1180,7 +1195,9 @@ class REDCapPRO extends AbstractExternalModule {
             if ($result) {
                 $this->log("Disenrolled Participant", [
                     "rcpro_participant_id" => $rcpro_participant_id,
-                    "rcpro_project_id" => $rcpro_project_id
+                    "rcpro_username"       => $this->getUserName($rcpro_participant_id),
+                    "rcpro_project_id"     => $rcpro_project_id,
+                    "redcap_user"          => USERID
                 ]);
             }
             return $result;
@@ -1234,8 +1251,8 @@ class REDCapPRO extends AbstractExternalModule {
             if ($result->num_rows > 0) {
                 $result_array = $result->fetch_assoc();
                 $this->log("Password Token Verified", [
-                    'rcpro_participant_id'  => $result_array['log_id'],
-                    'rcpro_username' => $result_array['rcpro_username']
+                    'rcpro_participant_id' => $result_array['log_id'],
+                    'rcpro_username'       => $result_array['rcpro_username']
                 ]);
                 return $result_array;
             } 
@@ -1305,17 +1322,17 @@ class REDCapPRO extends AbstractExternalModule {
             $result = \REDCap::email($to, $from, $subject, $body);
             $status = $result ? "Sent" : "Failed to send";
             $this->log("Password Reset Email - ${status}", [
-                "rcpro_participant_id"  => $rcpro_participant_id,
-                "rcpro_username" => $username_clean,
-                "rcpro_email"    => $to,
-                "redcap_user"    => USERID,
-                "redcap_project" => PROJECT_ID
+                "rcpro_participant_id" => $rcpro_participant_id,
+                "rcpro_username"       => $username_clean,
+                "rcpro_email"          => $to,
+                "redcap_user"          => USERID
             ]);
             return $result;
         }
         catch (\Exception $e) {
             $this->log("Password Reset Failed", [
-                "rcpro_participant_id" => $rcpro_participant_id
+                "rcpro_participant_id" => $rcpro_participant_id,
+                "redcap_user"          => USERID
             ]);
             $this->logError("Error sending password reset email", $e);
         }
@@ -1430,8 +1447,9 @@ class REDCapPRO extends AbstractExternalModule {
             if ($result) {
                 $this->log("Changed Email Address", [
                     "rcpro_participant_id" => $rcpro_participant_id,
-                    "old_email" => $current_email,
-                    "new_email" => $new_email
+                    "old_email"            => $current_email,
+                    "new_email"            => $new_email,
+                    "redcap_user"          => USERID
                 ]);
                 $username = $this->getUserName($rcpro_participant_id);
                 return $this->sendEmailUpdateEmail($username, $new_email, $current_email);
@@ -1653,11 +1671,12 @@ class REDCapPRO extends AbstractExternalModule {
      */
     public function logError(string $message, \Exception $e) {
         $params = [
-            "error_code"=>$e->getCode(),
-            "error_message"=>$e->getMessage(),
-            "error_file"=>$e->getFile(),
-            "error_line"=>$e->getLine(),
-            "error_string"=>$e->__toString()
+            "error_code"    => $e->getCode(),
+            "error_message" => $e->getMessage(),
+            "error_file"    => $e->getFile(),
+            "error_line"    => $e->getLine(),
+            "error_string"  => $e->__toString(),
+            "redcap_user"   => USERID
         ];
         if (isset($e->rcpro)) {
             $params = array_merge($params, $e->rcpro);
@@ -1977,9 +1996,11 @@ class Instrument {
                 $options .= "<option value='$inst_username' >$inst_username - $inst_fname $inst_lname - $inst_email</option>";
             }
             $replacement =  "<select id='username_selector'>$options</select>";
+            self::$module->initializeJavascriptModuleObject();
             ?>
             <script>
-                (function() {
+                (function($, window, document) {
+                    let module = <?=self::$module->getJavascriptModuleObjectName()?>;
                     let participants_json = '<?=$participants_json?>';
                     let participants_obj = JSON.parse(participants_json);
                     let participants = Object.values(participants_obj);
@@ -2004,7 +2025,11 @@ class Instrument {
                             participant = participants.filter((p) => p.rcpro_username === val)[0];
                         }
                         username_input.val(participant.rcpro_username);
-
+                        let logParameters = {
+                            rcpro_username: participant.rcpro_username,
+                            redcap_user: "<?=USERID?>"
+                        };
+                        
                         // If there is an email field, update it
                         <?php if (isset($this->email)) { ?>
                             let email_input = $('input[name="<?=$this->email?>"]');
@@ -2028,9 +2053,12 @@ class Instrument {
                                 lname_input.val(participant.lname);
                             }
                         <?php } ?>
+
+                        // Log this.
+                        module.log("Populated REDCapPRO User Info On Form", logParameters);
                     });
                     
-                })();
+                })(window.jQuery, window, document);
             </script>
             <?php
         }

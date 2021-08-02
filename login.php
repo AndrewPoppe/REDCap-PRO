@@ -95,9 +95,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // --> Username is locked out
                     $login_err = "You have been temporarily locked out.<br>You have ${lockout_duration_remaining} seconds left.";
                     $module->log("Login Attempted - Username Locked Out", [
-                        "rcpro_ip"       => $ip,
-                        "rcpro_username" => $username,
-                        "rcpro_participant_id"  => $participant["log_id"]
+                        "rcpro_ip"             => $ip,
+                        "rcpro_username"       => $username,
+                        "rcpro_participant_id" => $participant["log_id"]
                     ]);
 
                 // Check that there is a stored password hash
@@ -106,7 +106,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // TODO: Give option to resend password email?
                     $module->log("No password hash stored.", [
                         "rcpro_participant_id" => $participant["log_id"],
-                        "rcpro_username" => $username
+                        "rcpro_username"       => $username
                     ]);
                     $login_err = "Error: you have not set up your password. Please speak with your study coordinator.";
                 
@@ -119,9 +119,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     ///////////////////////////////
 
                     $module->log("Login Successful", [
-                        "rcpro_ip"       => $ip,
-                        "rcpro_username" => $username,
-                        "rcpro_participant_id"  => $participant["log_id"]
+                        "rcpro_ip"             => $ip,
+                        "rcpro_username"       => $username,
+                        "rcpro_participant_id" => $participant["log_id"]
                     ]);
                     
                     // Rehash password if necessary
@@ -157,9 +157,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // --> Password is not valid
                     // display a generic error message
                     $module->log("Login Unsuccessful - Incorrect Password", [
-                        "rcpro_ip"       => $ip,
-                        "rcpro_username" => $username,
-                        "rcpro_participant_id"  => $participant["log_id"]
+                        "rcpro_ip"             => $ip,
+                        "rcpro_username"       => $username,
+                        "rcpro_participant_id" => $participant["log_id"]
                     ]);
                     $module->incrementFailedLogin($participant["log_id"]);
                     $module->incrementFailedIp($ip);
@@ -168,9 +168,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     if ($remainingAttempts <= 0) {
                         $login_err = "Invalid username or password.<br>You have been locked out for ".$module::$SETTINGS::getLockoutDurationSeconds()." seconds.";
                         $module->log("USERNAME LOCKOUT", [
-                            "rcpro_ip"       => $ip,
-                            "rcpro_username" => $username,
-                            "rcpro_participant_id"  => $participant["log_id"]
+                            "rcpro_ip"             => $ip,
+                            "rcpro_username"       => $username,
+                            "rcpro_participant_id" => $participant["log_id"]
                         ]);
                     } else {
                         $login_err = "Invalid username or password.<br>You have ${remainingAttempts} attempts remaining before being locked out.";

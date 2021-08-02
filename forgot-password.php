@@ -27,8 +27,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $rcpro_participant_id = $module->getParticipantIdFromUsername($username);
             if (!empty($rcpro_participant_id)) {
                 $module->log("Password Reset Email Sent", [
-                    "rcpro_participant_id"  => $rcpro_participant_id,
-                    "rcpro_username" => $username
+                    "rcpro_participant_id" => $rcpro_participant_id,
+                    "rcpro_username"       => $username
                 ]);
                 $module->sendPasswordResetEmail($rcpro_participant_id);
             }
