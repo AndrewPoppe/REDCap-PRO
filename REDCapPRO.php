@@ -1644,7 +1644,7 @@ class REDCapPRO extends AbstractExternalModule {
                     Projects</a>
                 </li>
                 <li class='nav-item'>
-                    <a class='nav-link ".($page==="Manage" ? "active" : "")."' href='".$this->getUrl("cc_manage.php")."'>
+                    <a class='nav-link ".($page==="Participants" ? "active" : "")."' href='".$this->getUrl("cc_participants.php")."'>
                     <i class='fas fa-users-cog'></i>
                     Participants</a>
                 </li>

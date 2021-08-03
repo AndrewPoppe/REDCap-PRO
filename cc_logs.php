@@ -30,7 +30,7 @@ if (!SUPER_USER) {
         #RCPRO_Logs tr.odd {
             background-color: #f9f9f9 !important;
         }
-        #RCPRO_Logs tr:hover {
+        #RCPRO_Logs tbody tr:hover {
             background-color: #ddd !important;
             cursor: pointer;
         }

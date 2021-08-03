@@ -86,12 +86,10 @@ class Project {
             padding: 20px;
             margin-left:auto; 
             margin-right:auto;
-            width: 50vw !important;
         }
         div.dataTableParentHidden {
             overflow: hidden;
             height: 0px;
-            width: 100%;
             display: none;
         }
         #projects {
@@ -99,6 +97,7 @@ class Project {
             border: 1px solid #cccccc;
             padding: 20px;
             box-shadow: 0px 0px 5px #eeeeee;
+            width: 50vw !important;
         }
         #RCPRO_Projects tr.even {
             background-color: white !important;
@@ -158,16 +157,16 @@ class Project {
             <div id="loading" class="loader"></div>
         </div>
         <div id="projects" class="dataTableParentHidden">
-            <table class="table compact hover" id="RCPRO_Projects" style="width:100%;">
+            <table class="table" id="RCPRO_Projects" style="width:100%;">
                 <caption>REDCapPRO Study Logs</caption>
                 <thead>
                     <th class='dt-center'>Project ID</th>
                     <th class='dt-center'>REDCap PID</th>
                     <th>Title</th>
                     <th class='dt-center'>Status</th>
-                    <th class='dt-center'>Participants</th>
-                    <th class='dt-center'>Staff</th>
-                    <th class='dt-center'>Records</th>
+                    <th class='dt-center'># Participants</th>
+                    <th class='dt-center'># Staff Members</th>
+                    <th class='dt-center'># Records</th>
                 </thead>
                 <tbody>
                     <?php
