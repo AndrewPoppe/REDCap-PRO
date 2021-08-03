@@ -95,7 +95,7 @@
                 "name"                  : "<strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em>",
                 "key"                   : "redcappro",
                 "icon"                  : "fas fa-fingerprint",
-                "url"                   : "cc_home.php",
+                "url"                   : "cc_projects.php",
                 "show-header-and-footer": true
            }
         ]

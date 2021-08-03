@@ -5,9 +5,9 @@ function createProjectsCell(array $projects) {
     global $module;
     $result = "<td  class='dt-center'>";
     foreach ($projects as $project) {
-        $pid              = trim($project["redcap_pid"]);
+        $pid = trim($project["redcap_pid"]);
         $url = $module->getUrl("manage.php?pid=${pid}");
-        $result .= "<div><a class='rcpro_project_link' href='${url}'>PID: ${pid}</a></div>";
+        $result .= "<div><a class='rcpro_project_link' href='${url}'>PID ${pid}</a></div>";
     }
     $result .= "</td>";
     return $result;
@@ -107,7 +107,7 @@ function createProjectsCell(array $projects) {
 
     <?php if ($_SERVER["REQUEST_METHOD"] == "POST") { ?>
         <script>
-            Swal.fire({icon: "<?=$icon?>", title:"<?=$title?>"});
+            Swal.fire({icon: "<?=$icon?>", title:"<?=$title?>", confirmButtonColor: "#900000"});
         </script>
     <?php } ?>
 
@@ -125,7 +125,8 @@ function createProjectsCell(array $projects) {
                         <caption>Manage REDCapPRO Participants</caption>
                         <thead>
                             <tr>
-                                <th id="uname">Username</th>
+                                <th id="uid">User_ID</th>
+                                <th id="uname" class="dt-center">Username</th>
                                 <th id="fname" class="dt-center">First Name</th>
                                 <th id="lname" class="dt-center">Last Name</th>
                                 <th id="email">Email</th>
@@ -144,7 +145,8 @@ function createProjectsCell(array $projects) {
                                 $projects_array       = $module->getParticipantProjects($rcpro_participant_id);
                             ?>
                             <tr>
-                                <td><?=$username_clean?></td>
+                                <td><?=$participant["log_id"]?></td>
+                                <td class="dt-center"><?=$username_clean?></td>
                                 <td class="dt-center"><?=$fname_clean?></td>
                                 <td class="dt-center"><?=$lname_clean?></td>
                                 <td><?=$email_clean?></td>

@@ -887,6 +887,7 @@ class REDCapPRO extends AbstractExternalModule {
         }
     }
 
+
     /**
      * Determine whether email address already exists in database
      * 
@@ -1638,14 +1639,19 @@ class REDCapPRO extends AbstractExternalModule {
             <br>
             <nav style='margin-top:20px;'><ul class='nav nav-tabs rcpro-nav'>
                 <li class='nav-item'>
-                    <a class='nav-link ".($page==="Home" ? "active" : "")."' aria-current='page' href='".$this->getUrl("cc_home.php")."'>
-                    <i class='fas fa-home'></i>
-                    Home</a>
+                    <a class='nav-link ".($page==="Projects" ? "active" : "")."' aria-current='page' href='".$this->getUrl("cc_projects.php")."'>
+                    <i class='fas fa-briefcase'></i>
+                    Projects</a>
                 </li>
                 <li class='nav-item'>
                     <a class='nav-link ".($page==="Manage" ? "active" : "")."' href='".$this->getUrl("cc_manage.php")."'>
                     <i class='fas fa-users-cog'></i>
-                    Manage Participants</a>
+                    Participants</a>
+                </li>
+                <li class='nav-item'>
+                    <a class='nav-link ".($page==="Staff" ? "active" : "")."' href='".$this->getUrl("cc_staff.php")."'>
+                    <i class='fas fa-users'></i>
+                    Staff</a>
                 </li>
                 <li class='nav-item'>
                     <a class='nav-link ".($page==="Logs" ? "active" : "")."' href='".$this->getUrl("cc_logs.php")."'>
@@ -1865,6 +1871,7 @@ class Auth {
     
 
 }
+
 
 class ProjectSettings {
     public static $module;

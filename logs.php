@@ -10,12 +10,8 @@ if ($role < 3) {
 <meta charset='UTF-8'>
 <title><?=$module::$APPTITLE?> - Enroll</title>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.24/af-2.3.5/b-1.7.0/b-colvis-1.7.0/b-html5-1.7.0/b-print-1.7.0/rg-1.1.2/sb-1.0.1/sp-1.2.2/sl-1.3.3/datatables.min.css"/>
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/colreorder/1.5.3/css/colReorder.dataTables.min.css">
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js" defer></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js" defer></script>
-<script type="text/javascript" src="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.24/af-2.3.5/b-1.7.0/b-colvis-1.7.0/b-html5-1.7.0/b-print-1.7.0/rg-1.1.2/sb-1.0.1/sp-1.2.2/sl-1.3.3/datatables.min.js" defer></script>
-<script type="text/javascript" src="https://cdn.datatables.net/colreorder/1.5.3/js/dataTables.colReorder.min.js" defer></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/cr-1.5.4/date-1.1.0/sb-1.1.0/sp-1.3.0/sl-1.3.3/datatables.min.css"/>
+<script type="text/javascript" src="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/cr-1.5.4/date-1.1.0/sb-1.1.0/sp-1.3.0/sl-1.3.3/datatables.min.js" defer></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" defer></script>
 <style>
     .wrapper { 
@@ -222,9 +218,6 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns));
                         return JSON.parse( localStorage.getItem( 'DataTables_' + settings.sInstance ) )
                     },
 					colReorder: true,
-                    "columnDefs": [
-                        //{ "visible": false, "targets": [4,10,12,13,14,15,16,17,19,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35] }
-                    ],
 					buttons: [
 						{
 							extend: 'searchPanes',
@@ -244,18 +237,6 @@ $tableData = $module->queryLogs("SELECT ".implode(", ", $columns));
 								window.location.reload();
 							}
 						},
-						/*{
-							extend: 'csv',
-							exportOptions: { columns: ':visible' }
-						},
-						{ 
-							extend: 'excel',
-							exportOptions: { columns: ':visible' }
-						},
-						{ 
-							extend: 'pdf',
-							exportOptions: { columns: ':visible' }
-						}*/
 					],
 					scrollX: true,
 					scrollY: '50vh',
