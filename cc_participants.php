@@ -20,7 +20,7 @@ function createProjectsCell(array $projects) {
 
 function getParticipantInfo($rcpro_participant_id) {
     global $module;
-    $SQL = "SELECT log_id AS 'User_ID', rcpro_username AS Username, timestamp AS 'Created At', redcap_user AS 'Created By' WHERE log_id = ?";
+    $SQL = "SELECT log_id AS 'User_ID', rcpro_username AS Username, timestamp AS 'Registered At', redcap_user AS 'Registered By' WHERE log_id = ?";
     $result_obj = $module->queryLogs($SQL, [$rcpro_participant_id]);
     return $result_obj->fetch_assoc();
 }
@@ -90,6 +90,7 @@ function getParticipantInfo($rcpro_participant_id) {
             border: 1px solid #cccccc;
             padding: 20px;
             box-shadow: 0px 0px 5px #eeeeee;
+            min-width: 50vw !important;
         }
         #RCPRO_Participants tr.even {
             background-color: white !important;
@@ -146,14 +147,14 @@ function getParticipantInfo($rcpro_participant_id) {
         <h2>Manage Participants</h2>
         <p>All participants across studies</p>
         <form class="participants-form" id="participants-form" action="<?= $module->getUrl("cc_participants.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
-<?php if (count($participants) === 0 || empty($participants)) { ?>
+            <?php if (count($participants) === 0 || empty($participants)) { ?>
                 <div>
                     <p>No participants have been enrolled in this study</p>
                 </div>
-<?php } else { ?>
+            <?php } else { ?>
                 <div class="form-group">
                     <table class="table" id="RCPRO_Participants">
-                        <caption>Manage REDCapPRO Participants</caption>
+                        <caption>REDCapPRO Participants</caption>
                         <thead>
                             <tr>
                                 <th id="uid">User_ID</th>
@@ -211,7 +212,7 @@ function getParticipantInfo($rcpro_participant_id) {
                                 </td>
                                 <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
                                     Swal.fire({
-                                        title: "Enter the new email address for <?="${fname_clean} ${lname_clean}"?>",
+                                            title: "Enter the new email address for <?="${fname_clean} ${lname_clean}"?>",
                                             input: "email",
                                             inputPlaceholder: "<?=$email_clean?>",
                                             confirmButtonText: "Change Email",
@@ -229,22 +230,36 @@ function getParticipantInfo($rcpro_participant_id) {
                                     })();'>Change</button>
                                 </td>
                             </tr>
-<?php } ?>
+                            <?php } ?>
                         </tbody>
                     </table>
                 </div>
                 <input type="hidden" id="toReset" name="toReset">
                 <input type="hidden" id="toChangeEmail" name="toChangeEmail">
                 <input type="hidden" id="newEmail" name="newEmail">
-                <input type="hidden" id="toDisenroll" name="toDisenroll">        
+                <input type="hidden" id="toDisenroll" name="toDisenroll">    
+            <?php } ?>
         </form>
-            
-<?php } ?>
     </div>
     <script>
-        $('#RCPRO_Participants').DataTable();
+        (function($, window, document) {     
+            $(document).ready( function () {
+                let participantsTable = $('#RCPRO_Participants').DataTable({
+                    dom: 'lBfrtip',
+                    stateSave: true,
+                    stateSaveCallback: function(settings,data) {
+                        localStorage.setItem( 'DataTables_' + settings.sInstance, JSON.stringify(data) )
+                    },
+                    stateLoadCallback: function(settings) {
+                        return JSON.parse( localStorage.getItem( 'DataTables_' + settings.sInstance ) )
+                    },
+                    scrollY: '50vh',
+                    scrollCollapse: true,
+                    pageLength: 100
+                });
+            });
+		}(window.jQuery, window, document));
     </script>
-
     <?php
     require_once APP_PATH_DOCROOT . 'ControlCenter/footer.php';
     ?>

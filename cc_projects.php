@@ -54,7 +54,10 @@ class Project {
     function getStaff() {
         $managers = self::$module->getProjectSetting("managers", self::$redcap_pid);
         $users    = self::$module->getProjectSetting("users", self::$redcap_pid);
-        $monitors = self::$module->getProjectSetting("monitors", self::$redcap_pid);
+        $monitors = self::$module->getProjectSetting("monitors", self::$redcap_pid);        
+        $managers = is_null($managers) ? [] : $managers;
+        $users    = is_null($users) ? [] : $users;
+        $monitors = is_null($monitors) ? [] : $monitors;
         $allStaff = array_merge($managers, $users, $monitors);
 
         return [
@@ -97,7 +100,7 @@ class Project {
             border: 1px solid #cccccc;
             padding: 20px;
             box-shadow: 0px 0px 5px #eeeeee;
-            width: 50vw !important;
+            min-width: 50vw !important;
         }
         #RCPRO_Projects tr.even {
             background-color: white !important;
@@ -158,7 +161,7 @@ class Project {
         </div>
         <div id="projects" class="dataTableParentHidden">
             <table class="table" id="RCPRO_Projects" style="width:100%;">
-                <caption>REDCapPRO Study Logs</caption>
+                <caption>REDCapPRO Projects</caption>
                 <thead>
                     <th class='dt-center'>Project ID</th>
                     <th class='dt-center'>REDCap PID</th>
