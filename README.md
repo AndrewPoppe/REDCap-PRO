@@ -1,8 +1,8 @@
 ![REDCapPRO](./images/RCPro_Logo.svg)
 
-##REDCapPRO - Patient Reported Outcomes
+## REDCapPRO - Patient Reported Outcomes
 
-###Description
+### Description
 This external module is designed to bring an ePRO interface to REDCap. Its primary purpose is to allow the identification of a survey taker and to log that information in a REDCap project's audit trail. The reason this is needed is that there is no built-in method of providing authentication and identification of survey respondents that provides all of the following:
 1. **Identification**: It identifies the survey respondent (via a participant ID) in the logs of the project itself. 
 2. **Authentication**: It provides a means of proving that participant is genuinely who they claim to be. There is no way for another person to pretend to be the participant, either in real time or after the fact by modifying logs. Obvious exceptions:
