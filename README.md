@@ -1,1 +1,1 @@
-# REDCap-PRO
+![REDCapPRO](./images/RCPro_Logo.svg)
