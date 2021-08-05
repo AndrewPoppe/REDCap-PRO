@@ -2,7 +2,7 @@
 
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role < 2) {
-    header("location:".$module->getUrl("home.php"));
+    header("location:".$module->getUrl("src/home.php"));
 }
 
 echo "<!DOCTYPE html>
@@ -81,7 +81,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
                 })
                 .then(() => {
                     if (success) {
-                        window.location.href = "<?=$module->getUrl("register.php");?>";
+                        window.location.href = "<?=$module->getUrl("src/register.php");?>";
                     }
                 });
             </script>
@@ -108,8 +108,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
     <div class="wrapper">
         <h2>Register a Participant</h2>
         <p>Submit this form to create a new account for this participant.</p>
-        <p><em>If the participant already has an account, you can enroll them in this project </em><strong><a href="<?=$module->getUrl("enroll.php");?>">here</a></strong>.</p>
-        <form class="register-form" action="<?= $module->getUrl("register.php"); ?>" method="POST" enctype="multipart/form-data" target="_self" >
+        <p><em>If the participant already has an account, you can enroll them in this project </em><strong><a href="<?=$module->getUrl("src/enroll.php");?>">here</a></strong>.</p>
+        <form class="register-form" action="<?= $module->getUrl("src/register.php"); ?>" method="POST" enctype="multipart/form-data" target="_self" >
             <div class="form-group">
                 <label>First Name</label>
                 <input type="text" name="REDCapPRO_FName" class="form-control <?php echo (!empty($fname_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $fname_clean; ?>">

@@ -44,7 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     echo '<div style="text-align: center;"><p>Provide the email address associated with your account.</p></div>';
     ?>
-            <form action="<?= $module->getUrl("forgot-username.php", true); ?>" method="post">
+            <form action="<?= $module->getUrl("src/forgot-username.php", true); ?>" method="post">
                 <div class="form-group">
                     <label>Email Address</label>
                     <input type="email" name="email" class="form-control <?php echo (!empty($err)) ? 'is-invalid' : ''; ?>">
@@ -57,7 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             </form>
             <hr>
             <div style="text-align: center;"> 
-                <a href="<?= $module->getUrl("forgot-password.php", true); ?>">Forgot Password?</a>
+                <a href="<?= $module->getUrl("src/forgot-password.php", true); ?>">Forgot Password?</a>
             </div>
     </div>
     <style>

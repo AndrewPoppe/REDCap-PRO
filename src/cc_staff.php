@@ -41,7 +41,7 @@ function createProjectsCell(array $projects) {
     $result = "<td  class='dt-center'>";
     foreach ($projects as $project) {
         $link_class = 'rcpro_project_link';    
-        $url = $module->getUrl("manage-users.php?pid=${project}");
+        $url = $module->getUrl("src/manage-users.php?pid=${project}");
         $result .= "<div><a class='${link_class}' href='${url}'>PID ${project}</a></div>";
     }
     $result .= "</td>";

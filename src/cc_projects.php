@@ -176,12 +176,12 @@ class Project {
                         foreach ($redcap_project_ids as $id) {
                             echo "<tr>";
                             $thisProject = new Project($module, $id);
-                            echo "<td class='dt-center'><a class='rcpro_link' href='".$module->getUrl("home.php?pid=$id")."'>".$thisProject::$rcpro_project_id."</a></td>";
-                            echo "<td class='dt-center'><a class='rcpro_link' href='".$module->getUrl("home.php?pid=$id")."'>$id</a></td>";
+                            echo "<td class='dt-center'><a class='rcpro_link' href='".$module->getUrl("src/home.php?pid=$id")."'>".$thisProject::$rcpro_project_id."</a></td>";
+                            echo "<td class='dt-center'><a class='rcpro_link' href='".$module->getUrl("src/home.php?pid=$id")."'>$id</a></td>";
                             echo "<td>".$thisProject::$info["app_title"]."</td>";
                             echo "<td class='dt-center'>".$thisProject->getStatus()."</td>";
-                            echo "<td class='dt-center'><a class='rcpro_link' href='".$module->getUrl("manage.php?pid=$id")."'>".$thisProject->getParticipantCount()."</a></td>";
-                            echo "<td class='dt-center'><a class='rcpro_link' href='".$module->getUrl("manage-users.php?pid=$id")."'>".count($thisProject::$staff["allStaff"])."</a></td>";
+                            echo "<td class='dt-center'><a class='rcpro_link' href='".$module->getUrl("src/manage.php?pid=$id")."'>".$thisProject->getParticipantCount()."</a></td>";
+                            echo "<td class='dt-center'><a class='rcpro_link' href='".$module->getUrl("src/manage-users.php?pid=$id")."'>".count($thisProject::$staff["allStaff"])."</a></td>";
                             echo "<td class='dt-center'>".$thisProject->getRecordCount()."</td>";
                             echo "</tr>";
                         }

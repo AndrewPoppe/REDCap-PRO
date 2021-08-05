@@ -95,19 +95,18 @@
                 "name"                  : "<strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em>",
                 "key"                   : "redcappro",
                 "icon"                  : "fas fa-fingerprint",
-                "url"                   : "cc_projects.php",
+                "url"                   : "src/cc_projects.php",
                 "show-header-and-footer": true
            }
         ]
      },
     "no-auth-pages": [
-        "home",
-        "login",
-        "logout",
-        "reset-password",
-        "create-password",
-        "forgot-password",
-        "forgot-username"
+        "src/login",
+        "src/logout",
+        "src/reset-password",
+        "src/create-password",
+        "src/forgot-password",
+        "src/forgot-username"
     ],
     "framework-version": 5,
     "compatibility": {

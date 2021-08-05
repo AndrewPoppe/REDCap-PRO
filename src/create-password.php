@@ -8,7 +8,7 @@ parse_str($_SERVER['QUERY_STRING'], $qstring);
 
 // Redirect to login page if we shouldn't be here
 if (!isset($qstring["t"]) && $_SERVER["REQUEST_METHOD"] !== "POST") {
-    header("location: ".$module->getUrl("login.php", true));
+    header("location: ".$module->getUrl("src/login.php", true));
     return;
 }
  
@@ -103,7 +103,7 @@ if ($verified_user) {
 
     echo "<p>Please fill out this form to create your password.</p>";
     ?>
-            <form action="<?= $module->getUrl("create-password.php", true)."&t=".urlencode($qstring["t"]); ?>" method="post">
+            <form action="<?= $module->getUrl("src/create-password.php", true)."&t=".urlencode($qstring["t"]); ?>" method="post">
                 <div class="form-group">
                     <span>Username: <span style="color: #900000; font-weight: bold;"><?= $verified_user["rcpro_username"]; ?></span></span>
                 </div> 

@@ -97,7 +97,7 @@ if ($role >= 3) {
                                 </ul><br>
                                 </div>`
                     })})();">staff permissions</span> to REDCapPRO</p>
-        <form class="manage-users-form" id="manage-users-form" action="<?= $module->getUrl("manage-users.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
+        <form class="manage-users-form" id="manage-users-form" action="<?= $module->getUrl("src/manage-users.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
 <?php if (count($userList) === 0) { ?>
                 <div>
                     <p>No users have access to this project.</p>

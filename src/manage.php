@@ -120,7 +120,7 @@ if ($role > 0) {
     <div class="manageContainer wrapper">
         <h2>Manage Study Participants</h2>
         <p>Reset passwords, disenroll from study, etc.</p>
-        <form class="manage-form" id="manage-form" action="<?= $module->getUrl("manage.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
+        <form class="manage-form" id="manage-form" action="<?= $module->getUrl("src/manage.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
             <?php if (count($participantList) === 0) { ?>
                 <div>
                     <p>No participants have been enrolled in this study</p>

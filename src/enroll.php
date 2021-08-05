@@ -2,7 +2,7 @@
 
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role < 2) {
-    header("location:".$module->getUrl("home.php"));
+    header("location:".$module->getUrl("src/home.php"));
 }
 
 echo "<!DOCTYPE html>
@@ -55,7 +55,7 @@ $module->UiShowHeader("Enroll");
     <div class="wrapper">
         <h2>Enroll a Participant</h2>
         <p>Search for a participant by email , name, or username, and enroll the selected participant in this project.</p>
-        <p><em>If the participant does not have an account, you can register them </em><strong><a href="<?=$module->getUrl("register.php");?>">here</a></strong>.</p>
+        <p><em>If the participant does not have an account, you can register them </em><strong><a href="<?=$module->getUrl("src/register.php");?>">here</a></strong>.</p>
         <script>
             function showResult(str) {
                 if (str.length < 3) {
@@ -68,7 +68,7 @@ $module->UiShowHeader("Enroll");
                         document.getElementById("searchResults").innerHTML=this.responseText;
                     }
                 }
-                xmlhttp.open("GET","<?=$module->getUrl("livesearch.php")?>&q="+str,true);
+                xmlhttp.open("GET","<?=$module->getUrl("src/livesearch.php")?>&q="+str,true);
                 xmlhttp.send();
             }
             function populateSelection(fname,lname,email,id,username) {
@@ -96,7 +96,7 @@ $module->UiShowHeader("Enroll");
                 </div>
             </div>
         </form>
-        <form class="confirm-form" name="confirm-form" id="confirm-form" action="<?= $module->getUrl("enroll.php");?>" method="POST" enctype="multipart/form-data" target="_self" style="display:none;">
+        <form class="confirm-form" name="confirm-form" id="confirm-form" action="<?= $module->getUrl("src/enroll.php");?>" method="POST" enctype="multipart/form-data" target="_self" style="display:none;">
             <div class="form-group">
                 <div class="selection" id="selectionContainer">
                     <div class="mb-3 row">

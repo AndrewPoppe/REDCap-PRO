@@ -43,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     echo '<div style="text-align: center;"><p>Provide the username associated with your account.</p></div>';
     ?>
-            <form action="<?= $module->getUrl("forgot-password.php", true); ?>" method="post">
+            <form action="<?= $module->getUrl("src/forgot-password.php", true); ?>" method="post">
                 <div class="form-group">
                     <label>Username</label>
                     <input type="text" name="username" class="form-control <?php echo (!empty($err)) ? 'is-invalid' : ''; ?>">
@@ -56,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             </form>
             <hr>
             <div style="text-align: center;"> 
-                <a href="<?= $module->getUrl("forgot-username.php", true); ?>">Forgot Username?</a>
+                <a href="<?= $module->getUrl("src/forgot-username.php", true); ?>">Forgot Username?</a>
             </div>
 <?php } ?>
     </div>

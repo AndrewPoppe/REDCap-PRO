@@ -30,7 +30,7 @@ class REDCapPRO extends AbstractExternalModule {
                     let link = $("<div>"+
                         "<img src='<?=$this->getUrl('images/fingerprint_2.png');?>' style='width:16px; height:16px; position:relative; top:-2px'></img>"+
                         "&nbsp;"+
-                        "<a href='<?=$this->getUrl('home.php');?>'><span id='RCPro-Link'><strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em></strong></span></a>"+
+                        "<a href='<?=$this->getUrl('src/home.php');?>'><span id='RCPro-Link'><strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em></strong></span></a>"+
                     "</div>");
                     $('#app_panel').find('div.hang').last().after(link);
                 }, 10);
@@ -96,10 +96,10 @@ class REDCapPRO extends AbstractExternalModule {
                     transition: 0.1s filter linear;
                 }
             </style>";
-            echo "<script src='".$this->getUrl("rcpro_base.js",true)."'></script>";
+            echo "<script src='".$this->getUrl("src/rcpro_base.js",true)."'></script>";
             echo "<script>
                 window.rcpro.logo = '".$this->getUrl("images/RCPro_Favicon.svg")."';
-                window.rcpro.logoutPage = '".$this->getUrl("logout.php", true)."';
+                window.rcpro.logoutPage = '".$this->getUrl("src/logout.php", true)."';
                 window.rcpro.timeout_minutes = ".$this::$SETTINGS::getTimeoutMinutes().";
                 window.rcpro.warning_minutes = ".$this::$SETTINGS::getTimeoutWarningMinutes().";
                 window.rcpro.initTimeout();
@@ -111,7 +111,7 @@ class REDCapPRO extends AbstractExternalModule {
             $this::$AUTH::set_survey_url(APP_PATH_SURVEY_FULL."?s=${survey_hash}");
             \Session::savecookie($this::$APPTITLE."_survey_url", APP_PATH_SURVEY_FULL."?s=${survey_hash}", 0, TRUE);
             $this::$AUTH::set_survey_active_state(TRUE);
-            header("location: ".$this->getUrl("login.php", true)."&s=${survey_hash}");
+            header("location: ".$this->getUrl("src/login.php", true)."&s=${survey_hash}");
             $this->exitAfterHook();
         }
 
@@ -1304,8 +1304,8 @@ class REDCapPRO extends AbstractExternalModule {
             <br>We have received a request to reset your account password. If you did not make this request, you can ignore this email.<br>
             <br>To reset your password, click the link below.
             <br>This is your username: <strong>${username_clean}</strong><br>
-            <br>Click <a href='".$this->getUrl("reset-password.php",true)."&t=${token}'>here</a> to reset your password.
-            <br><em>That link is only valid for the next hour. If you need a new link, click <a href='".$this->getUrl("forgot-password.php",true)."'>here</a>.</em>
+            <br>Click <a href='".$this->getUrl("src/reset-password.php",true)."&t=${token}'>here</a> to reset your password.
+            <br><em>That link is only valid for the next hour. If you need a new link, click <a href='".$this->getUrl("src/forgot-password.php",true)."'>here</a>.</em>
             </p>
             <br>";
             if (defined("PROJECT_ID")) {
@@ -1369,7 +1369,7 @@ class REDCapPRO extends AbstractExternalModule {
             Write it down someplace safe, because you will need to know your username to take part in the study.</p>
 
             <p>To use your account, first you will need to create a password. 
-            <br>Click <a href='".$this->getUrl("create-password.php",true)."&t=${token}'>this link</a> to create your password.
+            <br>Click <a href='".$this->getUrl("src/create-password.php",true)."&t=${token}'>this link</a> to create your password.
             <br>That link will only work for the next $hours_valid hours.
             </p>
             <br>";
@@ -1566,37 +1566,37 @@ class REDCapPRO extends AbstractExternalModule {
             <br>
             <nav style='margin-top:20px;'><ul class='nav nav-tabs rcpro-nav'>
                 <li class='nav-item'>
-                    <a class='nav-link ".($page==="Home" ? "active" : "")."' aria-current='page' href='".$this->getUrl("home.php")."'>
+                    <a class='nav-link ".($page==="Home" ? "active" : "")."' aria-current='page' href='".$this->getUrl("src/home.php")."'>
                     <i class='fas fa-home'></i>
                     Home</a>
                 </li>";
         if ($role >= 1) {
             $header .= "<li class='nav-item'>
-                            <a class='nav-link ".($page==="Manage" ? "active" : "")."' href='".$this->getUrl("manage.php")."'>
+                            <a class='nav-link ".($page==="Manage" ? "active" : "")."' href='".$this->getUrl("src/manage.php")."'>
                             <i class='fas fa-users-cog'></i>
                             Manage Participants</a>
                         </li>";
         }
         if ($role >= 2) {
             $header .= "<li class='nav-item'>
-                            <a class='nav-link ".($page==="Enroll" ? "active" : "")."' href='".$this->getUrl("enroll.php")."'>
+                            <a class='nav-link ".($page==="Enroll" ? "active" : "")."' href='".$this->getUrl("src/enroll.php")."'>
                             <i class='fas fa-user-check'></i>
                             Enroll</a>
                         </li>
                         <li class='nav-item'>
-                            <a class='nav-link ".($page==="Register" ? "active" : "")."' href='".$this->getUrl("register.php")."'>
+                            <a class='nav-link ".($page==="Register" ? "active" : "")."' href='".$this->getUrl("src/register.php")."'>
                             <i class='fas fa-id-card'></i>
                             Register</a>
                         </li>";
         }
         if ($role > 2) {
             $header .= "<li class='nav-item'>
-                            <a class='nav-link ".($page==="Users" ? "active" : "")."' href='".$this->getUrl("manage-users.php")."'>
+                            <a class='nav-link ".($page==="Users" ? "active" : "")."' href='".$this->getUrl("src/manage-users.php")."'>
                             <i class='fas fa-users'></i>
                             Study Staff</a>
                         </li>
                         <li class='nav-item'>
-                            <a class='nav-link ".($page==="Logs" ? "active" : "")."' href='".$this->getUrl("logs.php")."'>
+                            <a class='nav-link ".($page==="Logs" ? "active" : "")."' href='".$this->getUrl("src/logs.php")."'>
                             <i class='fas fa-list'></i>
                             Logs</a>
                         </li>";
@@ -1639,22 +1639,22 @@ class REDCapPRO extends AbstractExternalModule {
             <br>
             <nav style='margin-top:20px;'><ul class='nav nav-tabs rcpro-nav'>
                 <li class='nav-item'>
-                    <a class='nav-link ".($page==="Projects" ? "active" : "")."' aria-current='page' href='".$this->getUrl("cc_projects.php")."'>
+                    <a class='nav-link ".($page==="Projects" ? "active" : "")."' aria-current='page' href='".$this->getUrl("src/cc_projects.php")."'>
                     <i class='fas fa-briefcase'></i>
                     Projects</a>
                 </li>
                 <li class='nav-item'>
-                    <a class='nav-link ".($page==="Participants" ? "active" : "")."' href='".$this->getUrl("cc_participants.php")."'>
+                    <a class='nav-link ".($page==="Participants" ? "active" : "")."' href='".$this->getUrl("src/cc_participants.php")."'>
                     <i class='fas fa-users-cog'></i>
                     Participants</a>
                 </li>
                 <li class='nav-item'>
-                    <a class='nav-link ".($page==="Staff" ? "active" : "")."' href='".$this->getUrl("cc_staff.php")."'>
+                    <a class='nav-link ".($page==="Staff" ? "active" : "")."' href='".$this->getUrl("src/cc_staff.php")."'>
                     <i class='fas fa-users'></i>
                     Staff</a>
                 </li>
                 <li class='nav-item'>
-                    <a class='nav-link ".($page==="Logs" ? "active" : "")."' href='".$this->getUrl("cc_logs.php")."'>
+                    <a class='nav-link ".($page==="Logs" ? "active" : "")."' href='".$this->getUrl("src/cc_logs.php")."'>
                     <i class='fas fa-list'></i>
                     Logs</a>
                 </li>

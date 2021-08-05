@@ -201,7 +201,7 @@ $module->UiShowParticipantHeader("Login");
             }        
             ?>
 
-            <form action="<?= $module->getUrl("login.php", true); ?>" method="post">
+            <form action="<?= $module->getUrl("src/login.php", true); ?>" method="post">
                 <div class="form-group">
                     <label>Username</label>
                     <input type="text" name="username" class="form-control <?= (!empty($username_err)) ? 'is-invalid' : ''; ?>" value="<?= $username; ?>">
@@ -220,9 +220,9 @@ $module->UiShowParticipantHeader("Login");
             <hr>
             <div style="text-align: center;">
                 Forgot 
-                <a href="<?= $module->getUrl("forgot-username.php", true); ?>">Username</a>
+                <a href="<?= $module->getUrl("src/forgot-username.php", true); ?>">Username</a>
                  or 
-                <a href="<?= $module->getUrl("forgot-password.php", true); ?>">Password</a>?
+                <a href="<?= $module->getUrl("src/forgot-password.php", true); ?>">Password</a>?
             </div>
         </div>
     </div>

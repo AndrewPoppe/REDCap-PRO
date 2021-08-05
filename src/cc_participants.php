@@ -10,7 +10,7 @@ function createProjectsCell(array $projects) {
             $title = "Active";
             
             $pid = trim($project["redcap_pid"]);
-            $url = $module->getUrl("manage.php?pid=${pid}");
+            $url = $module->getUrl("src/manage.php?pid=${pid}");
             $result .= "<div><a class='${link_class}' title='${title}' href='${url}'>PID ${pid}</a></div>";
         }
     }
@@ -146,7 +146,7 @@ function getParticipantInfo($rcpro_participant_id) {
     <div class="participantsContainer wrapper">
         <h2>Manage Participants</h2>
         <p>All participants across studies</p>
-        <form class="participants-form" id="participants-form" action="<?= $module->getUrl("cc_participants.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
+        <form class="participants-form" id="participants-form" action="<?= $module->getUrl("src/cc_participants.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
             <?php if (count($participants) === 0 || empty($participants)) { ?>
                 <div>
                     <p>No participants have been enrolled in this study</p>
