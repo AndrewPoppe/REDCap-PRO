@@ -2,76 +2,83 @@
 
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role < 2) {
-    header("location:".$module->getUrl("src/home.php"));
+    header("location:" . $module->getUrl("src/home.php"));
 }
 
 echo "<!DOCTYPE html>
 <html lang='en'>
 <head>
 <meta charset='UTF-8'>
-<title>".$module::$APPTITLE." - Enroll</title>";
+<title>" . $module::$APPTITLE . " - Enroll</title>";
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module->UiShowHeader("Enroll");
 
 
 ?>
-    <style>
-        .wrapper { 
-            width: 720px; 
-            padding: 20px; 
-        }
-        .enroll-form {
-            width: 540px;
-            border-radius: 5px;
-            border: 1px solid #cccccc;
-            padding: 20px;
-            box-shadow: 0px 0px 5px #eeeeee;
-        }
-        .confirm-form {
-            width: 500px;
-            border-radius: 5px;
-            border: 1px solid #cccccc;
-            padding: 20px;
-            box-shadow: 0px 0px 5px #eeeeee;
-        }
-        .searchResult {
-            cursor: pointer;
-            padding: 5px;
-            margin-top: 5px;
-            background-color: #ddd;
-            border-radius: 5px;
-            color: black;
-        }
-        .searchResult:hover {
-            background-color: #900000;
-            color: white;
-        }
-        button:hover {
-            outline: none !important;
-        }
-    </style>
+<style>
+    .wrapper {
+        width: 720px;
+        padding: 20px;
+    }
+
+    .enroll-form {
+        width: 540px;
+        border-radius: 5px;
+        border: 1px solid #cccccc;
+        padding: 20px;
+        box-shadow: 0px 0px 5px #eeeeee;
+    }
+
+    .confirm-form {
+        width: 500px;
+        border-radius: 5px;
+        border: 1px solid #cccccc;
+        padding: 20px;
+        box-shadow: 0px 0px 5px #eeeeee;
+    }
+
+    .searchResult {
+        cursor: pointer;
+        padding: 5px;
+        margin-top: 5px;
+        background-color: #ddd;
+        border-radius: 5px;
+        color: black;
+    }
+
+    .searchResult:hover {
+        background-color: #900000;
+        color: white;
+    }
+
+    button:hover {
+        outline: none !important;
+    }
+</style>
 </head>
+
 <body>
     <div class="wrapper">
         <h2>Enroll a Participant</h2>
         <p>Search for a participant by email , name, or username, and enroll the selected participant in this project.</p>
-        <p><em>If the participant does not have an account, you can register them </em><strong><a href="<?=$module->getUrl("src/register.php");?>">here</a></strong>.</p>
+        <p><em>If the participant does not have an account, you can register them </em><strong><a href="<?= $module->getUrl("src/register.php"); ?>">here</a></strong>.</p>
         <script>
             function showResult(str) {
                 if (str.length < 3) {
-                    document.getElementById("searchResults").innerHTML="";
+                    document.getElementById("searchResults").innerHTML = "";
                     return;
                 }
-                var xmlhttp=new XMLHttpRequest();
-                xmlhttp.onreadystatechange=function() {
-                    if (this.readyState==4 && this.status==200) {
-                        document.getElementById("searchResults").innerHTML=this.responseText;
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        document.getElementById("searchResults").innerHTML = this.responseText;
                     }
                 }
-                xmlhttp.open("GET","<?=$module->getUrl("src/livesearch.php")?>&q="+str,true);
+                xmlhttp.open("GET", "<?= $module->getUrl("src/livesearch.php") ?>&q=" + str, true);
                 xmlhttp.send();
             }
-            function populateSelection(fname,lname,email,id,username) {
+
+            function populateSelection(fname, lname, email, id, username) {
                 $("#fname").val(fname);
                 $("#lname").val(lname);
                 $("#email").val(email);
@@ -80,6 +87,7 @@ $module->UiShowHeader("Enroll");
                 $("#enroll-form").hide();
                 $("#confirm-form").show();
             }
+
             function resetForm() {
                 $('#REDCapPRO_Search').val("");
                 showResult("");
@@ -96,7 +104,7 @@ $module->UiShowHeader("Enroll");
                 </div>
             </div>
         </form>
-        <form class="confirm-form" name="confirm-form" id="confirm-form" action="<?= $module->getUrl("src/enroll.php");?>" method="POST" enctype="multipart/form-data" target="_self" style="display:none;">
+        <form class="confirm-form" name="confirm-form" id="confirm-form" action="<?= $module->getUrl("src/enroll.php"); ?>" method="POST" enctype="multipart/form-data" target="_self" style="display:none;">
             <div class="form-group">
                 <div class="selection" id="selectionContainer">
                     <div class="mb-3 row">
@@ -131,27 +139,26 @@ $module->UiShowHeader("Enroll");
                     </div>
                 </div>
             </div>
-        </form> 
+        </form>
 
-        <?php 
-            if (isset($_POST["id"]) && isset($project_id)) {
-                $rcpro_participant_id = intval($_POST["id"]);
-                $pid = intval($project_id);
-                $result = $module->enrollParticipant($rcpro_participant_id, $pid);
+        <?php
+        if (isset($_POST["id"]) && isset($project_id)) {
+            $rcpro_participant_id = intval($_POST["id"]);
+            $pid = intval($project_id);
+            $result = $module->enrollParticipant($rcpro_participant_id, $pid);
 
-                if ($result === -1) {
-                    echo "<script>Swal.fire({'title':'This user is already enrolled in this project', 'icon':'info'});</script>";
-                }
-                else if ($result === TRUE) {
-                    echo "<script>Swal.fire({'title':'The user was successfully enrolled in this project', 'icon':'success'});</script>";
-                } 
-                else if (!$result) {
-                    echo "<script>Swal.fire({'title':'There was a problem enrolling this user in this project', 'icon':'error'});</script>";
-                }
+            if ($result === -1) {
+                echo "<script>Swal.fire({'title':'This user is already enrolled in this project', 'icon':'info'});</script>";
+            } else if ($result === TRUE) {
+                echo "<script>Swal.fire({'title':'The user was successfully enrolled in this project', 'icon':'success'});</script>";
+            } else if (!$result) {
+                echo "<script>Swal.fire({'title':'There was a problem enrolling this user in this project', 'icon':'error'});</script>";
             }
+        }
         ?>
-    </div>    
+    </div>
 </body>
+
 </html>
 
 

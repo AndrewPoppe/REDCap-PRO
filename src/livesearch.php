@@ -13,11 +13,11 @@ $result = $module->searchParticipants($wq);
 
 $hint = "";
 while ($row = $result->fetch_assoc()) {
-    $fname = \REDCap::escapeHtml($row["fname"]);
-    $lname = \REDCap::escapeHtml($row["lname"]);
-    $email = \REDCap::escapeHtml($row["email"]);
+    $fname    = \REDCap::escapeHtml($row["fname"]);
+    $lname    = \REDCap::escapeHtml($row["lname"]);
+    $email    = \REDCap::escapeHtml($row["email"]);
     $username = \REDCap::escapeHtml($row["rcpro_username"]);
-    $id = \REDCap::escapeHtml($row["log_id"]);
+    $id       = \REDCap::escapeHtml($row["log_id"]);
     $hint .= "<div class='searchResult' onclick='populateSelection(\"${fname}\", \"${lname}\", \"${email}\", \"${id}\", \"${username}\");'><strong>${username}</strong> - ${fname} ${lname} - ${email}</div>";
 }
 
@@ -28,5 +28,3 @@ if ($hint === "") {
 }
 
 echo $response;
-?>
-

@@ -1,22 +1,22 @@
 <?php
 
 // Initialize Authentication
-$module::$AUTH::init();
+$module::$AUTH->init();
 
 // Check if the user is already logged in, if yes then redirect then to the survey
-if ($module::$AUTH::is_logged_in()) {
-    $survey_url = $module::$AUTH::get_survey_url();
-    $survey_url_active = $module::$AUTH::is_survey_link_active();
-    
+if ($module::$AUTH->is_logged_in()) {
+    $survey_url = $module::$AUTH->get_survey_url();
+    $survey_url_active = $module::$AUTH->is_survey_link_active();
+
     if (empty($survey_url) || empty($survey_url_active) || $survey_url_active !== TRUE) {
         return;
     }
 
-    $module::$AUTH::deactivate_survey_link();
+    $module::$AUTH->deactivate_survey_link();
     header("location: ${survey_url}");
     return;
-} 
- 
+}
+
 // Define variables and initialize with empty values
 $username = $password = "";
 $username_err = $password_err = $login_err = "";
@@ -29,26 +29,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     parse_str($_SERVER['QUERY_STRING'], $qstring);
 
     // Validate token
-    if (!$module::$AUTH::validate_csrf_token($_POST['token'])) {
+    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
         $module->log("Invalid CSRF Token");
         echo "Oops! Something went wrong. Please try again later.";
         return;
     }
- 
+
     // Check if username is empty
     if (empty(trim($_POST["username"]))) {
         $username_err = "Please enter username.";
     } else {
         $username = \REDCap::escapeHtml(trim($_POST["username"]));
     }
-    
+
     // Check if password is empty
     if (empty(trim($_POST["password"]))) {
         $password_err = "Please enter your password.";
     } else {
         $password = trim($_POST["password"]);
     }
-    
+
     try {
         // Validate credentials
         if (empty($username_err) && empty($password_err)) {
@@ -64,26 +64,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     "rcpro_username" => $username
                 ]);
 
-            // Check if username exists, if yes then verify password
-            // --> USERNAME DOES NOT EXIST
+                // Check if username exists, if yes then verify password
+                // --> USERNAME DOES NOT EXIST
             } else if (!$module->usernameIsTaken($username)) {
 
                 // Username doesn't exist, display a generic error message
                 $module->incrementFailedIp($ip);
                 $attempts = $module->checkAttempts(NULL, $ip);
-                $remainingAttempts = $module::$SETTINGS::getLoginAttempts() - $attempts;
+                $remainingAttempts = $module::$SETTINGS->getLoginAttempts() - $attempts;
                 $module->log("Login Attempted - Username does not exist", [
                     "rcpro_ip"       => $ip,
                     "rcpro_username" => $username
                 ]);
                 if ($remainingAttempts <= 0) {
-                    $login_err = "Invalid username or password.<br>You have been locked out for ".$module::$SETTINGS::getLockoutDurationSeconds()." seconds.";
+                    $login_err = "Invalid username or password.<br>You have been locked out for " . $module::$SETTINGS->getLockoutDurationSeconds() . " seconds.";
                     $module->log("IP LOCKOUT", ["rcpro_ip" => $ip]);
                 } else {
                     $login_err = "Invalid username or password.<br>You have ${remainingAttempts} attempts remaining before being locked out.";
                 }
 
-            // --> USERNAME EXISTS
+                // --> USERNAME EXISTS
             } else {
 
                 $participant = $module->getParticipant($username);
@@ -100,7 +100,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         "rcpro_participant_id" => $participant["log_id"]
                     ]);
 
-                // Check that there is a stored password hash
+                    // Check that there is a stored password hash
                 } else if (empty($stored_hash)) {
                     // --> No password hash exists
                     // TODO: Give option to resend password email?
@@ -109,11 +109,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         "rcpro_username"       => $username
                     ]);
                     $login_err = "Error: you have not set up your password. Please speak with your study coordinator.";
-                
-                // Verify supplied password is correct
+
+                    // Verify supplied password is correct
                 } else if (password_verify($password, $stored_hash)) {
-                    
-                    
+
+
                     ///////////////////////////////
                     // SUCCESSFUL AUTHENTICATION //
                     ///////////////////////////////
@@ -123,7 +123,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         "rcpro_username"       => $username,
                         "rcpro_participant_id" => $participant["log_id"]
                     ]);
-                    
+
                     // Rehash password if necessary
                     if (password_needs_rehash($stored_hash, PASSWORD_DEFAULT)) {
                         $new_hash = password_hash($password, PASSWORD_DEFAULT);
@@ -135,23 +135,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $module->resetFailedLogin($participant["log_id"]);
 
                     // Store data in session variables
-                    $module::$AUTH::set_login_values($participant);
-                    
+                    $module::$AUTH->set_login_values($participant);
+
                     // Redirect user to appropriate page
-                    if ($module::$AUTH::is_survey_url_set()) {
-                        header("location: ".$module::$AUTH::get_survey_url());
+                    if ($module::$AUTH->is_survey_url_set()) {
+                        header("location: " . $module::$AUTH->get_survey_url());
                     } else if (isset($qstring["s"])) {
-                        header("location: ".APP_PATH_SURVEY_FULL.$_SERVER['QUERY_STRING']); 
+                        header("location: " . APP_PATH_SURVEY_FULL . $_SERVER['QUERY_STRING']);
                     } else {
                         $study_contact = $module->getContactPerson();
                         if (!isset($study_contact["name"])) {
                             echo "Please contact your study coordinator.";
                         } else {
-                            echo "Please contact your study coordinator:<br>".$study_contact["info"];
+                            echo "Please contact your study coordinator:<br>" . $study_contact["info"];
                         }
                     }
                     return;
-
                 } else {
 
                     // --> Password is not valid
@@ -164,9 +163,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $module->incrementFailedLogin($participant["log_id"]);
                     $module->incrementFailedIp($ip);
                     $attempts = $module->checkAttempts($participant["log_id"], $ip);
-                    $remainingAttempts = $module::$SETTINGS::getLoginAttempts() - $attempts;
+                    $remainingAttempts = $module::$SETTINGS->getLoginAttempts() - $attempts;
                     if ($remainingAttempts <= 0) {
-                        $login_err = "Invalid username or password.<br>You have been locked out for ".$module::$SETTINGS::getLockoutDurationSeconds()." seconds.";
+                        $login_err = "Invalid username or password.<br>You have been locked out for " . $module::$SETTINGS->getLockoutDurationSeconds() . " seconds.";
                         $module->log("USERNAME LOCKOUT", [
                             "rcpro_ip"             => $ip,
                             "rcpro_username"       => $username,
@@ -178,8 +177,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
         }
-    }
-    catch (\Exception $e) {
+    } catch (\Exception $e) {
         $module->logError("Error logging in", $e);
         echo "Oops! Something went wrong. Please try again later.";
         exit();
@@ -187,54 +185,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // set csrf token
-$module::$AUTH::set_csrf_token();
- 
+$module::$AUTH->set_csrf_token();
+
 // This method starts the html doc
 $module->UiShowParticipantHeader("Login");
 ?>
 
-<div style="text-align: center;"><p>Please fill in your credentials to login.</p></div>
+<div style="text-align: center;">
+    <p>Please fill in your credentials to login.</p>
+</div>
 
-            <?php 
-            if (!empty($login_err)) {
-                echo '<div class="alert alert-danger">' . $login_err . '</div>';
-            }        
-            ?>
+<?php
+if (!empty($login_err)) {
+    echo '<div class="alert alert-danger">' . $login_err . '</div>';
+}
+?>
 
-            <form action="<?= $module->getUrl("src/login.php", true); ?>" method="post">
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" name="username" class="form-control <?= (!empty($username_err)) ? 'is-invalid' : ''; ?>" value="<?= $username; ?>">
-                    <span class="invalid-feedback"><?= $username_err; ?></span>
-                </div>    
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" name="password" class="form-control <?= (!empty($password_err)) ? 'is-invalid' : ''; ?>">
-                    <span class="invalid-feedback"><?= $password_err; ?></span>
-                </div>
-                <div class="form-group d-grid">
-                    <input type="submit" class="btn btn-primary" value="Login">
-                </div>
-                <input type="hidden" name="token" value="<?=$module::$AUTH::get_csrf_token();?>">
-            </form>
-            <hr>
-            <div style="text-align: center;">
-                Forgot 
-                <a href="<?= $module->getUrl("src/forgot-username.php", true); ?>">Username</a>
-                 or 
-                <a href="<?= $module->getUrl("src/forgot-password.php", true); ?>">Password</a>?
-            </div>
-        </div>
+<form action="<?= $module->getUrl("src/login.php", true); ?>" method="post">
+    <div class="form-group">
+        <label>Username</label>
+        <input type="text" name="username" class="form-control <?= (!empty($username_err)) ? 'is-invalid' : ''; ?>" value="<?= $username; ?>">
+        <span class="invalid-feedback"><?= $username_err; ?></span>
     </div>
-    <style>
-        a {
-            text-decoration: none !important;
-            color: #900000 !important;
-            font-weight: bold !important;
-        }
-        a:hover {
-            text-shadow: 0px 0px 5px #900000;
-        }
-    </style>
+    <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" class="form-control <?= (!empty($password_err)) ? 'is-invalid' : ''; ?>">
+        <span class="invalid-feedback"><?= $password_err; ?></span>
+    </div>
+    <div class="form-group d-grid">
+        <input type="submit" class="btn btn-primary" value="Login">
+    </div>
+    <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+</form>
+<hr>
+<div style="text-align: center;">
+    Forgot
+    <a href="<?= $module->getUrl("src/forgot-username.php", true); ?>">Username</a>
+    or
+    <a href="<?= $module->getUrl("src/forgot-password.php", true); ?>">Password</a>?
+</div>
+</div>
+</div>
+<style>
+    a {
+        text-decoration: none !important;
+        color: #900000 !important;
+        font-weight: bold !important;
+    }
+
+    a:hover {
+        text-shadow: 0px 0px 5px #900000;
+    }
+</style>
 </body>
+
 </html>

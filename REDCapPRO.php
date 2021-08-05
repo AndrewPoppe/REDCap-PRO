@@ -1,4 +1,5 @@
 <?php
+
 namespace YaleREDCap\REDCapPRO;
 
 use ExternalModules\AbstractExternalModule;
@@ -6,50 +7,61 @@ use ExternalModules\AbstractExternalModule;
 /**
  * Main EM Class
  */
-class REDCapPRO extends AbstractExternalModule {
- 
+class REDCapPRO extends AbstractExternalModule
+{
+
     static $APPTITLE = "REDCapPRO";
     static $AUTH;
     static $SETTINGS;
-    
-    function __construct() {
+
+    function __construct()
+    {
         parent::__construct();
         $this::$AUTH = new Auth($this::$APPTITLE);
         $this::$SETTINGS = new ProjectSettings($this);
     }
 
-    function redcap_every_page_top($project_id) {
+    function redcap_every_page_top($project_id)
+    {
         if (strpos($_SERVER["PHP_SELF"], "surveys") !== false) {
             return;
         }
         $role = SUPER_USER ? 3 : $this->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
         if ($role > 0) {
-            ?>
+?>
             <script>
                 setTimeout(function() {
-                    let link = $("<div>"+
-                        "<img src='<?=$this->getUrl('images/fingerprint_2.png');?>' style='width:16px; height:16px; position:relative; top:-2px'></img>"+
-                        "&nbsp;"+
-                        "<a href='<?=$this->getUrl('src/home.php');?>'><span id='RCPro-Link'><strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em></strong></span></a>"+
-                    "</div>");
+                    let link = $("<div>" +
+                        "<img src='<?= $this->getUrl('images/fingerprint_2.png'); ?>' style='width:16px; height:16px; position:relative; top:-2px'></img>" +
+                        "&nbsp;" +
+                        "<a href='<?= $this->getUrl('src/home.php'); ?>'><span id='RCPro-Link'><strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em></strong></span></a>" +
+                        "</div>");
                     $('#app_panel').find('div.hang').last().after(link);
                 }, 10);
             </script>
-            <?php
+        <?php
         }
     }
 
-    function redcap_survey_page_top($project_id, $record, $instrument, 
-    $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
-        
+    function redcap_survey_page_top(
+        $project_id,
+        $record,
+        $instrument,
+        $event_id,
+        $group_id,
+        $survey_hash,
+        $response_id,
+        $repeat_instance
+    ) {
+
         // Initialize Authentication
-        $this::$AUTH::init();
+        $this::$AUTH->init();
 
         // Participant is logged in to their account
-        if ($this::$AUTH::is_logged_in()) {
+        if ($this::$AUTH->is_logged_in()) {
 
             // Determine whether participant is enrolled in the study.
-            $rcpro_participant_id = $this::$AUTH::get_participant_id();
+            $rcpro_participant_id = $this::$AUTH->get_participant_id();
             if (!$this->enrolledInProject($rcpro_participant_id, $project_id)) {
                 $this->UiShowParticipantHeader("Not Enrolled");
                 echo "<p style='text-align:center;'>You are not currently enrolled in this study.<br>";
@@ -57,7 +69,7 @@ class REDCapPRO extends AbstractExternalModule {
                 if (!isset($study_contact["name"])) {
                     echo "Please contact your study coordinator.";
                 } else {
-                    echo "Please contact your study coordinator:<br>".$study_contact["info"];
+                    echo "Please contact your study coordinator:<br>" . $study_contact["info"];
                 }
                 echo "</p>";
                 $this->exitAfterHook();
@@ -65,16 +77,16 @@ class REDCapPRO extends AbstractExternalModule {
 
             \REDCap::logEvent(
                 "REDCapPRO Survey Accessed",                                        // action description
-                "REDCapPRO User: ".$this::$AUTH::get_username()."\n".
-                "Instrument: ${instrument}\n",                                      // changes made
+                "REDCapPRO User: " . $this::$AUTH->get_username() . "\n" .
+                    "Instrument: ${instrument}\n",                                      // changes made
                 NULL,                                                               // sql
                 $record,                                                            // record
                 $event_id,                                                          // event
                 $project_id                                                         // project id
             );
             $this->log("REDCapPRO Survey Accessed", [
-                "rcpro_username"  => $this::$AUTH::get_username(),
-                "rcpro_user_id"   => $this::$AUTH::get_participant_id(),
+                "rcpro_username"  => $this::$AUTH->get_username(),
+                "rcpro_user_id"   => $this::$AUTH->get_participant_id(),
                 "record"          => $record,
                 "event"           => $event_id,
                 "instrument"      => $instrument,
@@ -96,38 +108,37 @@ class REDCapPRO extends AbstractExternalModule {
                     transition: 0.1s filter linear;
                 }
             </style>";
-            echo "<script src='".$this->getUrl("src/rcpro_base.js",true)."'></script>";
+            echo "<script src='" . $this->getUrl("src/rcpro_base.js", true) . "'></script>";
             echo "<script>
-                window.rcpro.logo = '".$this->getUrl("images/RCPro_Favicon.svg")."';
-                window.rcpro.logoutPage = '".$this->getUrl("src/logout.php", true)."';
-                window.rcpro.timeout_minutes = ".$this::$SETTINGS::getTimeoutMinutes().";
-                window.rcpro.warning_minutes = ".$this::$SETTINGS::getTimeoutWarningMinutes().";
+                window.rcpro.logo = '" . $this->getUrl("images/RCPro_Favicon.svg") . "';
+                window.rcpro.logoutPage = '" . $this->getUrl("src/logout.php", true) . "';
+                window.rcpro.timeout_minutes = " . $this::$SETTINGS->getTimeoutMinutes() . ";
+                window.rcpro.warning_minutes = " . $this::$SETTINGS->getTimeoutWarningMinutes() . ";
                 window.rcpro.initTimeout();
             </script>";
 
-        // Participant is not logged into their account
-        // Store cookie to return to survey
+            // Participant is not logged into their account
+            // Store cookie to return to survey
         } else {
-            $this::$AUTH::set_survey_url(APP_PATH_SURVEY_FULL."?s=${survey_hash}");
-            \Session::savecookie($this::$APPTITLE."_survey_url", APP_PATH_SURVEY_FULL."?s=${survey_hash}", 0, TRUE);
-            $this::$AUTH::set_survey_active_state(TRUE);
-            header("location: ".$this->getUrl("src/login.php", true)."&s=${survey_hash}");
+            $this::$AUTH->set_survey_url(APP_PATH_SURVEY_FULL . "?s=${survey_hash}");
+            \Session::savecookie($this::$APPTITLE . "_survey_url", APP_PATH_SURVEY_FULL . "?s=${survey_hash}", 0, TRUE);
+            $this::$AUTH->set_survey_active_state(TRUE);
+            header("location: " . $this->getUrl("src/login.php", true) . "&s=${survey_hash}");
             $this->exitAfterHook();
         }
-
     }
 
-    function redcap_data_entry_form($project_id, $record, $instrument, $event_id, $group_id, $repeat_instance = 1) {
+    function redcap_data_entry_form($project_id, $record, $instrument, $event_id, $group_id, $repeat_instance = 1)
+    {
         $role = SUPER_USER ? 3 : $this->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
         if ($role < 2) {
             return;
         }
-        echo '<link href="'.$this->getUrl("lib/select2/select2.min.css").'" rel="stylesheet" />
-        <script src="'.$this->getUrl("lib/select2/select2.min.js").'"></script>';
+        echo '<link href="' . $this->getUrl("lib/select2/select2.min.css") . '" rel="stylesheet" />
+        <script src="' . $this->getUrl("lib/select2/select2.min.js") . '"></script>';
 
         $instrument = new Instrument($this, $instrument);
         $instrument->update_form();
-        
     }
 
     /**
@@ -138,7 +149,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return void
      */
-    function redcap_module_project_enable($version, $pid) {
+    function redcap_module_project_enable($version, $pid)
+    {
         if (!$this->checkProject($pid)) {
             $this->addProject($pid);
         } else {
@@ -154,11 +166,12 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return void
      */
-    function redcap_module_project_disable($version, $project_id) {
+    function redcap_module_project_disable($version, $project_id)
+    {
         $this->setProjectActive($project_id, 0);
     }
 
-    
+
 
     /**
      * Increments the number of failed attempts at login for the provided id
@@ -167,16 +180,16 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return BOOL|NULL
      */
-    public function incrementFailedLogin(int $rcpro_participant_id) {
+    public function incrementFailedLogin(int $rcpro_participant_id)
+    {
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = value+1 WHERE log_id = ? AND name = 'failed_attempts'";
         try {
             $res = $this->query($SQL, [$rcpro_participant_id]);
-            
+
             // Lockout username if necessary
             $this->lockoutLogin($rcpro_participant_id);
             return $res;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error incrementing failed login", $e);
             return NULL;
         }
@@ -190,11 +203,12 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return BOOL|NULL
      */
-    private function lockoutLogin(int $rcpro_participant_id) {
+    private function lockoutLogin(int $rcpro_participant_id)
+    {
         try {
             $attempts = $this->checkUsernameAttempts($rcpro_participant_id);
-            if ($attempts >= $this::$SETTINGS::getLoginAttempts()) {
-                $lockout_ts = time() + $this::$SETTINGS::getLockoutDurationSeconds();
+            if ($attempts >= $this::$SETTINGS->getLoginAttempts()) {
+                $lockout_ts = time() + $this::$SETTINGS->getLockoutDurationSeconds();
                 $SQL = "UPDATE redcap_external_modules_log_parameters SET lockout_ts = ? WHERE log_id = ?;";
                 $res = $this->query($SQL, [$lockout_ts, $rcpro_participant_id]);
                 $status = $res ? "Successful" : "Failed";
@@ -206,8 +220,7 @@ class REDCapPRO extends AbstractExternalModule {
             } else {
                 return TRUE;
             }
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error doing login lockout", $e);
             return FALSE;
         }
@@ -220,12 +233,12 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return BOOL|NULL
      */
-    public function resetFailedLogin(int $rcpro_participant_id) {
+    public function resetFailedLogin(int $rcpro_participant_id)
+    {
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value=0 WHERE log_id=? AND name='failed_attempts';";
         try {
             return $this->query($SQL, [$rcpro_participant_id]);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error resetting failed login count", $e);
             return NULL;
         }
@@ -236,9 +249,10 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return string - the ip address
      */
-    public function getIPAddress() {
+    public function getIPAddress()
+    {
         return $_SERVER['REMOTE_ADDR'];
-    }  
+    }
 
     /**
      * Increments the number of failed login attempts for the given ip address
@@ -250,7 +264,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return int number of attempts INCLUDING current attempt
      */
-    public function incrementFailedIp(string $ip) {
+    public function incrementFailedIp(string $ip)
+    {
         if ($this->getSystemSetting('ip_lockouts') === null) {
             $this->setSystemSetting('ip_lockouts', json_encode(array()));
         }
@@ -262,8 +277,8 @@ class REDCapPRO extends AbstractExternalModule {
         }
         if (isset($ipStat["attempts"])) {
             $ipStat["attempts"]++;
-            if ($ipStat["attempts"] >= $this::$SETTINGS::getLoginAttempts()) {
-                $ipStat["lockout_ts"] = time() + $this::$SETTINGS::getLockoutDurationSeconds();
+            if ($ipStat["attempts"] >= $this::$SETTINGS->getLoginAttempts()) {
+                $ipStat["lockout_ts"] = time() + $this::$SETTINGS->getLockoutDurationSeconds();
                 $this->log("Locked out IP address", [
                     "rcpro_ip"   => $ip,
                     "lockout_ts" => $ipStat["lockout_ts"]
@@ -284,7 +299,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return bool Whether or not the reset succeeded
      */
-    public function resetFailedIp(string $ip) {
+    public function resetFailedIp(string $ip)
+    {
         try {
             if ($this->getSystemSetting('ip_lockouts') === null) {
                 $this->setSystemSetting('ip_lockouts', json_encode(array()));
@@ -300,8 +316,7 @@ class REDCapPRO extends AbstractExternalModule {
             $ipLockouts[$ip] = $ipStat;
             $this->setSystemSetting('ip_lockouts', json_encode($ipLockouts));
             return TRUE;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("IP Login Attempt Reset Failed", $e);
             return FALSE;
         }
@@ -314,7 +329,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return int number of failed login attempts for the given ip
      */
-    private function checkIpAttempts(string $ip) { 
+    private function checkIpAttempts(string $ip)
+    {
         if ($this->getSystemSetting('ip_lockouts') === null) {
             $this->setSystemSetting('ip_lockouts', json_encode(array()));
         }
@@ -335,13 +351,14 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return bool whether ip is locked out
      */
-    public function checkIpLockedOut(string $ip) {
+    public function checkIpLockedOut(string $ip)
+    {
         if ($this->getSystemSetting('ip_lockouts') === null) {
             $this->setSystemSetting('ip_lockouts', json_encode(array()));
         }
         $ipLockouts = json_decode($this->getSystemSetting('ip_lockouts'), true);
         $ipStat = $ipLockouts[$ip];
-        
+
         if (isset($ipStat) && $ipStat["lockout_ts"] !== null && $ipStat["lockout_ts"] >= time()) {
             return $ipStat["lockout_ts"];
         }
@@ -355,13 +372,13 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return int number of failed login attempts
      */
-    private function checkUsernameAttempts(int $rcpro_participant_id) {
+    private function checkUsernameAttempts(int $rcpro_participant_id)
+    {
         $SQL = "SELECT failed_attempts WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $res->fetch_assoc()["failed_attempts"];
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Failed to check username attempts", $e);
             return 0;
         }
@@ -376,7 +393,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return int number of seconds of lockout left
      */
-    public function getUsernameLockoutDuration(int $rcpro_participant_id) {
+    public function getUsernameLockoutDuration(int $rcpro_participant_id)
+    {
         $SQL = "SELECT lockout_ts WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL);";
         try {
             $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
@@ -385,8 +403,7 @@ class REDCapPRO extends AbstractExternalModule {
             if ($time_remaining > 0) {
                 return $time_remaining;
             }
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Failed to check username lockout", $e);
         }
     }
@@ -401,7 +418,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return int number of consecutive attempts
      */
-    public function checkAttempts($rcpro_participant_id, $ip) {
+    public function checkAttempts($rcpro_participant_id, $ip)
+    {
         if ($rcpro_participant_id === null) {
             $usernameAttempts = 0;
         } else {
@@ -421,11 +439,12 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return int role
      */
-    public function getUserRole(string $username) {
+    public function getUserRole(string $username)
+    {
         $managers = $this->getProjectSetting("managers");
         $users    = $this->getProjectSetting("users");
         $monitors = $this->getProjectSetting("monitors");
-        
+
         $result = 0;
 
         if (in_array($username, $managers)) {
@@ -448,7 +467,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return void
      */
-    public function changeUserRole(string $username, string $oldRole, string $newRole) {
+    public function changeUserRole(string $username, string $oldRole, string $newRole)
+    {
         $roles = array(
             "3" => $this->getProjectSetting("managers"),
             "2" => $this->getProjectSetting("users"),
@@ -465,7 +485,7 @@ class REDCapPRO extends AbstractExternalModule {
         if ($newRole !== "0") {
             $roles[$newRole][] = $username;
         }
-            
+
         $this->setProjectSetting("managers", $roles["3"]);
         $this->setProjectSetting("users", $roles["2"]);
         $this->setProjectSetting("monitors", $roles["1"]);
@@ -476,7 +496,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return array of contact details
      */
-    public function getContactPerson(string $subject = NULL) {
+    public function getContactPerson(string $subject = NULL)
+    {
         $name  = $this->getProjectSetting("pc-name");
         $email = $this->getProjectSetting("pc-email");
         $phone = $this->getProjectSetting("pc-phone");
@@ -485,15 +506,15 @@ class REDCapPRO extends AbstractExternalModule {
         $email_string = isset($email) ? $this->createEmailLink($email, $subject) : "";
         $phone_string = isset($phone) ? "<br><strong>Phone:</strong> $phone" : "";
         $info  = "${name_string} ${email_string} ${phone_string}";
-                
+
         return [
             "name" => $name,
-            "email"=> $email,
-            "phone"=> $phone,
+            "email" => $email,
+            "phone" => $phone,
             "info" => $info,
             "name_string" => $name_string,
-            "email_string"=> $email_string,
-            "phone_string"=> $phone_string
+            "email_string" => $email_string,
+            "phone_string" => $phone_string
         ];
     }
 
@@ -503,20 +524,21 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return [type]
      */
-    public function createEmailLink(string $email, ?string $subject) {
+    public function createEmailLink(string $email, ?string $subject)
+    {
         if (!isset($subject)) {
             $subject = "REDCapPRO Inquiry";
         }
         $body = "";
-        if ($this::$AUTH::is_logged_in()) {
-            $username = $this::$AUTH::get_username();
+        if ($this::$AUTH->is_logged_in()) {
+            $username = $this::$AUTH->get_username();
             $body .= "REDCapPRO Username: ${username}\n";
         }
         if (PROJECT_ID) {
-            $body .= "Project ID: ".PROJECT_ID;
-            $body .= "\nProject Title: ".\REDCap::getProjectTitle();
+            $body .= "Project ID: " . PROJECT_ID;
+            $body .= "\nProject Title: " . \REDCap::getProjectTitle();
         }
-        $link = "mailto:${email}?subject=".rawurlencode($subject)."&body=".rawurlencode($body);
+        $link = "mailto:${email}?subject=" . rawurlencode($subject) . "&body=" . rawurlencode($body);
         return "<br><strong>Email:</strong> <a href='${link}'>$email</a>";
     }
 
@@ -571,13 +593,13 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return string|NULL hashed password or null
      */
-    public function getHash(int $rcpro_participant_id) {
+    public function getHash(int $rcpro_participant_id)
+    {
         try {
             $SQL = "SELECT pw WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL);";
             $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $res->fetch_assoc()['pw'];
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error fetching password hash", $e);
         }
     }
@@ -590,7 +612,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return bool|NULL success/failure/null
      */
-    public function storeHash(string $hash, int $rcpro_participant_id) {
+    public function storeHash(string $hash, int $rcpro_participant_id)
+    {
         try {
             $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'pw';";
             $res = $this->query($SQL, [$hash, $rcpro_participant_id]);
@@ -599,8 +622,7 @@ class REDCapPRO extends AbstractExternalModule {
                 "rcpro_username"       => $this->getUserName($rcpro_participant_id)
             ]);
             return $res;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error storing password hash", $e);
         }
     }
@@ -616,7 +638,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return string username of newly created participant
      */
-    public function createParticipant(string $email, string $fname, string $lname) {
+    public function createParticipant(string $email, string $fname, string $lname)
+    {
         $username     = $this->createUsername();
         $email_clean  = \REDCap::escapeHtml($email);
         $fname_clean  = \REDCap::escapeHtml($fname);
@@ -648,15 +671,14 @@ class REDCapPRO extends AbstractExternalModule {
             ]);
             if (!$id) {
                 throw new REDCapProException(["rcpro_username" => $username]);
-            } 
+            }
             $this->log("Participant Created", [
                 "rcpro_user_id"  => $id,
                 "rcpro_username" => $username,
                 "redcap_user"    => USERID
             ]);
             return $username;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Participant Creation Failed", $e);
         }
     }
@@ -669,10 +691,11 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return string username
      */
-    private function createUsername() {
-        return sprintf("%03d", random_int(100, 999)) . '-' . 
-               sprintf("%02d", random_int(0,99)) . '-' . 
-               sprintf("%03d", random_int(0,999));
+    private function createUsername()
+    {
+        return sprintf("%03d", random_int(100, 999)) . '-' .
+            sprintf("%02d", random_int(0, 99)) . '-' .
+            sprintf("%03d", random_int(0, 999));
     }
 
     /**
@@ -682,13 +705,13 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return boolean|NULL True if taken, False if free, NULL if error 
      */
-    public function usernameIsTaken(string $username) {
+    public function usernameIsTaken(string $username)
+    {
         $SQL = "message = 'PARTICIPANT' AND rcpro_username = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->countLogs($SQL, [$username]);
             return $result > 0;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error checking if username is taken", $e);
         }
     }
@@ -701,7 +724,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return array|NULL user information
      */
-    public function getParticipant(string $username) {
+    public function getParticipant(string $username)
+    {
         if ($username === NULL) {
             return NULL;
         }
@@ -709,8 +733,7 @@ class REDCapPRO extends AbstractExternalModule {
         try {
             $result = $this->queryLogs($SQL, [$username]);
             return $result->fetch_assoc();
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error fetching participant information", $e);
         }
     }
@@ -722,13 +745,13 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return string|NULL username
      */
-    public function getUserName(int $rcpro_participant_id) {
+    public function getUserName(int $rcpro_participant_id)
+    {
         $SQL = "SELECT rcpro_username WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $result->fetch_assoc()["rcpro_username"];
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error fetching username", $e);
         }
     }
@@ -740,13 +763,13 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return int|NULL RCPRO participant id
      */
-    public function getParticipantIdFromUsername(string $username) {
+    public function getParticipantIdFromUsername(string $username)
+    {
         $SQL = "SELECT log_id WHERE message = 'PARTICIPANT' AND rcpro_username = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$username]);
             return $result->fetch_assoc()["log_id"];
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error fetching id from username", $e);
         }
     }
@@ -758,13 +781,13 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return int|NULL RCPRO participant id
      */
-    public function getParticipantIdFromEmail(string $email) {
+    public function getParticipantIdFromEmail(string $email)
+    {
         $SQL = "SELECT log_id WHERE message = 'PARTICIPANT' AND email = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$email]);
             return $result->fetch_assoc()["log_id"];
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error fetching id from email", $e);
         }
     }
@@ -776,13 +799,13 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return string|NULL email address
      */
-    public function getEmail(int $rcpro_participant_id) {
+    public function getEmail(int $rcpro_participant_id)
+    {
         $SQL = "SELECT email WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$rcpro_participant_id]);
             return $result->fetch_assoc()["email"];
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error fetching email address", $e);
         }
     }
@@ -796,13 +819,14 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return array array of arrays, each corresponding with a project
      */
-    public function getParticipantProjects(int $rcpro_participant_id) {
+    public function getParticipantProjects(int $rcpro_participant_id)
+    {
         $SQL = "SELECT rcpro_project_id, active WHERE rcpro_participant_id = ? AND message = 'LINK' AND (project_id IS NULL OR project_id IS NOT NULL)";
         $projects = array();
         try {
             $result = $this->queryLogs($SQL, [$rcpro_participant_id]);
             if (!$result) {
-                throw new REDCapProException(["rcpro_participant_id"=>$rcpro_participant_id]);
+                throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
             }
             while ($row = $result->fetch_assoc()) {
                 array_push($projects, [
@@ -812,8 +836,7 @@ class REDCapPRO extends AbstractExternalModule {
                 ]);
             }
             return $projects;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error fetching participant's projects", $e);
         }
     }
@@ -825,15 +848,15 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return 
      */
-    public function searchParticipants(string $search_term) {
+    public function searchParticipants(string $search_term)
+    {
         $SQL = "SELECT fname, lname, email, log_id, rcpro_username 
                 WHERE message = 'PARTICIPANT' 
                 AND (project_id IS NULL OR project_id IS NOT NULL) 
                 AND (fname LIKE ? OR lname LIKE ? OR email LIKE ? OR rcpro_username LIKE ?)";
         try {
             return $this->queryLogs($SQL, [$search_term, $search_term, $search_term, $search_term]);
-        }
-        catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error performing livesearch", $e);
         }
     }
@@ -843,7 +866,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return array|NULL of user arrays or null if error
      */
-    public function getAllParticipants() {
+    public function getAllParticipants()
+    {
         $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts WHERE message = 'PARTICIPANT' AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, []);
@@ -851,11 +875,10 @@ class REDCapPRO extends AbstractExternalModule {
 
             // grab participant details
             while ($row = $result->fetch_assoc()) {
-                $participants[$row["log_id"]] = $row;               
+                $participants[$row["log_id"]] = $row;
             }
             return $participants;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error fetching participants", $e);
         }
     }
@@ -868,7 +891,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return array|NULL participants enrolled in given study
      */
-    public function getProjectParticipants(string $rcpro_project_id) {
+    public function getProjectParticipants(string $rcpro_project_id)
+    {
         $SQL = "SELECT rcpro_participant_id WHERE message = 'LINK' AND rcpro_project_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$rcpro_project_id]);
@@ -878,11 +902,10 @@ class REDCapPRO extends AbstractExternalModule {
                 $participantSQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
                 $participantResult = $this->queryLogs($participantSQL, [$row["rcpro_participant_id"]]);
                 $participant = $participantResult->fetch_assoc();
-                $participants[$row["rcpro_participant_id"]] = $participant;               
+                $participants[$row["rcpro_participant_id"]] = $participant;
             }
             return $participants;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error fetching project participants", $e);
         }
     }
@@ -895,13 +918,13 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return boolean True if email already exists, False if not
      */
-    public function checkEmailExists(string $email) {
+    public function checkEmailExists(string $email)
+    {
         $SQL = "message = 'PARTICIPANT' AND email = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->countLogs($SQL, [$email]);
             return $result > 0;
-        } 
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error checking if email exists", $e);
         }
     }
@@ -915,14 +938,14 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return boolean TRUE if the participant is enrolled
      */
-    public function enrolledInProject(int $rcpro_participant_id, int $pid) {
+    public function enrolledInProject(int $rcpro_participant_id, int $pid)
+    {
         $rcpro_project_id = $this->getProjectIdFromPID($pid);
         $SQL = "message = 'LINK' AND rcpro_project_id = ? AND rcpro_participant_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->countLogs($SQL, [$rcpro_project_id, $rcpro_participant_id]);
             return $result > 0;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error checking that participant is enrolled", $e);
         }
     }
@@ -935,15 +958,15 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return boolean success
      */
-    public function addProject(int $pid) {
+    public function addProject(int $pid)
+    {
         try {
             return $this->log("PROJECT", [
                 "pid"         => $pid,
                 "active"      => 1,
                 "redcap_user" => USERID
             ]);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error creating project entry", $e);
         }
     }
@@ -956,7 +979,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return boolean success
      */
-    public function setProjectActive(int $pid, int $active) {
+    public function setProjectActive(int $pid, int $active)
+    {
         $rcpro_project_id = $this->getProjectIdFromPID($pid);
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
         try {
@@ -968,8 +992,7 @@ class REDCapPRO extends AbstractExternalModule {
                     "redcap_user"      => USERID
                 ]);
             }
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error setting project active status", $e);
         }
     }
@@ -984,7 +1007,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return bool
      */
-    public function checkProject(int $pid, bool $check_active = FALSE) {
+    public function checkProject(int $pid, bool $check_active = FALSE)
+    {
         $SQL = "SELECT active WHERE pid = ? and message = 'PROJECT' and (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$pid]);
@@ -993,8 +1017,7 @@ class REDCapPRO extends AbstractExternalModule {
             }
             $row = $result->fetch_assoc();
             return $check_active ? $row["active"] == "1" : TRUE;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error checking project", $e);
         }
     }
@@ -1008,13 +1031,13 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return int rcpro project ID associated with the PID
      */
-    public function getProjectIdFromPID(int $pid) {
+    public function getProjectIdFromPID(int $pid)
+    {
         $SQL = "SELECT log_id WHERE message = 'PROJECT' AND pid = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$pid]);
             return $result->fetch_assoc()["log_id"];
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error fetching project id from pid", $e);
         }
     }
@@ -1026,13 +1049,13 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return int REDCap PID associated with rcpro project id
      */
-    public function getPidFromProjectId(int $rcpro_project_id) {
+    public function getPidFromProjectId(int $rcpro_project_id)
+    {
         $SQL = "SELECT pid WHERE message = 'PROJECT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$rcpro_project_id]);
             return $result->fetch_assoc()["pid"];
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error fetching pid from project id", $e);
         }
     }
@@ -1045,13 +1068,13 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return int link id
      */
-    public function getLinkId(int $rcpro_participant_id, int $rcpro_project_id) {
+    public function getLinkId(int $rcpro_participant_id, int $rcpro_project_id)
+    {
         $SQL = "SELECT log_id WHERE message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$rcpro_participant_id, $rcpro_project_id]);
             return $result->fetch_assoc()["log_id"];
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error fetching link id", $e);
         }
     }
@@ -1064,7 +1087,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return int -1 if already enrolled, bool otherwise
      */
-    public function enrollParticipant(int $rcpro_participant_id, int $pid) {
+    public function enrollParticipant(int $rcpro_participant_id, int $pid)
+    {
         // If project does not exist, create it.
         if (!$this->checkProject($pid)) {
             $this->addProject($pid);
@@ -1102,7 +1126,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return bool success or failure
      */
-    private function createLink(int $rcpro_participant_id, int $rcpro_project_id) {
+    private function createLink(int $rcpro_participant_id, int $rcpro_project_id)
+    {
         try {
             $this->log("LINK", [
                 "rcpro_project_id"     => $rcpro_project_id,
@@ -1117,8 +1142,7 @@ class REDCapPRO extends AbstractExternalModule {
                 "redcap_user"          => USERID
             ]);
             return TRUE;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error enrolling participant", $e);
             return FALSE;
         }
@@ -1133,13 +1157,13 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return
      */
-    private function setLinkActiveStatus(int $rcpro_participant_id, int $rcpro_project_id, int $active) {
+    private function setLinkActiveStatus(int $rcpro_participant_id, int $rcpro_project_id, int $active)
+    {
         $link_id = $this->getLinkId($rcpro_participant_id, $rcpro_project_id);
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
         try {
             return $this->query($SQL, [$active, $link_id]);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error setting link activity", $e);
         }
     }
@@ -1152,13 +1176,13 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return bool
      */
-    private function participantEnrolled(int $rcpro_participant_id, int $rcpro_project_id) {
+    private function participantEnrolled(int $rcpro_participant_id, int $rcpro_project_id)
+    {
         $SQL = "message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->countLogs($SQL, [$rcpro_participant_id, $rcpro_project_id]);
             return $result > 0;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error checking participant enrollment", $e);
         }
     }
@@ -1171,13 +1195,13 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return bool
      */
-    private function linkAlreadyExists(int $rcpro_participant_id, int $rcpro_project_id) {
+    private function linkAlreadyExists(int $rcpro_participant_id, int $rcpro_project_id)
+    {
         $SQL = "message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->countLogs($SQL, [$rcpro_participant_id, $rcpro_project_id]);
             return $result > 0;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error checking if link exists", $e);
         }
     }
@@ -1190,7 +1214,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return [type]
      */
-    public function disenrollParticipant($rcpro_participant_id, $rcpro_project_id) {
+    public function disenrollParticipant($rcpro_participant_id, $rcpro_project_id)
+    {
         try {
             $result = $this->setLinkActiveStatus($rcpro_participant_id, $rcpro_project_id, 0);
             if ($result) {
@@ -1202,13 +1227,12 @@ class REDCapPRO extends AbstractExternalModule {
                 ]);
             }
             return $result;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error Disenrolling Participant", $e);
         }
     }
 
-    
+
 
     /**
      * Create and store token for resetting participant's password
@@ -1218,9 +1242,10 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return string token
      */
-    public function createResetToken($rcpro_participant_id, int $hours_valid = 1) {
+    public function createResetToken($rcpro_participant_id, int $hours_valid = 1)
+    {
         $token = bin2hex(random_bytes(32));
-        $token_ts = time() + ($hours_valid*60*60);
+        $token_ts = time() + ($hours_valid * 60 * 60);
         $SQL1 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'token'";
         $SQL2 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'token_ts'";
         $SQL3 = "UPDATE redcap_external_modules_log_parameters SET value = 1 WHERE log_id = ? AND name = 'token_valid'";
@@ -1229,11 +1254,10 @@ class REDCapPRO extends AbstractExternalModule {
             $result2 = $this->query($SQL2, [$token_ts, $rcpro_participant_id]);
             $result3 = $this->query($SQL3, [$rcpro_participant_id]);
             if (!$result1 || !$result2 || !$result3) {
-                throw new REDCapProException(["rcpro_participant_id"=>$rcpro_participant_id]);
+                throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
             }
             return $token;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error creating reset token", $e);
         }
     }
@@ -1245,7 +1269,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return array with participant id and username
      */
-    public function verifyPasswordResetToken(string $token) {
+    public function verifyPasswordResetToken(string $token)
+    {
         $SQL = "SELECT log_id, rcpro_username WHERE message = 'PARTICIPANT' AND token = ? AND token_ts > ? AND token_valid = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->queryLogs($SQL, [$token, time()]);
@@ -1256,9 +1281,8 @@ class REDCapPRO extends AbstractExternalModule {
                     'rcpro_username'       => $result_array['rcpro_username']
                 ]);
                 return $result_array;
-            } 
-        }
-        catch (\Exception $e) {
+            }
+        } catch (\Exception $e) {
             $this->logError("Error verifying password reset token", $e);
         }
     }
@@ -1270,12 +1294,12 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return bool|null success or failure
      */
-    public function expirePasswordResetToken($rcpro_participant_id) {
+    public function expirePasswordResetToken($rcpro_participant_id)
+    {
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = 0 WHERE log_id = ? AND name = 'token_valid'";
         try {
             return $this->query($SQL, [$rcpro_participant_id]);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error expiring password reset token.", $e);
         }
     }
@@ -1287,25 +1311,26 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return void
      */
-    public function sendPasswordResetEmail($rcpro_participant_id) {
+    public function sendPasswordResetEmail($rcpro_participant_id)
+    {
         try {
             // generate token
             $token    = $this->createResetToken($rcpro_participant_id);
             $to       = $this->getEmail($rcpro_participant_id);
             $username = $this->getUserName($rcpro_participant_id);
             $username_clean = \REDCap::escapeHtml($username);
-        
+
             // create email
             $subject = "REDCapPRO - Password Reset";
             $from = "noreply@REDCapPRO.com";
             $body = "<html><body><div>
-            <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
+            <img src='" . $this->getUrl("images/RCPro_Logo.svg") . "' alt='img' width='500px'><br>
             <p>Hello,
             <br>We have received a request to reset your account password. If you did not make this request, you can ignore this email.<br>
             <br>To reset your password, click the link below.
             <br>This is your username: <strong>${username_clean}</strong><br>
-            <br>Click <a href='".$this->getUrl("src/reset-password.php",true)."&t=${token}'>here</a> to reset your password.
-            <br><em>That link is only valid for the next hour. If you need a new link, click <a href='".$this->getUrl("src/forgot-password.php",true)."'>here</a>.</em>
+            <br>Click <a href='" . $this->getUrl("src/reset-password.php", true) . "&t=${token}'>here</a> to reset your password.
+            <br><em>That link is only valid for the next hour. If you need a new link, click <a href='" . $this->getUrl("src/forgot-password.php", true) . "'>here</a>.</em>
             </p>
             <br>";
             if (defined("PROJECT_ID")) {
@@ -1313,7 +1338,7 @@ class REDCapPRO extends AbstractExternalModule {
                 if (!isset($study_contact["name"])) {
                     $body .= "<p>If you have any questions, contact a member of the study team.</p>";
                 } else {
-                    $body .= "<p>If you have any questions, contact a member of the study team:<br>".$study_contact["info"]."</p>";
+                    $body .= "<p>If you have any questions, contact a member of the study team:<br>" . $study_contact["info"] . "</p>";
                 }
             } else {
                 $body .= "<p>If you have any questions, contact a member of the study team.</p>";
@@ -1329,8 +1354,7 @@ class REDCapPRO extends AbstractExternalModule {
                 "redcap_user"          => USERID
             ]);
             return $result;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->log("Password Reset Failed", [
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "redcap_user"          => USERID
@@ -1351,25 +1375,26 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return bool|NULL
      */
-    public function sendNewParticipantEmail(string $username, string $email, string $fname, string $lname) {
+    public function sendNewParticipantEmail(string $username, string $email, string $fname, string $lname)
+    {
         // generate token
         try {
             $rcpro_participant_id = $this->getParticipantIdFromUsername($username);
             $hours_valid          = 24;
             $token                = $this->createResetToken($rcpro_participant_id, $hours_valid);
-        
+
             // create email
             $subject = "REDCapPRO - Account Created";
             $from    = "noreply@REDCapPRO.com";
             $body    = "<html><body><div>
-            <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
+            <img src='" . $this->getUrl("images/RCPro_Logo.svg") . "' alt='img' width='500px'><br>
             <p>Hello ${fname} ${lname},
             <br>An account has been created for you in order to take part in a research study.<br>
             This is your username: <strong>${username}</strong><br>
             Write it down someplace safe, because you will need to know your username to take part in the study.</p>
 
             <p>To use your account, first you will need to create a password. 
-            <br>Click <a href='".$this->getUrl("src/create-password.php",true)."&t=${token}'>this link</a> to create your password.
+            <br>Click <a href='" . $this->getUrl("src/create-password.php", true) . "&t=${token}'>this link</a> to create your password.
             <br>That link will only work for the next $hours_valid hours.
             </p>
             <br>";
@@ -1378,7 +1403,7 @@ class REDCapPRO extends AbstractExternalModule {
                 if (!isset($study_contact["name"])) {
                     $body .= "<p>If you have any questions, contact a member of the study team.</p>";
                 } else {
-                    $body .= "<p>If you have any questions, contact a member of the study team:<br>".$study_contact["info"]."</p>";
+                    $body .= "<p>If you have any questions, contact a member of the study team:<br>" . $study_contact["info"] . "</p>";
                 }
             } else {
                 $body .= "<p>If you have any questions, contact a member of the study team.</p>";
@@ -1386,8 +1411,7 @@ class REDCapPRO extends AbstractExternalModule {
             $body .= "</body></html></div>";
 
             return \REDCap::email($email, $from, $subject, $body);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error sending new user email", $e);
         }
     }
@@ -1400,11 +1424,12 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return bool|NULL success or failure
      */
-    public function sendUsernameEmail(string $email, string $username) {
+    public function sendUsernameEmail(string $email, string $username)
+    {
         $subject = "REDCapPRO - Username";
         $from    = "noreply@REDCapPRO.com";
         $body    = "<html><body><div>
-        <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
+        <img src='" . $this->getUrl("images/RCPro_Logo.svg") . "' alt='img' width='500px'><br>
         <p>Hello,</p>
         <p>This is your username: <strong>${username}</strong><br>
         Write it down someplace safe.</p>
@@ -1415,17 +1440,16 @@ class REDCapPRO extends AbstractExternalModule {
             if (!isset($study_contact["name"])) {
                 $body .= "If you have any questions, contact a member of the study team.</p>";
             } else {
-                $body .= "If you have any questions, contact a member of the study team:<br>".$study_contact["info"]."</p>";
+                $body .= "If you have any questions, contact a member of the study team:<br>" . $study_contact["info"] . "</p>";
             }
         } else {
             $body .= "If you have any questions, contact a member of the study team.</p>";
         }
         $body .= "</body></html></div>";
- 
+
         try {
             return \REDCap::email($email, $from, $subject, $body);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error sending username email", $e);
         }
     }
@@ -1440,7 +1464,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return bool|NULL
      */
-    public function changeEmailAddress(int $rcpro_participant_id, string $new_email) {
+    public function changeEmailAddress(int $rcpro_participant_id, string $new_email)
+    {
         $current_email = $this->getEmail($rcpro_participant_id);
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'email'";
         try {
@@ -1457,19 +1482,19 @@ class REDCapPRO extends AbstractExternalModule {
             } else {
                 throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
             }
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error changing email address", $e);
         }
     }
 
-    public function sendEmailUpdateEmail(string $username, string $new_email, string $old_email) {
+    public function sendEmailUpdateEmail(string $username, string $new_email, string $old_email)
+    {
         $subject = "REDCapPRO - Email Address Changed";
         $from    = "noreply@REDCapPRO.com";
         $old_email_clean = \REDCap::escapeHtml($old_email);
         $new_email_clean = \REDCap::escapeHtml($new_email);
         $body    = "<html><body><div>
-        <img src='".$this->getUrl("images/RCPro_Logo.svg")."' alt='img' width='500px'><br>
+        <img src='" . $this->getUrl("images/RCPro_Logo.svg") . "' alt='img' width='500px'><br>
         <p>Hello,</p>
         <p>Your email for username <strong>${username}</strong> was just changed.<br>
             <ul>
@@ -1482,17 +1507,16 @@ class REDCapPRO extends AbstractExternalModule {
             if (!isset($study_contact["name"])) {
                 $body .= "<p><strong>If you did not request this change, please contact a member of the study team!</strong></p>";
             } else {
-                $body .= "<p><strong>If you did not request this change, please contact a member of the study team!</strong><br>".$study_contact["info"]."</p>";
+                $body .= "<p><strong>If you did not request this change, please contact a member of the study team!</strong><br>" . $study_contact["info"] . "</p>";
             }
         } else {
             $body .= "<p><strong>If you did not request this change, please contact a member of the study team!</strong></p>";
         }
         $body .= "</body></html></div>";
- 
+
         try {
             return \REDCap::email($new_email, $from, $subject, $body, $old_email);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error sending email reset email", $e);
         }
     }
@@ -1501,17 +1525,18 @@ class REDCapPRO extends AbstractExternalModule {
     |             UI FORMATTING             |
     \*-------------------------------------*/
 
-    public function UiShowParticipantHeader(string $title) {
+    public function UiShowParticipantHeader(string $title)
+    {
         echo '<!DOCTYPE html>
                 <html lang="en">
                 <head>
                     <meta charset="UTF-8">
-                    <title>REDCapPRO '.$title.'</title>
-                    <link rel="shortcut icon" href="'.$this->getUrl("images/favicon.ico").'"/>
-                    <link rel="icon" type="image/png" sizes="32x32" href="'.$this->getUrl("images/favicon-32x32.png").'">
-                    <link rel="icon" type="image/png" sizes="16x16" href="'.$this->getUrl("images/favicon-16x16.png").'">
-                    <link rel="stylesheet" href="'.$this->getUrl("lib/bootstrap/css/bootstrap.min.css").'">
-                    <script async src="'.$this->getUrl("lib/bootstrap/js/bootstrap.bundle.min.js").'"></script>
+                    <title>REDCapPRO ' . $title . '</title>
+                    <link rel="shortcut icon" href="' . $this->getUrl("images/favicon.ico") . '"/>
+                    <link rel="icon" type="image/png" sizes="32x32" href="' . $this->getUrl("images/favicon-32x32.png") . '">
+                    <link rel="icon" type="image/png" sizes="16x16" href="' . $this->getUrl("images/favicon-16x16.png") . '">
+                    <link rel="stylesheet" href="' . $this->getUrl("lib/bootstrap/css/bootstrap.min.css") . '">
+                    <script async src="' . $this->getUrl("lib/bootstrap/js/bootstrap.bundle.min.js") . '"></script>
                     <style>
                         body { font: 14px sans-serif; }
                         .wrapper { width: 360px; padding: 20px; }
@@ -1523,16 +1548,18 @@ class REDCapPRO extends AbstractExternalModule {
                 <body>
                     <div class="center">
                         <div class="wrapper">
-                            <img id="rcpro-logo" src="'.$this->getUrl("images/RCPro_Logo.svg").'" width="500px"></img>
+                            <img id="rcpro-logo" src="' . $this->getUrl("images/RCPro_Logo.svg") . '" width="500px"></img>
                             <hr>
-                            <div style="text-align: center;"><h2>'.$title.'</h2></div>';
+                            <div style="text-align: center;"><h2>' . $title . '</h2></div>';
     }
 
-    public function UiEndParticipantPage() {
+    public function UiEndParticipantPage()
+    {
         echo '</div></div></body></html>';
     }
 
-    public function UiShowHeader(string $page) {
+    public function UiShowHeader(string $page)
+    {
         $role = SUPER_USER ? 3 : $this->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
         $header = "
         <style>
@@ -1558,45 +1585,45 @@ class REDCapPRO extends AbstractExternalModule {
                 outline: none !important;
             }
         </style>
-        <link rel='shortcut icon' href='".$this->getUrl('images/favicon.ico')."'/>
-        <link rel='icon' type='image/png' sizes='32x32' href='".$this->getUrl('images/favicon-32x32.png')."'>
-        <link rel='icon' type='image/png' sizes='16x16' href='".$this->getUrl('images/favicon-16x16.png')."'>
+        <link rel='shortcut icon' href='" . $this->getUrl('images/favicon.ico') . "'/>
+        <link rel='icon' type='image/png' sizes='32x32' href='" . $this->getUrl('images/favicon-32x32.png') . "'>
+        <link rel='icon' type='image/png' sizes='16x16' href='" . $this->getUrl('images/favicon-16x16.png') . "'>
         <div>
-            <img src='".$this->getUrl("images/RCPro_Logo.svg")."' width='500px'></img>
+            <img src='" . $this->getUrl("images/RCPro_Logo.svg") . "' width='500px'></img>
             <br>
             <nav style='margin-top:20px;'><ul class='nav nav-tabs rcpro-nav'>
                 <li class='nav-item'>
-                    <a class='nav-link ".($page==="Home" ? "active" : "")."' aria-current='page' href='".$this->getUrl("src/home.php")."'>
+                    <a class='nav-link " . ($page === "Home" ? "active" : "") . "' aria-current='page' href='" . $this->getUrl("src/home.php") . "'>
                     <i class='fas fa-home'></i>
                     Home</a>
                 </li>";
         if ($role >= 1) {
             $header .= "<li class='nav-item'>
-                            <a class='nav-link ".($page==="Manage" ? "active" : "")."' href='".$this->getUrl("src/manage.php")."'>
+                            <a class='nav-link " . ($page === "Manage" ? "active" : "") . "' href='" . $this->getUrl("src/manage.php") . "'>
                             <i class='fas fa-users-cog'></i>
                             Manage Participants</a>
                         </li>";
         }
         if ($role >= 2) {
             $header .= "<li class='nav-item'>
-                            <a class='nav-link ".($page==="Enroll" ? "active" : "")."' href='".$this->getUrl("src/enroll.php")."'>
+                            <a class='nav-link " . ($page === "Enroll" ? "active" : "") . "' href='" . $this->getUrl("src/enroll.php") . "'>
                             <i class='fas fa-user-check'></i>
                             Enroll</a>
                         </li>
                         <li class='nav-item'>
-                            <a class='nav-link ".($page==="Register" ? "active" : "")."' href='".$this->getUrl("src/register.php")."'>
+                            <a class='nav-link " . ($page === "Register" ? "active" : "") . "' href='" . $this->getUrl("src/register.php") . "'>
                             <i class='fas fa-id-card'></i>
                             Register</a>
                         </li>";
         }
         if ($role > 2) {
             $header .= "<li class='nav-item'>
-                            <a class='nav-link ".($page==="Users" ? "active" : "")."' href='".$this->getUrl("src/manage-users.php")."'>
+                            <a class='nav-link " . ($page === "Users" ? "active" : "") . "' href='" . $this->getUrl("src/manage-users.php") . "'>
                             <i class='fas fa-users'></i>
                             Study Staff</a>
                         </li>
                         <li class='nav-item'>
-                            <a class='nav-link ".($page==="Logs" ? "active" : "")."' href='".$this->getUrl("src/logs.php")."'>
+                            <a class='nav-link " . ($page === "Logs" ? "active" : "") . "' href='" . $this->getUrl("src/logs.php") . "'>
                             <i class='fas fa-list'></i>
                             Logs</a>
                         </li>";
@@ -1606,7 +1633,8 @@ class REDCapPRO extends AbstractExternalModule {
         echo $header;
     }
 
-    public function UiShowControlCenterHeader(string $page) {
+    public function UiShowControlCenterHeader(string $page)
+    {
         $header = "
         <style>
             .rcpro-nav a {
@@ -1631,35 +1659,35 @@ class REDCapPRO extends AbstractExternalModule {
                 outline: none !important;
             }
         </style>
-        <link rel='shortcut icon' href='".$this->getUrl('images/favicon.ico')."'/>
-        <link rel='icon' type='image/png' sizes='32x32' href='".$this->getUrl('images/favicon-32x32.png')."'>
-        <link rel='icon' type='image/png' sizes='16x16' href='".$this->getUrl('images/favicon-16x16.png')."'>
+        <link rel='shortcut icon' href='" . $this->getUrl('images/favicon.ico') . "'/>
+        <link rel='icon' type='image/png' sizes='32x32' href='" . $this->getUrl('images/favicon-32x32.png') . "'>
+        <link rel='icon' type='image/png' sizes='16x16' href='" . $this->getUrl('images/favicon-16x16.png') . "'>
         <div>
-            <img src='".$this->getUrl("images/RCPro_Logo.svg")."' width='500px'></img>
+            <img src='" . $this->getUrl("images/RCPro_Logo.svg") . "' width='500px'></img>
             <br>
             <nav style='margin-top:20px;'><ul class='nav nav-tabs rcpro-nav'>
                 <li class='nav-item'>
-                    <a class='nav-link ".($page==="Projects" ? "active" : "")."' aria-current='page' href='".$this->getUrl("src/cc_projects.php")."'>
+                    <a class='nav-link " . ($page === "Projects" ? "active" : "") . "' aria-current='page' href='" . $this->getUrl("src/cc_projects.php") . "'>
                     <i class='fas fa-briefcase'></i>
                     Projects</a>
                 </li>
                 <li class='nav-item'>
-                    <a class='nav-link ".($page==="Participants" ? "active" : "")."' href='".$this->getUrl("src/cc_participants.php")."'>
+                    <a class='nav-link " . ($page === "Participants" ? "active" : "") . "' href='" . $this->getUrl("src/cc_participants.php") . "'>
                     <i class='fas fa-users-cog'></i>
                     Participants</a>
                 </li>
                 <li class='nav-item'>
-                    <a class='nav-link ".($page==="Staff" ? "active" : "")."' href='".$this->getUrl("src/cc_staff.php")."'>
+                    <a class='nav-link " . ($page === "Staff" ? "active" : "") . "' href='" . $this->getUrl("src/cc_staff.php") . "'>
                     <i class='fas fa-users'></i>
                     Staff</a>
                 </li>
                 <li class='nav-item'>
-                    <a class='nav-link ".($page==="Logs" ? "active" : "")."' href='".$this->getUrl("src/cc_logs.php")."'>
+                    <a class='nav-link " . ($page === "Logs" ? "active" : "") . "' href='" . $this->getUrl("src/cc_logs.php") . "'>
                     <i class='fas fa-list'></i>
                     Logs</a>
                 </li>
         ";
-        
+
         $header .= "</ul></nav>
         </div><hr style='margin-top:0px;'>";
         echo $header;
@@ -1675,7 +1703,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return void
      */
-    public function logError(string $message, \Exception $e) {
+    public function logError(string $message, \Exception $e)
+    {
         $params = [
             "error_code"    => $e->getCode(),
             "error_message" => $e->getMessage(),
@@ -1697,13 +1726,13 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return string|null Full Name
      */
-    public function getUserFullname(string $username) {
+    public function getUserFullname(string $username)
+    {
         $SQL = 'SELECT CONCAT(user_firstname, " ", user_lastname) AS name FROM redcap_user_information WHERE username = ?';
         try {
             $result = $this->query($SQL, [$username]);
             return $result->fetch_assoc()["name"];
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->logError("Error getting user full name", $e);
         }
     }
@@ -1718,7 +1747,8 @@ class REDCapPRO extends AbstractExternalModule {
      * 
      * @return string|null if not null, the error message to show to user
      */
-    function validateSettings(array $settings) {
+    function validateSettings(array $settings)
+    {
 
         $managers = $users = $monitors = array();
         $message = NULL;
@@ -1726,7 +1756,7 @@ class REDCapPRO extends AbstractExternalModule {
         // project-level settings
         if ($this->getProjectId()) {
             if (count($settings["managers"]) > 0) {
-                foreach ($settings["managers"] as $i=>$manager) {
+                foreach ($settings["managers"] as $manager) {
                     if (in_array($manager, $managers)) {
                         $message = "This user ($manager) is already a manager";
                     }
@@ -1734,7 +1764,7 @@ class REDCapPRO extends AbstractExternalModule {
                 }
             }
             if (count($settings["users"]) > 0) {
-                foreach ($settings["users"] as $i=>$user) {
+                foreach ($settings["users"] as $user) {
                     if (in_array($user, $users)) {
                         $message = "This user ($user) is already a user";
                     }
@@ -1745,7 +1775,7 @@ class REDCapPRO extends AbstractExternalModule {
                 }
             }
             if (count($settings["monitors"]) > 0) {
-                foreach ($settings["monitors"] as $i=>$monitor) {
+                foreach ($settings["monitors"] as $monitor) {
                     if (in_array($monitor, $monitors)) {
                         $message = "This user ($monitor) is already a monitor";
                     }
@@ -1753,7 +1783,6 @@ class REDCapPRO extends AbstractExternalModule {
                     if (in_array($monitor, $managers) || in_array($monitor, $users)) {
                         $message = "This user ($monitor) cannot have multiple roles";
                     }
-                    
                 }
             }
         } else {
@@ -1780,107 +1809,124 @@ class REDCapPRO extends AbstractExternalModule {
 /**
  * Authorization class
  */
-class Auth {
+class Auth
+{
 
     public static $APPTITLE;
-    
-    function __construct($title = null) {
+
+    function __construct($title = null)
+    {
         self::$APPTITLE = $title;
     }
 
-    public function init() {
+    public function init()
+    {
         $session_id = $_COOKIE["survey"] ?? $_COOKIE["PHPSESSID"];
         if (!empty($session_id)) {
             session_id($session_id);
         } else {
-            self::createSession();
+            $this->createSession();
         }
         session_start();
     }
 
-    function createSession() {
+    public function createSession()
+    {
         \Session::init();
-        self::set_csrf_token();
+        $this->set_csrf_token();
     }
 
-    function set_csrf_token() {
-        $_SESSION[self::$APPTITLE."_token"] = bin2hex(random_bytes(24));
+    public function set_csrf_token()
+    {
+        $_SESSION[self::$APPTITLE . "_token"] = bin2hex(random_bytes(24));
     }
 
-    function get_csrf_token() {
-        return $_SESSION[self::$APPTITLE."_token"];
+    public function get_csrf_token()
+    {
+        return $_SESSION[self::$APPTITLE . "_token"];
     }
 
-    function validate_csrf_token(string $token) {
-        return hash_equals(self::get_csrf_token(), $token);
+    public function validate_csrf_token(string $token)
+    {
+        return hash_equals($this->get_csrf_token(), $token);
     }
 
     // --- THESE DEAL WITH SESSION VALUES --- \\
 
     // TESTS 
-    function is_logged_in() {
-        return isset($_SESSION[self::$APPTITLE."_loggedin"]) && $_SESSION[self::$APPTITLE."_loggedin"] === true;
+    public function is_logged_in()
+    {
+        return isset($_SESSION[self::$APPTITLE . "_loggedin"]) && $_SESSION[self::$APPTITLE . "_loggedin"] === true;
     }
 
-    function is_survey_url_set() {
-        return isset($_SESSION[self::$APPTITLE."_survey_url"]);
+    public function is_survey_url_set()
+    {
+        return isset($_SESSION[self::$APPTITLE . "_survey_url"]);
     }
-    
-    function is_survey_link_active() {
-        return $_SESSION[self::$APPTITLE."_survey_link_active"];
+
+    public function is_survey_link_active()
+    {
+        return $_SESSION[self::$APPTITLE . "_survey_link_active"];
     }
 
     // GETS
-    
-    function get_survey_url() {
-        return $_SESSION[self::$APPTITLE."_survey_url"];
-    }
-    
-    function get_participant_id() {
-        return $_SESSION[self::$APPTITLE."_participant_id"];
+
+    public function get_survey_url()
+    {
+        return $_SESSION[self::$APPTITLE . "_survey_url"];
     }
 
-    function get_username() {
-        return $_SESSION[self::$APPTITLE."_username"];
+    public function get_participant_id()
+    {
+        return $_SESSION[self::$APPTITLE . "_participant_id"];
+    }
+
+    public function get_username()
+    {
+        return $_SESSION[self::$APPTITLE . "_username"];
     }
 
     // SETS
 
-    function deactivate_survey_link() {
-        unset($_SESSION[self::$APPTITLE."_survey_link_active"]);
+    public function deactivate_survey_link()
+    {
+        unset($_SESSION[self::$APPTITLE . "_survey_link_active"]);
     }
 
-    function set_survey_url($url) {
-        $_SESSION[self::$APPTITLE."_survey_url"] = $url;
+    public function set_survey_url($url)
+    {
+        $_SESSION[self::$APPTITLE . "_survey_url"] = $url;
     }
 
-    function set_survey_active_state($state) {
-        $_SESSION[self::$APPTITLE."_survey_link_active"] = $state;
+    public function set_survey_active_state($state)
+    {
+        $_SESSION[self::$APPTITLE . "_survey_link_active"] = $state;
     }
 
-    function set_login_values($participant) {
+    public function set_login_values($participant)
+    {
         $_SESSION["username"] = $participant["rcpro_username"];
-        $_SESSION[self::$APPTITLE."_participant_id"] = $participant["log_id"];
-        $_SESSION[self::$APPTITLE."_username"] = $participant["rcpro_username"];
-        $_SESSION[self::$APPTITLE."_email"] = $participant["email"];
-        $_SESSION[self::$APPTITLE."_fname"] = $participant["fname"];
-        $_SESSION[self::$APPTITLE."_lname"] = $participant["lname"];
-        $_SESSION[self::$APPTITLE."_loggedin"] = true;
+        $_SESSION[self::$APPTITLE . "_participant_id"] = $participant["log_id"];
+        $_SESSION[self::$APPTITLE . "_username"] = $participant["rcpro_username"];
+        $_SESSION[self::$APPTITLE . "_email"] = $participant["email"];
+        $_SESSION[self::$APPTITLE . "_fname"] = $participant["fname"];
+        $_SESSION[self::$APPTITLE . "_lname"] = $participant["lname"];
+        $_SESSION[self::$APPTITLE . "_loggedin"] = true;
     }
-
-    
-
 }
 
 
-class ProjectSettings {
+class ProjectSettings
+{
     public static $module;
-    
-    function __construct($module) {
+
+    function __construct($module)
+    {
         self::$module = $module;
     }
- 
-    public function getTimeoutWarningMinutes() {
+
+    public function getTimeoutWarningMinutes()
+    {
         $result = self::$module->getSystemSetting("warning-time");
         if (!floatval($result)) {
             // DEFAULT TO 1 MINUTE IF NOT SET
@@ -1889,7 +1935,8 @@ class ProjectSettings {
         return $result;
     }
 
-    public function getTimeoutMinutes() {
+    public function getTimeoutMinutes()
+    {
         $result = self::$module->getSystemSetting("timeout-time");
         if (!floatval($result)) {
             // DEFAULT TO 5 MINUTES IF NOT SET
@@ -1898,7 +1945,8 @@ class ProjectSettings {
         return $result;
     }
 
-    public function getPasswordLength() {
+    public function getPasswordLength()
+    {
         $result = self::$module->getSystemSetting("password-length");
         if (!intval($result)) {
             // DEFAULT TO 8 CHARACTERS IF NOT SET
@@ -1906,8 +1954,9 @@ class ProjectSettings {
         }
         return $result;
     }
-    
-    public function getLoginAttempts() {
+
+    public function getLoginAttempts()
+    {
         $result = self::$module->getSystemSetting("login-attempts");
         if (!intval($result)) {
             // DEFAULT TO 3 ATTEMPTS IF NOT SET
@@ -1916,7 +1965,8 @@ class ProjectSettings {
         return $result;
     }
 
-    public function getLockoutDurationSeconds() {
+    public function getLockoutDurationSeconds()
+    {
         $result = self::$module->getSystemSetting("lockout-seconds");
         if (!intval($result)) {
             // DEFAULT TO 300 SECONDS IF NOT SET
@@ -1926,7 +1976,8 @@ class ProjectSettings {
     }
 }
 
-class Instrument {
+class Instrument
+{
     public static $module;
     public static $instrument_name;
     public $dd;
@@ -1934,8 +1985,9 @@ class Instrument {
     public $email;
     public $fname;
     public $lname;
-    
-    function __construct($module, $instrument_name) {
+
+    function __construct($module, $instrument_name)
+    {
         self::$module = $module;
         self::$instrument_name = $instrument_name;
         $this->dd = $this->getDD();
@@ -1947,49 +1999,63 @@ class Instrument {
         }
     }
 
-    function getDD() {
+    function getDD()
+    {
         $json = \REDCap::getDataDictionary("json", false, null, [self::$instrument_name], false);
         return json_decode($json, true);
     }
 
-    function getUsernameField() {
+    function getUsernameField()
+    {
         foreach ($this->dd as $field) {
-            if (strpos($field["field_annotation"], "@RCPRO-USERNAME") !== FALSE
-                && $field["field_type"] === "text") {
+            if (
+                strpos($field["field_annotation"], "@RCPRO-USERNAME") !== FALSE
+                && $field["field_type"] === "text"
+            ) {
                 return $field["field_name"];
             }
         }
     }
 
-    function getEmailField() {
+    function getEmailField()
+    {
         foreach ($this->dd as $field) {
-            if (strpos($field["field_annotation"], "@RCPRO-EMAIL") !== FALSE 
-                && $field["field_type"] === "text" 
-                && $field["text_validation_type_or_show_slider_number"] === "email") {
+            if (
+                strpos($field["field_annotation"], "@RCPRO-EMAIL") !== FALSE
+                && $field["field_type"] === "text"
+                && $field["text_validation_type_or_show_slider_number"] === "email"
+            ) {
                 return $field["field_name"];
             }
         }
     }
 
-    function getFirstNameField() {
+    function getFirstNameField()
+    {
         foreach ($this->dd as $field) {
-            if (strpos($field["field_annotation"], "@RCPRO-FNAME") !== FALSE 
-                && $field["field_type"] === "text") {
+            if (
+                strpos($field["field_annotation"], "@RCPRO-FNAME") !== FALSE
+                && $field["field_type"] === "text"
+            ) {
                 return $field["field_name"];
             }
         }
     }
 
-    function getLastNameField() {
+    function getLastNameField()
+    {
         foreach ($this->dd as $field) {
-            if (strpos($field["field_annotation"], "@RCPRO-LNAME") !== FALSE 
-                && $field["field_type"] === "text") {
+            if (
+                strpos($field["field_annotation"], "@RCPRO-LNAME") !== FALSE
+                && $field["field_type"] === "text"
+            ) {
                 return $field["field_name"];
             }
         }
     }
 
-    function update_form() {
+    function update_form()
+    {
         if (isset($this->username)) {
             $rcpro_project_id = self::$module->getProjectIdFromPID(PROJECT_ID);
             $participants = self::$module->getProjectParticipants($rcpro_project_id);
@@ -1997,18 +2063,18 @@ class Instrument {
             $participants_json = json_encode($participants);
             foreach ($participants as $participant) {
                 $inst_username = \REDCap::escapeHtml($participant["rcpro_username"]);
-                $inst_email = \REDCap::escapeHtml($participant["email"]);
-                $inst_fname = \REDCap::escapeHtml($participant["fname"]);
-                $inst_lname = \REDCap::escapeHtml($participant["lname"]);
-                $options .= "<option value='$inst_username' >$inst_username - $inst_fname $inst_lname - $inst_email</option>";
+                $inst_email    = \REDCap::escapeHtml($participant["email"]);
+                $inst_fname    = \REDCap::escapeHtml($participant["fname"]);
+                $inst_lname    = \REDCap::escapeHtml($participant["lname"]);
+                $options      .= "<option value='$inst_username' >$inst_username - $inst_fname $inst_lname - $inst_email</option>";
             }
             $replacement =  "<select id='username_selector'>$options</select>";
             self::$module->initializeJavascriptModuleObject();
-            ?>
+        ?>
             <script>
                 (function($, window, document) {
-                    let module = <?=self::$module->getJavascriptModuleObjectName()?>;
-                    let participants_json = '<?=$participants_json?>';
+                    let module = <?= self::$module->getJavascriptModuleObjectName() ?>;
+                    let participants_json = '<?= $participants_json ?>';
                     let participants_obj = JSON.parse(participants_json);
                     let participants = Object.values(participants_obj);
                     let empty_participant = {
@@ -2017,65 +2083,67 @@ class Instrument {
                         lname: ""
                     };
 
-                    let username_input = $("input[name='<?=$this->username?>']");
+                    let username_input = $("input[name='<?= $this->username ?>']");
                     username_input.hide();
-                    let username_select = $("<?=$replacement?>")[0];
+                    let username_select = $("<?= $replacement ?>")[0];
                     username_input.after(username_select);
                     $('#username_selector').select2({
-                        placeholder: 'Select a participant',
-                        allowClear: true
-                    }).val(username_input.val()).trigger('change')
-                    .on("change", (evt) => {
-                        let val = evt.target.value;
-                        let participant = empty_participant;
-                        if (val !== "") {
-                            participant = participants.filter((p) => p.rcpro_username === val)[0];
-                        }
-                        username_input.val(participant.rcpro_username);
-                        let logParameters = {
-                            rcpro_username: participant.rcpro_username,
-                            redcap_user: "<?=USERID?>"
-                        };
-                        
-                        // If there is an email field, update it
-                        <?php if (isset($this->email)) { ?>
-                            let email_input = $('input[name="<?=$this->email?>"]');
-                            if (email_input) {
-                                email_input.val(participant.email);
+                            placeholder: 'Select a participant',
+                            allowClear: true
+                        }).val(username_input.val()).trigger('change')
+                        .on("change", (evt) => {
+                            let val = evt.target.value;
+                            let participant = empty_participant;
+                            if (val !== "") {
+                                participant = participants.filter((p) => p.rcpro_username === val)[0];
                             }
-                        <?php } ?>
+                            username_input.val(participant.rcpro_username);
+                            let logParameters = {
+                                rcpro_username: participant.rcpro_username,
+                                redcap_user: "<?= USERID ?>"
+                            };
 
-                        // If there is a fname field, update it
-                        <?php if (isset($this->fname)) { ?>
-                            let fname_input = $('input[name="<?=$this->fname?>"]');
-                            if (fname_input) {
-                                fname_input.val(participant.fname);
-                            }
-                        <?php } ?>
+                            // If there is an email field, update it
+                            <?php if (isset($this->email)) { ?>
+                                let email_input = $('input[name="<?= $this->email ?>"]');
+                                if (email_input) {
+                                    email_input.val(participant.email);
+                                }
+                            <?php } ?>
 
-                        // If there is a lname field, update it
-                        <?php if (isset($this->lname)) { ?>
-                            let lname_input = $('input[name="<?=$this->lname?>"]');
-                            if (lname_input) {
-                                lname_input.val(participant.lname);
-                            }
-                        <?php } ?>
+                            // If there is a fname field, update it
+                            <?php if (isset($this->fname)) { ?>
+                                let fname_input = $('input[name="<?= $this->fname ?>"]');
+                                if (fname_input) {
+                                    fname_input.val(participant.fname);
+                                }
+                            <?php } ?>
 
-                        // Log this.
-                        module.log("Populated REDCapPRO User Info On Form", logParameters);
-                    });
-                    
+                            // If there is a lname field, update it
+                            <?php if (isset($this->lname)) { ?>
+                                let lname_input = $('input[name="<?= $this->lname ?>"]');
+                                if (lname_input) {
+                                    lname_input.val(participant.lname);
+                                }
+                            <?php } ?>
+
+                            // Log this.
+                            module.log("Populated REDCapPRO User Info On Form", logParameters);
+                        });
+
                 })(window.jQuery, window, document);
             </script>
-            <?php
+<?php
         }
     }
 }
 
 
-class REDCapProException extends \Exception {
-    public $rcpro = NULL; 
-    public function __construct($rcpro = NULL) {
+class REDCapProException extends \Exception
+{
+    public $rcpro = NULL;
+    public function __construct($rcpro = NULL)
+    {
         $this->rcpro = $rcpro;
     }
 }
