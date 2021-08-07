@@ -9,7 +9,7 @@ $q = $_GET["q"];
 $wq = "%${q}%";
 
 
-$result = $module->searchParticipants($wq);
+$result = $module::$PARTICIPANT->searchParticipants($wq);
 
 $hint = "";
 while ($row = $result->fetch_assoc()) {

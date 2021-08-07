@@ -24,9 +24,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $email = \REDCap::escapeHtml(trim($_POST["email"]));
         // Check input errors before sending reset email
         if (!$err) {
-            $rcpro_participant_id = $module->getParticipantIdFromEmail($email);
+            $rcpro_participant_id = $module::$PARTICIPANT->getParticipantIdFromEmail($email);
             if (!empty($rcpro_participant_id)) {
-                $username = $module->getUserName($rcpro_participant_id);
+                $username = $module::$PARTICIPANT->getUserName($rcpro_participant_id);
                 $module->log("Username Reminder Email Sent", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $username

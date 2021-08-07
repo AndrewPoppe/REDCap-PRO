@@ -15,7 +15,7 @@ class Project
     {
         self::$module           = $module;
         self::$redcap_pid       = $redcap_pid;
-        self::$rcpro_project_id = self::$module->getProjectIdFromPID($redcap_pid);
+        self::$rcpro_project_id = self::$module::$PROJECT->getProjectIdFromPID($redcap_pid);
         self::$info             = $this->getProjectInfo();
         self::$staff            = $this->getStaff();
     }

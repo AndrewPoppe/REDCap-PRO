@@ -145,7 +145,7 @@ $module::$UI->ShowHeader("Enroll");
         if (isset($_POST["id"]) && isset($project_id)) {
             $rcpro_participant_id = intval($_POST["id"]);
             $pid = intval($project_id);
-            $result = $module->enrollParticipant($rcpro_participant_id, $pid);
+            $result = $module::$PROJECT->enrollParticipant($rcpro_participant_id, $pid);
 
             if ($result === -1) {
                 echo "<script>Swal.fire({'title':'This user is already enrolled in this project', 'icon':'info'});</script>";

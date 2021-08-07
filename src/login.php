@@ -72,7 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 // Check if username exists, if yes then verify password
                 // --> USERNAME DOES NOT EXIST
-            } else if (!$module->usernameIsTaken($username)) {
+            } else if (!$module::$PARTICIPANT->usernameIsTaken($username)) {
 
                 // Username doesn't exist, display a generic error message
                 $Login->incrementFailedIp($ip);
@@ -92,7 +92,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // --> USERNAME EXISTS
             } else {
 
-                $participant = $module->getParticipant($username);
+                $participant = $module::$PARTICIPANT->getParticipant($username);
                 $stored_hash = $Login->getHash($participant["log_id"]);
 
                 // Check that this username is not locked out
@@ -133,7 +133,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // Rehash password if necessary
                     if (password_needs_rehash($stored_hash, PASSWORD_DEFAULT)) {
                         $new_hash = password_hash($password, PASSWORD_DEFAULT);
-                        $module->storeHash($new_hash, $participant["log_id"]);
+                        $module::$PARTICIPANT->storeHash($new_hash, $participant["log_id"]);
                     }
 
                     // Reset failed attempts and failed IP

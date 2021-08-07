@@ -56,7 +56,7 @@ class LoginHelper
                 $status = $res ? "Successful" : "Failed";
                 self::$module->log("Login Lockout ${status}", [
                     "rcpro_participant_id" => $rcpro_participant_id,
-                    "rcpro_username"       => self::$module->getUserName($rcpro_participant_id)
+                    "rcpro_username"       => self::$module::$PARTICIPANT->getUserName($rcpro_participant_id)
                 ]);
                 return $res;
             } else {

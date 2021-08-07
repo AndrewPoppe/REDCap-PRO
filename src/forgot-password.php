@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $username = \REDCap::escapeHtml(trim($_POST["username"]));
         // Check input errors before sending reset email
         if (!$err) {
-            $rcpro_participant_id = $module->getParticipantIdFromUsername($username);
+            $rcpro_participant_id = $module::$PARTICIPANT->getParticipantIdFromUsername($username);
             if (!empty($rcpro_participant_id)) {
                 $module->log("Password Reset Email Sent", [
                     "rcpro_participant_id" => $rcpro_participant_id,

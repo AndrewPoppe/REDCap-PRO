@@ -6,6 +6,8 @@ class Instrument
 {
     public static $module;
     public static $instrument_name;
+    public static $PARTICIPANT;
+    public static $PROJECT;
     public $dd;
     public $username;
     public $email;
@@ -15,6 +17,8 @@ class Instrument
     function __construct($module, $instrument_name)
     {
         self::$module = $module;
+        self::$PARTICIPANT = $module::$PARTICIPANT;
+        self::$PROJECT = $module::$PROJECT;
         self::$instrument_name = $instrument_name;
         $this->dd = $this->getDD();
         $this->username = $this->getUsernameField();
@@ -83,8 +87,8 @@ class Instrument
     function update_form()
     {
         if (isset($this->username)) {
-            $rcpro_project_id = self::$module->getProjectIdFromPID(PROJECT_ID);
-            $participants = self::$module->getProjectParticipants($rcpro_project_id);
+            $rcpro_project_id = self::$PROJECT->getProjectIdFromPID(PROJECT_ID);
+            $participants = self::$PARTICIPANT->getProjectParticipants($rcpro_project_id);
             $options = "<option value=''>''</option>";
             $participants_json = json_encode($participants);
             foreach ($participants as $participant) {

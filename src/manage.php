@@ -10,7 +10,7 @@ if ($role > 0) {
     require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
     $module::$UI->ShowHeader("Manage");
 
-    $rcpro_project_id = $module->getProjectIdFromPID($project_id);
+    $rcpro_project_id = $module::$PROJECT->getProjectIdFromPID($project_id);
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         try {
@@ -23,7 +23,7 @@ if ($role > 0) {
                     $icon = "error";
                     $title = "You do not have the required role to do that.";
                 } else {
-                    $result = $module->disenrollParticipant($_POST["toDisenroll"], $rcpro_project_id);
+                    $result = $module::$PROJECT->disenrollParticipant($_POST["toDisenroll"], $rcpro_project_id);
                     if (!$result) {
                         $icon = "error";
                         $title = "Trouble disenrolling participant.";
@@ -53,11 +53,11 @@ if ($role > 0) {
                     $title = "You do not have the required role to do that.";
                 } else {
                     $newEmail = $_POST["newEmail"];
-                    if ($module->checkEmailExists($newEmail)) {
+                    if ($module::$PARTICIPANT->checkEmailExists($newEmail)) {
                         $icon = "error";
                         $title = "The provided email address is already associated with a REDCapPRO account.";
                     } else {
-                        $result = $module->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
+                        $result = $module::$PARTICIPANT->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
                         if (!$result) {
                             $icon = "error";
                             $title = "Trouble changing participant's email address.";
@@ -76,7 +76,7 @@ if ($role > 0) {
     }
 
     // Get list of participants
-    $participantList = $module->getProjectParticipants($rcpro_project_id);
+    $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_id);
 
 ?>
     <style>

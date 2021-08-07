@@ -18,7 +18,7 @@ $new_password_err = $confirm_password_err = "";
 
 
 // Verify password reset token
-$verified_user = $module->verifyPasswordResetToken($qstring["t"]);
+$verified_user = $module::$PARTICIPANT->verifyPasswordResetToken($qstring["t"]);
 
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -71,18 +71,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (!$any_error) {
 
         // Grab all user details
-        $participant = $module->getParticipant($_POST["username"]);
+        $participant = $module::$PARTICIPANT->getParticipant($_POST["username"]);
 
         // Update password
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
-        $result = $module->storeHash($password_hash, $participant["log_id"]);
+        $result = $module::$PARTICIPANT->storeHash($password_hash, $participant["log_id"]);
         if (empty($result) || $result === FALSE) {
             echo "Oops! Something went wrong. Please try again later.";
             return;
         }
 
         // Password was successfully set. Expire the token.
-        $module->expirePasswordResetToken($participant["log_id"]);
+        $module::$PARTICIPANT->expirePasswordResetToken($participant["log_id"]);
 
         // Store data in session variables
         $module::$AUTH->set_login_values($participant);

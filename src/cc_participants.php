@@ -55,11 +55,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else if (!empty($_POST["toChangeEmail"])) {
             $function = "change participant's email address";
             $newEmail = $_POST["newEmail"];
-            if ($module->checkEmailExists($newEmail)) {
+            if ($module::$PARTICIPANT->checkEmailExists($newEmail)) {
                 $icon = "error";
                 $title = "The provided email address is already associated with a REDCapPRO account.";
             } else {
-                $result = $module->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
+                $result = $module::$PARTICIPANT->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
                 if (!$result) {
                     $icon = "error";
                     $title = "Trouble changing participant's email address.";
@@ -77,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // Get array of participants
-$participants = $module->getAllParticipants();
+$participants = $module::$PARTICIPANT->getAllParticipants();
 
 ?>
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
@@ -194,7 +194,7 @@ $participants = $module->getAllParticipants();
                             $lname_clean          = \REDCap::escapeHtml($participant["lname"]);
                             $email_clean          = \REDCap::escapeHtml($participant["email"]);
                             $rcpro_participant_id = intval($participant["log_id"]);
-                            $projects_array       = $module->getParticipantProjects($rcpro_participant_id);
+                            $projects_array       = $module::$PARTICIPANT->getParticipantProjects($rcpro_participant_id);
                             $info                 = getParticipantInfo($rcpro_participant_id);
                             $allData              = "<div style='display: block; text-align:left;'><ul>";
                             foreach ($info as $title => $value) {
