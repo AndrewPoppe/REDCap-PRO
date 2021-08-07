@@ -4,6 +4,12 @@ namespace YaleREDCap\REDCapPRO;
 
 use ExternalModules\AbstractExternalModule;
 
+require_once("src/classes/Auth.php");
+require_once("src/classes/Instrument.php");
+require_once("src/classes/ProjectSettings.php");
+require_once("src/classes/REDCapProException.php");
+require_once("src/classes/UI.php");
+
 /**
  * Main EM Class
  */
@@ -13,12 +19,14 @@ class REDCapPRO extends AbstractExternalModule
     static $APPTITLE = "REDCapPRO";
     static $AUTH;
     static $SETTINGS;
+    static $UI;
 
     function __construct()
     {
         parent::__construct();
         $this::$AUTH = new Auth($this::$APPTITLE);
         $this::$SETTINGS = new ProjectSettings($this);
+        $this::$UI = new UI($this);
     }
 
     function redcap_every_page_top($project_id)
@@ -39,7 +47,7 @@ class REDCapPRO extends AbstractExternalModule
                     $('#app_panel').find('div.hang').last().after(link);
                 }, 10);
             </script>
-        <?php
+<?php
         }
     }
 
@@ -63,7 +71,7 @@ class REDCapPRO extends AbstractExternalModule
             // Determine whether participant is enrolled in the study.
             $rcpro_participant_id = $this::$AUTH->get_participant_id();
             if (!$this->enrolledInProject($rcpro_participant_id, $project_id)) {
-                $this->UiShowParticipantHeader("Not Enrolled");
+                self::$UI->ShowParticipantHeader("Not Enrolled");
                 echo "<p style='text-align:center;'>You are not currently enrolled in this study.<br>";
                 $study_contact = $this->getContactPerson("REDCapPRO - Not Enrolled");
                 if (!isset($study_contact["name"])) {
@@ -172,261 +180,27 @@ class REDCapPRO extends AbstractExternalModule
     }
 
 
-
     /**
-     * Increments the number of failed attempts at login for the provided id
+     * Stores hashed password for the given participant id
      * 
+     * @param string $hash - hashed password
      * @param int $rcpro_participant_id - id key for participant
      * 
-     * @return BOOL|NULL
+     * @return bool|NULL success/failure/null
      */
-    public function incrementFailedLogin(int $rcpro_participant_id)
+    public function storeHash(string $hash, int $rcpro_participant_id)
     {
-        $SQL = "UPDATE redcap_external_modules_log_parameters SET value = value+1 WHERE log_id = ? AND name = 'failed_attempts'";
         try {
-            $res = $this->query($SQL, [$rcpro_participant_id]);
-
-            // Lockout username if necessary
-            $this->lockoutLogin($rcpro_participant_id);
+            $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'pw';";
+            $res = $this->query($SQL, [$hash, $rcpro_participant_id]);
+            $this->log("Password Hash Stored", [
+                "rcpro_participant_id" => $rcpro_participant_id,
+                "rcpro_username"       => $this->getUserName($rcpro_participant_id)
+            ]);
             return $res;
         } catch (\Exception $e) {
-            $this->logError("Error incrementing failed login", $e);
-            return NULL;
+            $this->logError("Error storing password hash", $e);
         }
-    }
-
-    /**
-     * This both tests whether a user should be locked out based on the number
-     * of failed login attempts and does the locking out.
-     * 
-     * @param int $rcpro_participant_id - id key for participant
-     * 
-     * @return BOOL|NULL
-     */
-    private function lockoutLogin(int $rcpro_participant_id)
-    {
-        try {
-            $attempts = $this->checkUsernameAttempts($rcpro_participant_id);
-            if ($attempts >= $this::$SETTINGS->getLoginAttempts()) {
-                $lockout_ts = time() + $this::$SETTINGS->getLockoutDurationSeconds();
-                $SQL = "UPDATE redcap_external_modules_log_parameters SET lockout_ts = ? WHERE log_id = ?;";
-                $res = $this->query($SQL, [$lockout_ts, $rcpro_participant_id]);
-                $status = $res ? "Successful" : "Failed";
-                $this->log("Login Lockout ${status}", [
-                    "rcpro_participant_id" => $rcpro_participant_id,
-                    "rcpro_username"       => $this->getUserName($rcpro_participant_id)
-                ]);
-                return $res;
-            } else {
-                return TRUE;
-            }
-        } catch (\Exception $e) {
-            $this->logError("Error doing login lockout", $e);
-            return FALSE;
-        }
-    }
-
-    /**
-     * Resets the count of failed login attempts for the given id
-     * 
-     * @param int $rcpro_participant_id - id key for participant
-     * 
-     * @return BOOL|NULL
-     */
-    public function resetFailedLogin(int $rcpro_participant_id)
-    {
-        $SQL = "UPDATE redcap_external_modules_log_parameters SET value=0 WHERE log_id=? AND name='failed_attempts';";
-        try {
-            return $this->query($SQL, [$rcpro_participant_id]);
-        } catch (\Exception $e) {
-            $this->logError("Error resetting failed login count", $e);
-            return NULL;
-        }
-    }
-
-    /**
-     * Gets the IP address in an easy way
-     * 
-     * @return string - the ip address
-     */
-    public function getIPAddress()
-    {
-        return $_SERVER['REMOTE_ADDR'];
-    }
-
-    /**
-     * Increments the number of failed login attempts for the given ip address
-     * 
-     * It also detects whether the ip should be locked out based on the number
-     * of failed attempts and then does the locking.
-     * 
-     * @param string $ip Client IP address
-     * 
-     * @return int number of attempts INCLUDING current attempt
-     */
-    public function incrementFailedIp(string $ip)
-    {
-        if ($this->getSystemSetting('ip_lockouts') === null) {
-            $this->setSystemSetting('ip_lockouts', json_encode(array()));
-        }
-        $ipLockouts = json_decode($this->getSystemSetting('ip_lockouts'), true);
-        if (isset($ipLockouts[$ip])) {
-            $ipStat = $ipLockouts[$ip];
-        } else {
-            $ipStat = array();
-        }
-        if (isset($ipStat["attempts"])) {
-            $ipStat["attempts"]++;
-            if ($ipStat["attempts"] >= $this::$SETTINGS->getLoginAttempts()) {
-                $ipStat["lockout_ts"] = time() + $this::$SETTINGS->getLockoutDurationSeconds();
-                $this->log("Locked out IP address", [
-                    "rcpro_ip"   => $ip,
-                    "lockout_ts" => $ipStat["lockout_ts"]
-                ]);
-            }
-        } else {
-            $ipStat["attempts"] = 1;
-        }
-        $ipLockouts[$ip] = $ipStat;
-        $this->setSystemSetting('ip_lockouts', json_encode($ipLockouts));
-        return $ipStat["attempts"];
-    }
-
-    /**
-     * Resets the failed login attempt count for the given ip address
-     * 
-     * @param string $ip Client IP address
-     * 
-     * @return bool Whether or not the reset succeeded
-     */
-    public function resetFailedIp(string $ip)
-    {
-        try {
-            if ($this->getSystemSetting('ip_lockouts') === null) {
-                $this->setSystemSetting('ip_lockouts', json_encode(array()));
-            }
-            $ipLockouts = json_decode($this->getSystemSetting('ip_lockouts'), true);
-            if (isset($ipLockouts[$ip])) {
-                $ipStat = $ipLockouts[$ip];
-            } else {
-                $ipStat = array();
-            }
-            $ipStat["attempts"] = 0;
-            $ipStat["lockout_ts"] = NULL;
-            $ipLockouts[$ip] = $ipStat;
-            $this->setSystemSetting('ip_lockouts', json_encode($ipLockouts));
-            return TRUE;
-        } catch (\Exception $e) {
-            $this->logError("IP Login Attempt Reset Failed", $e);
-            return FALSE;
-        }
-    }
-
-    /**
-     * Checks the number of failed login attempts for the given ip address
-     * 
-     * @param string $ip Client IP address
-     * 
-     * @return int number of failed login attempts for the given ip
-     */
-    private function checkIpAttempts(string $ip)
-    {
-        if ($this->getSystemSetting('ip_lockouts') === null) {
-            $this->setSystemSetting('ip_lockouts', json_encode(array()));
-        }
-        $ipLockouts = json_decode($this->getSystemSetting('ip_lockouts'), true);
-        if (isset($ipLockouts[$ip])) {
-            $ipStat = $ipLockouts[$ip];
-            if (isset($ipStat["attempts"])) {
-                return $ipStat["attempts"];
-            }
-        }
-        return 0;
-    }
-
-    /**
-     * Determines whether given ip is currently locked out
-     * 
-     * @param string $ip Client IP address
-     * 
-     * @return bool whether ip is locked out
-     */
-    public function checkIpLockedOut(string $ip)
-    {
-        if ($this->getSystemSetting('ip_lockouts') === null) {
-            $this->setSystemSetting('ip_lockouts', json_encode(array()));
-        }
-        $ipLockouts = json_decode($this->getSystemSetting('ip_lockouts'), true);
-        $ipStat = $ipLockouts[$ip];
-
-        if (isset($ipStat) && $ipStat["lockout_ts"] !== null && $ipStat["lockout_ts"] >= time()) {
-            return $ipStat["lockout_ts"];
-        }
-        return FALSE;
-    }
-
-    /**
-     * Gets number of failed login attempts for the given user by id
-     * 
-     * @param int $rcpro_participant_id - id key for participant
-     * 
-     * @return int number of failed login attempts
-     */
-    private function checkUsernameAttempts(int $rcpro_participant_id)
-    {
-        $SQL = "SELECT failed_attempts WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
-        try {
-            $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
-            return $res->fetch_assoc()["failed_attempts"];
-        } catch (\Exception $e) {
-            $this->logError("Failed to check username attempts", $e);
-            return 0;
-        }
-    }
-
-    /**
-     * Checks whether given user (by id) is locked out
-     * 
-     * Returns the remaining lockout time in seconds for this participant
-     * 
-     * @param int $rcpro_participant_id - id key for participant
-     * 
-     * @return int number of seconds of lockout left
-     */
-    public function getUsernameLockoutDuration(int $rcpro_participant_id)
-    {
-        $SQL = "SELECT lockout_ts WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL);";
-        try {
-            $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
-            $lockout_ts = intval($res->fetch_assoc()["lockout_ts"]);
-            $time_remaining = $lockout_ts - time();
-            if ($time_remaining > 0) {
-                return $time_remaining;
-            }
-        } catch (\Exception $e) {
-            $this->logError("Failed to check username lockout", $e);
-        }
-    }
-
-    /**
-     * Returns number of consecutive failed login attempts
-     * 
-     * This checks both by username and by ip, and returns the larger
-     * 
-     * @param int|null $rcpro_participant_id
-     * @param mixed $ip
-     * 
-     * @return int number of consecutive attempts
-     */
-    public function checkAttempts($rcpro_participant_id, $ip)
-    {
-        if ($rcpro_participant_id === null) {
-            $usernameAttempts = 0;
-        } else {
-            $usernameAttempts = $this->checkUsernameAttempts($rcpro_participant_id);
-        }
-        $ipAttempts = $this->checkIpAttempts($ip);
-        return max($usernameAttempts, $ipAttempts);
     }
 
     ////////////////////
@@ -586,46 +360,8 @@ class REDCapPRO extends AbstractExternalModule
                                   (i.e., if the link is active)
     */
 
-    /**
-     * Get hashed password for participant.
-     * 
-     * @param int $rcpro_participant_id - id key for participant
-     * 
-     * @return string|NULL hashed password or null
-     */
-    public function getHash(int $rcpro_participant_id)
-    {
-        try {
-            $SQL = "SELECT pw WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL);";
-            $res = $this->queryLogs($SQL, [$rcpro_participant_id]);
-            return $res->fetch_assoc()['pw'];
-        } catch (\Exception $e) {
-            $this->logError("Error fetching password hash", $e);
-        }
-    }
 
-    /**
-     * Stores hashed password for the given participant id
-     * 
-     * @param string $hash - hashed password
-     * @param int $rcpro_participant_id - id key for participant
-     * 
-     * @return bool|NULL success/failure/null
-     */
-    public function storeHash(string $hash, int $rcpro_participant_id)
-    {
-        try {
-            $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'pw';";
-            $res = $this->query($SQL, [$hash, $rcpro_participant_id]);
-            $this->log("Password Hash Stored", [
-                "rcpro_participant_id" => $rcpro_participant_id,
-                "rcpro_username"       => $this->getUserName($rcpro_participant_id)
-            ]);
-            return $res;
-        } catch (\Exception $e) {
-            $this->logError("Error storing password hash", $e);
-        }
-    }
+
 
     /**
      * Adds participant entry into log table.
@@ -1525,174 +1261,6 @@ class REDCapPRO extends AbstractExternalModule
     |             UI FORMATTING             |
     \*-------------------------------------*/
 
-    public function UiShowParticipantHeader(string $title)
-    {
-        echo '<!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>REDCapPRO ' . $title . '</title>
-                    <link rel="shortcut icon" href="' . $this->getUrl("images/favicon.ico") . '"/>
-                    <link rel="icon" type="image/png" sizes="32x32" href="' . $this->getUrl("images/favicon-32x32.png") . '">
-                    <link rel="icon" type="image/png" sizes="16x16" href="' . $this->getUrl("images/favicon-16x16.png") . '">
-                    <link rel="stylesheet" href="' . $this->getUrl("lib/bootstrap/css/bootstrap.min.css") . '">
-                    <script async src="' . $this->getUrl("lib/bootstrap/js/bootstrap.bundle.min.js") . '"></script>
-                    <style>
-                        body { font: 14px sans-serif; }
-                        .wrapper { width: 360px; padding: 20px; }
-                        .form-group { margin-top: 20px; }
-                        .center { display: flex; justify-content: center; align-items: center; }
-                        img#rcpro-logo { position: relative; left: -125px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="center">
-                        <div class="wrapper">
-                            <img id="rcpro-logo" src="' . $this->getUrl("images/RCPro_Logo.svg") . '" width="500px"></img>
-                            <hr>
-                            <div style="text-align: center;"><h2>' . $title . '</h2></div>';
-    }
-
-    public function UiEndParticipantPage()
-    {
-        echo '</div></div></body></html>';
-    }
-
-    public function UiShowHeader(string $page)
-    {
-        $role = SUPER_USER ? 3 : $this->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
-        $header = "
-        <style>
-            .rcpro-nav a {
-                color: #900000 !important;
-                font-weight: bold !important;
-            }
-            .rcpro-nav a.active:hover {
-                color: #900000 !important;
-                font-weight: bold !important;
-                outline: none !important;
-            }
-            .rcpro-nav a:hover:not(.active), a:focus {
-                color: #900000 !important;
-                font-weight: bold !important;
-                border: 1px solid #c0c0c0 !important;
-                background-color: #e1e1e1 !important;
-                outline: none !important;
-            }
-            .rcpro-nav a:not(.active) {
-                background-color: #f7f6f6 !important;
-                border: 1px solid #e1e1e1 !important;
-                outline: none !important;
-            }
-        </style>
-        <link rel='shortcut icon' href='" . $this->getUrl('images/favicon.ico') . "'/>
-        <link rel='icon' type='image/png' sizes='32x32' href='" . $this->getUrl('images/favicon-32x32.png') . "'>
-        <link rel='icon' type='image/png' sizes='16x16' href='" . $this->getUrl('images/favicon-16x16.png') . "'>
-        <div>
-            <img src='" . $this->getUrl("images/RCPro_Logo.svg") . "' width='500px'></img>
-            <br>
-            <nav style='margin-top:20px;'><ul class='nav nav-tabs rcpro-nav'>
-                <li class='nav-item'>
-                    <a class='nav-link " . ($page === "Home" ? "active" : "") . "' aria-current='page' href='" . $this->getUrl("src/home.php") . "'>
-                    <i class='fas fa-home'></i>
-                    Home</a>
-                </li>";
-        if ($role >= 1) {
-            $header .= "<li class='nav-item'>
-                            <a class='nav-link " . ($page === "Manage" ? "active" : "") . "' href='" . $this->getUrl("src/manage.php") . "'>
-                            <i class='fas fa-users-cog'></i>
-                            Manage Participants</a>
-                        </li>";
-        }
-        if ($role >= 2) {
-            $header .= "<li class='nav-item'>
-                            <a class='nav-link " . ($page === "Enroll" ? "active" : "") . "' href='" . $this->getUrl("src/enroll.php") . "'>
-                            <i class='fas fa-user-check'></i>
-                            Enroll</a>
-                        </li>
-                        <li class='nav-item'>
-                            <a class='nav-link " . ($page === "Register" ? "active" : "") . "' href='" . $this->getUrl("src/register.php") . "'>
-                            <i class='fas fa-id-card'></i>
-                            Register</a>
-                        </li>";
-        }
-        if ($role > 2) {
-            $header .= "<li class='nav-item'>
-                            <a class='nav-link " . ($page === "Users" ? "active" : "") . "' href='" . $this->getUrl("src/manage-users.php") . "'>
-                            <i class='fas fa-users'></i>
-                            Study Staff</a>
-                        </li>
-                        <li class='nav-item'>
-                            <a class='nav-link " . ($page === "Logs" ? "active" : "") . "' href='" . $this->getUrl("src/logs.php") . "'>
-                            <i class='fas fa-list'></i>
-                            Logs</a>
-                        </li>";
-        }
-        $header .= "</ul></nav>
-            </div>";
-        echo $header;
-    }
-
-    public function UiShowControlCenterHeader(string $page)
-    {
-        $header = "
-        <style>
-            .rcpro-nav a {
-                color: #900000 !important;
-                font-weight: bold !important;
-            }
-            .rcpro-nav a.active:hover {
-                color: #900000 !important;
-                font-weight: bold !important;
-                outline: none !important;
-            }
-            .rcpro-nav a:hover:not(.active), a:focus {
-                color: #900000 !important;
-                font-weight: bold !important;
-                border: 1px solid #c0c0c0 !important;
-                background-color: #e1e1e1 !important;
-                outline: none !important;
-            }
-            .rcpro-nav a:not(.active) {
-                background-color: #f7f6f6 !important;
-                border: 1px solid #e1e1e1 !important;
-                outline: none !important;
-            }
-        </style>
-        <link rel='shortcut icon' href='" . $this->getUrl('images/favicon.ico') . "'/>
-        <link rel='icon' type='image/png' sizes='32x32' href='" . $this->getUrl('images/favicon-32x32.png') . "'>
-        <link rel='icon' type='image/png' sizes='16x16' href='" . $this->getUrl('images/favicon-16x16.png') . "'>
-        <div>
-            <img src='" . $this->getUrl("images/RCPro_Logo.svg") . "' width='500px'></img>
-            <br>
-            <nav style='margin-top:20px;'><ul class='nav nav-tabs rcpro-nav'>
-                <li class='nav-item'>
-                    <a class='nav-link " . ($page === "Projects" ? "active" : "") . "' aria-current='page' href='" . $this->getUrl("src/cc_projects.php") . "'>
-                    <i class='fas fa-briefcase'></i>
-                    Projects</a>
-                </li>
-                <li class='nav-item'>
-                    <a class='nav-link " . ($page === "Participants" ? "active" : "") . "' href='" . $this->getUrl("src/cc_participants.php") . "'>
-                    <i class='fas fa-users-cog'></i>
-                    Participants</a>
-                </li>
-                <li class='nav-item'>
-                    <a class='nav-link " . ($page === "Staff" ? "active" : "") . "' href='" . $this->getUrl("src/cc_staff.php") . "'>
-                    <i class='fas fa-users'></i>
-                    Staff</a>
-                </li>
-                <li class='nav-item'>
-                    <a class='nav-link " . ($page === "Logs" ? "active" : "") . "' href='" . $this->getUrl("src/cc_logs.php") . "'>
-                    <i class='fas fa-list'></i>
-                    Logs</a>
-                </li>
-        ";
-
-        $header .= "</ul></nav>
-        </div><hr style='margin-top:0px;'>";
-        echo $header;
-    }
-
 
 
     /**
@@ -1805,347 +1373,3 @@ class REDCapPRO extends AbstractExternalModule
         return $message;
     }
 }
-
-/**
- * Authorization class
- */
-class Auth
-{
-
-    public static $APPTITLE;
-
-    function __construct($title = null)
-    {
-        self::$APPTITLE = $title;
-    }
-
-    public function init()
-    {
-        $session_id = $_COOKIE["survey"] ?? $_COOKIE["PHPSESSID"];
-        if (!empty($session_id)) {
-            session_id($session_id);
-        } else {
-            $this->createSession();
-        }
-        session_start();
-    }
-
-    public function createSession()
-    {
-        \Session::init();
-        $this->set_csrf_token();
-    }
-
-    public function set_csrf_token()
-    {
-        $_SESSION[self::$APPTITLE . "_token"] = bin2hex(random_bytes(24));
-    }
-
-    public function get_csrf_token()
-    {
-        return $_SESSION[self::$APPTITLE . "_token"];
-    }
-
-    public function validate_csrf_token(string $token)
-    {
-        return hash_equals($this->get_csrf_token(), $token);
-    }
-
-    // --- THESE DEAL WITH SESSION VALUES --- \\
-
-    // TESTS 
-    public function is_logged_in()
-    {
-        return isset($_SESSION[self::$APPTITLE . "_loggedin"]) && $_SESSION[self::$APPTITLE . "_loggedin"] === true;
-    }
-
-    public function is_survey_url_set()
-    {
-        return isset($_SESSION[self::$APPTITLE . "_survey_url"]);
-    }
-
-    public function is_survey_link_active()
-    {
-        return $_SESSION[self::$APPTITLE . "_survey_link_active"];
-    }
-
-    // GETS
-
-    public function get_survey_url()
-    {
-        return $_SESSION[self::$APPTITLE . "_survey_url"];
-    }
-
-    public function get_participant_id()
-    {
-        return $_SESSION[self::$APPTITLE . "_participant_id"];
-    }
-
-    public function get_username()
-    {
-        return $_SESSION[self::$APPTITLE . "_username"];
-    }
-
-    // SETS
-
-    public function deactivate_survey_link()
-    {
-        unset($_SESSION[self::$APPTITLE . "_survey_link_active"]);
-    }
-
-    public function set_survey_url($url)
-    {
-        $_SESSION[self::$APPTITLE . "_survey_url"] = $url;
-    }
-
-    public function set_survey_active_state($state)
-    {
-        $_SESSION[self::$APPTITLE . "_survey_link_active"] = $state;
-    }
-
-    public function set_login_values($participant)
-    {
-        $_SESSION["username"] = $participant["rcpro_username"];
-        $_SESSION[self::$APPTITLE . "_participant_id"] = $participant["log_id"];
-        $_SESSION[self::$APPTITLE . "_username"] = $participant["rcpro_username"];
-        $_SESSION[self::$APPTITLE . "_email"] = $participant["email"];
-        $_SESSION[self::$APPTITLE . "_fname"] = $participant["fname"];
-        $_SESSION[self::$APPTITLE . "_lname"] = $participant["lname"];
-        $_SESSION[self::$APPTITLE . "_loggedin"] = true;
-    }
-}
-
-
-class ProjectSettings
-{
-    public static $module;
-
-    function __construct($module)
-    {
-        self::$module = $module;
-    }
-
-    public function getTimeoutWarningMinutes()
-    {
-        $result = self::$module->getSystemSetting("warning-time");
-        if (!floatval($result)) {
-            // DEFAULT TO 1 MINUTE IF NOT SET
-            $result = 1;
-        }
-        return $result;
-    }
-
-    public function getTimeoutMinutes()
-    {
-        $result = self::$module->getSystemSetting("timeout-time");
-        if (!floatval($result)) {
-            // DEFAULT TO 5 MINUTES IF NOT SET
-            $result = 5;
-        }
-        return $result;
-    }
-
-    public function getPasswordLength()
-    {
-        $result = self::$module->getSystemSetting("password-length");
-        if (!intval($result)) {
-            // DEFAULT TO 8 CHARACTERS IF NOT SET
-            $result = 8;
-        }
-        return $result;
-    }
-
-    public function getLoginAttempts()
-    {
-        $result = self::$module->getSystemSetting("login-attempts");
-        if (!intval($result)) {
-            // DEFAULT TO 3 ATTEMPTS IF NOT SET
-            $result = 3;
-        }
-        return $result;
-    }
-
-    public function getLockoutDurationSeconds()
-    {
-        $result = self::$module->getSystemSetting("lockout-seconds");
-        if (!intval($result)) {
-            // DEFAULT TO 300 SECONDS IF NOT SET
-            $result = 300;
-        }
-        return $result;
-    }
-}
-
-class Instrument
-{
-    public static $module;
-    public static $instrument_name;
-    public $dd;
-    public $username;
-    public $email;
-    public $fname;
-    public $lname;
-
-    function __construct($module, $instrument_name)
-    {
-        self::$module = $module;
-        self::$instrument_name = $instrument_name;
-        $this->dd = $this->getDD();
-        $this->username = $this->getUsernameField();
-        if (isset($this->username)) {
-            $this->email = $this->getEmailField();
-            $this->fname = $this->getFirstNameField();
-            $this->lname = $this->getLastNameField();
-        }
-    }
-
-    function getDD()
-    {
-        $json = \REDCap::getDataDictionary("json", false, null, [self::$instrument_name], false);
-        return json_decode($json, true);
-    }
-
-    function getUsernameField()
-    {
-        foreach ($this->dd as $field) {
-            if (
-                strpos($field["field_annotation"], "@RCPRO-USERNAME") !== FALSE
-                && $field["field_type"] === "text"
-            ) {
-                return $field["field_name"];
-            }
-        }
-    }
-
-    function getEmailField()
-    {
-        foreach ($this->dd as $field) {
-            if (
-                strpos($field["field_annotation"], "@RCPRO-EMAIL") !== FALSE
-                && $field["field_type"] === "text"
-                && $field["text_validation_type_or_show_slider_number"] === "email"
-            ) {
-                return $field["field_name"];
-            }
-        }
-    }
-
-    function getFirstNameField()
-    {
-        foreach ($this->dd as $field) {
-            if (
-                strpos($field["field_annotation"], "@RCPRO-FNAME") !== FALSE
-                && $field["field_type"] === "text"
-            ) {
-                return $field["field_name"];
-            }
-        }
-    }
-
-    function getLastNameField()
-    {
-        foreach ($this->dd as $field) {
-            if (
-                strpos($field["field_annotation"], "@RCPRO-LNAME") !== FALSE
-                && $field["field_type"] === "text"
-            ) {
-                return $field["field_name"];
-            }
-        }
-    }
-
-    function update_form()
-    {
-        if (isset($this->username)) {
-            $rcpro_project_id = self::$module->getProjectIdFromPID(PROJECT_ID);
-            $participants = self::$module->getProjectParticipants($rcpro_project_id);
-            $options = "<option value=''>''</option>";
-            $participants_json = json_encode($participants);
-            foreach ($participants as $participant) {
-                $inst_username = \REDCap::escapeHtml($participant["rcpro_username"]);
-                $inst_email    = \REDCap::escapeHtml($participant["email"]);
-                $inst_fname    = \REDCap::escapeHtml($participant["fname"]);
-                $inst_lname    = \REDCap::escapeHtml($participant["lname"]);
-                $options      .= "<option value='$inst_username' >$inst_username - $inst_fname $inst_lname - $inst_email</option>";
-            }
-            $replacement =  "<select id='username_selector'>$options</select>";
-            self::$module->initializeJavascriptModuleObject();
-        ?>
-            <script>
-                (function($, window, document) {
-                    let module = <?= self::$module->getJavascriptModuleObjectName() ?>;
-                    let participants_json = '<?= $participants_json ?>';
-                    let participants_obj = JSON.parse(participants_json);
-                    let participants = Object.values(participants_obj);
-                    let empty_participant = {
-                        email: "",
-                        fname: "",
-                        lname: ""
-                    };
-
-                    let username_input = $("input[name='<?= $this->username ?>']");
-                    username_input.hide();
-                    let username_select = $("<?= $replacement ?>")[0];
-                    username_input.after(username_select);
-                    $('#username_selector').select2({
-                            placeholder: 'Select a participant',
-                            allowClear: true
-                        }).val(username_input.val()).trigger('change')
-                        .on("change", (evt) => {
-                            let val = evt.target.value;
-                            let participant = empty_participant;
-                            if (val !== "") {
-                                participant = participants.filter((p) => p.rcpro_username === val)[0];
-                            }
-                            username_input.val(participant.rcpro_username);
-                            let logParameters = {
-                                rcpro_username: participant.rcpro_username,
-                                redcap_user: "<?= USERID ?>"
-                            };
-
-                            // If there is an email field, update it
-                            <?php if (isset($this->email)) { ?>
-                                let email_input = $('input[name="<?= $this->email ?>"]');
-                                if (email_input) {
-                                    email_input.val(participant.email);
-                                }
-                            <?php } ?>
-
-                            // If there is a fname field, update it
-                            <?php if (isset($this->fname)) { ?>
-                                let fname_input = $('input[name="<?= $this->fname ?>"]');
-                                if (fname_input) {
-                                    fname_input.val(participant.fname);
-                                }
-                            <?php } ?>
-
-                            // If there is a lname field, update it
-                            <?php if (isset($this->lname)) { ?>
-                                let lname_input = $('input[name="<?= $this->lname ?>"]');
-                                if (lname_input) {
-                                    lname_input.val(participant.lname);
-                                }
-                            <?php } ?>
-
-                            // Log this.
-                            module.log("Populated REDCapPRO User Info On Form", logParameters);
-                        });
-
-                })(window.jQuery, window, document);
-            </script>
-<?php
-        }
-    }
-}
-
-
-class REDCapProException extends \Exception
-{
-    public $rcpro = NULL;
-    public function __construct($rcpro = NULL)
-    {
-        $this->rcpro = $rcpro;
-    }
-}
-
-?>

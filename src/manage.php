@@ -8,7 +8,7 @@ if ($role > 0) {
     <head>
     <meta charset='UTF-8'><title>" . $module::$APPTITLE . " - Manage</title>";
     require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-    $module->UiShowHeader("Manage");
+    $module::$UI->ShowHeader("Manage");
 
     $rcpro_project_id = $module->getProjectIdFromPID($project_id);
 

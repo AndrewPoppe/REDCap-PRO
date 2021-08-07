@@ -88,7 +88,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if ($module::$AUTH->is_survey_url_set()) {
             header("location: " . $module::$AUTH->get_survey_url());
         } else {
-            $module->UiShowParticipantHeader("Password Successfully Reset");
+            $module::$UI->ShowParticipantHeader("Password Successfully Reset");
             echo "<div style='text-align:center;'><p>You may now close this tab.</p></div>";
         }
         return;
@@ -98,7 +98,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 // set csrf token
 $module::$AUTH->set_csrf_token();
 
-$module->UiShowParticipantHeader("Reset Password");
+$module::$UI->ShowParticipantHeader("Reset Password");
 
 if ($verified_participant) {
 

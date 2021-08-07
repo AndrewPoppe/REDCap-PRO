@@ -9,7 +9,7 @@ $_SESSION = array();
 session_destroy();
 
 // This method starts the html doc
-$module->UiShowParticipantHeader("Logged Out");
+$module::$UI->ShowParticipantHeader("Logged Out");
 ?>
 <style>
     .swal2-timer-progress-bar {
@@ -35,4 +35,4 @@ $module->UiShowParticipantHeader("Logged Out");
     });
 </script>
 
-<?php $module->UiEndParticipantPage(); ?>
+<?php $module::$UI->EndParticipantPage(); ?>

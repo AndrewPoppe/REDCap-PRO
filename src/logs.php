@@ -151,7 +151,7 @@ if ($role < 3) {
 </head>
 <?php
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->UiShowHeader("Logs");
+$module::$UI->ShowHeader("Logs");
 
 $columns = [
     "timestamp",

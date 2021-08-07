@@ -10,7 +10,7 @@ echo "<!DOCTYPE html>
 <head>
 <meta charset='UTF-8'><title>" . $module::$APPTITLE . " - Register</title>";
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->UiShowHeader("Register");
+$module::$UI->ShowHeader("Register");
 
 // Track all errors
 $any_error = FALSE;

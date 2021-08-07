@@ -34,7 +34,7 @@ if (!SUPER_USER) {
     return;
 }
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
-$module->UiShowControlCenterHeader("Participants");
+$module::$UI->ShowControlCenterHeader("Participants");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
@@ -85,6 +85,9 @@ $participants = $module->getAllParticipants();
     .wrapper {
         display: inline-block;
         padding: 20px;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50vw !important;
     }
 
     .participants-form {

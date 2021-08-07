@@ -176,7 +176,7 @@ class Project
 <body>
     <?php
     require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
-    $module->UiShowControlCenterHeader("Projects");
+    $module::$UI->ShowControlCenterHeader("Projects");
     $redcap_project_ids = $module->getProjectsWithModuleEnabled();
     ?>
     <div class="projectsContainer wrapper">

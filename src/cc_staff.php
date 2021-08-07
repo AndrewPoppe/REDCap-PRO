@@ -58,7 +58,7 @@ if (!SUPER_USER) {
     return;
 }
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
-$module->UiShowControlCenterHeader("Staff");
+$module::$UI->ShowControlCenterHeader("Staff");
 
 // Get array of staff (users)
 $users = getAllUsers();

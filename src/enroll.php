@@ -11,7 +11,7 @@ echo "<!DOCTYPE html>
 <meta charset='UTF-8'>
 <title>" . $module::$APPTITLE . " - Enroll</title>";
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->UiShowHeader("Enroll");
+$module::$UI->ShowHeader("Enroll");
 
 
 ?>

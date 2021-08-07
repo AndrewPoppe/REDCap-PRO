@@ -1,7 +1,13 @@
 <?php
 
+use YaleREDCap\REDCapPRO\LoginHelper;
+
 // Initialize Authentication
 $module::$AUTH->init();
+
+// Login Helper
+require_once("classes/LoginHelper.php");
+$Login = new LoginHelper($module);
 
 // Check if the user is already logged in, if yes then redirect then to the survey
 if ($module::$AUTH->is_logged_in()) {
@@ -54,8 +60,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (empty($username_err) && empty($password_err)) {
 
             // Check that IP is not locked out
-            $ip = $module->getIPAddress();
-            $lockout_ts_ip = $module->checkIpLockedOut($ip);
+            $ip = $Login->getIPAddress();
+            $lockout_ts_ip = $Login->checkIpLockedOut($ip);
             if ($lockout_ts_ip !== FALSE) {
                 $lockout_duration_remaining = $lockout_ts_ip - time();
                 $login_err = "You have been temporarily locked out.<br>You have ${lockout_duration_remaining} seconds left.";
@@ -69,8 +75,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             } else if (!$module->usernameIsTaken($username)) {
 
                 // Username doesn't exist, display a generic error message
-                $module->incrementFailedIp($ip);
-                $attempts = $module->checkAttempts(NULL, $ip);
+                $Login->incrementFailedIp($ip);
+                $attempts = $Login->checkAttempts(NULL, $ip);
                 $remainingAttempts = $module::$SETTINGS->getLoginAttempts() - $attempts;
                 $module->log("Login Attempted - Username does not exist", [
                     "rcpro_ip"       => $ip,
@@ -87,10 +93,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             } else {
 
                 $participant = $module->getParticipant($username);
-                $stored_hash = $module->getHash($participant["log_id"]);
+                $stored_hash = $Login->getHash($participant["log_id"]);
 
                 // Check that this username is not locked out
-                $lockout_duration_remaining = $module->getUsernameLockoutDuration($participant["log_id"]);
+                $lockout_duration_remaining = $Login->getUsernameLockoutDuration($participant["log_id"]);
                 if ($lockout_duration_remaining !== FALSE && $lockout_duration_remaining !== NULL) {
                     // --> Username is locked out
                     $login_err = "You have been temporarily locked out.<br>You have ${lockout_duration_remaining} seconds left.";
@@ -131,8 +137,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     }
 
                     // Reset failed attempts and failed IP
-                    $module->resetFailedIp($ip);
-                    $module->resetFailedLogin($participant["log_id"]);
+                    $Login->resetFailedIp($ip);
+                    $Login->resetFailedLogin($participant["log_id"]);
 
                     // Store data in session variables
                     $module::$AUTH->set_login_values($participant);
@@ -160,9 +166,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         "rcpro_username"       => $username,
                         "rcpro_participant_id" => $participant["log_id"]
                     ]);
-                    $module->incrementFailedLogin($participant["log_id"]);
-                    $module->incrementFailedIp($ip);
-                    $attempts = $module->checkAttempts($participant["log_id"], $ip);
+                    $Login->incrementFailedLogin($participant["log_id"]);
+                    $Login->incrementFailedIp($ip);
+                    $attempts = $Login->checkAttempts($participant["log_id"], $ip);
                     $remainingAttempts = $module::$SETTINGS->getLoginAttempts() - $attempts;
                     if ($remainingAttempts <= 0) {
                         $login_err = "Invalid username or password.<br>You have been locked out for " . $module::$SETTINGS->getLockoutDurationSeconds() . " seconds.";
@@ -188,7 +194,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $module::$AUTH->set_csrf_token();
 
 // This method starts the html doc
-$module->UiShowParticipantHeader("Login");
+$module::$UI->ShowParticipantHeader("Login");
 ?>
 
 <div style="text-align: center;">

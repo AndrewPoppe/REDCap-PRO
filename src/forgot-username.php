@@ -3,7 +3,7 @@
 # Initialize authentication session on page
 $module::$AUTH->init();
 
-$module->UiShowParticipantHeader("Forgot Username?");
+$module::$UI->ShowParticipantHeader("Forgot Username?");
 
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {

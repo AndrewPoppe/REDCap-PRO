@@ -7,7 +7,7 @@ if ($role >= 3) {
     <head>
     <meta charset='UTF-8'><title>" . $module::$APPTITLE . " - Staff</title>";
     require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-    $module->UiShowHeader("Users");
+    $module::$UI->ShowHeader("Users");
 
     $proj_id = $module->getProjectIdFromPID($project_id);
 

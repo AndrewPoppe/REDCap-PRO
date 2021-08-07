@@ -25,9 +25,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // Validate token
     if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        $module->UiShowParticipantHeader('Error');
+        $module::$UI->ShowParticipantHeader('Error');
         echo "<div style='text-align: center;'>Oops! Something went wrong.<br>Do you have multiple tabs open?</div>";
-        $module->UiEndParticipantPage();
+        $module::$UI->EndParticipantPage();
         return;
     }
 
@@ -87,9 +87,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         // Store data in session variables
         $module::$AUTH->set_login_values($participant);
 
-        $module->UiShowParticipantHeader("Password Successfully Set");
+        $module::$UI->ShowParticipantHeader("Password Successfully Set");
         echo "<div style='text-align:center;'><p>You may now close this tab.</p></div>";
-        $module->UiEndParticipantPage();
+        $module::$UI->EndParticipantPage();
         return;
     }
 }
@@ -97,7 +97,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 // set csrf token
 $module::$AUTH->set_csrf_token();
 
-$module->UiShowParticipantHeader("Create Password");
+$module::$UI->ShowParticipantHeader("Create Password");
 
 if ($verified_user) {
 
