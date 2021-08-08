@@ -131,6 +131,21 @@ $module::$UI->ShowHeader("Enroll");
                             <input type="text" id="email" name="email" class="form-control-plaintext" disabled readonly>
                         </div>
                     </div>
+
+                    <?php if ($module::$DAG->getProjectDags()) {
+                        $userDags = $module::$DAG->getPossibleDags(USERID, PROJECT_ID) ?? $module::$DAG;
+                        $userDags = $userDags ?? $module
+                    ?>
+                        <div class="mb-3 row">
+                            <label for="dag" class="col-sm-3 col-form-label">Data Access Group:</label>
+                            <div class="col-sm-9">
+                                <select id="dag" name="dag" class="form-control">
+
+                                </select>
+                            </div>
+                        </div>
+                    <?php } ?>
+
                     <input type="text" id="id" name="id" class="form-control" readonly hidden>
                     <div>
                         <hr>
