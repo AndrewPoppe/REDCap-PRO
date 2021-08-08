@@ -73,25 +73,29 @@ class ProjectHelper
     /**
      * Creates link between participant and project 
      * 
-     * @param int $rcpro_participant_id
-     * @param int $rcpro_project_id
+     * @param int $rcpro_participant_id Participant ID
+     * @param int $rcpro_project_id REDCap Project ID
+     * @param int|null $dag Data Access Group for this participant in this 
+     * project
      * 
      * @return bool success or failure
      */
-    private function createLink(int $rcpro_participant_id, int $rcpro_project_id)
+    private function createLink(int $rcpro_participant_id, int $rcpro_project_id, ?int $dag)
     {
         try {
             self::$module->log("LINK", [
                 "rcpro_project_id"     => $rcpro_project_id,
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "active"               => 1,
-                "redcap_user"          => USERID
+                "redcap_user"          => USERID,
+                "project_dag"           => $dag
             ]);
             self::$module->log("Enrolled Participant", [
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "rcpro_username"       => self::$PARTICIPANT->getUserName($rcpro_participant_id),
                 "rcpro_project_id"     => $rcpro_project_id,
-                "redcap_user"          => USERID
+                "redcap_user"          => USERID,
+                "project_dag"           => $dag
             ]);
             return TRUE;
         } catch (\Exception $e) {
@@ -129,12 +133,13 @@ class ProjectHelper
     /**
      * Enrolls a participant in a project
      * 
-     * @param int $rcpro_participant_id
-     * @param int $pid
+     * @param int $rcpro_participant_id Participant ID
+     * @param int $pid REDCap project ID
+     * @param int|null $dag Data Access Group the participant should be in
      * 
      * @return int -1 if already enrolled, bool otherwise
      */
-    public function enrollParticipant(int $rcpro_participant_id, int $pid)
+    public function enrollParticipant(int $rcpro_participant_id, int $pid, ?int $dag)
     {
         // If project does not exist, create it.
         if (!$this->checkProject($pid)) {
@@ -150,18 +155,19 @@ class ProjectHelper
         // If there is already a link between this participant and project,
         // then activate it, otherwise create the link
         if ($this->linkAlreadyExists($rcpro_participant_id, $rcpro_project_id)) {
-            $result = $this->setLinkActiveStatus($rcpro_participant_id, $rcpro_project_id, 1);
+            $result = $this->setLinkActiveStatus($rcpro_participant_id, $rcpro_project_id, 1, $dag);
             if ($result) {
                 self::$module->log("Enrolled Participant", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => self::$PARTICIPANT->getUserName($rcpro_participant_id),
                     "rcpro_project_id"     => $rcpro_project_id,
-                    "redcap_user"          => USERID
+                    "redcap_user"          => USERID,
+                    "project_dag"          => $dag
                 ]);
             }
             return $result;
         } else {
-            return $this->createLink($rcpro_participant_id, $rcpro_project_id);
+            return $this->createLink($rcpro_participant_id, $rcpro_project_id, $dag);
         }
     }
 
@@ -226,6 +232,7 @@ class ProjectHelper
      * 
      * @param int $rcpro_participant_id
      * @param int $rcpro_project_id
+     * @param int|null $dag
      * 
      * @return bool
      */
@@ -265,15 +272,21 @@ class ProjectHelper
      * @param int $rcpro_participant_id
      * @param int $rcpro_project_id
      * @param int $active                   - 0 for inactive, 1 for active
+     * @param int|null $dag
      * 
      * @return
      */
-    private function setLinkActiveStatus(int $rcpro_participant_id, int $rcpro_project_id, int $active)
+    private function setLinkActiveStatus(int $rcpro_participant_id, int $rcpro_project_id, int $active, int $dag = NULL)
     {
         $link_id = $this->getLinkId($rcpro_participant_id, $rcpro_project_id);
-        $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
+        $SQL1 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
+        $SQL2 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'project_dag'";
         try {
-            return self::$module->query($SQL, [$active, $link_id]);
+            $result1 = self::$module->query($SQL1, [$active, $link_id]);
+            if ($result1 && isset($dag)) {
+                $result2 = self::$module->query($SQL2, [$dag, $link_id]);
+            }
+            return $result1;
         } catch (\Exception $e) {
             self::$module->logError("Error setting link activity", $e);
         }

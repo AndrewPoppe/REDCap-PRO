@@ -1,15 +1,10 @@
 <?php
 
-namespace YaleREDCap\REDCapPRO;
-
-require_once("classes/DAG.php");
-
-$DAG = new DAG($module);
-var_dump($DAG->getPossibleDags("bob", 26));
-
-
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
-if ($role > 0) {
+if ($role === 0) {
+
+    header("location:" . $module->getUrl("src/home.php"));
+} else {
 
     echo "<!DOCTYPE html>
     <html lang='en'>
@@ -18,7 +13,17 @@ if ($role > 0) {
     require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
     $module::$UI->ShowHeader("Manage");
 
+    // RCPRO Project ID 
     $rcpro_project_id = $module::$PROJECT->getProjectIdFromPID($project_id);
+
+    // DAGs
+    $rcpro_user_dag = $module::$DAG->getCurrentDag(USERID, $project_id);
+    $project_dags = $module::$DAG->getProjectDags();
+    $user_dags = $module::$DAG->getPossibleDags(USERID, PROJECT_ID);
+    $project_dags[NULL] = "Unassigned";
+
+    var_dump($project_dags);
+    var_dump($user_dags);
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         try {
@@ -75,6 +80,28 @@ if ($role > 0) {
                         }
                     }
                 }
+
+                // CHANGE THE PARTICIPANT'S DATA ACCESS GROUP
+            } else if (!empty($_POST["toSwitchDag"])) {
+                $function = "switch participant's Data Access Group";
+                $newDAG = $_POST["newDag"];
+                if ($role < 2) {
+                    $icon = "error";
+                    $title = "You do not have the required role to do that.";
+                } else if (!isset($newDAG) || !in_array($newDAG, array_keys($project_dags))) {
+                    $icon = "error";
+                    $title = "The provided DAG is invalid.";
+                } else {
+                    $newDAG = $newDAG === "" ? NULL : $newDAG;
+                    $result = $module::$DAG->updateDag($_POST["toSwitchDag"], $rcpro_project_id, $newDAG);
+                    if (!$result) {
+                        $icon = "error";
+                        $title = "Trouble switching participant's Data Access Group.";
+                    } else {
+                        $icon = "success";
+                        $title = "Successfully switched participant's Data Access Group.";
+                    }
+                }
             }
         } catch (\Exception $e) {
             $icon = "error";
@@ -84,7 +111,9 @@ if ($role > 0) {
     }
 
     // Get list of participants
-    $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_id);
+    $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_id, $rcpro_user_dag);
+
+
 
 ?>
     <style>
@@ -173,6 +202,7 @@ if ($role > 0) {
                                         <th id="rcpro_lname" class="dt-center">Last Name</th>
                                         <th id="rcpro_email">Email</th>
                                     <?php } ?>
+                                    <th id="rcpro_dag" class="dt-center">Data Access Group</th>
                                     <th id="rcpro_resetpw" class="dt-center">Reset Password</th>
                                     <?php if ($role > 2) { ?>
                                         <th id="rcpro_changeemail" class="dt-center">Change Email Address</th>
@@ -188,6 +218,10 @@ if ($role > 0) {
                                     $fname_clean    = \REDCap::escapeHtml($participant["fname"]);
                                     $lname_clean    = \REDCap::escapeHtml($participant["lname"]);
                                     $email_clean    = \REDCap::escapeHtml($participant["email"]);
+                                    $link_id        = $module::$PROJECT->getLinkId($participant["log_id"], $rcpro_project_id);
+                                    $dag_id         = $module::$DAG->getParticipantDag($link_id);
+                                    $dag_name       = \REDCap::getGroupNames(false, $dag_id);
+                                    $dag_name_clean = count($dag_name) === 1 ? \REDCap::escapeHtml($dag_name) : "Unassigned";
                                 ?>
                                     <tr>
                                         <td><?= $username_clean ?></td>
@@ -195,6 +229,41 @@ if ($role > 0) {
                                             <td class="dt-center"><?= $fname_clean ?></td>
                                             <td class="dt-center"><?= $lname_clean ?></td>
                                             <td><?= $email_clean ?></td>
+                                            <td class="dt-center">
+                                                <select class="dag_select" name="dag_select_<?= $username_clean ?>" id="dag_select_<?= $username_clean ?>" orig_value="<?= $dag_id ?>" form="manage-form" onchange='(function(){
+                                                    let el = $("#dag_select_<?= $username_clean ?>");
+                                                    let newDAG = el.val();
+                                                    let origDAG = el.attr("orig_value");
+                                                    let newDAGName = $("#dag_select_<?= $username_clean ?> option:selected").text();
+                                                    let oldDAGName = "<?= $dag_name_clean ?>";
+                                                    if (newDAG !== origDAG) {
+                                                        Swal.fire({
+                                                            title: "Switch Data Access Group for <?= $fname_clean . " " . $lname_clean ?>?",
+                                                            html: `From ${oldDAGName} to ${newDAGName}`,
+                                                            icon: "warning",
+                                                            iconColor: "#900000",
+                                                            confirmButtonText: "Switch DAG",
+                                                            allowEnterKey: false,
+                                                            showCancelButton: true,
+                                                            confirmButtonColor: "#900000"
+                                                        }).then((resp) => {
+                                                            if (resp.isConfirmed) {
+                                                                $("#toSwitchDag").val("<?= $participant["log_id"] ?>");
+                                                                $("#newDag").val(newDAG); 
+                                                                $("#manage-form").submit();
+                                                            } else {
+                                                                el.val(origDAG);
+                                                            }
+                                                        });
+                                                    }
+                                                    })();'>
+                                                    <?php foreach ($user_dags as $this_dag_id) { ?>
+                                                        <option value="<?= $this_dag_id ?>" <?= $this_dag_id == $dag_id ? "selected" : "" ?>><?= $project_dags[$this_dag_id] ?></option>
+                                                    <?php } ?>
+                                                </select>
+                                            </td>
+                                        <?php } else { ?>
+                                            <td class="dt-center"><?= $dag_name_clean ?></td>
                                         <?php } ?>
                                         <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
                                         $("#toReset").val("<?= $participant["log_id"] ?>");
@@ -253,6 +322,8 @@ if ($role > 0) {
                     <input type="hidden" id="toChangeEmail" name="toChangeEmail">
                     <input type="hidden" id="newEmail" name="newEmail">
                     <input type="hidden" id="toDisenroll" name="toDisenroll">
+                    <input type="hidden" id="toSwitchDag" name="toSwitchDag">
+                    <input type="hidden" id="newDag" name="newDag">
                 <?php } ?>
             </form>
         </div>

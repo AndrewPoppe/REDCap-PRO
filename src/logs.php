@@ -156,6 +156,7 @@ $module::$UI->ShowHeader("Logs");
 $columns = [
     "timestamp",
     "message",
+    "rcpro_username",
     "ui_id",
     "ip",
     "project_id",
@@ -163,7 +164,7 @@ $columns = [
     "fname",
     "lname",
     "email",
-    "rcpro_username",
+    "project_dag",
     "event",
     "instrument",
     "repeat_instance",

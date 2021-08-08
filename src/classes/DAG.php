@@ -11,9 +11,6 @@ class DAG
         self::$module = $module;
     }
 
-
-
-    // TODO: THINK MORE ABOUT HOW THIS SHOULD WORK. MAYBE IF THEY ARE IN A DAG WE SHOULD ONLY SHOW THEM THAT DAG AND REQUIRE THAT THEY SWITCH THEMSELVES TO ASSIGN TO/SEE OTHER DAGS 
     /**
      * Get DAGs the provided user has the ability to switch to or NULL if none
      * 
@@ -41,9 +38,9 @@ class DAG
         // If user is admin, all dags are available to them
         $user = self::$module->getUser($redcap_username);
         if ($user->isSuperUser()) {
-            return $allDags;
+            $result = [NULL];
+            return array_merge($result, $allDags);
         }
-
 
         try {
 
@@ -79,7 +76,8 @@ class DAG
      * 
      * @param string $redcap_username Username of REDCap User (staff)
      * @param int $redcap_pid REDCap's PID for this project
-     * @return int|NULL DAG ID currently selected for this user 
+     * @return int|NULL DAG ID currently selected for this user. Returns -1 if 
+     * the user is not in a DAG. 
      */
     public function getCurrentDag(string $redcap_username, int $redcap_pid)
     {
@@ -89,7 +87,7 @@ class DAG
                 AND username = ?";
         try {
             $result = self::$module->query($SQL, [$redcap_pid, $redcap_username]);
-            $dag = NULL;
+            $dag = -1;
             while ($row = $result->fetch_assoc()) {
                 $dag = $row["group_id"];
             }
@@ -109,8 +107,55 @@ class DAG
      * array keys. Returns FALSE if no data access groups exist for the current 
      * project. 
      */
-    public function getProjectDags($unique = false)
+    public function getProjectDags()
     {
-        return \REDCap::getGroupNames($unique);
+        return \REDCap::getGroupNames();
+    }
+
+    /**
+     * Get the DAG for a participant given a rcpro link
+     * 
+     * @param int $rcpro_link_id 
+     * @return mixed 
+     */
+    public function getParticipantDag(int $rcpro_link_id)
+    {
+
+        $SQL = "SELECT project_dag WHERE log_id = ?";
+        try {
+            $result = self::$module->queryLogs($SQL, [$rcpro_link_id]);
+            if ($row = $result->fetch_assoc()) {
+                return $row["project_dag"];
+            }
+        } catch (\Exception $e) {
+            self::$module->logError("Error getting participant DAG", $e);
+        }
+    }
+
+    /**
+     * Switch a participant's DAG in the given project
+     * 
+     * @param int $rcpro_participant_id 
+     * @param int $rcpro_project_id 
+     * @param int $dag_id 
+     * @return mixed 
+     */
+    public function updateDag(int $rcpro_participant_id, int $rcpro_project_id, ?int $dag_id)
+    {
+        $link_id = self::$module::$PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
+        $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'project_dag'";
+        try {
+            $result = self::$module->query($SQL, [$dag_id, $link_id]);
+            if ($result) {
+                self::$module->log("Participant DAG Switched", [
+                    "rcpro_participant_id" => $rcpro_participant_id,
+                    "rcpro_project_id" => $rcpro_project_id,
+                    "dag_id" => $dag_id
+                ]);
+            }
+            return $result;
+        } catch (\Exception $e) {
+            self::$module->logError("Error updating participant's DAG", $e);
+        }
     }
 }

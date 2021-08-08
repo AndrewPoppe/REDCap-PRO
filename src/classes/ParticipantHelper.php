@@ -343,14 +343,20 @@ class ParticipantHelper
      * get array of active enrolled participants given a rcpro project id
      * 
      * @param string $rcpro_project_id Project ID (not REDCap PID!)
+     * @param int|NULL $dag Data Access Group to filter search by
      * 
      * @return array|NULL participants enrolled in given study
      */
-    public function getProjectParticipants(string $rcpro_project_id)
+    public function getProjectParticipants(string $rcpro_project_id, ?int $dag = NULL)
     {
         $SQL = "SELECT rcpro_participant_id WHERE message = 'LINK' AND rcpro_project_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $PARAMS = [$rcpro_project_id];
+        if (isset($dag)) {
+            $SQL .= " AND project_dag IS NOT NULL AND project_dag = ?";
+            array_push($PARAMS, strval($dag));
+        }
         try {
-            $result = self::$module->queryLogs($SQL, [$rcpro_project_id]);
+            $result = self::$module->queryLogs($SQL, $PARAMS);
             $participants  = array();
 
             while ($row = $result->fetch_assoc()) {

@@ -133,15 +133,13 @@ $module::$UI->ShowHeader("Enroll");
                     </div>
 
                     <?php if ($module::$DAG->getProjectDags()) {
-                        $userDags = $module::$DAG->getPossibleDags(USERID, PROJECT_ID) ?? $module::$DAG;
-                        $userDags = $userDags ?? $module
+                        $userDag = $module::$DAG->getCurrentDag(USERID, PROJECT_ID);
+                        $dagName = isset($userDag) ? \REDCap::getGroupNames(false, $userDag) : "No Assignment";
                     ?>
                         <div class="mb-3 row">
                             <label for="dag" class="col-sm-3 col-form-label">Data Access Group:</label>
                             <div class="col-sm-9">
-                                <select id="dag" name="dag" class="form-control">
-
-                                </select>
+                                <input type="text" id="dag" name="dag" class="form-control-plaintext" disabled readonly value="<?= $dagName ?>">
                             </div>
                         </div>
                     <?php } ?>
@@ -158,9 +156,11 @@ $module::$UI->ShowHeader("Enroll");
 
         <?php
         if (isset($_POST["id"]) && isset($project_id)) {
+
             $rcpro_participant_id = intval($_POST["id"]);
+            $redcap_dag = $module::$DAG->getCurrentDag(USERID, PROJECT_ID);
             $pid = intval($project_id);
-            $result = $module::$PROJECT->enrollParticipant($rcpro_participant_id, $pid);
+            $result = $module::$PROJECT->enrollParticipant($rcpro_participant_id, $pid, $redcap_dag);
 
             if ($result === -1) {
                 echo "<script>Swal.fire({'title':'This user is already enrolled in this project', 'icon':'info'});</script>";
