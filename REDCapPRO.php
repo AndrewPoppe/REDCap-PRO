@@ -32,7 +32,7 @@ class REDCapPRO extends AbstractExternalModule
         self::$SETTINGS = new ProjectSettings($this);
         self::$UI = new UI($this);
         self::$PARTICIPANT = new ParticipantHelper($this);
-        self::$PROJECT = new ProjectHelper($this);
+        self::$PROJECT = new ProjectHelper($this, self::$PARTICIPANT);
     }
 
     function redcap_every_page_top($project_id)

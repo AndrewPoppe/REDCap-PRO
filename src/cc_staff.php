@@ -1,5 +1,6 @@
 <?php
 
+//TODO: Move these to Main Class
 function getAllUsers()
 {
     global $module;
@@ -53,6 +54,7 @@ function createProjectsCell(array $projects)
 
 ?>
 <!DOCTYPE html>
+<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro.css") ?>">
 <?php
 if (!SUPER_USER) {
     return;
@@ -63,114 +65,14 @@ $module::$UI->ShowControlCenterHeader("Staff");
 // Get array of staff (users)
 $users = getAllUsers();
 ?>
-<style>
-    .wrapper {
-        display: inline-block;
-        padding: 20px;
-    }
-
-    div.dataTableParentHidden {
-        overflow: hidden;
-        height: 0px;
-        display: none;
-    }
-
-    #users {
-        border-radius: 5px;
-        border: 1px solid #cccccc;
-        padding: 20px;
-        box-shadow: 0px 0px 5px #eeeeee;
-        min-width: 50vw !important;
-    }
-
-    #RCPRO_USERS {
-        width: 100% !important;
-    }
-
-    #RCPRO_USERS tr.even {
-        background-color: white !important;
-    }
-
-    #RCPRO_USERS tr.odd {
-        background-color: white !important;
-    }
-
-    table.dataTable tbody td {
-        vertical-align: middle;
-    }
-
-    .dt-center {
-        text-align: center;
-    }
-
-    button:hover {
-        outline: none !important;
-    }
-
-    .rcpro_project_link {
-        color: #000090 !important;
-        font-weight: bold !important;
-    }
-
-    .rcpro_project_link:hover {
-        color: #900000 !important;
-        font-weight: bold !important;
-        cursor: pointer !important;
-    }
-
-    .rcpro_project_link_inactive {
-        color: #101010 !important;
-        text-decoration: line-through !important;
-    }
-
-    .rcpro_project_link_inactive:hover {
-        color: #000000 !important;
-        cursor: pointer !important;
-        text-decoration: line-through !important;
-    }
-
-    .rcpro_user_link {
-        color: #000090 !important;
-        font-weight: bold !important;
-    }
-
-    .rcpro_user_link:hover {
-        color: #900000 !important;
-        font-weight: bold !important;
-        cursor: pointer !important;
-        background-color: #ddd !important;
-    }
-
-    .loader {
-        border: 16px solid #ddd;
-        /* Light grey */
-        border-top: 16px solid #900000;
-        /* Red */
-        border-radius: 50%;
-        width: 120px;
-        height: 120px;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% {
-            transform: rotate(0deg);
-        }
-
-        100% {
-            transform: rotate(360deg);
-        }
-    }
-</style>
-
 <div class="usersContainer wrapper">
     <h2>Staff Members</h2>
     <p>All users across studies</p>
     <div id="loading-container" class="loader-container">
         <div id="loading" class="loader"></div>
     </div>
-    <div id="users" class="dataTableParentHidden">
-        <table class="table" id="RCPRO_USERS">
+    <div id="users" class="dataTableParentHidden outer_container">
+        <table class="table" id="RCPRO_TABLE">
             <caption>REDCapPRO Staff</caption>
             <thead>
                 <tr>
@@ -198,7 +100,7 @@ $users = getAllUsers();
 <script>
     (function($, window, document) {
         $(document).ready(function() {
-            let usersTable = $('#RCPRO_USERS').DataTable({
+            let usersTable = $('#RCPRO_TABLE').DataTable({
                 dom: 'lBfrtip',
                 stateSave: true,
                 stateSaveCallback: function(settings, data) {

@@ -2,14 +2,27 @@
 
 namespace YaleREDCap\REDCapPRO;
 
+require_once("src/classes/ParticipantHelper.php");
+
+/**
+ * Holds methods related to REDCapPRO Project
+ * 
+ * @package YaleREDCap\REDCapPRO
+ */
 class ProjectHelper
 {
     public static $module;
     public static $PARTICIPANT;
-    function __construct($module)
+    /**
+     * Constructor
+     * 
+     * @param REDCapPRO $module 
+     * @param ParticipantHelper $PARTICIPANT passed so as not to create infinite loop
+     */
+    function __construct(REDCapPRO $module, ParticipantHelper $PARTICIPANT = NULL)
     {
         self::$module = $module;
-        self::$PARTICIPANT = $module::$PARTICIPANT;
+        self::$PARTICIPANT = isset($PARTICIPANT) ? $PARTICIPANT : new ParticipantHelper($module, $this);
     }
 
     /**

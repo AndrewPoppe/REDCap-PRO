@@ -89,88 +89,7 @@ class Project
 <head>
     <meta charset='UTF-8'>
     <title>REDCapPRO Projects</title>
-    <style>
-        .wrapper {
-            display: inline-block;
-            padding: 20px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        div.dataTableParentHidden {
-            overflow: hidden;
-            height: 0px;
-            display: none;
-        }
-
-        #projects {
-            border-radius: 5px;
-            border: 1px solid #cccccc;
-            padding: 20px;
-            box-shadow: 0px 0px 5px #eeeeee;
-            min-width: 50vw !important;
-        }
-
-        #RCPRO_Projects tr.even {
-            background-color: white !important;
-        }
-
-        #RCPRO_Projects tr.odd {
-            background-color: white !important;
-        }
-
-        table.dataTable tbody td {
-            vertical-align: middle;
-        }
-
-        .dt-center {
-            text-align: center;
-        }
-
-        button:hover {
-            outline: none !important;
-        }
-
-        .rcpro_link {
-            color: #000090 !important;
-            font-weight: bold !important;
-        }
-
-        .rcpro_link:hover {
-            color: #900000 !important;
-            font-weight: bold !important;
-            cursor: pointer !important;
-        }
-
-        .loader-container {
-            width: 90%;
-            display: flex;
-            justify-content: center;
-            height: 33vh;
-            align-items: center;
-        }
-
-        .loader {
-            border: 16px solid #ddd;
-            /* Light grey */
-            border-top: 16px solid #900000;
-            /* Red */
-            border-radius: 50%;
-            width: 120px;
-            height: 120px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro.css") ?>">
 </head>
 
 <body>
@@ -185,8 +104,8 @@ class Project
         <div id="loading-container" class="loader-container">
             <div id="loading" class="loader"></div>
         </div>
-        <div id="projects" class="dataTableParentHidden">
-            <table class="table" id="RCPRO_Projects" style="width:100%;">
+        <div id="projects" class="dataTableParentHidden outer_container">
+            <table class="table" id="RCPRO_TABLE" style="width:100%;">
                 <caption>REDCapPRO Projects</caption>
                 <thead>
                     <th class='dt-center'>Project ID</th>
@@ -200,14 +119,14 @@ class Project
                 <tbody>
                     <?php
                     foreach ($redcap_project_ids as $id) {
-                        echo "<tr>";
+                        echo "<tr class='hover'>";
                         $thisProject = new Project($module, $id);
-                        echo "<td class='dt-center'><a class='rcpro_link' href='" . $module->getUrl("src/home.php?pid=$id") . "'>" . $thisProject::$rcpro_project_id . "</a></td>";
-                        echo "<td class='dt-center'><a class='rcpro_link' href='" . $module->getUrl("src/home.php?pid=$id") . "'>$id</a></td>";
+                        echo "<td class='dt-center'><a class='rcpro_project_link' href='" . $module->getUrl("src/home.php?pid=$id") . "'>" . $thisProject::$rcpro_project_id . "</a></td>";
+                        echo "<td class='dt-center'><a class='rcpro_project_link' href='" . $module->getUrl("src/home.php?pid=$id") . "'>$id</a></td>";
                         echo "<td>" . $thisProject::$info["app_title"] . "</td>";
                         echo "<td class='dt-center'>" . $thisProject->getStatus() . "</td>";
-                        echo "<td class='dt-center'><a class='rcpro_link' href='" . $module->getUrl("src/manage.php?pid=$id") . "'>" . $thisProject->getParticipantCount() . "</a></td>";
-                        echo "<td class='dt-center'><a class='rcpro_link' href='" . $module->getUrl("src/manage-users.php?pid=$id") . "'>" . count($thisProject::$staff["allStaff"]) . "</a></td>";
+                        echo "<td class='dt-center'><a class='rcpro_participant_link' href='" . $module->getUrl("src/manage.php?pid=$id") . "'>" . $thisProject->getParticipantCount() . "</a></td>";
+                        echo "<td class='dt-center'><a class='rcpro_user_link' href='" . $module->getUrl("src/manage-users.php?pid=$id") . "'>" . count($thisProject::$staff["allStaff"]) . "</a></td>";
                         echo "<td class='dt-center'>" . $thisProject->getRecordCount() . "</td>";
                         echo "</tr>";
                     }
@@ -219,7 +138,7 @@ class Project
     <script>
         (function($, window, document) {
             $(document).ready(function() {
-                $('#RCPRO_Projects').DataTable({
+                $('#RCPRO_TABLE').DataTable({
                     dom: 'lBfrtip',
                     stateSave: true,
                     stateSaveCallback: function(settings, data) {
@@ -235,7 +154,7 @@ class Project
 
                 $('#projects').removeClass('dataTableParentHidden');
                 $('#loading-container').hide();
-                $('#RCPRO_Projects').DataTable().columns.adjust().draw();
+                $('#RCPRO_TABLE').DataTable().columns.adjust().draw();
 
             });
         }(window.jQuery, window, document));

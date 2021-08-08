@@ -81,77 +81,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
 
 ?>
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
-<style>
-    .wrapper {
-        display: inline-block;
-        padding: 20px;
-        margin-left: auto;
-        margin-right: auto;
-        width: 50vw !important;
-    }
-
-    .participants-form {
-        border-radius: 5px;
-        border: 1px solid #cccccc;
-        padding: 20px;
-        box-shadow: 0px 0px 5px #eeeeee;
-        min-width: 50vw !important;
-    }
-
-    #RCPRO_Participants tr.even {
-        background-color: white !important;
-    }
-
-    #RCPRO_Participants tr.odd {
-        background-color: white !important;
-    }
-
-    table.dataTable tbody td {
-        vertical-align: middle;
-    }
-
-    .dt-center {
-        text-align: center;
-    }
-
-    button:hover {
-        outline: none !important;
-    }
-
-    .rcpro_project_link {
-        color: #000090 !important;
-        font-weight: bold !important;
-    }
-
-    .rcpro_project_link:hover {
-        color: #900000 !important;
-        font-weight: bold !important;
-        cursor: pointer !important;
-    }
-
-    .rcpro_project_link_inactive {
-        color: #101010 !important;
-        text-decoration: line-through !important;
-    }
-
-    .rcpro_project_link_inactive:hover {
-        color: #000000 !important;
-        cursor: pointer !important;
-        text-decoration: line-through !important;
-    }
-
-    .rcpro_participant_link {
-        color: #000090 !important;
-        font-weight: bold !important;
-    }
-
-    .rcpro_participant_link:hover {
-        color: #900000 !important;
-        font-weight: bold !important;
-        cursor: pointer !important;
-        background-color: #ddd !important;
-    }
-</style>
+<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro.css") ?>">
 
 <?php if ($_SERVER["REQUEST_METHOD"] == "POST") { ?>
     <script>
@@ -166,14 +96,17 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
 <div class="participantsContainer wrapper">
     <h2>Manage Participants</h2>
     <p>All participants across studies</p>
-    <form class="participants-form" id="participants-form" action="<?= $module->getUrl("src/cc_participants.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
+    <div id="loading-container" class="loader-container">
+        <div id="loading" class="loader"></div>
+    </div>
+    <form class="dataTableParentHidden participants-form outer_container" id="participants-form" style="min-width:50vw !important;" action="<?= $module->getUrl("src/cc_participants.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
         <?php if (count($participants) === 0 || empty($participants)) { ?>
             <div>
                 <p>No participants have been enrolled in this study</p>
             </div>
         <?php } else { ?>
             <div class="form-group">
-                <table class="table" id="RCPRO_Participants">
+                <table class="table" id="RCPRO_TABLE">
                     <caption>REDCapPRO Participants</caption>
                     <thead>
                         <tr>
@@ -264,7 +197,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
 <script>
     (function($, window, document) {
         $(document).ready(function() {
-            let participantsTable = $('#RCPRO_Participants').DataTable({
+            let participantsTable = $('#RCPRO_TABLE').DataTable({
                 dom: 'lBfrtip',
                 stateSave: true,
                 stateSaveCallback: function(settings, data) {
@@ -277,6 +210,9 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                 scrollCollapse: true,
                 pageLength: 100
             });
+            $('#participants-form').removeClass('dataTableParentHidden');
+            $('#loading-container').hide();
+            participantsTable.columns.adjust().draw();
         });
     }(window.jQuery, window, document));
 </script>

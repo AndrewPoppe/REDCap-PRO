@@ -111,6 +111,24 @@ if ($role > 0) {
         button:hover {
             outline: none !important;
         }
+
+        .btn-rcpro {
+            background-color: #900000;
+            border-color: #900000;
+            color: white;
+        }
+
+        .btn-rcpro:active,
+        .btn-rcpro:hover {
+            background-color: #700000;
+            border-color: #700000;
+            color: white;
+        }
+
+        .btn-rcpro:focus {
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem #90000063;
+        }
     </style>
     <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
     </head>
@@ -198,7 +216,7 @@ if ($role > 0) {
                                             </td>
                                         <?php } ?>
                                         <?php if ($role > 1) { ?>
-                                            <td class="dt-center"><button type="button" class="btn btn-danger btn-sm" onclick='(function(){
+                                            <td class="dt-center"><button type="button" class="btn btn-rcpro btn-sm" onclick='(function(){
                                             
                                             Swal.fire({
                                                 icon: "warning",

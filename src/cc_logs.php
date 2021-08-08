@@ -16,156 +16,7 @@ $module::$UI->ShowControlCenterHeader("Logs");
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/cr-1.5.4/date-1.1.0/sb-1.1.0/sp-1.3.0/sl-1.3.3/datatables.min.css" />
 <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/cr-1.5.4/date-1.1.0/sb-1.1.0/sp-1.3.0/sl-1.3.3/datatables.min.js" defer></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" defer></script>
-<style>
-    .wrapper {
-        display: inline-block;
-        padding: 20px;
-        margin-left: auto;
-        margin-right: auto;
-        width: 50vw !important;
-    }
-
-    #RCPRO_Logs tr.even {
-        background-color: white !important;
-    }
-
-    #RCPRO_Logs tr.odd {
-        background-color: #f9f9f9 !important;
-    }
-
-    #RCPRO_Logs tbody tr:hover {
-        background-color: #ddd !important;
-        cursor: pointer;
-    }
-
-    table.dataTable tbody td {
-        vertical-align: middle;
-    }
-
-    .dt-center {
-        text-align: center;
-    }
-
-    button:hover {
-        outline: none !important;
-    }
-
-    table {
-        border-collapse: collapse;
-    }
-
-    table.dataTable tbody tr.even {
-        background-color: #f2f2f2;
-    }
-
-    button.dt-button {
-        padding: .1em .2em;
-    }
-
-    table.dataTable tr.dtrg-group.dtrg-level-0 td {
-        background-color: #00356b;
-        color: #f9f9f9;
-    }
-
-    table.dataTable tr.dtrg-group.dtrg-level-1 td {
-        background-color: #ccc;
-        font-weight: bold;
-    }
-
-    div.dt-buttons {
-        margin-left: 10px;
-    }
-
-    div.dtsp-panesContainer {
-        width: auto;
-    }
-
-    div.dtsp-panesContainer tr {
-        background-color: #fff !important;
-    }
-
-    div.dtsp-panesContainer tr.selected {
-        background-color: #900000 !important;
-        color: #f9f9f9;
-    }
-
-    div.dtsp-panesContainer tr:hover {
-        background-color: #aaa !important;
-        cursor: pointer;
-    }
-
-    div.dtsp-panesContainer tr.selected:hover {
-        background-color: #ffbfbf !important;
-        color: black;
-        cursor: pointer;
-    }
-
-    div.dataTableParentHidden {
-        overflow: hidden;
-        height: 0px;
-        width: 100%;
-        display: none;
-    }
-
-    #logs {
-        border-radius: 5px;
-        border: 1px solid #cccccc;
-        padding: 20px;
-        box-shadow: 0px 0px 5px #eeeeee;
-    }
-
-    div.ui-draggable {
-        cursor: move;
-        cursor: grab;
-        cursor: -moz-grab;
-        cursor: -webkit-grab;
-    }
-
-    div.ui-draggable-dragging {
-        cursor: grabbing;
-        cursor: -moz-grabbing;
-        cursor: -webkit-grabbing;
-    }
-
-    div.dtsb-searchBuilder {
-        cursor: inherit;
-    }
-
-    div.dtsb-searchBuilder select {
-        cursor: pointer;
-    }
-
-    .loader-container {
-        width: 90%;
-        display: flex;
-        justify-content: center;
-        height: 33vh;
-        align-items: center;
-    }
-
-    .loader {
-        border: 16px solid #ddd;
-        /* Light grey */
-        border-top: 16px solid #900000;
-        /* Red */
-        border-radius: 50%;
-        width: 120px;
-        height: 120px;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% {
-            transform: rotate(0deg);
-        }
-
-        100% {
-            transform: rotate(360deg);
-        }
-    }
-</style>
-
-
+<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro.css") ?>">
 <?php
 
 $columns = [
@@ -217,8 +68,8 @@ $tableData = $module->queryLogs("SELECT " . implode(', ', $columns) . " AND (pro
         <div id="loading-container" class="loader-container">
             <div id="loading" class="loader"></div>
         </div>
-        <div id="logs" class="dataTableParentHidden">
-            <table class="table compact hover" id="RCPRO_Logs" style="width:100%;">
+        <div id="logs" class="dataTableParentHidden outer_container">
+            <table class="table compact hover" id="RCPRO_TABLE" style="width:100%;">
                 <caption>REDCapPRO Logs</caption>
                 <thead>
                     <tr>
@@ -242,7 +93,7 @@ $tableData = $module->queryLogs("SELECT " . implode(', ', $columns) . " AND (pro
                             }
                         }
                         $allData .= "</ul></div>";
-                        echo "<tr onclick='(function() {Swal.fire({confirmButtonColor:\"#900000\", allowEnterKey: false, html:\"" . $allData . "\"})})()'>";
+                        echo "<tr class='hover pointer' onclick='(function() {Swal.fire({confirmButtonColor:\"#900000\", allowEnterKey: false, html:\"" . $allData . "\"})})()'>";
                         echo $tds;
                         echo "</tr>";
                     }
@@ -254,7 +105,7 @@ $tableData = $module->queryLogs("SELECT " . implode(', ', $columns) . " AND (pro
     <script>
         (function($, window, document) {
             $(document).ready(function() {
-                $('#RCPRO_Logs').DataTable({
+                $('#RCPRO_TABLE').DataTable({
                     //pageLength: 1000,
                     dom: 'lBfrtip',
                     stateSave: true,
@@ -304,7 +155,7 @@ $tableData = $module->queryLogs("SELECT " . implode(', ', $columns) . " AND (pro
                 $('#logs').removeClass('dataTableParentHidden');
                 $('#loading-container').hide();
 
-                $('#RCPRO_Logs').DataTable().on('buttons-action', function(e, buttonApi, dataTable, node, config) {
+                $('#RCPRO_TABLE').DataTable().on('buttons-action', function(e, buttonApi, dataTable, node, config) {
                     const text = buttonApi.text();
                     if (text.search(/Panes|Builder/)) {
                         $('.dt-button-collection').draggable();
