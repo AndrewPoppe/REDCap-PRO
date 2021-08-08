@@ -1,5 +1,13 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
+require_once("classes/DAG.php");
+
+$DAG = new DAG($module);
+var_dump($DAG->getPossibleDags("bob", 26));
+
+
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role > 0) {
 

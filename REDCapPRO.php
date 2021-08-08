@@ -11,6 +11,7 @@ require_once("src/classes/REDCapProException.php");
 require_once("src/classes/UI.php");
 require_once("src/classes/ParticipantHelper.php");
 require_once("src/classes/ProjectHelper.php");
+require_once("src/classes/DAG.php");
 
 /**
  * Main EM Class
@@ -24,6 +25,7 @@ class REDCapPRO extends AbstractExternalModule
     static $UI;
     static $PARTICIPANT;
     static $PROJECT;
+    static $DAG;
 
     function __construct()
     {
@@ -33,6 +35,7 @@ class REDCapPRO extends AbstractExternalModule
         self::$UI = new UI($this);
         self::$PARTICIPANT = new ParticipantHelper($this);
         self::$PROJECT = new ProjectHelper($this, self::$PARTICIPANT);
+        self::$DAG = new DAG($this);
     }
 
     function redcap_every_page_top($project_id)
