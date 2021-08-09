@@ -80,6 +80,15 @@ class REDCapPRO extends AbstractExternalModule
             // Determine whether participant is enrolled in the study.
             $rcpro_participant_id = self::$AUTH->get_participant_id();
             if (!self::$PARTICIPANT->enrolledInProject($rcpro_participant_id, $project_id)) {
+                $this->log("Participant not enrolled", [
+                    "rcpro_participant_id" => $rcpro_participant_id,
+                    "instrument"           => $instrument,
+                    "event"                => $event_id,
+                    "group_id"             => $group_id,
+                    "survey_hash"          => $survey_hash,
+                    "response_id"          => $response_id,
+                    "repeat_instance"      => $repeat_instance
+                ]);
                 self::$UI->ShowParticipantHeader("Not Enrolled");
                 echo "<p style='text-align:center;'>You are not currently enrolled in this study.<br>";
                 $study_contact = $this->getContactPerson("REDCapPRO - Not Enrolled");
@@ -90,6 +99,36 @@ class REDCapPRO extends AbstractExternalModule
                 }
                 echo "</p>";
                 $this->exitAfterHook();
+            }
+
+            // Determine whether participant is in the appropriate DAG
+            if (isset($group_id)) {
+                $rcpro_project_id = self::$PROJECT->getProjectIdFromPID(PROJECT_ID);
+                $rcpro_link_id = self::$PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
+                $rcpro_dag = self::$DAG->getParticipantDag($rcpro_link_id);
+
+                if ($group_id !== $rcpro_dag) {
+                    $this->log("Participant wrong DAG", [
+                        "rcpro_participant_id" => $rcpro_participant_id,
+                        "instrument"           => $instrument,
+                        "event"                => $event_id,
+                        "group_id"             => $group_id,
+                        "project_dag"          => $rcpro_dag,
+                        "survey_hash"          => $survey_hash,
+                        "response_id"          => $response_id,
+                        "repeat_instance"      => $repeat_instance
+                    ]);
+                    self::$UI->ShowParticipantHeader("Not Enrolled");
+                    echo "<p style='text-align:center;'>There was a problem with your enrollment in this study.<br>";
+                    $study_contact = $this->getContactPerson("REDCapPRO - Wrong Data Access Group");
+                    if (!isset($study_contact["name"])) {
+                        echo "Please contact your study coordinator.";
+                    } else {
+                        echo "Please contact your study coordinator:<br>" . $study_contact["info"];
+                    }
+                    echo "</p>";
+                    $this->exitAfterHook();
+                }
             }
 
             \REDCap::logEvent(
@@ -154,7 +193,8 @@ class REDCapPRO extends AbstractExternalModule
         echo '<link href="' . $this->getUrl("lib/select2/select2.min.css") . '" rel="stylesheet" />
         <script src="' . $this->getUrl("lib/select2/select2.min.js") . '"></script>';
 
-        $instrument = new Instrument($this, $instrument);
+        $rcpro_dag = self::$DAG->getCurrentDag(USERID, PROJECT_ID);
+        $instrument = new Instrument($this, $instrument, $rcpro_dag);
         $instrument->update_form();
     }
 

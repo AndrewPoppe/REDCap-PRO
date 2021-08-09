@@ -165,6 +165,7 @@ $columns = [
     "lname",
     "email",
     "project_dag",
+    "group_id",
     "event",
     "instrument",
     "repeat_instance",

@@ -21,10 +21,9 @@ if ($role === 0) {
     $project_dags = $module::$DAG->getProjectDags();
     $user_dags = $module::$DAG->getPossibleDags(USERID, PROJECT_ID);
     $project_dags[NULL] = "Unassigned";
+    $includeDAGColumn = count($project_dags) > 1;
 
-    var_dump($project_dags);
-    var_dump($user_dags);
-
+    // Dealing with an action
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         try {
             $function = NULL;
@@ -202,7 +201,9 @@ if ($role === 0) {
                                         <th id="rcpro_lname" class="dt-center">Last Name</th>
                                         <th id="rcpro_email">Email</th>
                                     <?php } ?>
-                                    <th id="rcpro_dag" class="dt-center">Data Access Group</th>
+                                    <?php if ($includeDAGColumn) { ?>
+                                        <th id="rcpro_dag" class="dt-center">Data Access Group</th>
+                                    <?php } ?>
                                     <th id="rcpro_resetpw" class="dt-center">Reset Password</th>
                                     <?php if ($role > 2) { ?>
                                         <th id="rcpro_changeemail" class="dt-center">Change Email Address</th>
@@ -229,6 +230,8 @@ if ($role === 0) {
                                             <td class="dt-center"><?= $fname_clean ?></td>
                                             <td class="dt-center"><?= $lname_clean ?></td>
                                             <td><?= $email_clean ?></td>
+                                        <?php } ?>
+                                        <?php if ($role > 1 && $includeDAGColumn) { ?>
                                             <td class="dt-center">
                                                 <select class="dag_select" name="dag_select_<?= $username_clean ?>" id="dag_select_<?= $username_clean ?>" orig_value="<?= $dag_id ?>" form="manage-form" onchange='(function(){
                                                     let el = $("#dag_select_<?= $username_clean ?>");
@@ -262,7 +265,7 @@ if ($role === 0) {
                                                     <?php } ?>
                                                 </select>
                                             </td>
-                                        <?php } else { ?>
+                                        <?php } else if ($includeDAGColumn) { ?>
                                             <td class="dt-center"><?= $dag_name_clean ?></td>
                                         <?php } ?>
                                         <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){

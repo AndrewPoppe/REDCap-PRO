@@ -6,6 +6,7 @@ class Instrument
 {
     public static $module;
     public static $instrument_name;
+    public static $rcpro_dag;
     public static $PARTICIPANT;
     public static $PROJECT;
     public $dd;
@@ -14,12 +15,13 @@ class Instrument
     public $fname;
     public $lname;
 
-    function __construct($module, $instrument_name)
+    function __construct($module, $instrument_name, $rcpro_dag)
     {
         self::$module = $module;
         self::$PARTICIPANT = $module::$PARTICIPANT;
         self::$PROJECT = $module::$PROJECT;
         self::$instrument_name = $instrument_name;
+        self::$rcpro_dag = $rcpro_dag;
         $this->dd = $this->getDD();
         $this->username = $this->getUsernameField();
         if (isset($this->username)) {
@@ -88,7 +90,7 @@ class Instrument
     {
         if (isset($this->username)) {
             $rcpro_project_id = self::$PROJECT->getProjectIdFromPID(PROJECT_ID);
-            $participants = self::$PARTICIPANT->getProjectParticipants($rcpro_project_id);
+            $participants = self::$PARTICIPANT->getProjectParticipants($rcpro_project_id, self::$rcpro_dag);
             $options = "<option value=''>''</option>";
             $participants_json = json_encode($participants);
             foreach ($participants as $participant) {

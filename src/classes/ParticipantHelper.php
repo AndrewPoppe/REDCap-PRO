@@ -185,7 +185,7 @@ class ParticipantHelper
     public function enrolledInProject(int $rcpro_participant_id, int $pid)
     {
         $rcpro_project_id = self::$PROJECT->getProjectIdFromPID($pid);
-        $SQL = "message = 'LINK' AND rcpro_project_id = ? AND rcpro_participant_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $SQL = "message = 'LINK' AND rcpro_project_id = ? AND rcpro_participant_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = self::$module->countLogs($SQL, [$rcpro_project_id, $rcpro_participant_id]);
             return $result > 0;

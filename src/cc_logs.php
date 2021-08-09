@@ -36,6 +36,8 @@ $columns = [
     "instrument",
     "repeat_instance",
     "response_id",
+    "project_dag",
+    "group_id",
     "survey_hash",
     "rcpro_ip",
     "rcpro_participant_id",
