@@ -12,6 +12,7 @@ require_once("src/classes/UI.php");
 require_once("src/classes/ParticipantHelper.php");
 require_once("src/classes/ProjectHelper.php");
 require_once("src/classes/DAG.php");
+require_once("src/classes/Project.php");
 
 /**
  * Main EM Class
@@ -77,11 +78,15 @@ class REDCapPRO extends AbstractExternalModule
         // Participant is logged in to their account
         if (self::$AUTH->is_logged_in()) {
 
+            // Get RCPRO project ID
+            $rcpro_project_id = self::$PROJECT->getProjectIdFromPID($project_id);
+
             // Determine whether participant is enrolled in the study.
             $rcpro_participant_id = self::$AUTH->get_participant_id();
-            if (!self::$PARTICIPANT->enrolledInProject($rcpro_participant_id, $project_id)) {
+            if (!self::$PARTICIPANT->enrolledInProject($rcpro_participant_id, $rcpro_project_id)) {
                 $this->log("Participant not enrolled", [
                     "rcpro_participant_id" => $rcpro_participant_id,
+                    "rcpro_project_id"     => $rcpro_project_id,
                     "instrument"           => $instrument,
                     "event"                => $event_id,
                     "group_id"             => $group_id,
@@ -103,7 +108,6 @@ class REDCapPRO extends AbstractExternalModule
 
             // Determine whether participant is in the appropriate DAG
             if (isset($group_id)) {
-                $rcpro_project_id = self::$PROJECT->getProjectIdFromPID(PROJECT_ID);
                 $rcpro_link_id = self::$PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
                 $rcpro_dag = self::$DAG->getParticipantDag($rcpro_link_id);
 
@@ -134,7 +138,7 @@ class REDCapPRO extends AbstractExternalModule
             \REDCap::logEvent(
                 "REDCapPRO Survey Accessed",                                        // action description
                 "REDCapPRO User: " . self::$AUTH->get_username() . "\n" .
-                    "Instrument: ${instrument}\n",                                      // changes made
+                    "Instrument: ${instrument}\n",                                  // changes made
                 NULL,                                                               // sql
                 $record,                                                            // record
                 $event_id,                                                          // event
@@ -193,7 +197,7 @@ class REDCapPRO extends AbstractExternalModule
         echo '<link href="' . $this->getUrl("lib/select2/select2.min.css") . '" rel="stylesheet" />
         <script src="' . $this->getUrl("lib/select2/select2.min.js") . '"></script>';
 
-        $rcpro_dag = self::$DAG->getCurrentDag(USERID, PROJECT_ID);
+        $rcpro_dag = self::$DAG->getCurrentDag(USERID, $project_id);
         $instrument = new Instrument($this, $instrument, $rcpro_dag);
         $instrument->update_form();
     }
@@ -228,6 +232,39 @@ class REDCapPRO extends AbstractExternalModule
         self::$PROJECT->setProjectActive($project_id, 0);
     }
 
+    // General Utilities 
+
+    /**
+     * Returns all REDCap users of the module (all staff)
+     * 
+     * @return [array]
+     */
+    function getAllUsers()
+    {
+        global $module;
+        $projects = $module->getProjectsWithModuleEnabled();
+        $users = array();
+        foreach ($projects as $pid) {
+            $project = new Project($this, $pid);
+            $staff_arr = $project->getStaff();
+            $all_staff = $staff_arr["allStaff"];
+            foreach ($all_staff as $user) {
+                if (isset($users[$user])) {
+                    array_push($users[$user]['projects'], $pid);
+                } else {
+                    $newUser = $module->getUser($user);
+                    $newUserArr = [
+                        "username" => $user,
+                        "email" => $newUser->getEmail(),
+                        "name" => $module->getUserFullname($user),
+                        "projects" => [$pid]
+                    ];
+                    $users[$user] = $newUserArr;
+                }
+            }
+        }
+        return $users;
+    }
 
     //////////////////\\\\\\\\\\\\\\\\\\\       
     /////   EMAIL-RELATED METHODS   \\\\\ 

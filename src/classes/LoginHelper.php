@@ -19,18 +19,19 @@ class LoginHelper
     /**
      * Increments the number of failed attempts at login for the provided id
      * 
-     * @param int $rcpro_participant_id - id key for participant
+     * @param int $rcpro_participant_id ID key for participant
+     * @param null|string $rcpro_username RCPRO Username    
      * 
-     * @return BOOL|NULL
+     * @return BOOL|NULL whether increment succeeded
      */
-    public function incrementFailedLogin(int $rcpro_participant_id)
+    public function incrementFailedLogin(int $rcpro_participant_id, ?string $rcpro_username = NULL)
     {
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = value+1 WHERE log_id = ? AND name = 'failed_attempts'";
         try {
             $res = self::$module->query($SQL, [$rcpro_participant_id]);
 
             // Lockout username if necessary
-            $this->lockoutLogin($rcpro_participant_id);
+            $this->lockoutLogin($rcpro_participant_id, $rcpro_username);
             return $res;
         } catch (\Exception $e) {
             self::$module->logError("Error incrementing failed login", $e);
@@ -41,11 +42,12 @@ class LoginHelper
      * This both tests whether a user should be locked out based on the number
      * of failed login attempts and does the locking out.
      * 
-     * @param int $rcpro_participant_id - id key for participant
+     * @param int $rcpro_participant_id id key for participant
+     * @param string|NULL $rcpro_username RCPRO Username
      * 
      * @return BOOL|NULL
      */
-    private function lockoutLogin(int $rcpro_participant_id)
+    private function lockoutLogin(int $rcpro_participant_id, ?string $rcpro_username = NULL)
     {
         try {
             $attempts = $this->checkUsernameAttempts($rcpro_participant_id);
@@ -56,7 +58,7 @@ class LoginHelper
                 $status = $res ? "Successful" : "Failed";
                 self::$module->log("Login Lockout ${status}", [
                     "rcpro_participant_id" => $rcpro_participant_id,
-                    "rcpro_username"       => self::$module::$PARTICIPANT->getUserName($rcpro_participant_id)
+                    "rcpro_username"       => $rcpro_username
                 ]);
                 return $res;
             } else {

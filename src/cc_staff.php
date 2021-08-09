@@ -1,43 +1,5 @@
 <?php
 
-//TODO: Move these to Main Class
-function getAllUsers()
-{
-    global $module;
-    $projects = $module->getProjectsWithModuleEnabled();
-    $users = array();
-    foreach ($projects as $pid) {
-        $staff = getStaff($pid);
-        foreach ($staff as $user) {
-            if (isset($users[$user])) {
-                array_push($users[$user]['projects'], $pid);
-            } else {
-                $newUser = $module->getUser($user);
-                $newUserArr = [
-                    "username" => $user,
-                    "email" => $newUser->getEmail(),
-                    "name" => $module->getUserFullname($user),
-                    "projects" => [$pid]
-                ];
-                $users[$user] = $newUserArr;
-            }
-        }
-    }
-    return $users;
-}
-
-function getStaff($redcap_pid)
-{
-    global $module;
-    $managers = $module->getProjectSetting("managers", $redcap_pid);
-    $users    = $module->getProjectSetting("users", $redcap_pid);
-    $monitors = $module->getProjectSetting("monitors", $redcap_pid);
-    $managers = is_null($managers) ? [] : $managers;
-    $users    = is_null($users) ? [] : $users;
-    $monitors = is_null($monitors) ? [] : $monitors;
-
-    return array_merge($managers, $users, $monitors);
-}
 
 function createProjectsCell(array $projects)
 {
@@ -63,7 +25,7 @@ require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $module::$UI->ShowControlCenterHeader("Staff");
 
 // Get array of staff (users)
-$users = getAllUsers();
+$users = $module->getAllUsers();
 ?>
 <div class="usersContainer wrapper">
     <h2>Staff Members</h2>
@@ -100,7 +62,7 @@ $users = getAllUsers();
 <script>
     (function($, window, document) {
         $(document).ready(function() {
-            let usersTable = $('#RCPRO_TABLE').DataTable({
+            let dataTable = $('#RCPRO_TABLE').DataTable({
                 dom: 'lBfrtip',
                 stateSave: true,
                 stateSaveCallback: function(settings, data) {
@@ -115,7 +77,7 @@ $users = getAllUsers();
             });
             $('#users').removeClass('dataTableParentHidden');
             $('#loading-container').hide();
-            usersTable.columns.adjust().draw();
+            dataTable.columns.adjust().draw();
 
         });
     }(window.jQuery, window, document));

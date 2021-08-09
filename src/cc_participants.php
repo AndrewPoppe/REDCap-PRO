@@ -19,13 +19,6 @@ function createProjectsCell(array $projects)
     return $result;
 }
 
-function getParticipantInfo($rcpro_participant_id)
-{
-    global $module;
-    $SQL = "SELECT log_id AS 'User_ID', rcpro_username AS Username, timestamp AS 'Registered At', redcap_user AS 'Registered By' WHERE log_id = ?";
-    $result_obj = $module->queryLogs($SQL, [$rcpro_participant_id]);
-    return $result_obj->fetch_assoc();
-}
 
 ?>
 <!DOCTYPE html>
@@ -128,7 +121,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                             $email_clean          = \REDCap::escapeHtml($participant["email"]);
                             $rcpro_participant_id = intval($participant["log_id"]);
                             $projects_array       = $module::$PARTICIPANT->getParticipantProjects($rcpro_participant_id);
-                            $info                 = getParticipantInfo($rcpro_participant_id);
+                            $info                 = $module::$PARTICIPANT->getParticipantInfo($rcpro_participant_id);
                             $allData              = "<div style='display: block; text-align:left;'><ul>";
                             foreach ($info as $title => $value) {
                                 $value_clean = \REDCap::escapeHtml($value);
@@ -197,7 +190,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
 <script>
     (function($, window, document) {
         $(document).ready(function() {
-            let participantsTable = $('#RCPRO_TABLE').DataTable({
+            let dataTable = $('#RCPRO_TABLE').DataTable({
                 dom: 'lBfrtip',
                 stateSave: true,
                 stateSaveCallback: function(settings, data) {
@@ -212,7 +205,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
             });
             $('#participants-form').removeClass('dataTableParentHidden');
             $('#loading-container').hide();
-            participantsTable.columns.adjust().draw();
+            dataTable.columns.adjust().draw();
         });
     }(window.jQuery, window, document));
 </script>

@@ -35,7 +35,8 @@ if ($role === 0) {
                     $icon = "error";
                     $title = "You do not have the required role to do that.";
                 } else {
-                    $result = $module::$PROJECT->disenrollParticipant($_POST["toDisenroll"], $rcpro_project_id);
+                    $rcpro_username = $module::$PARTICIPANT->getUserName($_POST["toDisenroll"]);
+                    $result = $module::$PROJECT->disenrollParticipant($_POST["toDisenroll"], $rcpro_project_id, $rcpro_username);
                     if (!$result) {
                         $icon = "error";
                         $title = "Trouble disenrolling participant.";
@@ -82,6 +83,7 @@ if ($role === 0) {
 
                 // CHANGE THE PARTICIPANT'S DATA ACCESS GROUP
             } else if (!empty($_POST["toSwitchDag"])) {
+                $rcpro_participant_id = intval($_POST["toSwitchDag"]);
                 $function = "switch participant's Data Access Group";
                 $newDAG = $_POST["newDag"];
                 if ($role < 2) {
@@ -92,11 +94,20 @@ if ($role === 0) {
                     $title = "The provided DAG is invalid.";
                 } else {
                     $newDAG = $newDAG === "" ? NULL : $newDAG;
-                    $result = $module::$DAG->updateDag($_POST["toSwitchDag"], $rcpro_project_id, $newDAG);
+                    $link_id = $module::$PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
+                    $result = $module::$DAG->updateDag($link_id, $newDAG);
                     if (!$result) {
                         $icon = "error";
                         $title = "Trouble switching participant's Data Access Group.";
                     } else {
+                        $participant_info = $module::$PARTICIPANT->getParticipantInfo($rcpro_participant_id);
+                        $module->log("Participant DAG Switched", [
+                            "rcpro_participant_id" => $participant_info["User_ID"],
+                            "rcpro_username" => $participant_info["Username"],
+                            "rcpro_project_id" => $rcpro_project_id,
+                            "rcpro_link_id" => $link_id,
+                            "dag_id" => $dag_id
+                        ]);
                         $icon = "success";
                         $title = "Successfully switched participant's Data Access Group.";
                     }

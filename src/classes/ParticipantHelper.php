@@ -12,17 +12,14 @@ require_once("src/classes/ProjectHelper.php");
 class ParticipantHelper
 {
     public static $module;
-    public static $PROJECT;
     /**
      * Constructor
      * 
      * @param REDCapPRO $module
-     * @param ProjectHelper $PROJECT
      */
-    function __construct(REDCapPRO $module, ProjectHelper $PROJECT = NULL)
+    function __construct(REDCapPRO $module)
     {
         self::$module = $module;
-        self::$PROJECT = isset($PROJECT) ? $PROJECT : new ProjectHelper($module, $this);
     }
 
     /**
@@ -178,13 +175,12 @@ class ParticipantHelper
      * Determines whether the current participant is enrolled in the project
      * 
      * @param int $rcpro_participant_id
-     * @param int $pid PID of REDCap project
+     * @param int $rcpro_project_id RCPRO Project ID
      * 
      * @return boolean TRUE if the participant is enrolled
      */
-    public function enrolledInProject(int $rcpro_participant_id, int $pid)
+    public function enrolledInProject(int $rcpro_participant_id, int $rcpro_project_id)
     {
-        $rcpro_project_id = self::$PROJECT->getProjectIdFromPID($pid);
         $SQL = "message = 'LINK' AND rcpro_project_id = ? AND rcpro_participant_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = self::$module->countLogs($SQL, [$rcpro_project_id, $rcpro_participant_id]);
@@ -309,6 +305,24 @@ class ParticipantHelper
     }
 
     /**
+     * Gets various info about a participant from participant ID
+     * 
+     * @param int $rcpro_participant_id RCPRO participant ID
+     * @return array info about participant:
+     * User_ID, Username, Registered At, Registered By 
+     */
+    public function getParticipantInfo(int $rcpro_participant_id)
+    {
+        $SQL = "SELECT log_id AS 'User_ID', rcpro_username AS Username, timestamp AS 'Registered At', redcap_user AS 'Registered By' WHERE log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+        try {
+            $result_obj = self::$module->queryLogs($SQL, [$rcpro_participant_id]);
+            return $result_obj->fetch_assoc();
+        } catch (\Exception $e) {
+            self::$module->logError("Error getting participant info", $e);
+        }
+    }
+
+    /**
      * Fetches all the projects that the provided participant is enrolled in
      * 
      * This includes active and inactive projects
@@ -319,18 +333,22 @@ class ParticipantHelper
      */
     public function getParticipantProjects(int $rcpro_participant_id)
     {
-        $SQL = "SELECT rcpro_project_id, active WHERE rcpro_participant_id = ? AND message = 'LINK' AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $SQL1 = "SELECT rcpro_project_id, active WHERE rcpro_participant_id = ? AND message = 'LINK' AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $SQL2 = "SELECT pid WHERE log_id = ? AND message = 'PROJECT' AND (project_id IS NULL OR project_id IS NOT NULL)";
         $projects = array();
         try {
-            $result = self::$module->queryLogs($SQL, [$rcpro_participant_id]);
-            if (!$result) {
+            $result1 = self::$module->queryLogs($SQL1, [$rcpro_participant_id]);
+            if (!$result1) {
                 throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
             }
-            while ($row = $result->fetch_assoc()) {
+            while ($row = $result1->fetch_assoc()) {
+                $rcpro_project_id = $row["rcpro_project_id"];
+                $result2 = self::$module->queryLogs($SQL2, [$rcpro_project_id]);
+                $redcap_pid = $result2->fetch_assoc()["pid"];
                 array_push($projects, [
-                    "rcpro_project_id" => $row["rcpro_project_id"],
+                    "rcpro_project_id" => $rcpro_project_id,
                     "active"           => $row["active"],
-                    "redcap_pid"       => self::$PROJECT->getPidFromProjectId($row["rcpro_project_id"])
+                    "redcap_pid"       => $redcap_pid
                 ]);
             }
             return $projects;

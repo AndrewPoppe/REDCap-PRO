@@ -120,7 +120,6 @@ class DAG
      */
     public function getParticipantDag(int $rcpro_link_id)
     {
-
         $SQL = "SELECT project_dag WHERE log_id = ?";
         try {
             $result = self::$module->queryLogs($SQL, [$rcpro_link_id]);
@@ -140,20 +139,11 @@ class DAG
      * @param int $dag_id 
      * @return mixed 
      */
-    public function updateDag(int $rcpro_participant_id, int $rcpro_project_id, ?int $dag_id)
+    public function updateDag(int $rcpro_link_id, ?int $dag_id)
     {
-        $link_id = self::$module::$PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'project_dag'";
         try {
-            $result = self::$module->query($SQL, [$dag_id, $link_id]);
-            if ($result) {
-                self::$module->log("Participant DAG Switched", [
-                    "rcpro_participant_id" => $rcpro_participant_id,
-                    "rcpro_project_id" => $rcpro_project_id,
-                    "dag_id" => $dag_id
-                ]);
-            }
-            return $result;
+            return self::$module->query($SQL, [$dag_id, $rcpro_link_id]);
         } catch (\Exception $e) {
             self::$module->logError("Error updating participant's DAG", $e);
         }

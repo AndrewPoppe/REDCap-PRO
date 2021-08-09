@@ -166,7 +166,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         "rcpro_username"       => $username,
                         "rcpro_participant_id" => $participant["log_id"]
                     ]);
-                    $Login->incrementFailedLogin($participant["log_id"]);
+                    $Login->incrementFailedLogin($participant["log_id"], $username);
                     $Login->incrementFailedIp($ip);
                     $attempts = $Login->checkAttempts($participant["log_id"], $ip);
                     $remainingAttempts = $module::$SETTINGS->getLoginAttempts() - $attempts;

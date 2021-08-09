@@ -12,17 +12,14 @@ require_once("src/classes/ParticipantHelper.php");
 class ProjectHelper
 {
     public static $module;
-    public static $PARTICIPANT;
     /**
      * Constructor
      * 
      * @param REDCapPRO $module 
-     * @param ParticipantHelper $PARTICIPANT passed so as not to create infinite loop
      */
-    function __construct(REDCapPRO $module, ParticipantHelper $PARTICIPANT = NULL)
+    function __construct(REDCapPRO $module)
     {
         self::$module = $module;
-        self::$PARTICIPANT = isset($PARTICIPANT) ? $PARTICIPANT : new ParticipantHelper($module, $this);
     }
 
     /**
@@ -80,7 +77,7 @@ class ProjectHelper
      * 
      * @return bool success or failure
      */
-    private function createLink(int $rcpro_participant_id, int $rcpro_project_id, ?int $dag)
+    private function createLink(int $rcpro_participant_id, int $rcpro_project_id, ?int $dag, ?string $rcpro_username)
     {
         try {
             self::$module->log("LINK", [
@@ -92,7 +89,7 @@ class ProjectHelper
             ]);
             self::$module->log("Enrolled Participant", [
                 "rcpro_participant_id" => $rcpro_participant_id,
-                "rcpro_username"       => self::$PARTICIPANT->getUserName($rcpro_participant_id),
+                "rcpro_username"       => $rcpro_username,
                 "rcpro_project_id"     => $rcpro_project_id,
                 "redcap_user"          => USERID,
                 "project_dag"           => $dag
@@ -107,19 +104,19 @@ class ProjectHelper
     /**
      * Removes participant from project.
      * 
-     * @param mixed $rcpro_participant_id
-     * @param mixed $rcpro_project_id
+     * @param int $rcpro_participant_id
+     * @param int $rcpro_project_id
      * 
-     * @return [type]
+     * @return BOOL|NULL Success/Failure of action
      */
-    public function disenrollParticipant($rcpro_participant_id, $rcpro_project_id)
+    public function disenrollParticipant(int $rcpro_participant_id, int $rcpro_project_id, ?string $rcpro_username)
     {
         try {
             $result = $this->setLinkActiveStatus($rcpro_participant_id, $rcpro_project_id, 0);
             if ($result) {
                 self::$module->log("Disenrolled Participant", [
                     "rcpro_participant_id" => $rcpro_participant_id,
-                    "rcpro_username"       => self::$PARTICIPANT->getUserName($rcpro_participant_id),
+                    "rcpro_username"       => $rcpro_username,
                     "rcpro_project_id"     => $rcpro_project_id,
                     "redcap_user"          => USERID
                 ]);
@@ -139,7 +136,7 @@ class ProjectHelper
      * 
      * @return int -1 if already enrolled, bool otherwise
      */
-    public function enrollParticipant(int $rcpro_participant_id, int $pid, ?int $dag)
+    public function enrollParticipant(int $rcpro_participant_id, int $pid, ?int $dag, ?string $rcpro_username)
     {
         // If project does not exist, create it.
         if (!$this->checkProject($pid)) {
@@ -159,7 +156,7 @@ class ProjectHelper
             if ($result) {
                 self::$module->log("Enrolled Participant", [
                     "rcpro_participant_id" => $rcpro_participant_id,
-                    "rcpro_username"       => self::$PARTICIPANT->getUserName($rcpro_participant_id),
+                    "rcpro_username"       => $rcpro_username,
                     "rcpro_project_id"     => $rcpro_project_id,
                     "redcap_user"          => USERID,
                     "project_dag"          => $dag
@@ -167,7 +164,7 @@ class ProjectHelper
             }
             return $result;
         } else {
-            return $this->createLink($rcpro_participant_id, $rcpro_project_id, $dag);
+            return $this->createLink($rcpro_participant_id, $rcpro_project_id, $dag, $rcpro_username);
         }
     }
 

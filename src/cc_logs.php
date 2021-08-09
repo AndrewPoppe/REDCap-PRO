@@ -107,7 +107,7 @@ $tableData = $module->queryLogs("SELECT " . implode(', ', $columns) . " AND (pro
     <script>
         (function($, window, document) {
             $(document).ready(function() {
-                $('#RCPRO_TABLE').DataTable({
+                let dataTable = $('#RCPRO_TABLE').DataTable({
                     //pageLength: 1000,
                     dom: 'lBfrtip',
                     stateSave: true,
@@ -157,13 +157,13 @@ $tableData = $module->queryLogs("SELECT " . implode(', ', $columns) . " AND (pro
                 $('#logs').removeClass('dataTableParentHidden');
                 $('#loading-container').hide();
 
-                $('#RCPRO_TABLE').DataTable().on('buttons-action', function(e, buttonApi, dataTable, node, config) {
+                dataTable.on('buttons-action', function(e, buttonApi, dataTable, node, config) {
                     const text = buttonApi.text();
                     if (text.search(/Panes|Builder/)) {
                         $('.dt-button-collection').draggable();
                     }
                 });
-                $('#RCPRO_Logs').DataTable().columns.adjust().draw();
+                dataTable.columns.adjust().draw();
             });
         }(window.jQuery, window, document));
     </script>

@@ -1,85 +1,11 @@
 <?php
+
+namespace YaleREDCap\REDCapPRO;
+
+require_once("classes/Project.php");
+
 if (!SUPER_USER) {
     return;
-}
-
-class Project
-{
-    public static $module;
-    public static $rcpro_project_id;
-    public static $redcap_pid;
-    public static $info;
-    public static $staff;
-
-    function __construct($module, $redcap_pid)
-    {
-        self::$module           = $module;
-        self::$redcap_pid       = $redcap_pid;
-        self::$rcpro_project_id = self::$module::$PROJECT->getProjectIdFromPID($redcap_pid);
-        self::$info             = $this->getProjectInfo();
-        self::$staff            = $this->getStaff();
-    }
-
-    function getProjectInfo()
-    {
-        $SQL = "SELECT * FROM redcap_projects WHERE project_id = ?";
-        $result_obj = self::$module->query($SQL, [self::$redcap_pid]);
-        return $result_obj->fetch_assoc();
-    }
-
-    function getStatus()
-    {
-        $status_value = !is_null(self::$info["completed_time"]) ? "Completed" : self::$info["status"];
-        switch ($status_value) {
-            case 0:
-                $result = "Development";
-                break;
-            case 1:
-                $result = "Production";
-                break;
-            case 2:
-                $result = "Analysis/Cleanup";
-                break;
-            case "Completed":
-                $result = "Completed";
-                break;
-            default:
-                $result = "Unknown";
-                break;
-        }
-        return $result;
-    }
-
-    function getParticipantCount()
-    {
-        $SQL = "SELECT log_id WHERE message = 'LINK' AND rcpro_project_id = ? AND active = 1";
-        return self::$module->countLogs($SQL, [self::$rcpro_project_id]);
-    }
-
-    function getStaff()
-    {
-        $managers = self::$module->getProjectSetting("managers", self::$redcap_pid);
-        $users    = self::$module->getProjectSetting("users", self::$redcap_pid);
-        $monitors = self::$module->getProjectSetting("monitors", self::$redcap_pid);
-        $managers = is_null($managers) ? [] : $managers;
-        $users    = is_null($users) ? [] : $users;
-        $monitors = is_null($monitors) ? [] : $monitors;
-        $allStaff = array_merge($managers, $users, $monitors);
-
-        return [
-            "managers" => $managers,
-            "users"    => $users,
-            "monitors" => $monitors,
-            "allStaff" => $allStaff
-        ];
-    }
-
-    function getRecordCount()
-    {
-        $SQL = "SELECT COUNT(record) num FROM redcap_record_list WHERE project_id = ?";
-        $result_obj = self::$module->query($SQL, [self::$redcap_pid]);
-        return $result_obj->fetch_assoc()["num"];
-    }
 }
 
 ?>
@@ -119,18 +45,45 @@ class Project
                 <tbody>
                     <?php
                     foreach ($redcap_project_ids as $id) {
-                        echo "<tr class='hover'>";
-                        $thisProject = new Project($module, $id);
-                        echo "<td class='dt-center'><a class='rcpro_project_link' href='" . $module->getUrl("src/home.php?pid=$id") . "'>" . $thisProject::$rcpro_project_id . "</a></td>";
-                        echo "<td class='dt-center'><a class='rcpro_project_link' href='" . $module->getUrl("src/home.php?pid=$id") . "'>$id</a></td>";
-                        echo "<td>" . $thisProject::$info["app_title"] . "</td>";
-                        echo "<td class='dt-center'>" . $thisProject->getStatus() . "</td>";
-                        echo "<td class='dt-center'><a class='rcpro_participant_link' href='" . $module->getUrl("src/manage.php?pid=$id") . "'>" . $thisProject->getParticipantCount() . "</a></td>";
-                        echo "<td class='dt-center'><a class='rcpro_user_link' href='" . $module->getUrl("src/manage-users.php?pid=$id") . "'>" . count($thisProject::$staff["allStaff"]) . "</a></td>";
-                        echo "<td class='dt-center'>" . $thisProject->getRecordCount() . "</td>";
-                        echo "</tr>";
-                    }
+                        $thisProject                = new Project($module, $id);
+                        $rcpro_project_id           = $module::$PROJECT->getProjectIdFromPID($thisProject::$redcap_pid);
+                        $project_rcpro_home         = $module->getUrl("src/home.php?pid=${id}");
+                        $project_home               = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "index.php?pid=${id}";
+                        $project_rcpro_manage       = $module->getUrl("src/manage.php?pid=${id}");
+                        $project_rcpro_manage_users = $module->getUrl("src/manage-users.php?pid=${id}");
+                        $project_records            = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "DataEntry/record_status_dashboard.php?pid=${id}"
                     ?>
+                        <tr>
+                            <!-- Project ID -->
+                            <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_rcpro_home ?>', '_blank').focus();})()">
+                                <?= $rcpro_project_id ?>
+                            </td>
+                            <!-- REDCap PID -->
+                            <td class='dt-center'>
+                                <?= $id ?>
+                            </td>
+                            <!-- Title -->
+                            <td>
+                                <?= $thisProject::$info["app_title"] ?>
+                            </td>
+                            <!-- Status -->
+                            <td class='dt-center'>
+                                <?= $thisProject->getStatus() ?>
+                            </td>
+                            <!-- # Participants -->
+                            <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_rcpro_manage ?>', '_blank').focus();})()">
+                                <?= $thisProject->getParticipantCount($rcpro_project_id) ?>
+                            </td>
+                            <!-- # Staff Members -->
+                            <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_rcpro_manage_users ?>', '_blank').focus();})()">
+                                <?= count($thisProject::$staff["allStaff"]) ?>
+                            </td>
+                            <!-- # Records -->
+                            <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_records ?>', '_blank').focus();})()">
+                                <?= $thisProject->getRecordCount() ?>
+                            </td>
+                        </tr>
+                    <?php } ?>
                 </tbody>
             </table>
         </div>
@@ -138,7 +91,7 @@ class Project
     <script>
         (function($, window, document) {
             $(document).ready(function() {
-                $('#RCPRO_TABLE').DataTable({
+                let dataTable = $('#RCPRO_TABLE').DataTable({
                     dom: 'lBfrtip',
                     stateSave: true,
                     stateSaveCallback: function(settings, data) {
@@ -154,7 +107,7 @@ class Project
 
                 $('#projects').removeClass('dataTableParentHidden');
                 $('#loading-container').hide();
-                $('#RCPRO_TABLE').DataTable().columns.adjust().draw();
+                dataTable.columns.adjust().draw();
 
             });
         }(window.jQuery, window, document));
