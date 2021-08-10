@@ -14,6 +14,7 @@ require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module::$UI->ShowHeader("Enroll");
 
 
+
 ?>
 <style>
     .wrapper {
@@ -58,6 +59,34 @@ $module::$UI->ShowHeader("Enroll");
 </head>
 
 <body>
+
+    <?php
+    if (isset($_POST["id"]) && isset($project_id)) {
+
+        // Validate token
+        if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
+            header("location:" . $module->getUrl("src/enroll.php"));
+        }
+
+        $rcpro_participant_id = intval($_POST["id"]);
+        $redcap_dag = $module::$DAG->getCurrentDag(USERID, PROJECT_ID);
+        $pid = intval($project_id);
+        $rcpro_username = $module::$PARTICIPANT->getUserName($rcpro_participant_id);
+        $result = $module::$PROJECT->enrollParticipant($rcpro_participant_id, $pid, $redcap_dag, $rcpro_username);
+
+        if ($result === -1) {
+            echo "<script defer>Swal.fire({'title':'This user is already enrolled in this project', 'icon':'info'});</script>";
+        } else if ($result === TRUE) {
+            echo "<script defer>Swal.fire({'title':'The user was successfully enrolled in this project', 'icon':'success'});</script>";
+        } else if (!$result) {
+            echo "<script defer>Swal.fire({'title':'There was a problem enrolling this user in this project', 'icon':'error'});</script>";
+        }
+    }
+
+    // set csrf token
+    $module::$AUTH->set_csrf_token();
+    ?>
+
     <div class="wrapper">
         <h2>Enroll a Participant</h2>
         <p>Search for a participant by email , name, or username, and enroll the selected participant in this project.</p>
@@ -95,7 +124,7 @@ $module::$UI->ShowHeader("Enroll");
                 $("#confirm-form").hide();
             }
         </script>
-        <form class="enroll-form" id="enroll-form">
+        <form class="enroll-form" id="enroll-form" onkeydown="return event.key != 'Enter';">
             <div class="form-group">
                 <div id="searchContainer">
                     <label>Search</label>
@@ -145,6 +174,7 @@ $module::$UI->ShowHeader("Enroll");
                     <?php } ?>
 
                     <input type="text" id="id" name="id" class="form-control" readonly hidden>
+                    <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
                     <div>
                         <hr>
                         <button type="submit" class="btn btn-primary">Enroll Participant</button>
@@ -153,24 +183,6 @@ $module::$UI->ShowHeader("Enroll");
                 </div>
             </div>
         </form>
-
-        <?php
-        if (isset($_POST["id"]) && isset($project_id)) {
-
-            $rcpro_participant_id = intval($_POST["id"]);
-            $redcap_dag = $module::$DAG->getCurrentDag(USERID, PROJECT_ID);
-            $pid = intval($project_id);
-            $result = $module::$PROJECT->enrollParticipant($rcpro_participant_id, $pid, $redcap_dag);
-
-            if ($result === -1) {
-                echo "<script>Swal.fire({'title':'This user is already enrolled in this project', 'icon':'info'});</script>";
-            } else if ($result === TRUE) {
-                echo "<script>Swal.fire({'title':'The user was successfully enrolled in this project', 'icon':'success'});</script>";
-            } else if (!$result) {
-                echo "<script>Swal.fire({'title':'There was a problem enrolling this user in this project', 'icon':'error'});</script>";
-            }
-        }
-        ?>
     </div>
 </body>
 

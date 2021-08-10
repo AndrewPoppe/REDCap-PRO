@@ -18,6 +18,12 @@ $any_error = FALSE;
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
+    // Validate token
+    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
+        header("location:" . $module->getUrl("src/register.php"));
+        return;
+    }
+
     // Validate Name
     $fname = trim($_POST["REDCapPRO_FName"]);
     $fname_clean = \REDCap::escapeHtml($fname);
@@ -87,6 +93,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 }
+
+// set csrf token
+$module::$AUTH->set_csrf_token();
+
 ?>
 <style>
     .wrapper {
@@ -132,6 +142,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="form-group">
                 <button type="submit" class="btn btn-primary" value="Submit">Submit</button>
             </div>
+            <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
         </form>
     </div>
 </body>

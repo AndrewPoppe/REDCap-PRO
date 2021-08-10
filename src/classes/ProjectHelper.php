@@ -252,7 +252,7 @@ class ProjectHelper
      * 
      * @return bool
      */
-    private function participantEnrolled(int $rcpro_participant_id, int $rcpro_project_id)
+    public function participantEnrolled(int $rcpro_participant_id, int $rcpro_project_id)
     {
         $SQL = "message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
