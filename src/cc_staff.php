@@ -16,7 +16,7 @@ function createProjectsCell(array $projects)
 
 ?>
 <!DOCTYPE html>
-<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro.css") ?>">
+<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro_cc.css") ?>">
 <?php
 if (!SUPER_USER) {
     return;

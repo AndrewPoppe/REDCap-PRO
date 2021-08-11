@@ -16,46 +16,7 @@ $module::$UI->ShowHeader("Enroll");
 
 
 ?>
-<style>
-    .wrapper {
-        width: 720px;
-        padding: 20px;
-    }
-
-    .enroll-form {
-        width: 540px;
-        border-radius: 5px;
-        border: 1px solid #cccccc;
-        padding: 20px;
-        box-shadow: 0px 0px 5px #eeeeee;
-    }
-
-    .confirm-form {
-        width: 500px;
-        border-radius: 5px;
-        border: 1px solid #cccccc;
-        padding: 20px;
-        box-shadow: 0px 0px 5px #eeeeee;
-    }
-
-    .searchResult {
-        cursor: pointer;
-        padding: 5px;
-        margin-top: 5px;
-        background-color: #ddd;
-        border-radius: 5px;
-        color: black;
-    }
-
-    .searchResult:hover {
-        background-color: #900000;
-        color: white;
-    }
-
-    button:hover {
-        outline: none !important;
-    }
-</style>
+<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro.php") ?>" />
 </head>
 
 <body>
@@ -75,11 +36,11 @@ $module::$UI->ShowHeader("Enroll");
         $result = $module::$PROJECT->enrollParticipant($rcpro_participant_id, $pid, $redcap_dag, $rcpro_username);
 
         if ($result === -1) {
-            echo "<script defer>Swal.fire({'title':'This user is already enrolled in this project', 'icon':'info'});</script>";
+            echo "<script defer>Swal.fire({'title':'This user is already enrolled in this project', 'icon':'info', 'showConfirmButton': false});</script>";
         } else if ($result === TRUE) {
-            echo "<script defer>Swal.fire({'title':'The user was successfully enrolled in this project', 'icon':'success'});</script>";
+            echo "<script defer>Swal.fire({'title':'The user was successfully enrolled in this project', 'icon':'success', 'showConfirmButton': false});</script>";
         } else if (!$result) {
-            echo "<script defer>Swal.fire({'title':'There was a problem enrolling this user in this project', 'icon':'error'});</script>";
+            echo "<script defer>Swal.fire({'title':'There was a problem enrolling this user in this project', 'icon':'error', 'showConfirmButton': false});</script>";
         }
     }
 
@@ -87,7 +48,7 @@ $module::$UI->ShowHeader("Enroll");
     $module::$AUTH->set_csrf_token();
     ?>
 
-    <div class="wrapper">
+    <div class="wrapper enroll-wrapper">
         <h2>Enroll a Participant</h2>
         <p>Search for a participant by email , name, or username, and enroll the selected participant in this project.</p>
         <p><em>If the participant does not have an account, you can register them </em><strong><a href="<?= $module->getUrl("src/register.php"); ?>">here</a></strong>.</p>
@@ -124,7 +85,7 @@ $module::$UI->ShowHeader("Enroll");
                 $("#confirm-form").hide();
             }
         </script>
-        <form class="enroll-form" id="enroll-form" onkeydown="return event.key != 'Enter';">
+        <form class="rcpro-form enroll-form" id="enroll-form" onkeydown="return event.key != 'Enter';">
             <div class="form-group">
                 <div id="searchContainer">
                     <label>Search</label>
@@ -133,7 +94,7 @@ $module::$UI->ShowHeader("Enroll");
                 </div>
             </div>
         </form>
-        <form class="confirm-form" name="confirm-form" id="confirm-form" action="<?= $module->getUrl("src/enroll.php"); ?>" method="POST" enctype="multipart/form-data" target="_self" style="display:none;">
+        <form class="rcpro-form confirm-form" name="confirm-form" id="confirm-form" action="<?= $module->getUrl("src/enroll.php"); ?>" method="POST" enctype="multipart/form-data" target="_self" style="display:none;">
             <div class="form-group">
                 <div class="selection" id="selectionContainer">
                     <div class="mb-3 row">
@@ -177,7 +138,7 @@ $module::$UI->ShowHeader("Enroll");
                     <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
                     <div>
                         <hr>
-                        <button type="submit" class="btn btn-primary">Enroll Participant</button>
+                        <button type="submit" class="btn btn-rcpro">Enroll Participant</button>
                         <button type="button" onclick="(function() { resetForm(); return false;})()" class="btn btn-secondary">Cancel</button>
                     </div>
                 </div>

@@ -65,6 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $module->sendNewParticipantEmail($username, $email, $fname_clean, $lname_clean);
             $icon = "success";
             $title = "Participant Registered";
+
             $module->log("Participant Registered", [
                 "rcpro_username" => $username,
                 "redcap_user"    => USERID
@@ -81,7 +82,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 Swal.fire({
                         icon: "<?= $icon ?>",
                         title: "<?= $title ?>",
-                        html: "<?= $body ?>"
+                        html: "<?= $body ?>",
+                        showConfirmButton: false
                     })
                     .then(() => {
                         if (success) {
@@ -98,24 +100,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $module::$AUTH->set_csrf_token();
 
 ?>
-<style>
-    .wrapper {
-        width: 720px;
-        padding: 20px;
-    }
-
-    .register-form {
-        width: 360px;
-        border-radius: 5px;
-        border: 1px solid #cccccc;
-        padding: 20px;
-        box-shadow: 0px 0px 5px #eeeeee;
-    }
-
-    button:hover {
-        outline: none !important;
-    }
-</style>
+<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro.php") ?>" />
 </head>
 
 <body>
@@ -123,7 +108,7 @@ $module::$AUTH->set_csrf_token();
         <h2>Register a Participant</h2>
         <p>Submit this form to create a new account for this participant.</p>
         <p><em>If the participant already has an account, you can enroll them in this project </em><strong><a href="<?= $module->getUrl("src/enroll.php"); ?>">here</a></strong>.</p>
-        <form class="register-form" action="<?= $module->getUrl("src/register.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
+        <form class="rcpro-form register-form" action="<?= $module->getUrl("src/register.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
             <div class="form-group">
                 <label>First Name</label>
                 <input type="text" name="REDCapPRO_FName" class="form-control <?php echo (!empty($fname_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $fname_clean; ?>">
@@ -140,7 +125,7 @@ $module::$AUTH->set_csrf_token();
                 <span class="invalid-feedback"><?php echo $email_err; ?></span>
             </div>
             <div class="form-group">
-                <button type="submit" class="btn btn-primary" value="Submit">Submit</button>
+                <button type="submit" class="btn btn-rcpro" value="Submit">Submit</button>
             </div>
             <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
         </form>

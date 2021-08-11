@@ -27,6 +27,15 @@ class REDCapPRO extends AbstractExternalModule
     static $PARTICIPANT;
     static $PROJECT;
     static $DAG;
+    static $COLORS = [
+        "primary"          => "#900000",
+        "secondary"        => "#17a2b8",
+        "primaryHighlight" => "#c91616",
+        "primaryDark"      => "#7a0000",
+        "lightGrey"        => "#f9f9f9",
+        "mediumGrey"       => "#dddddd",
+        "darkGrey"         => "#6c757d"
+    ];
 
     function __construct()
     {

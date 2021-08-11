@@ -30,6 +30,13 @@ require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $module::$UI->ShowControlCenterHeader("Participants");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    // Validate token
+    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
+        header("location:" . $module->getUrl("src/cc_participants.php"));
+        return;
+    }
+
     try {
         $function = NULL;
         // SEND A PASSWORD RESET EMAIL
@@ -69,12 +76,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
+// set csrf token
+$module::$AUTH->set_csrf_token();
+
 // Get array of participants
 $participants = $module::$PARTICIPANT->getAllParticipants();
 
 ?>
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
-<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro.css") ?>">
+<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro_cc.css") ?>">
 
 <?php if ($_SERVER["REQUEST_METHOD"] == "POST") { ?>
     <script>
@@ -184,6 +194,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
             <input type="hidden" id="toChangeEmail" name="toChangeEmail">
             <input type="hidden" id="newEmail" name="newEmail">
             <input type="hidden" id="toDisenroll" name="toDisenroll">
+            <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
         <?php } ?>
     </form>
 </div>

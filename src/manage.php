@@ -227,72 +227,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
 
 
 ?>
-<style>
-    .wrapper {
-        display: inline-block;
-        padding: 20px;
-    }
-
-    .manage-form {
-        border-radius: 5px;
-        border: 1px solid #cccccc;
-        padding: 20px 20px 0px 20px;
-        box-shadow: 0px 0px 5px #eeeeee;
-    }
-
-    .manage-button {
-        margin: 20px 5px 0px;
-    }
-
-    #RCPRO_Manage_Users tr.even {
-        background-color: white !important;
-        cursor: pointer;
-    }
-
-    #RCPRO_Manage_Users tr.odd {
-        background-color: white !important;
-        cursor: pointer;
-    }
-
-    #RCPRO_Manage_Users tr:hover {
-        background-color: #dddddd !important;
-    }
-
-    #RCPRO_Manage_Users tr.selected {
-        background-color: #900000 !important;
-        color: white !important;
-    }
-
-    table.dataTable tbody td {
-        vertical-align: middle;
-    }
-
-    .dt-center {
-        text-align: center;
-    }
-
-    button:hover {
-        outline: none !important;
-    }
-
-    .btn-rcpro {
-        background-color: #900000;
-        border-color: #900000;
-        color: white;
-    }
-
-    .btn-rcpro:active,
-    .btn-rcpro:hover {
-        background-color: #700000;
-        border-color: #700000;
-        color: white;
-    }
-
-    .btn-rcpro:focus {
-        outline: 0;
-        box-shadow: 0 0 0 0.2rem #90000063;
-    }
-</style>
+<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro.php") ?>" />
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
 </head>
 
@@ -314,14 +249,14 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
     <div class="manageContainer wrapper">
         <h2>Manage Study Participants</h2>
         <p>Reset passwords, disenroll from study, etc.</p>
-        <form class="manage-form" id="manage-form" action="<?= $module->getUrl("src/manage.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
+        <form class="rcpro-form" id="manage-form" action="<?= $module->getUrl("src/manage.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
             <?php if (count($participantList) === 0) { ?>
                 <div>
                     <p>No participants have been enrolled in this study</p>
                 </div>
             <?php } else { ?>
                 <div class="form-group">
-                    <table class="table" id="RCPRO_Manage_Users" style="width:100%;">
+                    <table class="table rcpro-datatable" id="RCPRO_TABLE" style="width:100%;">
                         <caption>Study Participants</caption>
                         <thead>
                             <tr>
@@ -349,9 +284,6 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                                 $dag_name       = \REDCap::getGroupNames(false, $dag_id);
                                 $dag_name_clean = count($dag_name) === 1 ? \REDCap::escapeHtml($dag_name) : "Unassigned";
                             ?>
-                                <?php
-                                //TODO: ONLY ADD DATA TO ROW IF THE USER HAS THE APPROPRIATE ROLE!!!!! 
-                                ?>
                                 <tr data-id="<?= $participant["log_id"] ?>" data-username="<?= $username_clean ?>" data-fname="<?= $fname_clean ?>" data-lname="<?= $lname_clean ?>" data-email="<?= $email_clean ?>">
                                     <td><?= $username_clean ?></td>
                                     <?php if ($role > 1) { ?>
@@ -372,11 +304,11 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                                                         title: "Switch Data Access Group for <?= $fname_clean . " " . $lname_clean ?>?",
                                                         html: `From ${oldDAGName} to ${newDAGName}`,
                                                         icon: "warning",
-                                                        iconColor: "#900000",
+                                                        iconColor: "<?= $module::$COLORS["primary"] ?>",
                                                         confirmButtonText: "Switch DAG",
                                                         allowEnterKey: false,
                                                         showCancelButton: true,
-                                                        confirmButtonColor: "#900000"
+                                                        confirmButtonColor: "<?= $module::$COLORS["primary"] ?>"
                                                     }).then((resp) => {
                                                         if (resp.isConfirmed) {
                                                             clearForm();
@@ -401,8 +333,8 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                             <?php } ?>
                         </tbody>
                     </table>
-                    <button type="button" class="btn btn-secondary btn-sm manage-button" onclick='(function(){
-                        let table = $("#RCPRO_Manage_Users").DataTable();
+                    <button type="button" class="btn btn-secondary rcpro-form-button" onclick='(function(){
+                        let table = $("#RCPRO_TABLE").DataTable();
                         let row = table.rows( { selected: true } );
                         if (row[0].length) {
                             let participant_id = row.nodes()[0].dataset.id;
@@ -412,8 +344,8 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                         }
                     })();'>Reset Password</button>
                     <?php if ($role > 2) { ?>
-                        <button type="button" class="btn btn-secondary btn-sm manage-button" onclick='(function(){
-                            let table = $("#RCPRO_Manage_Users").DataTable();
+                        <button type="button" class="btn btn-secondary rcpro-form-button" onclick='(function(){
+                            let table = $("#RCPRO_TABLE").DataTable();
                             let row = table.rows( { selected: true } );
                             if (row[0].length) {
                                 let dataset = row.nodes()[0].dataset;
@@ -423,7 +355,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                                     inputPlaceholder: dataset.email,
                                     confirmButtonText: "Change Email",
                                     showCancelButton: true,
-                                    confirmButtonColor: "#900000"
+                                    confirmButtonColor: "<?= $module::$COLORS["primary"] ?>"
                                 }).then((result) => {
                                     if (result.isConfirmed) {
                                         clearForm();
@@ -436,19 +368,19 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                         })();'>Change Email</button>
                     <?php } ?>
                     <?php if ($role > 1) { ?>
-                        <button type="button" class="btn btn-rcpro btn-sm manage-button" onclick='(function(){
-                            let table = $("#RCPRO_Manage_Users").DataTable();
+                        <button type="button" class="btn btn-rcpro rcpro-form-button" onclick='(function(){
+                            let table = $("#RCPRO_TABLE").DataTable();
                             let row = table.rows( { selected: true } );
                             if (row[0].length) {
                                 let dataset = row.nodes()[0].dataset;
                                 Swal.fire({
                                     icon: "warning",
-                                    iconColor: "#900000",
+                                    iconColor: "<?= $module::$COLORS["primary"] ?>",
                                     title: `Are you sure you want to remove ${dataset.fname} ${dataset.lname} from this project?`,
                                     confirmButtonText: "Remove Participant",
                                     allowEnterKey: false,
                                     showCancelButton: true,
-                                    confirmButtonColor: "#900000"
+                                    confirmButtonColor: "<?= $module::$COLORS["primary"] ?>"
                                 }).then((result) => {
                                     if (result.isConfirmed) {
                                         clearForm();
@@ -483,7 +415,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
             }
 
             // Initialize DataTable
-            let datatable = $('#RCPRO_Manage_Users').DataTable({
+            let datatable = $('#RCPRO_TABLE').DataTable({
                 select: {
                     style: 'single'
                 }
@@ -491,14 +423,14 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
 
             // Activate/Deactivate buttons based on selections
             datatable.on('select', function(e, dt, type, indexes) {
-                $('.manage-button').attr("disabled", false);
+                $('.rcpro-form-button').attr("disabled", false);
             });
             datatable.on('deselect', function(e, dt, type, indexes) {
-                $('.manage-button').attr("disabled", true);
+                $('.rcpro-form-button').attr("disabled", true);
             });
 
             // Start with buttons deactivated
-            $('.manage-button').attr("disabled", true);
+            $('.rcpro-form-button').attr("disabled", true);
 
             // Clicking on dag selector shouldn't select the row
             $('.dag_select').click((evt) => {

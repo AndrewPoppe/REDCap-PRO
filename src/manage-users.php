@@ -41,7 +41,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <script>
             Swal.fire({
                 icon: "success",
-                title: "Roles successfully changed"
+                title: "Roles successfully changed",
+                showConfirmButton: false
             });
         </script>
     <?php
@@ -51,7 +52,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             Swal.fire({
                 icon: "error",
                 title: "Error",
-                text: "<?= $e->getMessage(); ?>"
+                text: "<?= $e->getMessage(); ?>",
+                showConfirmButton: false
             });
         </script>
 <?php
@@ -62,46 +64,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $module::$AUTH->set_csrf_token();
 
 ?>
-<style>
-    .wrapper {
-        display: inline-block;
-        padding: 20px;
-    }
-
-    .manage-users-form {
-        border-radius: 5px;
-        border: 1px solid #cccccc;
-        padding: 20px;
-        box-shadow: 0px 0px 5px #eeeeee;
-    }
-
-    #RCPRO_Manage_Staff tr.even {
-        background-color: white !important;
-    }
-
-    #RCPRO_Manage_Staff tr.odd {
-        background-color: white !important;
-    }
-
-    table.dataTable tbody td {
-        vertical-align: middle;
-    }
-
-    #infotext {
-        cursor: pointer;
-        text-decoration: underline;
-        font-weight: bold;
-        color: #17a2b8;
-    }
-
-    #infotext:hover {
-        text-shadow: 0px 0px 5px #17a2b8;
-    }
-
-    button:hover {
-        outline: none !important;
-    }
-</style>
+<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro.php") ?>" />
 </head>
 
 <body>
@@ -111,10 +74,10 @@ $module::$AUTH->set_csrf_token();
         <p>Set <span id="infotext" onclick="(function() {
                 Swal.fire({
                     icon: 'info',
-                    iconColor: '#17a2b8',
+                    iconColor: 'black',
                     title: 'Staff Roles',
                     confirmButtonText: 'Got it!',
-                    confirmButtonColor: '#17a2b8',
+                    confirmButtonColor: '<?= $module::$COLORS["secondary"] ?>',
                     html: `Staff may have one of the following roles:<br><br>
                         <div style='text-align:left;'>
                             <ul>
@@ -124,14 +87,14 @@ $module::$AUTH->set_csrf_token();
                             </ul><br>
                             </div>`
                 })})();">staff permissions</span> to REDCapPRO</p>
-        <form class="manage-users-form" id="manage-users-form" action="<?= $module->getUrl("src/manage-users.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
+        <form class="rcpro-form" id="manage-users-form" action="<?= $module->getUrl("src/manage-users.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
             <?php if (count($userList) === 0) { ?>
                 <div>
                     <p>No users have access to this project.</p>
                 </div>
             <?php } else { ?>
                 <div class="form-group">
-                    <table class="table" id="RCPRO_Manage_Staff">
+                    <table class="table rcpro-datatable" id="RCPRO_Manage_Staff">
                         <caption></caption>
                         <thead>
                             <tr>
@@ -163,9 +126,9 @@ $module::$AUTH->set_csrf_token();
                             <?php } ?>
                         </tbody>
                     </table>
+                    <button class="btn btn-rcpro role_select_button" id="role_select_submit" type="submit" disabled>Save Changes</button>
+                    <button class="btn btn-secondary role_select_button" id="role_select_reset" disabled>Reset</button>
                 </div>
-                <button class="btn btn-primary role_select_button" id="role_select_submit" type="submit" disabled>Save Changes</button>
-                <button class="btn btn-secondary role_select_button" id="role_select_reset" disabled>Reset</button>
             <?php } ?>
             <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
         </form>
