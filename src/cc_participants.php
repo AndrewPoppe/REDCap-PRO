@@ -83,7 +83,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
 
 ?>
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
-<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro_cc.css") ?>">
+<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro_cc.php") ?>">
 
 <?php if ($_SERVER["REQUEST_METHOD"] == "POST") { ?>
     <script>

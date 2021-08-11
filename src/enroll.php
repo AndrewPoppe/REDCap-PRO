@@ -12,7 +12,7 @@ echo "<title>" . $module::$APPTITLE . " - Enroll</title>";
 
 
 ?>
-<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro.php") ?>" />
+<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
 
 <?php
 if (isset($_POST["id"]) && isset($project_id)) {

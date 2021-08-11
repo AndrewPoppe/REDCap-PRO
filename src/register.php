@@ -97,7 +97,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $module::$AUTH->set_csrf_token();
 
 ?>
-<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro.php") ?>" />
+<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
 
 <div class="wrapper" hidden>
     <h2>Register a Participant</h2>

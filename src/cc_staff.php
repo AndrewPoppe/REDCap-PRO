@@ -17,7 +17,7 @@ function createProjectsCell(array $projects)
 
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $module::$UI->ShowControlCenterHeader("Staff");
-echo '<link rel="stylesheet" type="text/css" href="' . $module->getUrl("css/rcpro_cc.css") . '">';
+echo '<link rel="stylesheet" type="text/css" href="' . $module->getUrl("src/css/rcpro_cc.php") . '">';
 
 if (!SUPER_USER) {
     return;

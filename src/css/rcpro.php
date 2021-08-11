@@ -21,7 +21,7 @@
 }
 
 .rcpro-datatable tr.odd {
-    background-color: white !important;    
+    background-color: <?=$module::$COLORS["lightGrey"] ?> !important;    
 }
 
 #RCPRO_TABLE tr {
@@ -39,6 +39,14 @@
 
 table.dataTable tbody td {
     vertical-align: middle !important;
+}
+
+table.table th {
+    border-top: none;
+}
+
+table.table td {
+    border-top: 1px solid #eeeeee !important;
 }
 
 .dt-center {

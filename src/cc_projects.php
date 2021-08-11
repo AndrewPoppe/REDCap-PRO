@@ -15,7 +15,7 @@ if (!SUPER_USER) {
 <head>
     <meta charset='UTF-8'>
     <title>REDCapPRO Projects</title>
-    <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro_cc.css") ?>">
+    <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro_cc.php") ?>">
 </head>
 
 <body>

@@ -225,7 +225,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
 
 
 ?>
-<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro.php") ?>" />
+<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
 <link rel='stylesheet' type='text/css' href='https://cdn.datatables.net/select/1.3.3/css/select.dataTables.min.css' />
 <script type='text/javascript' src='https://cdn.datatables.net/select/1.3.3/js/dataTables.select.min.js' defer></script>

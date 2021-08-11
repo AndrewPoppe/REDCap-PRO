@@ -8,7 +8,7 @@ if ($role < 3) {
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module::$UI->ShowHeader("Users");
 echo "<title>" . $module::$APPTITLE . " - Staff</title>
-<link rel='stylesheet' type='text/css' href='" . $module->getUrl('css/rcpro.php') . "'/>";
+<link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>";
 ?>
 
 
@@ -87,7 +87,7 @@ $module::$AUTH->set_csrf_token();
     <div id="loading-container" class="loader-container">
         <div id="loading" class="loader"></div>
     </div>
-    <div id="parent" class="dataTableParentHidden">
+    <div id="parent" class="dataTableParentHidden" style="display: none;">
         <form class="rcpro-form" id="manage-users-form" action="<?= $module->getUrl("src/manage-users.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
             <?php if (count($userList) === 0) { ?>
                 <div>
@@ -171,6 +171,7 @@ $module::$AUTH->set_csrf_token();
                 }
             });
             $('#parent').removeClass('dataTableParentHidden');
+            $('#parent').show();
             $('#loading-container').hide();
         });
     })(window.jQuery, window, document);

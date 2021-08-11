@@ -35,7 +35,8 @@ class REDCapPRO extends AbstractExternalModule
         "primaryLight"     => "#ffadad",
         "lightGrey"        => "#f9f9f9",
         "mediumGrey"       => "#dddddd",
-        "darkGrey"         => "#6c757d"
+        "darkGrey"         => "#6c757d",
+        "blue"             => "#000090"
     ];
 
     function __construct()

@@ -1,3 +1,5 @@
+<?php header("Content-type: text/css; charset: UTF-8");?>
+
 .wrapper {
     display: inline-block;
     padding: 20px;
@@ -18,11 +20,11 @@
 }
 
 #RCPRO_TABLE tr.odd {
-    background-color: #f9f9f9 !important;
+    background-color: <?=$module::$COLORS["lightGrey"] ?> !important;
 }
 
 #RCPRO_TABLE tbody .hover:hover {
-    background-color: #ddd !important;
+    background-color: <?=$module::$COLORS["mediumGrey"] ?> !important;
 }
 
 #RCPRO_TABLE tbody .pointer {
@@ -30,12 +32,12 @@
 }
 
 .rcpro_project_link {
-    color: #000090 !important;
+    color: <?=$module::$COLORS["blue"] ?> !important;
     font-weight: bold !important;
 }
 
 .rcpro_project_link:hover {
-    color: #900000 !important;
+    color: <?=$module::$COLORS["primary"] ?> !important;
     font-weight: bold !important;
     cursor: pointer !important;
 }
@@ -46,27 +48,35 @@
 }
 
 .rcpro_project_link_inactive:hover {
-    color: #000000 !important;
+    color: black !important;
     cursor: pointer !important;
     text-decoration: line-through !important;
 }
 
 .rcpro_participant_link,
 .rcpro_user_link {
-    color: #000090 !important;
+    color: <?=$module::$COLORS["blue"] ?> !important;
     font-weight: bold !important;
 }
 
 .rcpro_participant_link:hover,
 .rcpro_user_link:hover {
-    color: #900000 !important;
+    color: <?=$module::$COLORS["primary"] ?> !important;
     font-weight: bold !important;
     cursor: pointer !important;
-    background-color: #ddd !important;
+    background-color: <?=$module::$COLORS["mediumGrey"] ?> !important;
 }
 
-table.dataTable tbody td {
+table.dataTable td,  {
     vertical-align: middle;
+}
+
+table.table th {
+    border-top: none;
+}
+
+table.table td {
+    border-top: 1px solid #eeeeee !important;
 }
 
 .dt-center {
@@ -82,7 +92,7 @@ table {
 }
 
 table.dataTable tbody tr.even {
-    background-color: #f2f2f2;
+    background-color: <?=$module::$COLORS["lightGrey"] ?>;
 }
 
 button.dt-button {
@@ -90,7 +100,7 @@ button.dt-button {
 }
 
 table.dataTable tr.dtrg-group.dtrg-level-0 td {
-    background-color: #00356b;
+    background-color: <?=$module::$COLORS["primary"] ?>;
     color: #f9f9f9;
 }
 
@@ -112,7 +122,7 @@ div.dtsp-panesContainer tr {
 }
 
 div.dtsp-panesContainer tr.selected {
-    background-color: #900000 !important;
+    background-color: <?=$module::$COLORS["primary"] ?> !important;
     color: #f9f9f9;
 }
 
@@ -122,7 +132,7 @@ div.dtsp-panesContainer tr:hover {
 }
 
 div.dtsp-panesContainer tr.selected:hover {
-    background-color: #ffbfbf !important;
+    background-color: <?= $module::$COLORS["primaryHighlight"] ?> !important;
     color: black;
     cursor: pointer;
 }
@@ -164,14 +174,14 @@ div.dtsb-searchBuilder select {
 }
 
 .loader {
-    border: 16px solid #ddd;
+    border: 16px solid <?=$module::$COLORS["mediumGrey"]?>;
     /* Light grey */
-    border-top: 16px solid #900000;
+    border-top: 16px solid <?=$module::$COLORS["primary"]?>;
     /* Red */
     border-radius: 50%;
     width: 120px;
     height: 120px;
-    animation: spin 1s linear infinite;
+    animation: spin 0.75s linear infinite;
 }
 
 @keyframes spin {
