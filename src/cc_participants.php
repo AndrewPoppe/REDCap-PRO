@@ -204,10 +204,10 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                 dom: 'lBfrtip',
                 stateSave: true,
                 stateSaveCallback: function(settings, data) {
-                    localStorage.setItem('DataTables_' + settings.sInstance, JSON.stringify(data))
+                    localStorage.setItem('DataTables_ccpart_' + settings.sInstance, JSON.stringify(data))
                 },
                 stateLoadCallback: function(settings) {
-                    return JSON.parse(localStorage.getItem('DataTables_' + settings.sInstance))
+                    return JSON.parse(localStorage.getItem('DataTables_ccpart_' + settings.sInstance))
                 },
                 scrollY: '50vh',
                 scrollCollapse: true,

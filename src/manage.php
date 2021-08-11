@@ -418,6 +418,13 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
             let datatable = $('#RCPRO_TABLE').DataTable({
                 select: {
                     style: 'single'
+                },
+                stateSave: true,
+                stateSaveCallback: function(settings, data) {
+                    localStorage.setItem('DataTables_manage_' + settings.sInstance, JSON.stringify(data))
+                },
+                stateLoadCallback: function(settings) {
+                    return JSON.parse(localStorage.getItem('DataTables_manage_' + settings.sInstance))
                 }
             });
 

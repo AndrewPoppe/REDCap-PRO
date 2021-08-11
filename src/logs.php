@@ -106,10 +106,10 @@ $tableData = $module->queryLogs("SELECT " . implode(", ", $columns));
                 dom: 'lBfrtip',
                 stateSave: true,
                 stateSaveCallback: function(settings, data) {
-                    localStorage.setItem('DataTables_' + settings.sInstance, JSON.stringify(data))
+                    localStorage.setItem('DataTables_logs_' + settings.sInstance, JSON.stringify(data))
                 },
                 stateLoadCallback: function(settings) {
-                    return JSON.parse(localStorage.getItem('DataTables_' + settings.sInstance))
+                    return JSON.parse(localStorage.getItem('DataTables_logs_' + settings.sInstance))
                 },
                 colReorder: true,
                 buttons: [{

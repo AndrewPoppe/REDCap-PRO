@@ -159,7 +159,15 @@ $module::$AUTH->set_csrf_token();
                 });
             });
 
-            $('#RCPRO_Manage_Staff').DataTable();
+            $('#RCPRO_Manage_Staff').DataTable({
+                stateSave: true,
+                stateSaveCallback: function(settings, data) {
+                    localStorage.setItem('DataTables_staff_' + settings.sInstance, JSON.stringify(data))
+                },
+                stateLoadCallback: function(settings) {
+                    return JSON.parse(localStorage.getItem('DataTables_staff_' + settings.sInstance))
+                }
+            });
             $('.role_select').on("change", function(evt) {
                 let changed = checkRoleChanges();
                 if (changed) {
