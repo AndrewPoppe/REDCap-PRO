@@ -21,7 +21,6 @@ function createProjectsCell(array $projects)
 
 
 ?>
-<!DOCTYPE html>
 <?php
 if (!SUPER_USER) {
     return;

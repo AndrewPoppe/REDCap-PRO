@@ -32,6 +32,7 @@ class REDCapPRO extends AbstractExternalModule
         "secondary"        => "#17a2b8",
         "primaryHighlight" => "#c91616",
         "primaryDark"      => "#7a0000",
+        "primaryLight"     => "#ffadad",
         "lightGrey"        => "#f9f9f9",
         "mediumGrey"       => "#dddddd",
         "darkGrey"         => "#6c757d"

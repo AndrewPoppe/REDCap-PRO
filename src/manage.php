@@ -5,12 +5,10 @@ if ($role === 0) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
-echo "<!DOCTYPE html>
-<html lang='en'>
-<head>
-<meta charset='UTF-8'><title>" . $module::$APPTITLE . " - Manage</title>";
+
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module::$UI->ShowHeader("Manage");
+echo "<title>" . $module::$APPTITLE . " - Manage</title>";
 
 // RCPRO Project ID 
 $rcpro_project_id = $module::$PROJECT->getProjectIdFromPID($project_id);
@@ -120,10 +118,10 @@ function switchDAG(int $rcpro_participant_id, ?string $newDAG)
             $participant_info = $module::$PARTICIPANT->getParticipantInfo($rcpro_participant_id);
             $module->log("Participant DAG Switched", [
                 "rcpro_participant_id" => $participant_info["User_ID"],
-                "rcpro_username" => $participant_info["Username"],
-                "rcpro_project_id" => $rcpro_project_id,
-                "rcpro_link_id" => $link_id,
-                "project_dag" => $newDAG
+                "rcpro_username"       => $participant_info["Username"],
+                "rcpro_project_id"     => $rcpro_project_id,
+                "rcpro_link_id"        => $link_id,
+                "project_dag"          => $newDAG
             ]);
             $title = "Successfully switched participant's Data Access Group.";
             $icon = "success";
@@ -229,26 +227,26 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
 ?>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro.php") ?>" />
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
-</head>
+<link rel='stylesheet' type='text/css' href='https://cdn.datatables.net/select/1.3.3/css/select.dataTables.min.css' />
+<script type='text/javascript' src='https://cdn.datatables.net/select/1.3.3/js/dataTables.select.min.js' defer></script>
 
-<body>
+<?php if ($_SERVER["REQUEST_METHOD"] == "POST") { ?>
+    <script>
+        Swal.fire({
+            icon: "<?= $icon ?>",
+            title: "<?= $title ?>",
+            showConfirmButton: "<?= $showConfirm ?>"
+        });
+    </script>
+<?php } ?>
 
-    <link rel='stylesheet' type='text/css' href='https://cdn.datatables.net/select/1.3.3/css/select.dataTables.min.css' />
-    <script type='text/javascript' src='https://cdn.datatables.net/select/1.3.3/js/dataTables.select.min.js' defer></script>
-
-    <?php if ($_SERVER["REQUEST_METHOD"] == "POST") { ?>
-        <script>
-            Swal.fire({
-                icon: "<?= $icon ?>",
-                title: "<?= $title ?>",
-                showConfirmButton: "<?= $showConfirm ?>"
-            });
-        </script>
-    <?php } ?>
-
-    <div class="manageContainer wrapper">
-        <h2>Manage Study Participants</h2>
-        <p>Reset passwords, disenroll from study, etc.</p>
+<div class="manageContainer wrapper">
+    <h2>Manage Study Participants</h2>
+    <p>Reset passwords, disenroll from study, etc.</p>
+    <div id="loading-container" class="loader-container">
+        <div id="loading" class="loader"></div>
+    </div>
+    <div id="parent" class="dataTableParentHidden">
         <form class="rcpro-form" id="manage-form" action="<?= $module->getUrl("src/manage.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
             <?php if (count($participantList) === 0) { ?>
                 <div>
@@ -302,14 +300,14 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                                                 if (newDAG !== origDAG) {
                                                     Swal.fire({
                                                         title: "Switch Data Access Group for <?= $fname_clean . " " . $lname_clean ?>?",
-                                                        html: `From ${oldDAGName} to ${newDAGName}`,
+                                                        html: "From "+oldDAGName+" to "+newDAGName,
                                                         icon: "warning",
                                                         iconColor: "<?= $module::$COLORS["primary"] ?>",
                                                         confirmButtonText: "Switch DAG",
                                                         allowEnterKey: false,
                                                         showCancelButton: true,
                                                         confirmButtonColor: "<?= $module::$COLORS["primary"] ?>"
-                                                    }).then((resp) => {
+                                                    }).then(function(resp) {
                                                         if (resp.isConfirmed) {
                                                             clearForm();
                                                             $("#toSwitchDag").val("<?= $participant["log_id"] ?>");
@@ -350,13 +348,13 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                             if (row[0].length) {
                                 let dataset = row.nodes()[0].dataset;
                                 Swal.fire({
-                                    title: `Enter the new email address for ${dataset.fname} ${dataset.lname}`,
+                                    title: "Enter the new email address for "+dataset.fname+" "+dataset.lname,
                                     input: "email",
                                     inputPlaceholder: dataset.email,
                                     confirmButtonText: "Change Email",
                                     showCancelButton: true,
                                     confirmButtonColor: "<?= $module::$COLORS["primary"] ?>"
-                                }).then((result) => {
+                                }).then(function(result) {
                                     if (result.isConfirmed) {
                                         clearForm();
                                         $("#toChangeEmail").val(dataset.id);
@@ -376,12 +374,12 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                                 Swal.fire({
                                     icon: "warning",
                                     iconColor: "<?= $module::$COLORS["primary"] ?>",
-                                    title: `Are you sure you want to remove ${dataset.fname} ${dataset.lname} from this project?`,
+                                    title: "Are you sure you want to remove "+dataset.fname+" "+dataset.lname+" from this project?",
                                     confirmButtonText: "Remove Participant",
                                     allowEnterKey: false,
                                     showCancelButton: true,
                                     confirmButtonColor: "<?= $module::$COLORS["primary"] ?>"
-                                }).then((result) => {
+                                }).then(function(result) {
                                     if (result.isConfirmed) {
                                         clearForm();
                                         $("#toDisenroll").val(dataset.id);
@@ -402,7 +400,9 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
             <?php } ?>
         </form>
     </div>
-    <script>
+</div>
+<script>
+    (function($, window, document) {
         $(document).ready(function() {
             // Function for resetting manage-form values
             window.clearForm = function() {
@@ -433,12 +433,14 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
             $('.rcpro-form-button').attr("disabled", true);
 
             // Clicking on dag selector shouldn't select the row
-            $('.dag_select').click((evt) => {
+            $('.dag_select').click(function(evt) {
                 evt.stopPropagation();
             });
+            $('#parent').removeClass('dataTableParentHidden');
+            $('#loading-container').hide();
         });
-    </script>
-</body>
+    })(window.jQuery, window, document);
+</script>
 
 <?php
 include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';

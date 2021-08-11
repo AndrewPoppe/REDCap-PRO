@@ -3,11 +3,6 @@ if (!SUPER_USER) {
     return;
 }
 
-
-?>
-<!DOCTYPE html>
-<?php
-
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $module::$UI->ShowControlCenterHeader("Logs");
 
@@ -64,108 +59,105 @@ $columns = [
 $tableData = $module->queryLogs("SELECT " . implode(', ', $columns) . " AND (project_id IS NULL OR project_id IS NOT NULL)");
 
 ?>
-
-<body>
-    <div class="logsContainer wrapper">
-        <div id="loading-container" class="loader-container">
-            <div id="loading" class="loader"></div>
-        </div>
-        <div id="logs" class="dataTableParentHidden outer_container">
-            <table class="table compact hover" id="RCPRO_TABLE" style="width:100%;">
-                <caption>REDCapPRO Logs</caption>
-                <thead>
-                    <tr>
-                        <?php
-                        foreach ($columns as $column) {
-                            echo "<th id='rcpro_${column}' class='dt-center'>" . ucwords(str_replace("_", " ", $column)) . "</th>";
-                        }
-                        ?>
-                    </tr>
-                </thead>
-                <tbody>
+<div class="logsContainer wrapper">
+    <div id="loading-container" class="loader-container">
+        <div id="loading" class="loader"></div>
+    </div>
+    <div id="logs" class="dataTableParentHidden outer_container">
+        <table class="table compact hover" id="RCPRO_TABLE" style="width:100%;">
+            <caption>REDCapPRO Logs</caption>
+            <thead>
+                <tr>
                     <?php
-                    while ($row = $tableData->fetch_assoc()) {
-                        $tds = "";
-                        $allData = "<div style=\\\"display: block; text-align:left;\\\"><ul>";
-                        foreach ($columns as $column) {
-                            $value = str_replace("\n", "\\n", addslashes(\REDCap::escapeHtml($row[$column])));
-                            $tds .= "<td>$value</td>";
-                            if ($value != "") {
-                                $allData .= "<li><strong>${column}</strong>: $value</li>";
-                            }
-                        }
-                        $allData .= "</ul></div>";
-                        echo "<tr class='hover pointer' onclick='(function() {Swal.fire({confirmButtonColor:\"#900000\", allowEnterKey: false, html:\"" . $allData . "\"})})()'>";
-                        echo $tds;
-                        echo "</tr>";
+                    foreach ($columns as $column) {
+                        echo "<th id='rcpro_${column}' class='dt-center'>" . ucwords(str_replace("_", " ", $column)) . "</th>";
                     }
                     ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <script>
-        (function($, window, document) {
-            $(document).ready(function() {
-                let dataTable = $('#RCPRO_TABLE').DataTable({
-                    //pageLength: 1000,
-                    dom: 'lBfrtip',
-                    stateSave: true,
-                    stateSaveCallback: function(settings, data) {
-                        localStorage.setItem('DataTables_' + settings.sInstance, JSON.stringify(data))
-                    },
-                    stateLoadCallback: function(settings) {
-                        return JSON.parse(localStorage.getItem('DataTables_' + settings.sInstance))
-                    },
-                    colReorder: true,
-                    buttons: [{
-                            extend: 'searchPanes',
-                            config: {
-                                cascadePanes: true,
-                            }
-
-                        },
-                        {
-                            extend: 'searchBuilder',
-                        },
-                        'colvis',
-                        {
-                            text: 'Restore Default',
-                            action: function(e, dt, node, config) {
-                                dt.state.clear();
-                                window.location.reload();
-                            }
-                        },
-                        {
-                            extend: 'csv',
-                            exportOptions: {
-                                columns: ':visible'
-                            }
-                        },
-                        {
-                            extend: 'excel',
-                            exportOptions: {
-                                columns: ':visible'
-                            }
-                        },
-                    ],
-                    scrollX: true,
-                    scrollY: '60vh',
-                    scrollCollapse: true
-                });
-
-                $('#logs').removeClass('dataTableParentHidden');
-                $('#loading-container').hide();
-
-                dataTable.on('buttons-action', function(e, buttonApi, dataTable, node, config) {
-                    const text = buttonApi.text();
-                    if (text.search(/Panes|Builder/)) {
-                        $('.dt-button-collection').draggable();
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                while ($row = $tableData->fetch_assoc()) {
+                    $tds = "";
+                    $allData = "<div style=\\\"display: block; text-align:left;\\\"><ul>";
+                    foreach ($columns as $column) {
+                        $value = str_replace("\n", "\\n", addslashes(\REDCap::escapeHtml($row[$column])));
+                        $tds .= "<td>$value</td>";
+                        if ($value != "") {
+                            $allData .= "<li><strong>${column}</strong>: $value</li>";
+                        }
                     }
-                });
-                dataTable.columns.adjust().draw();
+                    $allData .= "</ul></div>";
+                    echo "<tr class='hover pointer' onclick='(function() {Swal.fire({confirmButtonColor:\"#900000\", allowEnterKey: false, html:\"" . $allData . "\"})})()'>";
+                    echo $tds;
+                    echo "</tr>";
+                }
+                ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    (function($, window, document) {
+        $(document).ready(function() {
+            let dataTable = $('#RCPRO_TABLE').DataTable({
+                //pageLength: 1000,
+                dom: 'lBfrtip',
+                stateSave: true,
+                stateSaveCallback: function(settings, data) {
+                    localStorage.setItem('DataTables_' + settings.sInstance, JSON.stringify(data))
+                },
+                stateLoadCallback: function(settings) {
+                    return JSON.parse(localStorage.getItem('DataTables_' + settings.sInstance))
+                },
+                colReorder: true,
+                buttons: [{
+                        extend: 'searchPanes',
+                        config: {
+                            cascadePanes: true,
+                        }
+
+                    },
+                    {
+                        extend: 'searchBuilder',
+                    },
+                    'colvis',
+                    {
+                        text: 'Restore Default',
+                        action: function(e, dt, node, config) {
+                            dt.state.clear();
+                            window.location.reload();
+                        }
+                    },
+                    {
+                        extend: 'csv',
+                        exportOptions: {
+                            columns: ':visible'
+                        }
+                    },
+                    {
+                        extend: 'excel',
+                        exportOptions: {
+                            columns: ':visible'
+                        }
+                    },
+                ],
+                scrollX: true,
+                scrollY: '60vh',
+                scrollCollapse: true
             });
-        }(window.jQuery, window, document));
-    </script>
-    <?php require_once APP_PATH_DOCROOT . 'ControlCenter/footer.php'; ?>
-</body>
+
+            $('#logs').removeClass('dataTableParentHidden');
+            $('#loading-container').hide();
+
+            dataTable.on('buttons-action', function(e, buttonApi, dataTable, node, config) {
+                const text = buttonApi.text();
+                if (text.search(/Panes|Builder/)) {
+                    $('.dt-button-collection').draggable();
+                }
+            });
+            dataTable.columns.adjust().draw();
+        });
+    }(window.jQuery, window, document));
+</script>
+<?php require_once APP_PATH_DOCROOT . 'ControlCenter/footer.php'; ?>

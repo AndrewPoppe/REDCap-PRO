@@ -5,13 +5,14 @@ if ($role < 3) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
-echo "<!DOCTYPE html>
-<html lang='en'>
-<head>
-<meta charset='UTF-8'><title>" . $module::$APPTITLE . " - Staff</title>";
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module::$UI->ShowHeader("Users");
+echo "<title>" . $module::$APPTITLE . " - Staff</title>
+<link rel='stylesheet' type='text/css' href='" . $module->getUrl('css/rcpro.php') . "'/>";
+?>
 
+
+<?php
 $proj_id = $module::$PROJECT->getProjectIdFromPID($project_id);
 
 // Get list of users
@@ -64,29 +65,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $module::$AUTH->set_csrf_token();
 
 ?>
-<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro.php") ?>" />
-</head>
 
-<body>
-
-    <div class="manageContainer wrapper">
-        <h2>Manage Study Staff</h2>
-        <p>Set <span id="infotext" onclick="(function() {
-                Swal.fire({
-                    icon: 'info',
-                    iconColor: 'black',
-                    title: 'Staff Roles',
-                    confirmButtonText: 'Got it!',
-                    confirmButtonColor: '<?= $module::$COLORS["secondary"] ?>',
-                    html: `Staff may have one of the following roles:<br><br>
-                        <div style='text-align:left;'>
-                            <ul>
-                                <li><strong>Manager:</strong> Highest permissions. Has the ability to grant/revoke staff access. You are a manager if you are reading this.</li>
-                                <li><strong>User:</strong> Able to view participant identifying information, register participants, enroll/disenroll participants in the study, and initiate password reset.</li>
-                                <li><strong>Monitor:</strong> Basic access. Can only view usernames and initiate password resets.</li>
-                            </ul><br>
-                            </div>`
-                })})();">staff permissions</span> to REDCapPRO</p>
+<div class="manageContainer wrapper">
+    <h2>Manage Study Staff</h2>
+    <p>Set <span id="infotext" onclick="(function() {
+            Swal.fire({
+                icon: 'info',
+                iconColor: 'black',
+                title: 'Staff Roles',
+                confirmButtonText: 'Got it!',
+                confirmButtonColor: '<?= $module::$COLORS["secondary"] ?>',
+                html: 'Staff may have one of the following roles:<br><br>'+
+                    '<div style=\'text-align:left;\'>'+
+                        '<ul>'+
+                            '<li><strong>Manager:</strong> Highest permissions. Has the ability to grant/revoke staff access. You are a manager if you are reading this.</li>'+
+                            '<li><strong>User:</strong> Able to view participant identifying information, register participants, enroll/disenroll participants in the study, and initiate password reset.</li>'+
+                            '<li><strong>Monitor:</strong> Basic access. Can only view usernames and initiate password resets.</li>'+
+                        '</ul><br>'+
+                        '</div>'
+            })})();">staff permissions</span> to REDCapPRO</p>
+    <div id="loading-container" class="loader-container">
+        <div id="loading" class="loader"></div>
+    </div>
+    <div id="parent" class="dataTableParentHidden">
         <form class="rcpro-form" id="manage-users-form" action="<?= $module->getUrl("src/manage-users.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
             <?php if (count($userList) === 0) { ?>
                 <div>
@@ -133,11 +134,13 @@ $module::$AUTH->set_csrf_token();
             <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
         </form>
     </div>
-    <script>
-        (function() {
+</div>
+<script>
+    (function($, window, document) {
+        $(document).ready(function() {
             function checkRoleChanges() {
                 let changed = false;
-                $('.role_select').each((i, el) => {
+                $('.role_select').each(function(i, el) {
                     let val = $(el).val();
                     let orig_val = $(el).attr('orig_value');
                     if (val !== orig_val) {
@@ -147,9 +150,9 @@ $module::$AUTH->set_csrf_token();
                 return changed;
             }
 
-            $('#role_select_reset').on('click', (evt) => {
+            $('#role_select_reset').on('click', function(evt) {
                 evt.preventDefault();
-                $('.role_select').each((i, el) => {
+                $('.role_select').each(function(i, el) {
                     $(el).val($(el).attr('orig_value'));
                     $('#role_select_submit').attr("disabled", true);
                     $('#role_select_reset').attr("disabled", true);
@@ -157,7 +160,7 @@ $module::$AUTH->set_csrf_token();
             });
 
             $('#RCPRO_Manage_Staff').DataTable();
-            $('.role_select').on("change", (evt) => {
+            $('.role_select').on("change", function(evt) {
                 let changed = checkRoleChanges();
                 if (changed) {
                     $('#role_select_submit').removeAttr("disabled");
@@ -167,9 +170,11 @@ $module::$AUTH->set_csrf_token();
                     $('#role_select_reset').attr("disabled", true);
                 }
             });
-        })();
-    </script>
-</body>
+            $('#parent').removeClass('dataTableParentHidden');
+            $('#loading-container').hide();
+        });
+    })(window.jQuery, window, document);
+</script>
 
 <?php
 include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';

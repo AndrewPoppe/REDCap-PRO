@@ -1,23 +1,19 @@
 <?php header("Content-type: text/css; charset: UTF-8");?>
 
-.testColor {
-    color: <?=$module::$COLORS["darkGrey"] ?>;
-}
-
 .wrapper {
-    display: inline-block;
-    padding: 20px;
+    display: inline-block !important;
+    padding: 20px !important;
 }
 
 .rcpro-form {
-    border-radius: 5px;
-    border: 1px solid #cccccc;
-    padding: 20px 20px 0px 20px;
-    box-shadow: 0px 0px 5px #eeeeee;
+    border-radius: 5px !important;
+    border: 1px solid #cccccc !important;
+    padding: 20px 20px 0px 20px !important;
+    box-shadow: 0px 0px 5px #eeeeee !important;
 }
 
 .rcpro-form-button-old {
-    margin: 20px 5px 0px;
+    margin: 20px 5px 0px !important;
 }
 
 .rcpro-datatable tr.even {
@@ -29,7 +25,7 @@
 }
 
 #RCPRO_TABLE tr {
-    cursor: pointer;
+    cursor: pointer !important;
 }
 
 #RCPRO_TABLE tr:hover {
@@ -42,11 +38,11 @@
 }
 
 table.dataTable tbody td {
-    vertical-align: middle;
+    vertical-align: middle !important;
 }
 
 .dt-center {
-    text-align: center;
+    text-align: center !important;
 }
 
 button:hover {
@@ -54,25 +50,25 @@ button:hover {
 }
 
 .btn-rcpro {
-    background-color: <?=$module::$COLORS["primary"] ?>;
-    border-color: <?=$module::$COLORS["primary"] ?>;
-    color: white;
+    background-color: <?=$module::$COLORS["primary"] ?> !important;
+    border-color: <?=$module::$COLORS["primary"] ?> !important;
+    color: white !important;
 }
 
 .btn-rcpro:active,
 .btn-rcpro:hover {
-    background-color: <?=$module::$COLORS["primaryDark"] ?>;
-    border-color: <?=$module::$COLORS["primaryDark"] ?>;
-    color: white;
+    background-color: <?=$module::$COLORS["primaryDark"] ?> !important;
+    border-color: <?=$module::$COLORS["primaryDark"] ?> !important;
+    color: white !important;
 }
 
 .btn-rcpro:focus {
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem <?=$module::$COLORS["primary"] ?>63;
+    outline: 0 !important;
+    box-shadow: 0 0 0 0.2rem <?=$module::$COLORS["primary"] ?>63 !important;
 }
 
 .enroll-wrapper {
-    width: 720px;
+    width: 720px !important;
 }
 
 .enroll-form {
@@ -84,17 +80,17 @@ button:hover {
 }
 
 .searchResult {
-    cursor: pointer;
-    padding: 5px;
-    margin-top: 5px;
-    background-color: <?=$module::$COLORS["mediumGrey"] ?>;
-    border-radius: 5px;
-    color: black;
+    cursor: pointer !important;
+    padding: 5px !important;
+    margin-top: 5px !important;
+    background-color: <?=$module::$COLORS["mediumGrey"] ?> !important;
+    border-radius: 5px !important;
+    color: black !important;
 }
 
 .searchResult:hover {
-    background-color: <?=$module::$COLORS["primary"] ?>;
-    color: white;
+    background-color: <?=$module::$COLORS["primary"] ?> !important;
+    color: white !important;
 }
 
 .register-form {
@@ -102,17 +98,123 @@ button:hover {
 }
 
 #infotext {
-    cursor: pointer;
-    text-decoration: underline;
-    font-weight: bold;
-    color: <?= $module::$COLORS["secondary"] ?>;
+    cursor: pointer !important;
+    text-decoration: underline !important;
+    font-weight: bold !important;
+    color: <?= $module::$COLORS["secondary"] ?> !important;
 }
 
 #infotext:hover {
-    text-shadow: 0px 0px 5px <?= $module::$COLORS["secondary"] ?>;
+    text-shadow: 0px 0px 5px <?= $module::$COLORS["secondary"] ?> !important;
 }
 
 .swal2-icon.swal2-info {
-    color: <?= $module::$COLORS["secondary"] ?>;
-    border-color: <?= $module::$COLORS["secondary"] ?>;
+    color: <?= $module::$COLORS["secondary"] ?> !important;
+    border-color: <?= $module::$COLORS["secondary"] ?> !important;
+}
+
+.log-wrapper {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 95% !important;
+}
+
+#RCPRO_Logs tr.odd {
+    background-color: <?= $module::$COLORS["lightGrey"] ?> !important;
+}
+
+#RCPRO_Logs tr:hover {
+    background-color: <?= $module::$COLORS["mediumGrey"] ?> !important;
+    cursor: pointer;
+}
+
+table {
+    border-collapse: collapse !important;
+}
+
+button.dt-button {
+    padding: .1em .2em !important;
+}
+
+div.dt-buttons {
+    margin-left: 10px !important;
+}
+
+div.dtsp-panesContainer {
+    width: auto !important;
+}
+
+div.dtsp-panesContainer tr {
+    background-color: white !important;
+}
+
+div.dtsp-panesContainer tr.selected {
+    background-color: <?=$module::$COLORS["primary"] ?> !important;
+    color: <?=$module::$COLORS["lightGrey"] ?> !important;
+}
+
+div.dtsp-panesContainer tr:hover {
+    background-color: <?=$module::$COLORS["mediumGrey"] ?> !important;
+    cursor: pointer !important;
+}
+
+div.dtsp-panesContainer tr.selected:hover {
+    background-color: <?=$module::$COLORS["primaryLight"] ?> !important;
+    color: black !important;
+    cursor: pointer !important;
+}
+
+div.dataTableParentHidden {
+    overflow: hidden !important;
+    height: 0px !important;
+    width: 100% !important;
+    display: none !important;
+}
+
+div.ui-draggable {
+    cursor: move !important;
+    cursor: grab !important;
+    cursor: -moz-grab !important;
+    cursor: -webkit-grab !important;
+}
+
+div.ui-draggable-dragging {
+    cursor: grabbing !important;
+    cursor: -moz-grabbing !important;
+    cursor: -webkit-grabbing !important;
+}
+
+div.dtsb-searchBuilder {
+    cursor: inherit !important;
+}
+
+div.dtsb-searchBuilder select {
+    cursor: pointer !important;
+}
+
+.loader-container {
+    width: 90% !important;
+    display: flex;
+    justify-content: center !important;
+    height: 33vh !important;
+    align-items: center !important;
+}
+
+.loader {
+    border: 16px solid <?=$module::$COLORS["mediumGrey"] ?> !important;
+    border-top: 16px solid <?=$module::$COLORS["primary"] ?> !important;
+    border-radius: 50% !important;
+    width: 120px !important;
+    height: 120px !important;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }

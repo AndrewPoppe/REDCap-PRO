@@ -14,15 +14,15 @@ function createProjectsCell(array $projects)
     return $result;
 }
 
-?>
-<!DOCTYPE html>
-<link rel="stylesheet" type="text/css" href="<?= $module->getUrl("css/rcpro_cc.css") ?>">
-<?php
+
+require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
+$module::$UI->ShowControlCenterHeader("Staff");
+echo '<link rel="stylesheet" type="text/css" href="' . $module->getUrl("css/rcpro_cc.css") . '">';
+
 if (!SUPER_USER) {
     return;
 }
-require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
-$module::$UI->ShowControlCenterHeader("Staff");
+
 
 // Get array of staff (users)
 $users = $module->getAllUsers();
@@ -86,6 +86,3 @@ $users = $module->getAllUsers();
 <?php
 require_once APP_PATH_DOCROOT . 'ControlCenter/footer.php';
 ?>
-</body>
-
-</html>
