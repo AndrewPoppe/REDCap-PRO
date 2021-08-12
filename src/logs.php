@@ -49,6 +49,7 @@ $columns = [
     "error_message",
     "error_string",
     "active",
+    "active_status",
     "pid",
     "rcpro_project_id",
     "failed_attempts",

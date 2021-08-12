@@ -216,6 +216,9 @@ class REDCapPRO extends AbstractExternalModule
     /**
      * Hook that is triggered when a module is enabled in a Project
      * 
+     * It creates/updates a LINK entry in the module log. It also makes the user
+     * that enabled the EM a manager in the project.
+     * 
      * @param mixed $version
      * @param mixed $pid
      * 
@@ -228,6 +231,7 @@ class REDCapPRO extends AbstractExternalModule
         } else {
             self::$PROJECT->setProjectActive($pid, 1);
         }
+        $this->changeUserRole(USERID, NULL, 3);
     }
 
     /**
@@ -530,12 +534,12 @@ class REDCapPRO extends AbstractExternalModule
      * Updates the role of the given REDCap user 
      * 
      * @param string $username
-     * @param string $oldRole
+     * @param string|NULL $oldRole This is just for logging purposes
      * @param string $newRole
      * 
      * @return void
      */
-    public function changeUserRole(string $username, string $oldRole, string $newRole)
+    public function changeUserRole(string $username, ?string $oldRole, string $newRole)
     {
         try {
             $roles = array(
@@ -547,9 +551,11 @@ class REDCapPRO extends AbstractExternalModule
             $oldRole = strval($oldRole);
             $newRole = strval($newRole);
 
-            if (($key = array_search($username, $roles[$oldRole])) !== false) {
-                unset($roles[$oldRole][$key]);
-                $roles[$oldRole] = array_values($roles[$oldRole]);
+            foreach ($roles as $role => $users) {
+                if (($key = array_search($username, $users)) !== false) {
+                    unset($users[$key]);
+                    $roles[$role] = array_values($users);
+                }
             }
             if ($newRole !== "0") {
                 $roles[$newRole][] = $username;

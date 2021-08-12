@@ -72,19 +72,6 @@
             "required"  : false,
             "type"      : "text",
             "validation": "phone"
-        },
-        {
-            "key"             : "managers-info",
-            "name"            : "<font style='font-size:large; font-weight:bold; color: #900000'>Managers</font>",
-            "type"            : "descriptive",
-            "super-users-only": true
-        },
-        {
-            "key"             : "managers",
-            "name"            : "<strong><font style='color: #900000'>Select Manager Accounts:</font></strong><br>These accounts will have the ability to edit user permissions in this module. (this setting is only available to super users)",
-            "type"            : "user-list",
-            "repeatable"      : true,
-            "super-users-only": true
         }
     ],
     "links": {
