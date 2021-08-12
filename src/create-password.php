@@ -101,6 +101,10 @@ $module::$UI->ShowParticipantHeader("Create Password");
 
 if ($verified_user) {
 
+    $module->log("Participant opened create password page", [
+        "rcpro_username" => $verified_user["rcpro_username"]
+    ]);
+
     echo "<p>Please fill out this form to create your password.</p>";
 ?>
     <form action="<?= $module->getUrl("src/create-password.php", true) . "&t=" . urlencode($qstring["t"]); ?>" method="post">

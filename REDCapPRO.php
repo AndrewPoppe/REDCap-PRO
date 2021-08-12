@@ -537,26 +537,37 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function changeUserRole(string $username, string $oldRole, string $newRole)
     {
-        $roles = array(
-            "3" => $this->getProjectSetting("managers"),
-            "2" => $this->getProjectSetting("users"),
-            "1" => $this->getProjectSetting("monitors")
-        );
+        try {
+            $roles = array(
+                "3" => $this->getProjectSetting("managers"),
+                "2" => $this->getProjectSetting("users"),
+                "1" => $this->getProjectSetting("monitors")
+            );
 
-        $oldRole = strval($oldRole);
-        $newRole = strval($newRole);
+            $oldRole = strval($oldRole);
+            $newRole = strval($newRole);
 
-        if (($key = array_search($username, $roles[$oldRole])) !== false) {
-            unset($roles[$oldRole][$key]);
-            $roles[$oldRole] = array_values($roles[$oldRole]);
+            if (($key = array_search($username, $roles[$oldRole])) !== false) {
+                unset($roles[$oldRole][$key]);
+                $roles[$oldRole] = array_values($roles[$oldRole]);
+            }
+            if ($newRole !== "0") {
+                $roles[$newRole][] = $username;
+            }
+
+            $this->setProjectSetting("managers", $roles["3"]);
+            $this->setProjectSetting("users", $roles["2"]);
+            $this->setProjectSetting("monitors", $roles["1"]);
+
+            $this->log("Changed user role", [
+                "redcap_user" => USERID,
+                "redcap_user_acted_upon" => $username,
+                "old_role" => $oldRole,
+                "new_role" => $newRole
+            ]);
+        } catch (\Exception $e) {
+            $this->logError("Error changing user role", $e);
         }
-        if ($newRole !== "0") {
-            $roles[$newRole][] = $username;
-        }
-
-        $this->setProjectSetting("managers", $roles["3"]);
-        $this->setProjectSetting("users", $roles["2"]);
-        $this->setProjectSetting("monitors", $roles["1"]);
     }
 
     /**
