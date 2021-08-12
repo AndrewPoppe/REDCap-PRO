@@ -95,12 +95,12 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
     </script>
 <?php } ?>
 
-<div class="participantsContainer wrapper">
+<div id="loading-container" class="loader-container">
+    <div id="loading" class="loader"></div>
+</div>
+<div class="participantsContainer wrapper" style="display: none;">
     <h2>Manage Participants</h2>
     <p>All participants across studies</p>
-    <div id="loading-container" class="loader-container">
-        <div id="loading" class="loader"></div>
-    </div>
     <form class="dataTableParentHidden participants-form outer_container" id="participants-form" style="min-width:50vw !important;" action="<?= $module->getUrl("src/cc_participants.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
         <?php if (count($participants) === 0 || empty($participants)) { ?>
             <div>
@@ -215,6 +215,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
             });
             $('#participants-form').removeClass('dataTableParentHidden');
             $('#loading-container').hide();
+            $('.wrapper').show();
             dataTable.columns.adjust().draw();
         });
     }(window.jQuery, window, document));
@@ -222,6 +223,3 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
 <?php
 require_once APP_PATH_DOCROOT . 'ControlCenter/footer.php';
 ?>
-</body>
-
-</html>

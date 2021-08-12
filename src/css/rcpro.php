@@ -28,11 +28,15 @@
     cursor: pointer !important;
 }
 
-#RCPRO_TABLE tr:hover {
+#RCPRO_TABLE tbody tr:hover {
     background-color: <?=$module::$COLORS["mediumGrey"] ?> !important;
 }
 
-#RCPRO_TABLE tr.selected {
+#RCPRO_TABLE tbody tr.selected:hover {
+    background-color: <?=$module::$COLORS["primaryHighlight"] ?> !important;
+}
+
+#RCPRO_TABLE tbody tr.selected {
     background-color: <?=$module::$COLORS["primary"] ?> !important;
     color: white !important;
 }

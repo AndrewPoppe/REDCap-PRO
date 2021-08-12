@@ -59,10 +59,11 @@ $columns = [
 $tableData = $module->queryLogs("SELECT " . implode(', ', $columns) . " AND (project_id IS NULL OR project_id IS NOT NULL)");
 
 ?>
-<div class="logsContainer wrapper">
-    <div id="loading-container" class="loader-container">
-        <div id="loading" class="loader"></div>
-    </div>
+<div id="loading-container" class="loader-container">
+    <div id="loading" class="loader"></div>
+</div>
+<div class="logsContainer wrapper" style="display: none;">
+
     <div id="logs" class="dataTableParentHidden outer_container">
         <table class="table compact hover" id="RCPRO_TABLE" style="width:100%;">
             <caption>REDCapPRO Logs</caption>
@@ -149,6 +150,7 @@ $tableData = $module->queryLogs("SELECT " . implode(', ', $columns) . " AND (pro
 
             $('#logs').removeClass('dataTableParentHidden');
             $('#loading-container').hide();
+            $('.wrapper').show();
 
             dataTable.on('buttons-action', function(e, buttonApi, dataTable, node, config) {
                 const text = buttonApi.text();

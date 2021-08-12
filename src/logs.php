@@ -59,7 +59,7 @@ $tableData = $module->queryLogs("SELECT " . implode(", ", $columns));
 
 ?>
 
-<div class="manageContainer wrapper log-wrapper">
+<div class="manageContainer wrapper log-wrapper" style="display: none;">
     <h2>Project Logs</h2>
     <p>This shows logs initiated from this project only.</p>
     <div id="loading-container" class="loader-container">
@@ -139,6 +139,7 @@ $tableData = $module->queryLogs("SELECT " . implode(", ", $columns));
 
             $('#logs').removeClass('dataTableParentHidden');
             $('#loading-container').hide();
+            $('.wrapper').show();
 
             $('#RCPRO_Logs').DataTable().on('buttons-action', function(e, buttonApi, dataTable, node, config) {
                 const text = buttonApi.text();

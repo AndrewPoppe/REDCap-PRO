@@ -66,7 +66,7 @@ $module::$AUTH->set_csrf_token();
 
 ?>
 
-<div class="manageContainer wrapper">
+<div class="manageContainer wrapper" style="display: none;">
     <h2>Manage Study Staff</h2>
     <p>Set <span id="infotext" onclick="(function() {
             Swal.fire({
@@ -87,7 +87,7 @@ $module::$AUTH->set_csrf_token();
     <div id="loading-container" class="loader-container">
         <div id="loading" class="loader"></div>
     </div>
-    <div id="parent" class="dataTableParentHidden" style="display: none;">
+    <div id="parent" class="dataTableParentHidden">
         <form class="rcpro-form" id="manage-users-form" action="<?= $module->getUrl("src/manage-users.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
             <?php if (count($userList) === 0) { ?>
                 <div>
@@ -179,7 +179,7 @@ $module::$AUTH->set_csrf_token();
                 }
             });
             $('#parent').removeClass('dataTableParentHidden');
-            $('#parent').show();
+            $('.wrapper').show();
             $('#loading-container').hide();
         });
     })(window.jQuery, window, document);

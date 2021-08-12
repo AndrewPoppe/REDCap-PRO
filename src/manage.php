@@ -246,7 +246,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
     <div id="loading-container" class="loader-container">
         <div id="loading" class="loader"></div>
     </div>
-    <div id="parent" class="dataTableParentHidden">
+    <div id="parent" class="dataTableParentHidden" style="display:hidden;">
         <form class="rcpro-form" id="manage-form" action="<?= $module->getUrl("src/manage.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
             <?php if (count($participantList) === 0) { ?>
                 <div>
@@ -443,7 +443,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
             $('.dag_select').click(function(evt) {
                 evt.stopPropagation();
             });
-            $('#parent').removeClass('dataTableParentHidden');
+            $('#parent').removeClass('dataTableParentHidden').show();
             $('#loading-container').hide();
         });
     })(window.jQuery, window, document);

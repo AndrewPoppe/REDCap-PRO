@@ -27,12 +27,12 @@ if (!SUPER_USER) {
 // Get array of staff (users)
 $users = $module->getAllUsers();
 ?>
-<div class="usersContainer wrapper">
+<div id="loading-container" class="loader-container">
+    <div id="loading" class="loader"></div>
+</div>
+<div class="usersContainer wrapper" style="display: none;">
     <h2>Staff Members</h2>
     <p>All users across studies</p>
-    <div id="loading-container" class="loader-container">
-        <div id="loading" class="loader"></div>
-    </div>
     <div id="users" class="dataTableParentHidden outer_container">
         <table class="table" id="RCPRO_TABLE">
             <caption>REDCapPRO Staff</caption>
@@ -77,6 +77,7 @@ $users = $module->getAllUsers();
             });
             $('#users').removeClass('dataTableParentHidden');
             $('#loading-container').hide();
+            $('.wrapper').show();
             dataTable.columns.adjust().draw();
 
         });
