@@ -12,8 +12,8 @@
     box-shadow: 0px 0px 5px #eeeeee !important;
 }
 
-.rcpro-form-button-old {
-    margin: 20px 5px 0px !important;
+.rcpro-form-button {
+    margin-top: 10px !important;
 }
 
 .rcpro-datatable tr.even {
@@ -89,6 +89,10 @@ button:hover {
 
 .confirm-form {
     width: 500px !important;
+}
+
+.manage-form {
+    min-width: 640px !important;
 }
 
 .searchResult {

@@ -247,7 +247,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
         <div id="loading" class="loader"></div>
     </div>
     <div id="parent" class="dataTableParentHidden" style="display:hidden;">
-        <form class="rcpro-form" id="manage-form" action="<?= $module->getUrl("src/manage.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
+        <form class="rcpro-form manage-form" id="manage-form" action="<?= $module->getUrl("src/manage.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
             <?php if (count($participantList) === 0) { ?>
                 <div>
                     <p>No participants have been enrolled in this study</p>

@@ -1,4 +1,4 @@
-![REDCapPRO](./images/RCPro_Logo.svg)
+![REDCapPRO](./images/REDCapPROLOGO_white.png)
 
 ## REDCapPRO - Patient Reported Outcomes
 
