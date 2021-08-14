@@ -38,6 +38,7 @@ class REDCapPRO extends AbstractExternalModule
         "darkGrey"         => "#6c757d",
         "blue"             => "#000090"
     ];
+    static $LOGO_URL = "https://i.imgur.com/5Xq2Vqt.png";
 
     function __construct()
     {
@@ -344,7 +345,7 @@ class REDCapPRO extends AbstractExternalModule
         $old_email_clean = \REDCap::escapeHtml($old_email);
         $new_email_clean = \REDCap::escapeHtml($new_email);
         $body    = "<html><body><div>
-        <img src='" . $this->getUrl("images/REDCapPROLOGO_4.png") . "' alt='img' width='500px'><br>
+        <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
         <p>Hello,</p>
         <p>Your email for username <strong>${username}</strong> was just changed.<br>
             <ul>
@@ -395,7 +396,7 @@ class REDCapPRO extends AbstractExternalModule
             $subject = "REDCapPRO - Account Created";
             $from    = "noreply@REDCapPRO.com";
             $body    = "<html><body><div>
-            <img src='" . $this->getUrl("images/REDCapPROLOGO_4.png") . "' alt='img' width='500px'><br>
+            <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
             <p>Hello ${fname} ${lname},
             <br>An account has been created for you in order to take part in a research study.<br>
             This is your username: <strong>${username}</strong><br>
@@ -444,7 +445,7 @@ class REDCapPRO extends AbstractExternalModule
             $subject = "REDCapPRO - Password Reset";
             $from = "noreply@REDCapPRO.com";
             $body = "<html><body><div>
-            <img src='https://i.imgur.com/5Xq2Vqt.png' alt='img' width='500px'><br>
+            <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
             <p>Hello,
             <br>We have received a request to reset your account password. If you did not make this request, you can ignore this email.<br>
             <br>To reset your password, click the link below.
@@ -496,7 +497,7 @@ class REDCapPRO extends AbstractExternalModule
         $subject = "REDCapPRO - Username";
         $from    = "noreply@REDCapPRO.com";
         $body    = "<html><body><div>
-        <img src='" . $this->getUrl("images/REDCapPROLOGO_4.png") . "' alt='img' width='500px'><br>
+        <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
         <p>Hello,</p>
         <p>This is your username: <strong>${username}</strong><br>
         Write it down someplace safe.</p>
