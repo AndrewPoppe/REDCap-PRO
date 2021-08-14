@@ -662,42 +662,11 @@ class REDCapPRO extends AbstractExternalModule
     function validateSettings(array $settings)
     {
 
-        $managers = $users = $monitors = array();
         $message = NULL;
 
-        // project-level settings
-        if ($this->getProjectId()) {
-            if (count($settings["managers"]) > 0) {
-                foreach ($settings["managers"] as $manager) {
-                    if (in_array($manager, $managers)) {
-                        $message = "This user ($manager) is already a manager";
-                    }
-                    array_push($managers, $manager);
-                }
-            }
-            if (count($settings["users"]) > 0) {
-                foreach ($settings["users"] as $user) {
-                    if (in_array($user, $users)) {
-                        $message = "This user ($user) is already a user";
-                    }
-                    array_push($users, $user);
-                    if (in_array($user, $managers)) {
-                        $message = "This user ($user) cannot have multiple roles";
-                    }
-                }
-            }
-            if (count($settings["monitors"]) > 0) {
-                foreach ($settings["monitors"] as $monitor) {
-                    if (in_array($monitor, $monitors)) {
-                        $message = "This user ($monitor) is already a monitor";
-                    }
-                    array_push($monitors, $monitor);
-                    if (in_array($monitor, $managers) || in_array($monitor, $users)) {
-                        $message = "This user ($monitor) cannot have multiple roles";
-                    }
-                }
-            }
-        } else {
+        // System settings
+        // Enforce limits on setting values
+        if (!$this->getProjectId()) {
             if (isset($settings["warning-time"]) && $settings["warning-time"] <= 0) {
                 $message = "The warning time must be a positive number.";
             }

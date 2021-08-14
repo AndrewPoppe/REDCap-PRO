@@ -33,7 +33,7 @@
 }
 
 #RCPRO_TABLE tbody tr.selected:hover {
-    background-color: <?=$module::$COLORS["primaryHighlight"] ?> !important;
+    background-color: <?=$module::$COLORS["primaryDark"] ?> !important;
 }
 
 #RCPRO_TABLE tbody tr.selected {
