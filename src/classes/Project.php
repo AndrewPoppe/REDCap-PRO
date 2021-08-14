@@ -82,7 +82,7 @@ class Project
      * @param int $rcpro_project_id RCPRO project ID
      * @return int|NULL Number of participants in project
      */
-    function getParticipantCount(int $rcpro_project_id)
+    function getParticipantCount(?int $rcpro_project_id)
     {
         $SQL = "SELECT log_id WHERE message = 'LINK' AND rcpro_project_id = ? AND active = 1";
         try {

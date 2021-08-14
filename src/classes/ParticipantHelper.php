@@ -419,7 +419,8 @@ class ParticipantHelper
         $SQL = "SELECT fname, lname, email, log_id, rcpro_username 
                 WHERE message = 'PARTICIPANT' 
                 AND (project_id IS NULL OR project_id IS NOT NULL) 
-                AND (fname LIKE ? OR lname LIKE ? OR email LIKE ? OR rcpro_username LIKE ?)";
+                AND (fname LIKE ? OR lname LIKE ? OR email LIKE ? OR rcpro_username LIKE ?)
+                LIMIT 5";
         try {
             return self::$module->queryLogs($SQL, [$search_term, $search_term, $search_term, $search_term]);
         } catch (\Exception $e) {
