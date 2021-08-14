@@ -127,8 +127,8 @@ $module::$AUTH->set_csrf_token();
                             <?php } ?>
                         </tbody>
                     </table>
-                    <button class="btn btn-rcpro role_select_button" id="role_select_submit" type="submit" disabled>Save Changes</button>
-                    <button class="btn btn-secondary role_select_button" id="role_select_reset" disabled>Reset</button>
+                    <button class="btn btn-rcpro rcpro-form-button role_select_button" id="role_select_submit" type="submit" disabled>Save Changes</button>
+                    <button class="btn btn-secondary rcpro-form-button role_select_button" id="role_select_reset" disabled>Reset</button>
                 </div>
             <?php } ?>
             <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">

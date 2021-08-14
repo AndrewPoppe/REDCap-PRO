@@ -41,6 +41,10 @@
     color: white !important;
 }
 
+#RCPRO_Logs_wrapper {
+    margin-bottom: 10px;
+}
+
 table.dataTable tbody td {
     vertical-align: middle !important;
 }
