@@ -444,7 +444,7 @@ class REDCapPRO extends AbstractExternalModule
             $subject = "REDCapPRO - Password Reset";
             $from = "noreply@REDCapPRO.com";
             $body = "<html><body><div>
-            <img src='" . $this->getUrl("images/REDCapPROLOGO_4.png") . "' alt='img' width='500px'><br>
+            <img src='https://i.imgur.com/5Xq2Vqt.png' alt='img' width='500px'><br>
             <p>Hello,
             <br>We have received a request to reset your account password. If you did not make this request, you can ignore this email.<br>
             <br>To reset your password, click the link below.
