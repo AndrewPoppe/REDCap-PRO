@@ -2,6 +2,13 @@
 
 # REDCapPRO - Patient Reported Outcomes
 
+## Table of Contents <!-- omit in toc -->
+- [REDCapPRO - Patient Reported Outcomes](#redcappro---patient-reported-outcomes)
+  - [Overview](#overview)
+  - [Installation](#installation)
+  - [Settings](#settings)
+    - [System Settings](#system-settings)
+
 ## Overview
 This external module is designed to bring an ePRO interface to REDCap. Its primary purpose is to allow the identification of a survey taker and to log that information in a REDCap project's audit trail. The reason this is needed is that there is no built-in method of providing authentication and identification of survey respondents that provides all of the following:
 1. **Identification**: It identifies the survey respondent (via a participant ID) in the logs of the project itself. 
@@ -26,10 +33,10 @@ To achieve this, project users must first register a participant with REDCapPRO 
 
 ### System Settings
 
-| Setting    | Type | Description | Default Value |
-|:--------   |:-----|:------------| ------------- |
-| **Warning Time** | Number | Number of minutes to wait before warning participant of inactivity timeout | 1 minute |
-| **Timeout Time** | Number | Number of minutes to wait before logging participant out due to inactivity | 5 minutes |
-| **Password Length** | Integer | Minimum length of participant's password in characters | 8 characters |
-|**Login Attempts** | Integer | Number of failed login attempts before being locked out | 3 attempts |
-|**Lockout Duration** | Integer | Length of a lockout due to failed login attempts, in seconds | 300 seconds
+| Setting              | Type    | Description                                                                | Default Value |
+| :------------------- | :------ | :------------------------------------------------------------------------- | ------------- |
+| **Warning Time**     | Number  | Number of minutes to wait before warning participant of inactivity timeout | 1 minute      |
+| **Timeout Time**     | Number  | Number of minutes to wait before logging participant out due to inactivity | 5 minutes     |
+| **Password Length**  | Integer | Minimum length of participant's password in characters                     | 8 characters  |
+| **Login Attempts**   | Integer | Number of failed login attempts before being locked out                    | 3 attempts    |
+| **Lockout Duration** | Integer | Length of a lockout due to failed login attempts, in seconds               | 300 seconds   |
