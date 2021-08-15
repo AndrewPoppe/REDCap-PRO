@@ -1,81 +1,22 @@
-![REDCapPRO](./images/REDCapPROLOGO_white.png)
-
-# REDCapPRO - Patient Reported Outcomes
-
-## Table of Contents <!-- omit in toc -->
-- [REDCapPRO - Patient Reported Outcomes](#redcappro---patient-reported-outcomes)
-  - [Overview](#overview)
-    - [What is REDCapPRO?](#what-is-redcappro)
-    - [How does it work?](#how-does-it-work)
-  - [Installation](#installation)
-  - [EM Settings](#em-settings)
-    - [System Settings](#system-settings)
-    - [Project Settings](#project-settings)
-  - [REDCapPRO Project Menu](#redcappro-project-menu)
-    - [Home Tab](#home-tab)
-    - [Manage Participants](#manage-participants)
-    - [Enroll](#enroll)
-    - [Register](#register)
-    - [Study Staff](#study-staff)
-    - [Logs](#logs)
-  - [REDCapPRO Control Center Menu](#redcappro-control-center-menu)
-    - [Projects](#projects)
-    - [Participants](#participants)
-    - [Staff](#staff)
-    - [Logs](#logs-1)
-  - [Action Tags](#action-tags)
+![REDCapPRO](https://i.imgur.com/5Xq2Vqt.png)
 
 ## Overview
 
 ### What is REDCapPRO?
-**REDCapPRO** is an external module for [REDCap](https://projectredcap.org) that allows participants/patients to directly report study data (*i.e.*, ePRO). Its primary purpose is to allow the identification of a survey participant and to log that information in a REDCap project's audit trail in a manner compliant with regulatory stipulations (primarily FDA's 21 CFR Part 11). The reason this is needed is that there is no built-in REDCap feature that provides all of the following:
-1. **Identification**: It identifies the survey respondent (via a participant ID) in the logs of the project itself. 
-2. **Authentication**: It provides a means of proving that the participant is genuinely who they claim to be. There is no way for another person to pretend to be the participant, either in real time or after the fact by modifying logs. Obvious exceptions:
-
-    1. Malicious attacks outside of REDCapPRO (*e.g.*, intercepting a participant's password reset email by hacking their email account) 
-    2. REDCap admin or other IT professional directly modifying the database
-
-3. **Authorization**: It provides a means of preventing unauthorized users from viewing identifying information and taking other unauthorized actions.
-4. **Convenience**: It must be easy to use for REDCap admins, REDCap users, and study participants.
-
-
-To achieve this, project users must first register a participant with REDCapPRO and then enroll that participant in the REDCap project. Step-by-step instructions are provided below.
-
-REDCapPRO is not meant to replace any of the following features/modules/external modules:
-- Survey Login
-- Participant Identifier
-- REDCap Mobile App
-- [MyCap](https://projectmycap.org/)
-- REDCap Survey Auth
+**REDCapPRO** is an external module for [REDCap](https://projectredcap.org) that allows participants/patients to directly report study data (*i.e.*, ePRO). Its primary purpose is to allow the identification of a survey participant and to log that information in a REDCap project's audit trail in a manner compliant with regulatory stipulations (primarily FDA's 21 CFR Part 11). To achieve this, project users must first register a participant with REDCapPRO and then enroll that participant in the REDCap project. Step-by-step instructions are provided below.
 
 ### How does it work?
 REDCapPRO provides a means for study participants to log in to REDCap surveys using a username created by REDCapPRO and a password that they choose for themselves. This password is not known to any other person (including study staff and REDCap admins). 
 
 <u>These are the steps required to collect data using REDCapPRO:</u>
 
-1. Enable the module in the REDCap system
-2. Enable the module in a REDCap project
-3. **Register:** A staff member of the study registers a participant with REDCapPRO
+1. **Register:** A staff member of the study registers a participant with REDCapPRO
    * The participant is registered system-wide. They use the same username and password for all REDCapPRO surveys in this REDCap system regardless of which REDCap project the survey belongs to.
-4. **Enroll:** The study staff member then enrolls the participant in this particular REDCap project
-5. Survey invitations can then be sent to the participant using REDCap survey distribution tools like normal. Participants will need to log in with their REDCapPRO username and password to access the survey. Because the login credentials are not tied to a specific record, public surveys are compatible with REDCapPRO.
-
-## Installation
-* This External Module should be installed via the REDCapREPO
-* It may also be installed by unpacking the code into the modules directory on your REDCap web server.
+2. **Enroll:** The study staff member then enrolls the participant in this particular REDCap project
+3. Survey invitations can then be sent to the participant using REDCap survey distribution tools like normal. Participants will need to log in with their REDCapPRO username and password to access the survey. Because the login credentials are not tied to a specific record, public surveys are compatible with REDCapPRO.
 
 ## EM Settings
 These are settings/configuration options accessible in the normal External Module settings interface.
-
-### System Settings
-
-| Setting              | Type    | Description                                                                | Default Value |
-| :------------------- | :------ | :------------------------------------------------------------------------- | ------------- |
-| **Warning Time**     | Number  | Number of minutes to wait before warning participant of inactivity timeout | 1 minute      |
-| **Timeout Time**     | Number  | Number of minutes to wait before logging participant out due to inactivity | 5 minutes     |
-| **Password Length**  | Integer | Minimum length of participant's password in characters                     | 8 characters  |
-| **Login Attempts**   | Integer | Number of consecutive failed login attempts before being locked out        | 3 attempts    |
-| **Lockout Duration** | Integer | Length of a lockout due to failed login attempts, in seconds               | 300 seconds   |
 
 ### Project Settings
 
@@ -91,14 +32,13 @@ These are settings/configuration options accessible in the normal External Modul
 The REDCapPRO Project Menu is accessible via a link in the Applications section of the REDCap project side menu. Access to the different sections of the menu is restricted based on the `role` of the user (see the Study Staff tab description for details). The link to the menu itself is only visible to users or role `Monitor` or above, although the Home tab is accessible by anyone. 
 
 ### Home Tab
-This is an informational page.
-This tab is accessible by any role (including no access).
+This is this page.
 
 ### Manage Participants
 This tab allows a user to view enrolled participants in this study project and to 
 take various actions on study participants. The actions available
 and the information that is visible depends on the `role` of the user. The tab
-itself is available to Monitors and above.
+itself is available to `Monitors` and above.
 
 | Label             | Type   | Description                                                                                                                                                               | Minimum Role to view/use |
 | ----------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
@@ -114,14 +54,14 @@ itself is available to Monitors and above.
 
 ### Enroll
 This tab allows a user to search for a registered participant in order to enroll
-them into this study project. This tab is available to Normal Users and above.
+them into this study project. This tab is available to `Normal Users` and above.
 
 ### Register
 This tab allows a user to register a participant with REDCapPRO. It is available
-to Normal Users and above.
+to `Normal Users` and above.
 
 ### Study Staff
-This tab allows Managers to set the `role` of users in the study project. All
+This tab allows `Managers` to set the `role` of users in the study project. All
 REDCap users are shown in this table. Set the role of the user according to this
 guide:
 | Role        | Description                                                                                                                               |
@@ -131,41 +71,14 @@ guide:
 | Normal User | Able to view participant identifying information and take several participant management actions (see Manage Participants section above). |
 | Manager     | Highest permissions. Has the ability to grant/revoke staff access and change a participant's email address                                |
 
-*<u>Note</u>: REDCap administrators have full Manager permissions in REDCapPRO no matter what `role` they have in the project (or if they appear in the staff list at all)*
+*<u>Note</u>: REDCap administrators have full `Manager` permissions in REDCapPRO no matter what `role` they have in the project (or if they appear in the staff list at all)*
 
 ### Logs
-This tab allows Managers to view the logs of REDCapPRO relevant to this study
+This tab allows `Managers` to view the logs of REDCapPRO relevant to this study
 project. It only contains information about actions taken in this project or on
 surveys tied to this project. 
 
-## REDCapPRO Control Center Menu
 
-This menu is accessible via a link in the External Modules section of the
-Control Center. Being in the Control Center, it is only accessible to REDCap
-administrators. It has the following sections:
-
-### Projects
-This table shows all of the REDCap projects that currently have REDCapPRO
-enabled and some basic information about them.
-
-### Participants
-This table lists all registered participants in the system. It lists every study
-project that each participant is enrolled in. It allows the following actions to
-be taken on a participant:
-
-| Action         | Description                                                              |
-| -------------- | ------------------------------------------------------------------------ |
-| Reset Password | Sends an email to the participant which contains a password reset link   |
-| Change Email   | Updates the email address in the REDCapPRO database for this participant |
-
-### Staff
-This table lists all REDCap users that have a `role` above No Access in any 
-REDCapPRO study project. It lists all projects that each user has access to with
-a `role` of Monitor or above.
-
-### Logs
-Similar to the project's Logs tab, this lists all logs made by REDCapPRO across
-the system.
 
 ## Action Tags
 

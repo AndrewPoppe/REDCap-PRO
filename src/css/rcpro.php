@@ -99,6 +99,17 @@ button:hover {
     min-width: 640px !important;
 }
 
+.home-form {
+    width: 50vw !important;
+    font-size: large;
+}
+
+.home-form a {
+    font-weight: bold;
+    font-size: inherit;
+    color: <?=$module::$COLORS["primary"]?>;
+}
+
 .searchResult {
     cursor: pointer !important;
     padding: 5px !important;
