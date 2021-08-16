@@ -258,7 +258,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                         <caption>Study Participants</caption>
                         <thead>
                             <tr>
-                                <th id="rcpro_username">Username</th>
+                                <th id="rcpro_username" class="text-right">Username</th>
                                 <?php if ($role > 1) { ?>
                                     <th id="rcpro_fname" class="dt-center">First Name</th>
                                     <th id="rcpro_lname" class="dt-center">Last Name</th>
@@ -272,6 +272,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                         <tbody>
                             <?php foreach ($participantList as $participant) {
                                 $username_clean = \REDCap::escapeHtml($participant["rcpro_username"]);
+                                $password_set   = $participant["pw_set"] === 'True';
                                 if ($role > 1) {
                                     $fname_clean    = \REDCap::escapeHtml($participant["fname"]);
                                     $lname_clean    = \REDCap::escapeHtml($participant["lname"]);
@@ -283,7 +284,9 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                                 $dag_name_clean = count($dag_name) === 1 ? \REDCap::escapeHtml($dag_name) : "Unassigned";
                             ?>
                                 <tr data-id="<?= $participant["log_id"] ?>" data-username="<?= $username_clean ?>" data-fname="<?= $fname_clean ?>" data-lname="<?= $lname_clean ?>" data-email="<?= $email_clean ?>">
-                                    <td><?= $username_clean ?></td>
+                                    <td>
+                                        <?= "<i title='Password Set' class='fas " . ($password_set ? "fa-check-circle" : "fa-fw") . "' style='margin-left:2px;margin-right:2px;color:#009000;'></i>&nbsp; $username_clean" ?>
+                                    </td>
                                     <?php if ($role > 1) { ?>
                                         <td class="dt-center"><?= $fname_clean ?></td>
                                         <td class="dt-center"><?= $lname_clean ?></td>

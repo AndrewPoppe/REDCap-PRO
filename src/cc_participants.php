@@ -114,6 +114,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                         <tr>
                             <th id="uid">User_ID</th>
                             <th id="uname" class="dt-center">Username</th>
+                            <th id="pw_set" class="dt-center">Password Set</th>
                             <th id="fname" class="dt-center">First Name</th>
                             <th id="lname" class="dt-center">Last Name</th>
                             <th id="email">Email</th>
@@ -125,6 +126,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                     <tbody>
                         <?php foreach ($participants as $participant) {
                             $username_clean       = \REDCap::escapeHtml($participant["rcpro_username"]);
+                            $password_set         = $participant["pw_set"] === 'True';
                             $fname_clean          = \REDCap::escapeHtml($participant["fname"]);
                             $lname_clean          = \REDCap::escapeHtml($participant["lname"]);
                             $email_clean          = \REDCap::escapeHtml($participant["email"]);
@@ -154,6 +156,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                             <tr>
                                 <td class="rcpro_participant_link" onclick="<?= $onclick ?>"><?= $participant["log_id"] ?></td>
                                 <td class="dt-center"><?= $username_clean ?></td>
+                                <td class="dt-center"><i title='Password Set' class='fas <?= ($password_set ? "fa-check-circle" : "fa-fw") ?>' style='margin-left:2px;margin-right:2px;color:#009000;'></i></td>
                                 <td class="dt-center"><?= $fname_clean ?></td>
                                 <td class="dt-center"><?= $lname_clean ?></td>
                                 <td><?= $email_clean ?></td>
