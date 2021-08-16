@@ -76,21 +76,21 @@ These are settings/configuration options accessible in the normal External Modul
 
 ### System Settings
 
-| Setting              | Type    | Description                                                                | Default Value |
-| :------------------- | :------ | :------------------------------------------------------------------------- | ------------- |
-| **Warning Time**     | Number  | Number of minutes to wait before warning participant of inactivity timeout | 1 minute      |
-| **Timeout Time**     | Number  | Number of minutes to wait before logging participant out due to inactivity | 5 minutes     |
+| Setting              |  Type   | Description                                                                | Default Value |
+| :------------------- | :-----: | :------------------------------------------------------------------------- | :-----------: |
+| **Warning Time**     | Number  | Number of minutes to wait before warning participant of inactivity timeout |   1 minute    |
+| **Timeout Time**     | Number  | Number of minutes to wait before logging participant out due to inactivity |   5 minutes   |
 | **Password Length**  | Integer | Minimum length of participant's password in characters                     | 8 characters  |
-| **Login Attempts**   | Integer | Number of consecutive failed login attempts before being locked out        | 3 attempts    |
-| **Lockout Duration** | Integer | Length of a lockout due to failed login attempts, in seconds               | 300 seconds   |
+| **Login Attempts**   | Integer | Number of consecutive failed login attempts before being locked out        |  3 attempts   |
+| **Lockout Duration** | Integer | Length of a lockout due to failed login attempts, in seconds               |  300 seconds  |
 
 ### Project Settings
 
 | Setting                 | Type  | Description                                                                                                                                           | Default Value |
-| :---------------------- | :---- | :---------------------------------------------------------------------------------------------------------------------------------------------------- | :------------ |
-| **Study Contact Name**  | Text  | The name of the study staff member that study participants should contact with questions/problems. This will appear in emails sent to the participant | N/A           |
-| **Study Contact Email** | Email | Email address that participants should contact (currently Study Contact Name must be defined for this to be presented to participants)                | N/A           |
-| **Study Contact Phone** | Phone | Phone number that participants should contact (currently Study Contact Name must be defined for this to be presented to participants)                 | N/A           |
+| :---------------------- | :---: | :---------------------------------------------------------------------------------------------------------------------------------------------------- | :-----------: |
+| **Study Contact Name**  | Text  | The name of the study staff member that study participants should contact with questions/problems. This will appear in emails sent to the participant |      N/A      |
+| **Study Contact Email** | Email | Email address that participants should contact (currently Study Contact Name must be defined for this to be presented to participants)                |      N/A      |
+| **Study Contact Phone** | Phone | Phone number that participants should contact (currently Study Contact Name must be defined for this to be presented to participants)                 |      N/A      |
 
 
 ## REDCapPRO Project Menu
@@ -107,17 +107,17 @@ take various actions on study participants. The actions available
 and the information that is visible depends on the `role` of the user. The tab
 itself is available to Monitors and above.
 
-| Label             | Type   | Description                                                                                                                                                               | Minimum Role to view/use |
-| ----------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| Username          | Column | Contains the **REDCapPRO** username assigned to this participant                                                                                                          | *Monitor*                |
-| First Name        | Column | Contains the first name of this participant                                                                                                                               | <u>Normal User</u>       |
-| Last Name         | Column | Contains the last name of this participant                                                                                                                                | <u>Normal User</u>       |
-| Email             | Column | Contains the email address of this participant                                                                                                                            | <u>Normal User</u>       |
-| Data Access Group | Column | Contains the DAG the participant is currently in *Note that this is independent of which DAG a REDCap record that corresponds with this participant might be assigned to* | *Monitor*                |
-| Data Access Group | Action | Ability to reassign DAG. Only DAGs available to the REDCap User are available as options to switch to                                                                     | <u>Normal User</u>       |
-| Reset Password    | Action | Sends an email to the participant which contains a password reset link                                                                                                    | *Monitor*                |
-| Change Email      | Action | Updates the email address in the **REDCapPRO** database for this participant                                                                                              | <u>**Manager**</u>       |
-| Disenroll         | Action | Removes the participant from this study project                                                                                                                           | <u>Normal User</u>       |
+| Label             |  Type  | Description                                                                                                                                                               | Minimum Role to view/use |
+| ----------------- | :----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------: |
+| Username          | Column | Contains the **REDCapPRO** username assigned to this participant                                                                                                          |        *Monitor*         |
+| First Name        | Column | Contains the first name of this participant                                                                                                                               |    <u>Normal User</u>    |
+| Last Name         | Column | Contains the last name of this participant                                                                                                                                |    <u>Normal User</u>    |
+| Email             | Column | Contains the email address of this participant                                                                                                                            |    <u>Normal User</u>    |
+| Data Access Group | Column | Contains the DAG the participant is currently in *Note that this is independent of which DAG a REDCap record that corresponds with this participant might be assigned to* |        *Monitor*         |
+| Data Access Group | Action | Ability to reassign DAG. Only DAGs available to the REDCap User are available as options to switch to                                                                     |    <u>Normal User</u>    |
+| Reset Password    | Action | Sends an email to the participant which contains a password reset link                                                                                                    |        *Monitor*         |
+| Change Email      | Action | Updates the email address in the **REDCapPRO** database for this participant                                                                                              |    <u>**Manager**</u>    |
+| Disenroll         | Action | Removes the participant from this study project                                                                                                                           |    <u>Normal User</u>    |
 
 ### Enroll
 This tab allows a user to search for a registered participant in order to enroll
@@ -181,8 +181,8 @@ information about **REDCapPRO** participants. These are described below:
 *Note: All action tags must exist on the same data collection instrument (not survey).*
 
 | Action Tag      | Use with field type | Validation on field type | Description                                                                                                                                                          |
-| --------------- | ------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| @RCPRO-USERNAME | text                | none                     | This transforms the field into a dropdown selector. The user can select a participant and populate the field with that participant's username                        |
-| @RCPRO-EMAIL    | text                | email                    | If @RCPRO-USERNAME is present on the instrument, then when it is selected the field with the @RCPRO-EMAIL tag will be populated with the participant's email address |
-| @RCPRO-FNAME    | text                | none                     | Like @RCPRO-EMAIL, but the field will be populated with the participant's first name                                                                                 |
-| @RCPRO-LNAME    | text                | none                     | Likewise, with last name                                                                                                                                             |
+| --------------- | :-----------------: | :----------------------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| @RCPRO-USERNAME |        text         |           none           | This transforms the field into a dropdown selector. The user can select a participant and populate the field with that participant's username                        |
+| @RCPRO-EMAIL    |        text         |          email           | If @RCPRO-USERNAME is present on the instrument, then when it is selected the field with the @RCPRO-EMAIL tag will be populated with the participant's email address |
+| @RCPRO-FNAME    |        text         |           none           | Like @RCPRO-EMAIL, but the field will be populated with the participant's first name                                                                                 |
+| @RCPRO-LNAME    |        text         |           none           | Likewise, with last name                                                                                                                                             |

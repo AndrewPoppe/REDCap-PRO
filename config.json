@@ -1,7 +1,7 @@
 {
     "name"       : "REDCapPRO",
     "namespace"  : "YaleREDCap\\REDCapPRO",
-    "description": "Patient Reported Outcomes in REDCap",
+    "description": "<strong>Patient Reported Outcomes in REDCap</strong><br>This module provides a means of identifying and authenticating study participants when collecting survey data. It stores that information in the REDCap project's audit trail.<br><strong><a href='https://github.com/AndrewPoppe/REDCap-PRO' style='color:#900000 !important;' target='_blank' rel='noreferrer noopen'>See full documentation here.</a></strong>",
     "permissions": [
         "redcap_survey_page_top",
         "redcap_every_page_top",
