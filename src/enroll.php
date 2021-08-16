@@ -43,7 +43,7 @@ $module::$AUTH->set_csrf_token();
 
 <div class="wrapper enroll-wrapper" hidden>
     <h2>Enroll a Participant</h2>
-    <p>Search for a participant by email , name, or username, and enroll the selected participant in this project.</p>
+    <p>Search for a participant by their email address and enroll the selected participant in this project.</p>
     <p><em>If the participant does not have an account, you can register them </em><strong><a href="<?= $module->getUrl("src/register.php"); ?>">here</a></strong>.</p>
     <script>
         function showResult(str) {
@@ -57,7 +57,10 @@ $module::$AUTH->set_csrf_token();
                     document.getElementById("searchResults").innerHTML = this.responseText;
                 }
             }
-            xmlhttp.open("GET", "<?= $module->getUrl("src/livesearch.php") ?>&q=" + str, true);
+            let url = new URL("<?= $module->getUrl("src/livesearch.php") ?>");
+            url.searchParams.append("q", str);
+
+            xmlhttp.open("GET", url, true);
             xmlhttp.send();
         }
 
@@ -77,16 +80,59 @@ $module::$AUTH->set_csrf_token();
             $("#enroll-form").show();
             $("#confirm-form").hide();
         }
+
+        function checkForClear() {
+            let inputField = $('#REDCapPRO_Search');
+            let inputButton = $('#emailSearchButton');
+            if (inputField.val() === "") {
+                inputButton.prop('disabled', true);
+                document.getElementById("searchResults").innerHTML = "";
+                return true;
+            }
+            inputButton.prop('disabled', false);
+            return false;
+        }
+
+        function isEmailFieldValid() {
+            let inputField = $("#REDCapPRO_Search");
+            if (!checkForClear() && !inputField[0].checkValidity()) {
+                let response = "<font style='color: red;'>Search term is not an email address</font>";
+                document.getElementById("searchResults").innerHTML = response;
+                return false;
+            }
+            return true;
+        }
+
+        function searchEmail() {
+            let inputField = $("#REDCapPRO_Search");
+            if (checkForClear()) {
+
+            }
+            if (isEmailFieldValid()) {
+                let searchValue = inputField.val();
+                let searchValueClean = encodeURIComponent(searchValue);
+                showResult(searchValue);
+                return;
+            }
+        }
     </script>
     <form class="rcpro-form enroll-form" id="enroll-form" onkeydown="return event.key != 'Enter';">
         <div class="form-group">
             <div id="searchContainer">
-                <label>Search</label>
-                <input type="text" name="REDCapPRO_Search" id="REDCapPRO_Search" class="form-control" onkeyup="showResult(this.value)">
+                <input type="email" placeholder="Enter the participant's email address..." name="REDCapPRO_Search" id="REDCapPRO_Search" class="form-control">
                 <div class="searchResults" id="searchResults"></div>
+                <button type="button" id="emailSearchButton" class="btn btn-rcpro enroll-button" style="margin-top: 10px;" onclick='searchEmail()' disabled>Search</button>
             </div>
         </div>
     </form>
+    <script>
+        const input = document.getElementById("REDCapPRO_Search");
+        input.addEventListener('click', checkForClear, false);
+        input.addEventListener('blur', checkForClear, false);
+        input.addEventListener('keydown', checkForClear, false);
+        input.addEventListener('keyup', checkForClear, false);
+        input.addEventListener('change', checkForClear, false);
+    </script>
     <form class="rcpro-form confirm-form" name="confirm-form" id="confirm-form" action="<?= $module->getUrl("src/enroll.php"); ?>" method="POST" enctype="multipart/form-data" target="_self" style="display:none;">
         <div class="form-group">
             <div class="selection" id="selectionContainer">
