@@ -6,6 +6,12 @@ if ($role < 2) {
 }
 
 $q = $_GET["q"];
+
+if (!filter_var($q, FILTER_VALIDATE_EMAIL)) {
+    echo "<font style='color: red;'>Search term is not an email address</font>";
+    return;
+}
+
 $wq = "%${q}%";
 
 
