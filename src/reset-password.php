@@ -110,7 +110,7 @@ if ($verified_participant) {
         </div>
         <div class="form-group">
             <label>New Password</label>
-            <input type="password" name="new_password" class="form-control <?php echo (!empty($new_password_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $new_password; ?>">
+            <input type="password" name="new_password" class="form-control <?php echo (!empty($new_password_err)) ? 'is-invalid' : ''; ?>">
             <span class="invalid-feedback"><?php echo $new_password_err; ?></span>
         </div>
         <div class="form-group">
