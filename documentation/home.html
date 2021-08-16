@@ -1195,22 +1195,31 @@ github.com style (c) Vasily Polovnyov <vast@whiteants.net>
         
     </head>
     <body class="vscode-body vscode-light">
-        <p><img src="https://i.imgur.com/5Xq2Vqt.png" alt="REDCapPRO"></p>
+        <center>
+   <img src="https://i.imgur.com/5Xq2Vqt.png">
+</center>
 <h2 id="overview">Overview</h2>
 <h3 id="what-is-redcappro">What is REDCapPRO?</h3>
-<p><strong>REDCapPRO</strong> is an external module for <a href="https://projectredcap.org">REDCap</a> that allows participants/patients to directly report study data (<em>i.e.</em>, ePRO). Its primary purpose is to allow the identification of a survey participant and to log that information in a REDCap project's audit trail in a manner compliant with regulatory stipulations (primarily FDA's 21 CFR Part 11). To achieve this, project users must first register a participant with REDCapPRO and then enroll that participant in the REDCap project. Step-by-step instructions are provided below.</p>
+<p><strong>REDCapPRO</strong> is an external module for <a href="https://projectredcap.org">REDCap</a> that allows participants/patients to directly report study data (<em>i.e.</em>, ePRO). Its primary purpose is to allow the identification of a survey participant and to log that information in a REDCap project's audit trail in a manner compliant with regulatory stipulations (primarily FDA's 21 CFR Part 11). To achieve this, project users must first register a participant with <strong>REDCapPRO</strong> and then enroll that participant in the REDCap project. Step-by-step instructions are provided below.</p>
 <h3 id="how-does-it-work">How does it work?</h3>
-<p>REDCapPRO provides a means for study participants to log in to REDCap surveys using a username created by REDCapPRO and a password that they choose for themselves. This password is not known to any other person (including study staff and REDCap admins).</p>
-<p><u>These are the steps required to collect data using REDCapPRO:</u></p>
+<p><strong>REDCapPRO</strong> provides a means for study participants to log in to REDCap surveys using a username created by <strong>REDCapPRO</strong> and a password that they choose for themselves. This password is not known to any other person (including study staff and REDCap admins).</p>
+<p><u>These are the steps required to collect data using <strong>REDCapPRO</strong>:</u></p>
 <ol>
-<li><strong>Register:</strong> A staff member of the study registers a participant with REDCapPRO
+<li><strong>Register:</strong> A staff member of the study registers a participant with <strong>REDCapPRO</strong>
 <ul>
-<li>The participant is registered system-wide. They use the same username and password for all REDCapPRO surveys in this REDCap system regardless of which REDCap project the survey belongs to.</li>
+<li>The participant is registered system-wide. They use the same username and password for all <strong>REDCapPRO</strong> surveys in this REDCap system regardless of which REDCap project the survey belongs to.</li>
 </ul>
 </li>
 <li><strong>Enroll:</strong> The study staff member then enrolls the participant in this particular REDCap project</li>
-<li>Survey invitations can then be sent to the participant using REDCap survey distribution tools like normal. Participants will need to log in with their REDCapPRO username and password to access the survey. Because the login credentials are not tied to a specific record, public surveys are compatible with REDCapPRO.</li>
+<li>Survey invitations can then be sent to the participant using REDCap survey distribution tools like normal. Participants will need to log in with their <strong>REDCapPRO</strong> username and password to access the survey. Because the login credentials are not tied to a specific record, public surveys are compatible with <strong>REDCapPRO</strong>.</li>
 </ol>
+<h3 id="what-is-the-process-like-for-participants">What is the process like for participants?</h3>
+<ul>
+<li>Upon registration with <strong>REDCapPRO</strong>, the participant will receive an email with a
+link to set their password.</li>
+<li>When the participant clicks a link to start a survey in a <strong>REDCapPRO</strong> project, they will see a login screen and will need to supply their username and password.</li>
+<li>They have the option to be sent a password reset email, a username reminder email, and/or an email address reminder email from the login screen.</li>
+</ul>
 <h2 id="em-settings">EM Settings</h2>
 <p>These are settings/configuration options accessible in the normal External Module settings interface.</p>
 <h3 id="project-settings">Project Settings</h3>
@@ -1245,7 +1254,7 @@ github.com style (c) Vasily Polovnyov <vast@whiteants.net>
 </tbody>
 </table>
 <h2 id="redcappro-project-menu">REDCapPRO Project Menu</h2>
-<p>The REDCapPRO Project Menu is accessible via a link in the Applications section of the REDCap project side menu. Access to the different sections of the menu is restricted based on the <code>role</code> of the user (see the Study Staff tab description for details). The link to the menu itself is only visible to users or role <code>Monitor</code> or above, although the Home tab is accessible by anyone.</p>
+<p>The <strong>REDCapPRO</strong> Project Menu is accessible via a link in the Applications section of the REDCap project side menu. Access to the different sections of the menu is restricted based on the <code>role</code> of the user (see the Study Staff tab description for details). The link to the menu itself is only visible to users or role <code>Monitor</code> or above, although the Home tab is accessible by anyone.</p>
 <h3 id="home-tab">Home Tab</h3>
 <p>This is this page.</p>
 <h3 id="manage-participants">Manage Participants</h3>
@@ -1266,7 +1275,7 @@ itself is available to <code>Monitors</code> and above.</p>
 <tr>
 <td>Username</td>
 <td>Column</td>
-<td>Contains the REDCapPRO username assigned to this participant</td>
+<td>Contains the <strong>REDCapPRO</strong> username assigned to this participant</td>
 <td><em>Monitor</em></td>
 </tr>
 <tr>
@@ -1308,7 +1317,7 @@ itself is available to <code>Monitors</code> and above.</p>
 <tr>
 <td>Change Email</td>
 <td>Action</td>
-<td>Updates the email address in the REDCapPRO database for this participant</td>
+<td>Updates the email address in the <strong>REDCapPRO</strong> database for this participant</td>
 <td><u><strong>Manager</strong></u></td>
 </tr>
 <tr>
@@ -1323,7 +1332,7 @@ itself is available to <code>Monitors</code> and above.</p>
 <p>This tab allows a user to search for a registered participant in order to enroll
 them into this study project. This tab is available to <code>Normal Users</code> and above.</p>
 <h3 id="register">Register</h3>
-<p>This tab allows a user to register a participant with REDCapPRO. It is available
+<p>This tab allows a user to register a participant with <strong>REDCapPRO</strong>. It is available
 to <code>Normal Users</code> and above.</p>
 <h3 id="study-staff">Study Staff</h3>
 <p>This tab allows <code>Managers</code> to set the <code>role</code> of users in the study project. All
@@ -1339,7 +1348,7 @@ guide:</p>
 <tbody>
 <tr>
 <td>No Access</td>
-<td>No access to REDCapPRO is given to this user.</td>
+<td>No access to <strong>REDCapPRO</strong> is given to this user.</td>
 </tr>
 <tr>
 <td>Monitor</td>
@@ -1355,14 +1364,14 @@ guide:</p>
 </tr>
 </tbody>
 </table>
-<p><em><u>Note</u>: REDCap administrators have full <code>Manager</code> permissions in REDCapPRO no matter what <code>role</code> they have in the project (or if they appear in the staff list at all)</em></p>
+<p><em><u>Note</u>: REDCap administrators have full <code>Manager</code> permissions in <strong>REDCapPRO</strong> no matter what <code>role</code> they have in the project (or if they appear in the staff list at all)</em></p>
 <h3 id="logs">Logs</h3>
-<p>This tab allows <code>Managers</code> to view the logs of REDCapPRO relevant to this study
+<p>This tab allows <code>Managers</code> to view the logs of <strong>REDCapPRO</strong> relevant to this study
 project. It only contains information about actions taken in this project or on
 surveys tied to this project.</p>
 <h2 id="action-tags">Action Tags</h2>
 <p>This module provides several action tags for populating REDCap fields with
-information about REDCapPRO participants. These are described below:
+information about <strong>REDCapPRO</strong> participants. These are described below:
 <em>Note: All action tags must exist on the same data collection instrument (not survey).</em></p>
 <table>
 <thead>
