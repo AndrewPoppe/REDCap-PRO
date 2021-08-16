@@ -104,7 +104,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
     <form class="dataTableParentHidden participants-form outer_container" id="participants-form" style="min-width:50vw !important;" action="<?= $module->getUrl("src/cc_participants.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
         <?php if (count($participants) === 0 || empty($participants)) { ?>
             <div>
-                <p>No participants have been enrolled in this study</p>
+                <p>No participants have been registered in this system</p>
             </div>
         <?php } else { ?>
             <div class="form-group">
