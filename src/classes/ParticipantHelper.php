@@ -214,7 +214,7 @@ class ParticipantHelper
      */
     public function getAllParticipants()
     {
-        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, CASE WHEN pw IS NULL OR pw = '' THEN 'False' ELSE 'True' END AS pw_set WHERE message = 'PARTICIPANT' AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, (CASE WHEN (pw IS NULL OR pw = '') THEN 'False' ELSE 'True' END) AS pw_set WHERE message = 'PARTICIPANT' AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = self::$module->queryLogs($SQL, []);
             $participants  = array();
@@ -378,7 +378,7 @@ class ParticipantHelper
             $participants  = array();
 
             while ($row = $result->fetch_assoc()) {
-                $participantSQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, CASE WHEN pw IS NULL OR pw = '' THEN 'False' ELSE 'True' END AS pw_set WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+                $participantSQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, (CASE WHEN (pw IS NULL OR pw = '') THEN 'False' ELSE 'True' END) AS pw_set WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
                 $participantResult = self::$module->queryLogs($participantSQL, [$row["rcpro_participant_id"]]);
                 $participant = $participantResult->fetch_assoc();
                 $participants[$row["rcpro_participant_id"]] = $participant;
