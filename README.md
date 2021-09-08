@@ -2,6 +2,8 @@
 
 # REDCapPRO - Patient Reported Outcomes
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=AndrewPoppe_REDCap-PRO&metric=alert_status)](https://sonarcloud.io/dashboard?id=AndrewPoppe_REDCap-PRO) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=AndrewPoppe_REDCap-PRO&metric=security_rating)](https://sonarcloud.io/dashboard?id=AndrewPoppe_REDCap-PRO) [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=AndrewPoppe_REDCap-PRO&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=AndrewPoppe_REDCap-PRO)
+
 ## Table of Contents <!-- omit in toc -->
 - [REDCapPRO - Patient Reported Outcomes](#redcappro---patient-reported-outcomes)
   - [Overview](#overview)
