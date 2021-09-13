@@ -1,15 +1,3 @@
 parameters:
-    version:
-        - latest
-    php_version:
-        - 7.4
-    php_extensions:
-        - N/A
-    command:
-        - analyze
-    path:
-        - src/
-    level:
-        - 6
     bootstrapFiles:
         - constants.php
