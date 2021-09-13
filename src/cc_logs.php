@@ -1,6 +1,6 @@
 <?php
 
-use REDCap;
+use \REDCap;
 
 if (!SUPER_USER) {
     return;
