@@ -1,5 +1,8 @@
 <?php
 
+$ok = $_POST['ok'];
+echo $ok;
+
 if (!SUPER_USER) {
     return;
 }
