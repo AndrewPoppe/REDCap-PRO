@@ -215,7 +215,7 @@ if (!empty($login_err)) {
     </div>
     <div class="form-group">
         <label>Password</label>
-        <input type="password" name="password" class="form-control <?= (!empty($password_err)) ? 'is-invalid' : ''; ?>" value="<?= $password; ?>">
+        <input type="password" name="password" class="form-control <?= (!empty($password_err)) ? 'is-invalid' : ''; ?>">
         <span class="invalid-feedback"><?= $password_err; ?></span>
     </div>
     <div class="form-group d-grid">
