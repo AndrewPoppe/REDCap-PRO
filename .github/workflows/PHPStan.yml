@@ -21,4 +21,4 @@ jobs:
         with:
            php_version: 7.4
            path: src/
-           configuration: "phpstan.neon"
+           configuration: ".github/workflows/phpstan.neon"
