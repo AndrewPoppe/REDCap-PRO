@@ -1,7 +1,5 @@
 <?php
 
-use \REDCap;
-
 if (!SUPER_USER) {
     return;
 }
