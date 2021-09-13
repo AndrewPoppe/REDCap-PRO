@@ -1,4 +1,4 @@
 <?php
 
-define("REDCap", 1);
-define("SUPER_USER", 1);
+class_alias(\REDCap::class, "REDCap");
+define("SUPER_USER", [true, false]);
