@@ -1,0 +1,25 @@
+name: PHPStan
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ master ]
+  schedule:
+    - cron: '29 4 * * 5'
+
+jobs:
+  phpstan:
+    name: PHPStan Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: PHPStan PHP v7.4
+        uses: php-actions/phpstan@v3
+        with:
+           php_version: 7.4
+           path: src/
+
+
