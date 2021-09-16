@@ -27,13 +27,13 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
         <table class="table" id="RCPRO_TABLE" style="width:100%;">
             <caption>REDCapPRO Projects</caption>
             <thead>
-                <th class='dt-center'>Project ID</th>
-                <th class='dt-center'>REDCap PID</th>
-                <th>Title</th>
-                <th class='dt-center'>Status</th>
-                <th class='dt-center'># Participants</th>
-                <th class='dt-center'># Staff Members</th>
-                <th class='dt-center'># Records</th>
+                <th scope="col" class='dt-center'>Project ID</th>
+                <th scope="col" class='dt-center'>REDCap PID</th>
+                <th scope="col">Title</th>
+                <th scope="col" class='dt-center'>Status</th>
+                <th scope="col" class='dt-center'># Participants</th>
+                <th scope="col" class='dt-center'># Staff Members</th>
+                <th scope="col" class='dt-center'># Records</th>
             </thead>
             <tbody>
                 <?php
