@@ -151,9 +151,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     } else {
                         $study_contact = $module->getContactPerson();
                         if (!isset($study_contact["name"])) {
-                            echo "Please contact your study coordinator.";
+                            echo "21Please contact your study coordinator.";
                         } else {
-                            echo "Please contact your study coordinator:<br>" . $study_contact["info"];
+                            echo "21Please contact your study coordinator:<br>" . $study_contact["info"];
                         }
                     }
                     return;

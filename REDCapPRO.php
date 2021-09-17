@@ -296,16 +296,15 @@ class REDCapPRO extends AbstractExternalModule
     public function createEmailLink(string $email, ?string $subject)
     {
         if (!isset($subject)) {
-            $subject = "REDCapPRO Inquiry";
+            $subject = $this->tt("email_inquiry_subject");
         }
         $body = "";
         if (self::$AUTH->is_logged_in()) {
             $username = self::$AUTH->get_username();
-            $body .= "REDCapPRO Username: ${username}\n";
+            $body .= $this->tt("email_inquiry_body_1", [$username]);
         }
         if (PROJECT_ID) {
-            $body .= "Project ID: " . PROJECT_ID;
-            $body .= "\nProject Title: " . \REDCap::getProjectTitle();
+            $body .= $this->tt("email_inquiry_body_2", [PROJECT_ID, \REDCap::getProjectTitle()]);
         }
         $link = "mailto:${email}?subject=" . rawurlencode($subject) . "&body=" . rawurlencode($body);
         return "<br><strong>Email:</strong> <a href='${link}'>$email</a>";
@@ -322,9 +321,9 @@ class REDCapPRO extends AbstractExternalModule
         $email = $this->getProjectSetting("pc-email");
         $phone = $this->getProjectSetting("pc-phone");
 
-        $name_string = "<strong>Name:</strong> $name";
+        $name_string = $this->tt("email_contact_name_string", $name);
         $email_string = isset($email) ? $this->createEmailLink($email, $subject) : "";
-        $phone_string = isset($phone) ? "<br><strong>Phone:</strong> $phone" : "";
+        $phone_string = isset($phone) ? $this->tt("email_contact_phone_string", $phone) : "";
         $info  = "${name_string} ${email_string} ${phone_string}";
 
         return [
@@ -340,30 +339,27 @@ class REDCapPRO extends AbstractExternalModule
 
     public function sendEmailUpdateEmail(string $username, string $new_email, string $old_email)
     {
-        $subject = "REDCapPRO - Email Address Changed";
+        $subject = $this->tt("email_update_subject");
         $from    = "noreply@REDCapPRO.com";
         $old_email_clean = \REDCap::escapeHtml($old_email);
         $new_email_clean = \REDCap::escapeHtml($new_email);
         $body    = "<html><body><div>
         <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
-        <p>Hello,</p>
-        <p>Your email for username <strong>${username}</strong> was just changed.<br>
+        <p>" . $this->tt("email_update_greeting") . "</p>
+        <p>" . $this->tt("email_update_message1", $username) . "<br>
             <ul>
-                <li><strong>Old email:</strong> ${old_email_clean}</li>
-                <li><strong>New email:</strong> ${new_email_clean}</li>
+                <li><strong>" . $this->tt("email_update_old_email") . ":</strong> ${old_email_clean}</li>
+                <li><strong>" . $this->tt("email_update_new_email") . ":</strong> ${new_email_clean}</li>
             </ul>
         </p>";
+        $body .= "<p><strong>" . $this->tt("email_update_message2") . "</strong>";
         if (defined("PROJECT_ID")) {
-            $study_contact = $this->getContactPerson("REDCapPRO - Reset Password");
-            if (!isset($study_contact["name"])) {
-                $body .= "<p><strong>If you did not request this change, please contact a member of the study team!</strong></p>";
-            } else {
-                $body .= "<p><strong>If you did not request this change, please contact a member of the study team!</strong><br>" . $study_contact["info"] . "</p>";
+            $study_contact = $this->getContactPerson($this->tt("email_update_subject"));
+            if (isset($study_contact["name"])) {
+                $body .= "<br>" . $study_contact["info"];
             }
-        } else {
-            $body .= "<p><strong>If you did not request this change, please contact a member of the study team!</strong></p>";
         }
-        $body .= "</body></html></div>";
+        $body .= "</p></div></body></html>";
 
         try {
             return \REDCap::email($new_email, $from, $subject, $body, $old_email);
