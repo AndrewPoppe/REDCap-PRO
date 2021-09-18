@@ -321,9 +321,9 @@ class REDCapPRO extends AbstractExternalModule
         $email = $this->getProjectSetting("pc-email");
         $phone = $this->getProjectSetting("pc-phone");
 
-        $name_string = $this->tt("email_contact_name_string", $name);
+        $name_string = "<strong>" . $this->tt("email_contact_name_string") . "</strong>" . $name;
         $email_string = isset($email) ? $this->createEmailLink($email, $subject) : "";
-        $phone_string = isset($phone) ? $this->tt("email_contact_phone_string", $phone) : "";
+        $phone_string = isset($phone) ? "<br><strong>" . $this->tt("email_contact_phone_string") . "</strong>" . $phone : "";
         $info  = "${name_string} ${email_string} ${phone_string}";
 
         return [
@@ -346,7 +346,7 @@ class REDCapPRO extends AbstractExternalModule
         $body    = "<html><body><div>
         <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
         <p>" . $this->tt("email_update_greeting") . "</p>
-        <p>" . $this->tt("email_update_message1", $username) . "<br>
+        <p>" . $this->tt("email_update_message1", "<strong>${username}</strong>") . "<br>
             <ul>
                 <li><strong>" . $this->tt("email_update_old_email") . ":</strong> ${old_email_clean}</li>
                 <li><strong>" . $this->tt("email_update_new_email") . ":</strong> ${new_email_clean}</li>
@@ -389,7 +389,7 @@ class REDCapPRO extends AbstractExternalModule
             $token                = self::$PARTICIPANT->createResetToken($rcpro_participant_id, $hours_valid);
 
             // create email
-            $subject = "REDCapPRO - Account Created";
+            $subject = $this->tt("email_new_participant_subject");
             $from    = "noreply@REDCapPRO.com";
             $body    = "<html><body><div>
             <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
