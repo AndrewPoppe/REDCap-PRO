@@ -393,31 +393,31 @@ class REDCapPRO extends AbstractExternalModule
             $from    = "noreply@REDCapPRO.com";
             $body    = "<html><body><div>
             <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
-            <p>Hello ${fname} ${lname},
-            <br>An account has been created for you in order to take part in a research study.<br>
-            This is your username: <strong>${username}</strong><br>
-            Write it down someplace safe, because you will need to know your username to take part in the study.</p>
+            <p>" . $this->tt("email_new_participant_greeting", [$fname, $lname]) . "
+            <br>" . $this->tt("email_new_participant_message1") . "
+            <br>" . $this->tt("email_new_participant_message2", "<strong>${username}</strong>") . "
+            <br>" . $this->tt("email_new_participant_message3") . "</p>
 
-            <p>To use your account, first you will need to create a password. 
-            <br>Click <a href='" . $this->getUrl("src/create-password.php", true) . "&t=${token}'>this link</a> to create your password.
-            <br>That link will only work for the next $hours_valid hours.
-            </p>
+            <p>" . $this->tt("email_new_participant_message4") . "
+            <br>" .
+                $this->tt(
+                    "email_new_participant_message5",
+                    "<a href='" . $this->getUrl("src/create-password.php", true) . "&t=${token}'>" . $this->tt("email_new_participant_link_text") . "</a>"
+                )
+                . "<br>" . $this->tt("email_new_participant_message6", $hours_valid) . "</p>
             <br>";
+            $body .= "<p>" . $this->tt("email_new_participant_message7");
             if (defined("PROJECT_ID")) {
-                $study_contact = $this->getContactPerson("REDCapPRO - Username Inquiry");
-                if (!isset($study_contact["name"])) {
-                    $body .= "<p>If you have any questions, contact a member of the study team.</p>";
-                } else {
-                    $body .= "<p>If you have any questions, contact a member of the study team:<br>" . $study_contact["info"] . "</p>";
+                $study_contact = $this->getContactPerson($subject);
+                if (isset($study_contact["name"])) {
+                    $body .= "<br>" . $study_contact["info"];
                 }
-            } else {
-                $body .= "<p>If you have any questions, contact a member of the study team.</p>";
             }
-            $body .= "</body></html></div>";
+            $body .= "</p></div></body></html>";
 
             return \REDCap::email($email, $from, $subject, $body);
         } catch (\Exception $e) {
-            $this->logError("Error sending new user email", $e);
+            $this->logError("Error sending new participant email", $e);
         }
     }
 
