@@ -438,29 +438,32 @@ class REDCapPRO extends AbstractExternalModule
             $username_clean = \REDCap::escapeHtml($username);
 
             // create email
-            $subject = "REDCapPRO - Password Reset";
+            $subject = $this->tt("email_password_reset_subject");
             $from = "noreply@REDCapPRO.com";
             $body = "<html><body><div>
             <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
-            <p>Hello,
-            <br>We have received a request to reset your account password. If you did not make this request, you can ignore this email.<br>
-            <br>To reset your password, click the link below.
-            <br>This is your username: <strong>${username_clean}</strong><br>
-            <br>Click <a href='" . $this->getUrl("src/reset-password.php", true) . "&t=${token}'>here</a> to reset your password.
-            <br><em>That link is only valid for the next hour. If you need a new link, click <a href='" . $this->getUrl("src/forgot-password.php", true) . "'>here</a>.</em>
-            </p>
-            <br>";
+            <p>" . $this->tt("email_password_reset_greeting") . "
+            <br>" . $this->tt("email_password_reset_message1") . "<br>
+            <br>" . $this->tt("email_password_reset_message2") . "
+            <br>" . $this->tt("email_password_reset_message3", "<strong>${username_clean}</strong>") . "
+            <br>
+            <br>" . $this->tt(
+                "email_password_reset_message4",
+                "<a href='" . $this->getUrl("src/reset-password.php", true) . "&t=${token}'>" . $this->tt("email_password_reset_link_text1") . "</a>"
+            )
+                . "<br><em>" . $this->tt(
+                    "email_password_reset_message5",
+                    "<a href='" . $this->getUrl("src/forgot-password.php", true) . "'>" . $this->tt("email_password_reset_link_text2") . "</a>"
+                )
+                . "</em></p><br>";
+            $body .= "<p>" . $this->tt("email_password_reset_message6");
             if (defined("PROJECT_ID")) {
-                $study_contact = $this->getContactPerson("REDCapPRO - Reset Password");
-                if (!isset($study_contact["name"])) {
-                    $body .= "<p>If you have any questions, contact a member of the study team.</p>";
-                } else {
-                    $body .= "<p>If you have any questions, contact a member of the study team:<br>" . $study_contact["info"] . "</p>";
+                $study_contact = $this->getContactPerson($subject);
+                if (isset($study_contact["name"])) {
+                    $body .= "<br>" . $study_contact["info"];
                 }
-            } else {
-                $body .= "<p>If you have any questions, contact a member of the study team.</p>";
             }
-            $body .= "</body></html></div>";
+            $body .= "</p></div></body></html>";
 
             $result = \REDCap::email($to, $from, $subject, $body);
             $status = $result ? "Sent" : "Failed to send";
@@ -490,26 +493,24 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function sendUsernameEmail(string $email, string $username)
     {
-        $subject = "REDCapPRO - Username";
+        $subject = $this->tt("email_username_subject");
         $from    = "noreply@REDCapPRO.com";
         $body    = "<html><body><div>
         <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
-        <p>Hello,</p>
-        <p>This is your username: <strong>${username}</strong><br>
-        Write it down someplace safe.</p>
+        <p>" . $this->tt("email_username_greeting") . "</p>
+        <p>" . $this->tt("email_username_message1", "<strong>${username}</strong>") . "<br>
+        " . $this->tt("email_username_message2") . "</p>
 
-        <p>If you did not request this email, please disregard.<br>";
+        <p>" . $this->tt("email_username_message3") . "<br>";
+
+        $body .= $this->tt("email_username_message4");
         if (defined("PROJECT_ID")) {
-            $study_contact = $this->getContactPerson("REDCapPRO - Username Inquiry");
-            if (!isset($study_contact["name"])) {
-                $body .= "If you have any questions, contact a member of the study team.</p>";
-            } else {
-                $body .= "If you have any questions, contact a member of the study team:<br>" . $study_contact["info"] . "</p>";
+            $study_contact = $this->getContactPerson($subject);
+            if (isset($study_contact["name"])) {
+                $body .= "<br>" . $study_contact["info"];
             }
-        } else {
-            $body .= "If you have any questions, contact a member of the study team.</p>";
         }
-        $body .= "</body></html></div>";
+        $body .= "</p></div></body></html>";
 
         try {
             return \REDCap::email($email, $from, $subject, $body);
