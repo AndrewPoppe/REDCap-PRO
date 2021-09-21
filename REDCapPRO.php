@@ -449,11 +449,11 @@ class REDCapPRO extends AbstractExternalModule
             <br>
             <br>" . $this->tt(
                 "email_password_reset_message4",
-                "<a href='" . $this->getUrl("src/reset-password.php", true) . "&t=${token}'>" . $this->tt("email_password_reset_link_text1") . "</a>"
+                "<a href='" . $this->getUrl("src/reset-password.php", true) . "&t=${token}'>" . $this->tt("email_password_reset_link_text") . "</a>"
             )
                 . "<br><em>" . $this->tt(
                     "email_password_reset_message5",
-                    "<a href='" . $this->getUrl("src/forgot-password.php", true) . "'>" . $this->tt("email_password_reset_link_text2") . "</a>"
+                    "<a href='" . $this->getUrl("src/forgot-password.php", true) . "'>" . $this->tt("email_password_reset_link_text") . "</a>"
                 )
                 . "</em></p><br>";
             $body .= "<p>" . $this->tt("email_password_reset_message6");

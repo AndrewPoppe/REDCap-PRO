@@ -25,8 +25,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // Validate token
     if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        $module::$UI->ShowParticipantHeader('Error');
-        echo "<div style='text-align: center;'>Oops! Something went wrong.<br>Do you have multiple tabs open?</div>";
+        $module::$UI->ShowParticipantHeader($module->tt("error_title"));
+        echo "<div style='text-align: center;'>" . $module->tt("error_generic1") . "<br>" . $module->tt("error_csrf1") . "</div>";
         $module::$UI->EndParticipantPage();
         return;
     }
@@ -34,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Validate password
     $new_password = trim($_POST["new_password"]);
     if (empty($new_password)) {
-        $new_password_err = "Please enter your new password.";
+        $new_password_err = $module->tt("create_password_message1");
         $any_error = TRUE;
     } else {
         // Validate password strength
@@ -46,11 +46,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $goodLength   = strlen($new_password) >= $pw_len_req;
 
         if (!$uppercase || !$lowercase || !$number || !$specialChars || !$goodLength) {
-            $new_password_err = "Password should be at least ${pw_len_req} characters in length and should include at least one of each of the following: 
-            <br>- upper-case letter
-            <br>- lower-case letter
-            <br>- number
-            <br>- special character (non-alphanumeric)";
+            $new_password_err = $module->tt("create_password_message2", $pw_len_req) . " 
+            <br>- " . $module->tt("create_password_upper") . "
+            <br>- " . $module->tt("create_password_lower") . "
+            <br>- " . $module->tt("create_password_number") . "
+            <br>- " . $module->tt("create_password_special");
             $any_error = TRUE;
         }
     }
@@ -58,11 +58,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Validate confirm password
     $confirm_password = trim($_POST["confirm_password"]);
     if (empty($confirm_password)) {
-        $confirm_password_err = "Please confirm the password.";
+        $confirm_password_err = $module->tt("create_password_confirm");
         $any_error = TRUE;
     } else {
         if (empty($new_password_err) && ($new_password !== $confirm_password)) {
-            $confirm_password_err = "Password did not match.";
+            $confirm_password_err = $module->tt("create_password_no_match");
             $any_error = TRUE;
         }
     }
@@ -77,7 +77,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
         $result = $module::$PARTICIPANT->storeHash($password_hash, $participant["log_id"]);
         if (empty($result) || $result === FALSE) {
-            echo "Oops! Something went wrong. Please try again later.";
+            echo $module->tt("error_generic1");
+            echo $module->tt("error_generic2");
             return;
         }
 
@@ -87,8 +88,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         // Store data in session variables
         $module::$AUTH->set_login_values($participant);
 
-        $module::$UI->ShowParticipantHeader("Password Successfully Set");
-        echo "<div style='text-align:center;'><p>You may now close this tab.</p></div>";
+        $module::$UI->ShowParticipantHeader($module->tt("create_password_set"));
+        echo "<div style='text-align:center;'><p>" . $module->tt("ui_close_tab") . "</p></div>";
         $module::$UI->EndParticipantPage();
         return;
     }
@@ -97,7 +98,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 // set csrf token
 $module::$AUTH->set_csrf_token();
 
-$module::$UI->ShowParticipantHeader("Create Password");
+$module::$UI->ShowParticipantHeader($module->tt("create_password_title"));
 
 if ($verified_user) {
 
@@ -105,24 +106,24 @@ if ($verified_user) {
         "rcpro_username" => $verified_user["rcpro_username"]
     ]);
 
-    echo "<p>Please fill out this form to create your password.</p>";
+    echo "<p>" . $module->tt("create_password_message3") . "</p>";
 ?>
     <form action="<?= $module->getUrl("src/create-password.php", true) . "&t=" . urlencode($qstring["t"]); ?>" method="post">
         <div class="form-group">
-            <span>Username: <span style="color: #900000; font-weight: bold;"><?= $verified_user["rcpro_username"]; ?></span></span>
+            <span><?= $module->tt("create_password_username_label") ?><span style="color: #900000; font-weight: bold;"><?= $verified_user["rcpro_username"]; ?></span></span>
         </div>
         <div class="form-group">
-            <label>New Password</label>
+            <label><?= $module->tt("create_password_new_label") ?></label>
             <input type="password" name="new_password" class="form-control <?php echo (!empty($new_password_err)) ? 'is-invalid' : ''; ?>">
             <span class="invalid-feedback"><?php echo $new_password_err; ?></span>
         </div>
         <div class="form-group">
-            <label>Confirm Password</label>
+            <label><?= $module->tt("create_password_confirm_label") ?></label>
             <input type="password" name="confirm_password" class="form-control <?php echo (!empty($confirm_password_err)) ? 'is-invalid' : ''; ?>">
             <span class="invalid-feedback"><?php echo $confirm_password_err; ?></span>
         </div>
         <div class="form-group">
-            <input type="submit" class="btn btn-primary" value="Submit">
+            <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
         </div>
         <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
         <input type="hidden" name="username" value="<?= $verified_user["rcpro_username"] ?>">
@@ -132,5 +133,5 @@ if ($verified_user) {
 
     </html>
 <?php } else {
-    echo "<div class='red'>Something went wrong. Try requesting a password reset.</div>";
+    echo "<div class='red'>" . $module->tt("create_password_error") . "</div>";
 }
