@@ -5,8 +5,6 @@ $module::$AUTH->init();
 
 $module::$UI->ShowParticipantHeader($module->tt("forgot_password_title"));
 
-$showform = true;
-
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
@@ -35,35 +33,32 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 ]);
                 $module->sendPasswordResetEmail($rcpro_participant_id);
             }
-            $showform = false;
             echo '<div style="text-align: center; font-size: large;"><p><br>' . $module->tt("forgot_password_message1") . '</p></div>';
+            return;
         }
     }
 }
 
-if ($showform) {
 
-    // set csrf token
-    $module::$AUTH->set_csrf_token();
+// set csrf token
+$module::$AUTH->set_csrf_token();
 
-    echo '<div style="text-align: center;"><p>' . $module->tt("forgot_password_message2") . '</p></div>';
+echo '<div style="text-align: center;"><p>' . $module->tt("forgot_password_message2") . '</p></div>';
 ?>
-    <form action="<?= $module->getUrl("src/forgot-password.php", true); ?>" method="post">
-        <div class="form-group">
-            <label><?= $module->tt("forgot_password_username_label") ?></label>
-            <input type="text" name="username" class="form-control <?php echo (!empty($err)) ? 'is-invalid' : ''; ?>">
-            <span class="invalid-feedback"><?php echo $err; ?></span>
-        </div>
-        <div class="form-group d-grid">
-            <input type="submit" class="btn btn-primary" value=<?= $module->tt("ui_button_submit") ?>>
-        </div>
-        <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
-    </form>
-    <hr>
-    <div style="text-align: center;">
-        <a href="<?= $module->getUrl("src/forgot-username.php", true); ?>"><?= $module->tt("forgot_password_forgot_username") ?></a>
+<form action="<?= $module->getUrl("src/forgot-password.php", true); ?>" method="post">
+    <div class="form-group">
+        <label><?= $module->tt("forgot_password_username_label") ?></label>
+        <input type="text" name="username" class="form-control <?php echo (!empty($err)) ? 'is-invalid' : ''; ?>">
+        <span class="invalid-feedback"><?php echo $err; ?></span>
     </div>
-<?php } ?>
+    <div class="form-group d-grid">
+        <input type="submit" class="btn btn-primary" value=<?= $module->tt("ui_button_submit") ?>>
+    </div>
+    <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+</form>
+<hr>
+<div style="text-align: center;">
+    <a href="<?= $module->getUrl("src/forgot-username.php", true); ?>"><?= $module->tt("forgot_password_forgot_username") ?></a>
 </div>
 <style>
     a {
