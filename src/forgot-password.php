@@ -12,7 +12,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
         $module->log("Invalid CSRF Token");
         echo $module->tt("error_generic1");
-        echo "<br>" . $module->tt("error_generic2");
+        echo "<br>";
+        echo $module->tt("error_generic2");
         return;
     }
 
@@ -52,7 +53,7 @@ echo '<div style="text-align: center;"><p>' . $module->tt("forgot_password_messa
         <span class="invalid-feedback"><?php echo $err; ?></span>
     </div>
     <div class="form-group d-grid">
-        <input type="submit" class="btn btn-primary" value=<?= $module->tt("ui_button_submit") ?>>
+        <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
     </div>
     <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
 </form>

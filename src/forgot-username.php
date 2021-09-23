@@ -3,7 +3,7 @@
 # Initialize authentication session on page
 $module::$AUTH->init();
 
-$module::$UI->ShowParticipantHeader("Forgot Username?");
+$module::$UI->ShowParticipantHeader($module->tt("forgot_username_title"));
 
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -11,7 +11,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Validate token
     if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
         $module->log("Invalid CSRF Token");
-        echo "Oops! Something went wrong. Please try again later.";
+        echo $module->tt("error_generic1");
+        echo "<br>";
+        echo $module->tt("error_generic2");
         return;
     }
 
@@ -19,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // Validate username
     if (empty(trim($_POST["email"]))) {
-        $err = "Please enter your email address.";
+        $err = $module->tt("forgot_username_err1");
     } else {
         $email = \REDCap::escapeHtml(trim($_POST["email"]));
         // Check input errors before sending reset email
@@ -33,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 ]);
                 $module->sendUsernameEmail($email, $username);
             }
-            echo "If a user account associated with the supplied email address exists, an email with the account's username was sent to that email address.";
+            echo $module->tt("forgot_username_message1");
             return;
         }
     }
@@ -42,23 +44,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 // set csrf token
 $module::$AUTH->set_csrf_token();
 
-echo '<div style="text-align: center;"><p>Provide the email address associated with your account.</p></div>';
+echo '<div style="text-align: center;"><p>' . $module->tt("forgot_username_message2") . '</p></div>';
 ?>
 <form action="<?= $module->getUrl("src/forgot-username.php", true); ?>" method="post">
     <div class="form-group">
-        <label>Email Address</label>
+        <label><?= $module->tt("forgot_username_email_label") ?></label>
         <input type="email" name="email" class="form-control <?php echo (!empty($err)) ? 'is-invalid' : ''; ?>">
         <span class="invalid-feedback"><?php echo $err; ?></span>
     </div>
     <div class="form-group d-grid">
-        <input type="submit" class="btn btn-primary" value="Submit">
+        <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
     </div>
     <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
 </form>
 <hr>
 <div style="text-align: center;">
-    <a href="<?= $module->getUrl("src/forgot-password.php", true); ?>">Forgot Password?</a>
-</div>
+    <a href="<?= $module->getUrl("src/forgot-password.php", true); ?>"><?= $module->tt("forgot_username_forgot_password") ?></a>
 </div>
 <style>
     a {

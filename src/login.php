@@ -37,20 +37,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Validate token
     if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
         $module->log("Invalid CSRF Token");
-        echo "Oops! Something went wrong. Please try again later.";
+        echo $module->tt("error_generic1");
+        echo "<br>";
+        echo $module->tt("error_generic2");
         return;
     }
 
     // Check if username is empty
     if (empty(trim($_POST["username"]))) {
-        $username_err = "Please enter username.";
+        $username_err = $module->tt("login_err1");
     } else {
         $username = \REDCap::escapeHtml(trim($_POST["username"]));
     }
 
     // Check if password is empty
     if (empty(trim($_POST["password"]))) {
-        $password_err = "Please enter your password.";
+        $password_err = $module->tt("login_err2");
     } else {
         $password = trim($_POST["password"]);
     }
@@ -64,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $lockout_ts_ip = $Login->checkIpLockedOut($ip);
             if ($lockout_ts_ip !== FALSE) {
                 $lockout_duration_remaining = $lockout_ts_ip - time();
-                $login_err = "You have been temporarily locked out.<br>You have ${lockout_duration_remaining} seconds left.";
+                $login_err = $module->tt("login_err3") . "<br>" . $module->tt("login_err4", $lockout_duration_remaining);
                 $module->log("Login Attempted - IP Locked Out", [
                     "rcpro_ip"       => $ip,
                     "rcpro_username" => $username
@@ -83,10 +85,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     "rcpro_username" => $username
                 ]);
                 if ($remainingAttempts <= 0) {
-                    $login_err = "Invalid username or password.<br>You have been locked out for " . $module::$SETTINGS->getLockoutDurationSeconds() . " seconds.";
+                    $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err6", $module::$SETTINGS->getLockoutDurationSeconds());
                     $module->log("IP LOCKOUT", ["rcpro_ip" => $ip]);
                 } else {
-                    $login_err = "Invalid username or password.<br>You have ${remainingAttempts} attempts remaining before being locked out.";
+                    $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err7", $remainingAttempts);
                 }
 
                 // --> USERNAME EXISTS
@@ -99,7 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $lockout_duration_remaining = $Login->getUsernameLockoutDuration($participant["log_id"]);
                 if ($lockout_duration_remaining !== FALSE && $lockout_duration_remaining !== NULL) {
                     // --> Username is locked out
-                    $login_err = "You have been temporarily locked out.<br>You have ${lockout_duration_remaining} seconds left.";
+                    $login_err = $module->tt("login_err3") . "<br>" . $module->tt("login_err4", $lockout_duration_remaining);
                     $module->log("Login Attempted - Username Locked Out", [
                         "rcpro_ip"             => $ip,
                         "rcpro_username"       => $username,
@@ -114,7 +116,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         "rcpro_participant_id" => $participant["log_id"],
                         "rcpro_username"       => $username
                     ]);
-                    $login_err = "Error: you have not set up your password. Please speak with your study coordinator.";
+                    $login_err = $module->tt("login_err8");
 
                     // Verify supplied password is correct
                 } else if (password_verify($password, $stored_hash)) {
@@ -150,10 +152,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         header("location: " . APP_PATH_SURVEY_FULL . $_SERVER['QUERY_STRING']);
                     } else {
                         $study_contact = $module->getContactPerson();
-                        if (!isset($study_contact["name"])) {
-                            echo "21Please contact your study coordinator.";
-                        } else {
-                            echo "21Please contact your study coordinator:<br>" . $study_contact["info"];
+                        echo $module->tt("login_err9");
+                        if (isset($study_contact["name"])) {
+                            echo ":<br>" . $study_contact["info"];
                         }
                     }
                     return;
@@ -194,7 +195,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $module::$AUTH->set_csrf_token();
 
 // This method starts the html doc
-$module::$UI->ShowParticipantHeader("Login");
+$module::$UI->ShowParticipantHeader($module->tt("login_title"));
 ?>
 
 <div style="text-align: center;">
