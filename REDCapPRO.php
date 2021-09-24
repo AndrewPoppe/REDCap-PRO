@@ -363,10 +363,10 @@ class REDCapPRO extends AbstractExternalModule
         $body    = "<html><body><div>
         <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
         <p>" . $this->tt("email_update_greeting") . "</p>
-        <p>" . $this->tt("email_update_message1", "<strong>${username}</strong>") . "<br>
+        <p>" . $this->tt("email_update_message1") . "<strong> ${username}</strong><br>
             <ul>
-                <li><strong>" . $this->tt("email_update_old_email") . ":</strong> ${old_email_clean}</li>
-                <li><strong>" . $this->tt("email_update_new_email") . ":</strong> ${new_email_clean}</li>
+                <li><strong>" . $this->tt("email_update_old_email") . "</strong> ${old_email_clean}</li>
+                <li><strong>" . $this->tt("email_update_new_email") . "</strong> ${new_email_clean}</li>
             </ul>
         </p>";
         $body .= "<p><strong>" . $this->tt("email_update_message2") . "</strong>";
@@ -412,16 +412,13 @@ class REDCapPRO extends AbstractExternalModule
             <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
             <p>" . $this->tt("email_new_participant_greeting", [$fname, $lname]) . "
             <br>" . $this->tt("email_new_participant_message1") . "
-            <br>" . $this->tt("email_new_participant_message2", "<strong>${username}</strong>") . "
+            <br>" . $this->tt("email_new_participant_message2") . " <strong>${username}</strong>
             <br>" . $this->tt("email_new_participant_message3") . "</p>
 
             <p>" . $this->tt("email_new_participant_message4") . "
-            <br>" .
-                $this->tt(
-                    "email_new_participant_message5",
-                    "<a href='" . $this->getUrl("src/create-password.php", true) . "&t=${token}'>" . $this->tt("email_new_participant_link_text") . "</a>"
-                )
-                . "<br>" . $this->tt("email_new_participant_message6", $hours_valid) . "</p>
+            <br>" . $this->tt("email_new_participant_message5") . " 
+            <a href='" . $this->getUrl("src/create-password.php", true) . "&t=${token}'>" . $this->tt("email_new_participant_link_text") . "</a>
+            <br>" . $this->tt("email_new_participant_message6", $hours_valid) . "</p>
             <br>";
             $body .= "<p>" . $this->tt("email_new_participant_message7");
             if (defined("PROJECT_ID")) {
@@ -509,10 +506,10 @@ class REDCapPRO extends AbstractExternalModule
         $body    = "<html><body><div>
         <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
         <p>" . $this->tt("email_username_greeting") . "</p>
-        <p>" . $this->tt("email_username_message1", "<strong>${username}</strong>") . "<br>
+        <p>" . $this->tt("email_username_message1") . "<strong> ${username}</strong><br>
         " . $this->tt("email_username_message2") . "</p>
 
-        <p>" . $this->tt("email_username_message3") . "<br>";
+        <p>" . $this->tt("email_username_message3") . "<br><br>";
 
         $body .= $this->tt("email_username_message4");
         if (defined("PROJECT_ID")) {
