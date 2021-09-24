@@ -25,13 +25,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // Validate token
     if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        echo "Oops! Something went wrong. Please try again later.";
+        echo $module->tt("error_generic1");
+        echo "<br>";
+        echo $module->tt("error_generic2");
         return;
     }
 
     // Validate password
     if (empty(trim($_POST["new_password"]))) {
-        $new_password_err = "Please enter your new password.";
+        $new_password_err = $module->tt("reset_password_err1");
         $any_error = TRUE;
     } else {
         $new_password = trim($_POST["new_password"]);
@@ -44,23 +46,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $goodLength   = strlen($new_password) >= $pw_len_req;
 
         if (!$uppercase || !$lowercase || !$number || !$specialChars || !$goodLength) {
-            $new_password_err = "Password should be at least ${pw_len_req} characters in length and should include at least one of each of the following: 
-            <br>- upper-case letter
-            <br>- lower-case letter
-            <br>- number
-            <br>- special character";
+            $new_password_err = implode("<br>- ", [
+                $module->tt("reset_password_err2", $pw_len_req),
+                $module->tt("create_password_upper"),
+                $module->tt("create_password_lower"),
+                $module->tt("create_password_number"),
+                $module->tt("create_password_special")
+            ]);
             $any_error = TRUE;
         }
     }
 
     // Validate confirm password
     if (empty(trim($_POST["confirm_password"]))) {
-        $confirm_password_err = "Please confirm the password.";
+        $confirm_password_err = $module->tt("reset_password_err3");
         $any_error = TRUE;
     } else {
         $confirm_password = trim($_POST["confirm_password"]);
         if (empty($new_password_err) && ($new_password !== $confirm_password)) {
-            $confirm_password_err = "Password did not match.";
+            $confirm_password_err = $module->tt("reset_password_err4");
             $any_error = TRUE;
         }
     }
@@ -75,7 +79,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
         $result = $module::$PARTICIPANT->storeHash($password_hash, $participant["log_id"]);
         if (empty($result) || $result === FALSE) {
-            echo "Oops! Something went wrong. Please try again later.";
+            echo $module->tt("error_generic1");
+            echo "<br>";
+            echo $module->tt("error_generic2");
             return;
         }
 
@@ -88,8 +94,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if ($module::$AUTH->is_survey_url_set()) {
             header("location: " . $module::$AUTH->get_survey_url());
         } else {
-            $module::$UI->ShowParticipantHeader("Password Successfully Reset");
-            echo "<div style='text-align:center;'><p>You may now close this tab.</p></div>";
+            $module::$UI->ShowParticipantHeader($module->tt("reset_password_title2"));
+            echo "<div style='text-align:center;'><p>" . $module->tt("ui_close_tab") . "</p></div>";
+            $module::$UI->EndParticipantPage();
         }
         return;
     }
@@ -98,36 +105,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 // set csrf token
 $module::$AUTH->set_csrf_token();
 
-$module::$UI->ShowParticipantHeader("Reset Password");
+$module::$UI->ShowParticipantHeader($module->tt("reset_password_title"));
 
 if ($verified_participant) {
-
-    echo "<p>Please fill out this form to reset your password.</p>";
 ?>
+    <div style="text-align: center;">
+        <p><?= $module->tt("reset_password_message1") ?></p>
+    </div>
     <form action="<?= $module->getUrl("src/reset-password.php", true) . "&t=" . $qstring["t"]; ?>" method="post">
         <div class="form-group">
-            <span>Username: <span style="color: #900000; font-weight: bold;"><?= $verified_participant["rcpro_username"]; ?></span></span>
+            <span><?= $module->tt("reset_password_username_label") ?><span style="color: #900000; font-weight: bold;"><?= $verified_participant["rcpro_username"]; ?></span></span>
         </div>
         <div class="form-group">
-            <label>New Password</label>
+            <label><?= $module->tt("reset_password_password_label") ?></label>
             <input type="password" name="new_password" class="form-control <?php echo (!empty($new_password_err)) ? 'is-invalid' : ''; ?>">
             <span class="invalid-feedback"><?php echo $new_password_err; ?></span>
         </div>
         <div class="form-group">
-            <label>Confirm Password</label>
+            <label><?= $module->tt("reset_password_confirm_password_label") ?></label>
             <input type="password" name="confirm_password" class="form-control <?php echo (!empty($confirm_password_err)) ? 'is-invalid' : ''; ?>">
             <span class="invalid-feedback"><?php echo $confirm_password_err; ?></span>
         </div>
-        <div class="form-group">
-            <input type="submit" class="btn btn-primary" value="Submit">
+        <div class="form-group d-grid">
+            <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
         </div>
         <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
         <input type="hidden" name="username" value="<?= $verified_participant["rcpro_username"] ?>">
     </form>
+<?php } else { ?>
+    <div class='red' style="text-align: center;">
+        <?= $module->tt("reset_password_err5") ?>
     </div>
-    </body>
-
-    </html>
-<?php } else {
-    echo "<div class='red'>Something went wrong. Try requesting a password reset.</div>";
-}
+<?php } ?>
+<?php $module::$UI->EndParticipantPage(); ?>

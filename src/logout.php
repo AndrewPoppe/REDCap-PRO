@@ -9,7 +9,7 @@ $_SESSION = array();
 session_destroy();
 
 // This method starts the html doc
-$module::$UI->ShowParticipantHeader("Logged Out");
+$module::$UI->ShowParticipantHeader($module->tt("logout_title"));
 ?>
 <style>
     .swal2-timer-progress-bar {
@@ -21,14 +21,14 @@ $module::$UI->ShowParticipantHeader("Logged Out");
     }
 </style>
 <div style="text-align: center;">
-    <p>You may now close this browser tab.</p>
+    <p><?= $module->tt("ui_close_tab") ?></p>
 </div>
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
 <script>
     Swal.fire({
         imageUrl: "<?= $module->getUrl("images/RCPro_Favicon.svg") ?>",
         imageWidth: '150px',
-        html: '<strong>You have been logged out due to inactivity.</strong>',
+        html: '<strong><?= $module->tt("logout_message1") ?></strong>',
         allowOutsideClick: false,
         confirmButtonText: "OK",
         confirmButtonColor: "#900000"

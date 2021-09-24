@@ -46,11 +46,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $goodLength   = strlen($new_password) >= $pw_len_req;
 
         if (!$uppercase || !$lowercase || !$number || !$specialChars || !$goodLength) {
-            $new_password_err = $module->tt("create_password_message2", $pw_len_req) . " 
-            <br>- " . $module->tt("create_password_upper") . "
-            <br>- " . $module->tt("create_password_lower") . "
-            <br>- " . $module->tt("create_password_number") . "
-            <br>- " . $module->tt("create_password_special");
+            $new_password_err = implode("<br>- ", [
+                $module->tt("create_password_message2", $pw_len_req),
+                $module->tt("create_password_upper"),
+                $module->tt("create_password_lower"),
+                $module->tt("create_password_number"),
+                $module->tt("create_password_special")
+            ]);
             $any_error = TRUE;
         }
     }

@@ -445,17 +445,11 @@ class REDCapPRO extends AbstractExternalModule
             <p>" . $this->tt("email_password_reset_greeting") . "
             <br>" . $this->tt("email_password_reset_message1") . "<br>
             <br>" . $this->tt("email_password_reset_message2") . "
-            <br>" . $this->tt("email_password_reset_message3", "<strong>${username_clean}</strong>") . "
+            <br>" . $this->tt("email_password_reset_message3") . "<strong>${username_clean}</strong>
             <br>
-            <br>" . $this->tt(
-                "email_password_reset_message4",
-                "<a href='" . $this->getUrl("src/reset-password.php", true) . "&t=${token}'>" . $this->tt("email_password_reset_link_text") . "</a>"
-            )
-                . "<br><em>" . $this->tt(
-                    "email_password_reset_message5",
-                    "<a href='" . $this->getUrl("src/forgot-password.php", true) . "'>" . $this->tt("email_password_reset_link_text") . "</a>"
-                )
-                . "</em></p><br>";
+            <br>" . $this->tt("email_password_reset_message4") . "<a href='" . $this->getUrl("src/reset-password.php", true) . "&t=${token}'>" . $this->tt("email_password_reset_link_text") . "</a>
+            <br><em>" . $this->tt("email_password_reset_message5") . "<a href='" . $this->getUrl("src/forgot-password.php", true) . "'>" . $this->tt("email_password_reset_link_text") . "</a>
+            </em></p><br>";
             $body .= "<p>" . $this->tt("email_password_reset_message6");
             if (defined("PROJECT_ID")) {
                 $study_contact = $this->getContactPerson($subject);

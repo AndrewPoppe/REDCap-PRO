@@ -172,21 +172,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $attempts = $Login->checkAttempts($participant["log_id"], $ip);
                     $remainingAttempts = $module::$SETTINGS->getLoginAttempts() - $attempts;
                     if ($remainingAttempts <= 0) {
-                        $login_err = "Invalid username or password.<br>You have been locked out for " . $module::$SETTINGS->getLockoutDurationSeconds() . " seconds.";
+                        $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err6", $module::$SETTINGS->getLockoutDurationSeconds());
                         $module->log("USERNAME LOCKOUT", [
                             "rcpro_ip"             => $ip,
                             "rcpro_username"       => $username,
                             "rcpro_participant_id" => $participant["log_id"]
                         ]);
                     } else {
-                        $login_err = "Invalid username or password.<br>You have ${remainingAttempts} attempts remaining before being locked out.";
+                        $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err7", $remainingAttempts);
                     }
                 }
             }
         }
     } catch (\Exception $e) {
         $module->logError("Error logging in", $e);
-        echo "Oops! Something went wrong. Please try again later.";
+        echo $module->tt("error_generic1");
+        echo "<br>";
+        echo $module->tt("error_generic2");
         exit();
     }
 }
@@ -199,7 +201,7 @@ $module::$UI->ShowParticipantHeader($module->tt("login_title"));
 ?>
 
 <div style="text-align: center;">
-    <p>Please fill in your credentials to login.</p>
+    <p><?= $module->tt("login_message1") ?></p>
 </div>
 
 <?php
@@ -210,28 +212,26 @@ if (!empty($login_err)) {
 
 <form action="<?= $module->getUrl("src/login.php", true); ?>" method="post">
     <div class="form-group">
-        <label>Username</label>
+        <label><?= $module->tt("login_username_label") ?></label>
         <input type="text" name="username" class="form-control <?= (!empty($username_err)) ? 'is-invalid' : ''; ?>" value="<?= $username; ?>">
         <span class="invalid-feedback"><?= $username_err; ?></span>
     </div>
     <div class="form-group">
-        <label>Password</label>
+        <label><?= $module->tt("login_password_label") ?></label>
         <input type="password" name="password" class="form-control <?= (!empty($password_err)) ? 'is-invalid' : ''; ?>">
         <span class="invalid-feedback"><?= $password_err; ?></span>
     </div>
     <div class="form-group d-grid">
-        <input type="submit" class="btn btn-primary" value="Login">
+        <input type="submit" class="btn btn-primary" value="<?= $module->tt("login_button_text") ?>">
     </div>
     <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
 </form>
 <hr>
 <div style="text-align: center;">
-    Forgot
-    <a href="<?= $module->getUrl("src/forgot-username.php", true); ?>">Username</a>
-    or
-    <a href="<?= $module->getUrl("src/forgot-password.php", true); ?>">Password</a>?
-</div>
-</div>
+    <?= $module->tt("login_forgot") ?>
+    <a href="<?= $module->getUrl("src/forgot-username.php", true); ?>"><?= $module->tt("login_username") ?></a>
+    <?= $module->tt("login_or") ?>
+    <a href="<?= $module->getUrl("src/forgot-password.php", true); ?>"><?= $module->tt("login_password") ?></a>?
 </div>
 <style>
     a {
@@ -244,6 +244,4 @@ if (!empty($login_err)) {
         text-shadow: 0px 0px 5px #900000;
     }
 </style>
-</body>
-
-</html>
+<?php $module::$UI->EndParticipantPage(); ?>

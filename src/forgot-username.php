@@ -72,6 +72,4 @@ echo '<div style="text-align: center;"><p>' . $module->tt("forgot_username_messa
         text-shadow: 0px 0px 5px #900000;
     }
 </style>
-</body>
-
-</html>
+<?php $module::$UI->EndParticipantPage(); ?>
