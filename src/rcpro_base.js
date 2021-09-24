@@ -1,6 +1,7 @@
 let rcpro = {
     logo:"",
     logoutPage:"",
+    module: null,
     timeout_minutes: 0,
     warning_minutes: 0,
     warningOpen: false,
@@ -47,20 +48,18 @@ rcpro.logoutWarning = function() {
     return Swal.fire({
         imageUrl: rcpro.logo,
         imageWidth: '150px',
-        html: `<strong>Due to inactivity, you will be logged out in <b></b></strong><br>Click the button below to continue on this page.`,
-        confirmButtonText: "Continue on this page",
+        html: `<strong>${rcpro.module.tt("timeout_message1")}</strong><br>${rcpro.module.tt("timeout_message2")}`,
+        confirmButtonText: rcpro.module.tt("timeout_button_text"),
         confirmButtonColor: "#900000",
+        allowEnterKey: false,
         onOpen: () => {
             timerInterval = setInterval(() => {
                 const content = Swal.getHtmlContainer()
                 if (content) {
-                    const b = content.querySelector('b')
-                    if (b) {
-                        let remaining = (rcpro.timeout_minutes*60) - rcpro.seconds;
-                        let rDate = new Date(remaining*1000);
-                        let formatted = `${rDate.getMinutes()}:${String(rDate.getSeconds()).padStart(2,0)}`;
-                        b.textContent = formatted;
-                    }
+                    let remaining = (rcpro.timeout_minutes*60) - rcpro.seconds;
+                    let rDate = new Date(remaining*1000);
+                    let formatted = `${rDate.getMinutes()}:${String(rDate.getSeconds()).padStart(2,0)}`;
+                    content.innerHTML = `<strong>${rcpro.module.tt("timeout_message1", formatted)}</strong><br>${rcpro.module.tt("timeout_message2")}`;
                 }
             }, 100)
         },
@@ -77,4 +76,3 @@ rcpro.logout = function () {
 }
 
 window.rcpro = rcpro;
-console.log("REDCapPRO LOADED");
