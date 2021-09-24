@@ -147,6 +147,7 @@ class REDCapPRO extends AbstractExternalModule
                 }
             }
 
+            // Log the event in REDCap's logs and the EM logs
             \REDCap::logEvent(
                 "REDCapPRO Survey Accessed",                                        // action description
                 "REDCapPRO User: " . self::$AUTH->get_username() . "\n" .
@@ -166,6 +167,8 @@ class REDCapPRO extends AbstractExternalModule
                 "response_id"     => $response_id,
                 "repeat_instance" => $repeat_instance
             ]);
+
+            // Add inline style
             echo "<style>
                 .swal2-timer-progress-bar {
                     background: #900000 !important;
@@ -180,8 +183,21 @@ class REDCapPRO extends AbstractExternalModule
                     transition: 0.1s filter linear;
                 }
             </style>";
+
+            // Initialize Javascript module object
+            $this->initializeJavascriptModuleObject();
+
+            // Transfer language translation keys to Javascript object
+            $this->tt_transferToJavascriptModuleObject([
+                "timeout_message1",
+                "timeout_message2",
+                "timeout_button_text"
+            ]);
+
+            // Add script to control logout of form
             echo "<script src='" . $this->getUrl("src/rcpro_base.js", true) . "'></script>";
             echo "<script>
+                window.rcpro.module = " . $this->getJavascriptModuleObjectName() . ";
                 window.rcpro.logo = '" . $this->getUrl("images/RCPro_Favicon.svg") . "';
                 window.rcpro.logoutPage = '" . $this->getUrl("src/logout.php", true) . "';
                 window.rcpro.timeout_minutes = " . self::$SETTINGS->getTimeoutMinutes() . ";
@@ -301,10 +317,11 @@ class REDCapPRO extends AbstractExternalModule
         $body = "";
         if (self::$AUTH->is_logged_in()) {
             $username = self::$AUTH->get_username();
-            $body .= $this->tt("email_inquiry_body_1", [$username]);
+            $body .= $this->tt("email_inquiry_username", $username) . "\n";
         }
         if (PROJECT_ID) {
-            $body .= $this->tt("email_inquiry_body_2", [PROJECT_ID, \REDCap::getProjectTitle()]);
+            $body .= $this->tt("email_inquiry_project_id", PROJECT_ID) . "\n";
+            $body .= $this->tt("email_inquiry_project_title", \REDCap::getProjectTitle());
         }
         $link = "mailto:${email}?subject=" . rawurlencode($subject) . "&body=" . rawurlencode($body);
         return "<br><strong>Email:</strong> <a href='${link}'>$email</a>";
