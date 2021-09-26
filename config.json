@@ -1,7 +1,9 @@
 {
     "name"       : "REDCapPRO",
+    "tt_name"    : "module_name",
     "namespace"  : "YaleREDCap\\REDCapPRO",
     "description": "<strong>Patient Reported Outcomes in REDCap</strong><br>This module provides a means of identifying and authenticating study participants when collecting survey data. It stores that information in the REDCap project's audit trail.<br><strong><a href='https://github.com/AndrewPoppe/REDCap-PRO#readme' style='color:#900000 !important;' target='_blank' rel='noreferrer noopen'>See full documentation here.</a></strong>",
+    "tt_description": "module_description",
     "permissions": [
         "redcap_survey_page_top",
         "redcap_every_page_top",
@@ -20,55 +22,64 @@
         {
             "key": "warning-time",
             "name": "<strong>Warning Time</strong>:<br>Number of minutes to wait before warning participant of inactivity timeout (default is 1 minute)",
+            "tt_name": "warning-time_name",
             "type": "text",
             "validation": "number"
         },
         {
             "key": "timeout-time",
             "name": "<strong>Timeout Time</strong>:<br>Number of minutes to wait before logging participant out due to inactivity (default is 5 minutes)",
+            "tt_name": "timeout-time_name",
             "type": "text",
             "validation": "number"
         },
         {
             "key": "password-length",
             "name": "<strong>Password Length</strong>:<br>Minimum length of password (default is 8 characters)",
+            "tt_name": "password-length_name",
             "type": "text",
             "validation": "integer"
         },
         {
             "key": "login-attempts",
             "name": "<strong>Login Attempts</strong>:<br>Number of failed login attempts before being locked out (default is 3 attempts)",
+            "tt_name": "login-attempts_name",
             "type": "text",
             "validation": "integer"
         },
         {
             "key": "lockout-seconds",
             "name": "<strong>Lockout Duration</strong>:<br>Length of a lockout due to failed login attempts, in seconds (default is 300 seconds)",
+            "tt_name": "lockout-seconds_name",
             "type": "text",
             "validation": "integer"
         }
     ],
     "project-settings": [
         {
-            "key" : "primary-contact",
-            "name": "<font style='font-size:large; font-weight:bold; color: #000000'>Study Contact for Participants</font>",
-            "type": "descriptive"
+            "key"    : "primary-contact",
+            "name"   : "<font style='font-size:large; font-weight:bold; color: #000000'>Study Contact for Participants</font>",
+            "tt_name": "primary-contact_name",
+            "type"   : "descriptive"
         },
         {
             "key"     : "pc-name",
             "name"    : "Name",
+            "tt_name" : "pc-name_name",
             "required": true,
             "type"    : "text"
         },
         {
             "key"     : "pc-email",
             "name"    : "Email",
+            "tt_name" : "pc-email_name",
             "required": false,
             "type"    : "email"
         },
         {
             "key"       : "pc-phone",
             "name"      : "Phone number",
+            "tt_name"   : "pc-phone_name",
             "required"  : false,
             "type"      : "text",
             "validation": "phone"
@@ -80,6 +91,7 @@
         "control-center": [
            {
                 "name"                  : "<strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em>",
+                "tt_name"               : "cc_link",
                 "key"                   : "redcappro",
                 "icon"                  : "fas fa-fingerprint",
                 "url"                   : "src/cc_projects.php",
