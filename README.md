@@ -14,6 +14,7 @@
   - [EM Settings](#em-settings)
     - [System Settings](#system-settings)
     - [Project Settings](#project-settings)
+    - [Translation](#translation)
   - [REDCapPRO Project Menu](#redcappro-project-menu)
     - [Home Tab](#home-tab)
     - [Manage Participants](#manage-participants)
@@ -78,22 +79,31 @@ These are settings/configuration options accessible in the normal External Modul
 
 ### System Settings
 
-| Setting              |  Type   | Description                                                                | Default Value |
-| :------------------- | :-----: | :------------------------------------------------------------------------- | :-----------: |
-| **Warning Time**     | Number  | Number of minutes to wait before warning participant of inactivity timeout |   1 minute    |
-| **Timeout Time**     | Number  | Number of minutes to wait before logging participant out due to inactivity |   5 minutes   |
-| **Password Length**  | Integer | Minimum length of participant's password in characters                     | 8 characters  |
-| **Login Attempts**   | Integer | Number of consecutive failed login attempts before being locked out        |  3 attempts   |
-| **Lockout Duration** | Integer | Length of a lockout due to failed login attempts, in seconds               |  300 seconds  |
+| Setting              |   Type   | Description                                                                                                                                                                                              | Default Value |
+| :------------------- | :------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-----------: |
+| **Language File**    | Dropdown | The language that text in the module will appear in. This system setting can be overridden by the corresponding project setting. See the [Translation](#translation) section below for more information. |    English    |
+| **Warning Time**     |  Number  | Number of minutes to wait before warning participant of inactivity timeout                                                                                                                               |   1 minute    |
+| **Timeout Time**     |  Number  | Number of minutes to wait before logging participant out due to inactivity                                                                                                                               |   5 minutes   |
+| **Password Length**  | Integer  | Minimum length of participant's password in characters                                                                                                                                                   | 8 characters  |
+| **Login Attempts**   | Integer  | Number of consecutive failed login attempts before being locked out                                                                                                                                      |  3 attempts   |
+| **Lockout Duration** | Integer  | Length of a lockout due to failed login attempts, in seconds                                                                                                                                             |  300 seconds  |
 
 ### Project Settings
 
-| Setting                 | Type  | Description                                                                                                                                           | Default Value |
-| :---------------------- | :---: | :---------------------------------------------------------------------------------------------------------------------------------------------------- | :-----------: |
-| **Study Contact Name**  | Text  | The name of the study staff member that study participants should contact with questions/problems. This will appear in emails sent to the participant |      N/A      |
-| **Study Contact Email** | Email | Email address that participants should contact (currently Study Contact Name must be defined for this to be presented to participants)                |      N/A      |
-| **Study Contact Phone** | Phone | Phone number that participants should contact (currently Study Contact Name must be defined for this to be presented to participants)                 |      N/A      |
+| Setting                 |   Type   | Description                                                                                                                                                             | Default Value |
+| :---------------------- | :------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-----------: |
+| **Language File**       | Dropdown | The language that text in the module will appear in. This overrides the default system setting. See the [Translation](#translation) section below for more information. |    English    |
+| **Study Contact Name**  |   Text   | The name of the study staff member that study participants should contact with questions/problems. This will appear in emails sent to the participant                   |      N/A      |
+| **Study Contact Email** |  Email   | Email address that participants should contact (currently Study Contact Name must be defined for this to be presented to participants)                                  |      N/A      |
+| **Study Contact Phone** |  Phone   | Phone number that participants should contact (currently Study Contact Name must be defined for this to be presented to participants)                                   |      N/A      |
 
+### Translation
+
+This external module makes use of the built-in text translation functions in REDCap's External Module framework. These functions use `.ini` files (located in the [lang](lang) directory of this module's source code) to replace placeholder text with the equivalent translated text. 
+
+If the language you desire does not appear in the `Language File` dropdown in the the external module settings, then no `.ini` file has been created for that language. Feel free to supply a translation file in whichever language you need. See the current language files located in the [lang](lang) directory as guides. Feel free to open a pull request or send the file directly to `andrew dot poppe at yale dot edu`.
+
+***Note:** Currently the module only translates participant-facing pages. Work is underway to translate all module pages.*
 
 ## REDCapPRO Project Menu
 
