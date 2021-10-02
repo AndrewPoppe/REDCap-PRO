@@ -106,15 +106,15 @@ class REDCapPRO extends AbstractExternalModule
                     "response_id"          => $response_id,
                     "repeat_instance"      => $repeat_instance
                 ]);
-                self::$UI->ShowParticipantHeader("Not Enrolled");
-                echo "<p style='text-align:center;'>You are not currently enrolled in this study.<br>";
-                $study_contact = $this->getContactPerson("REDCapPRO - Not Enrolled");
-                if (!isset($study_contact["name"])) {
-                    echo "Please contact your study coordinator.";
-                } else {
-                    echo "Please contact your study coordinator:<br>" . $study_contact["info"];
+                self::$UI->ShowParticipantHeader($this->tt("not_enrolled_title"));
+                echo "<p style='text-align:center;'>" . $this->tt("not_enrolled_message1") . "<br>";
+                $study_contact = $this->getContactPerson($this->tt("not_enrolled_subject"));
+                echo $this->tt("not_enrolled_message2");
+                if (isset($study_contact["name"])) {
+                    echo "<br>" . $study_contact["info"];
                 }
                 echo "</p>";
+                $this::$UI->EndParticipantPage();
                 $this->exitAfterHook();
             }
 
@@ -134,15 +134,15 @@ class REDCapPRO extends AbstractExternalModule
                         "response_id"          => $response_id,
                         "repeat_instance"      => $repeat_instance
                     ]);
-                    self::$UI->ShowParticipantHeader("Not Enrolled");
-                    echo "<p style='text-align:center;'>There was a problem with your enrollment in this study.<br>";
-                    $study_contact = $this->getContactPerson("REDCapPRO - Wrong Data Access Group");
-                    if (!isset($study_contact["name"])) {
-                        echo "Please contact your study coordinator.";
-                    } else {
-                        echo "Please contact your study coordinator:<br>" . $study_contact["info"];
+                    self::$UI->ShowParticipantHeader($this->tt("wrong_dag_title"));
+                    echo "<p style='text-align:center;'>" . $this->tt("wrong_dag_message1") . "<br>";
+                    $study_contact = $this->getContactPerson($this->tt("wrong_dag_subject"));
+                    echo $this->tt("not_enrolled_message2");
+                    if (isset($study_contact["name"])) {
+                        echo "<br>" . $study_contact["info"];
                     }
                     echo "</p>";
+                    $this::$UI->EndParticipantPage();
                     $this->exitAfterHook();
                 }
             }
