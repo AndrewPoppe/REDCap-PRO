@@ -62,7 +62,7 @@ To achieve this, project users must first register a participant with **REDCapPR
 3. **Register:** A staff member of the study registers a participant with **REDCapPRO**
    * The participant is registered system-wide. They use the same username and password for all REDCapPRO surveys in this REDCap system regardless of which REDCap project the survey belongs to.
 4. **Enroll:** The study staff member then enrolls the participant in this particular REDCap project
-5. Survey invitations can then be sent to the participant using REDCap survey distribution tools like normal. Participants will need to log in with their **REDCapPRO** username and password to access the survey. Because the login credentials are not tied to a specific record, public surveys are compatible with **REDCapPRO**.
+5. Survey invitations can then be sent to the participant using REDCap survey distribution tools like normal. Participants will be required to **log in** with their **REDCapPRO** username (or email address) and password to access the survey. Because the login credentials are not tied to a specific record, public surveys are compatible with **REDCapPRO**.
 
 ### What is the process like for participants?
 * Upon registration with **REDCapPRO**, the participant will receive an email with a
