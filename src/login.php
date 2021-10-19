@@ -48,6 +48,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $username_err = $module->tt("login_err1");
     } else {
         $username = \REDCap::escapeHtml(trim($_POST["username"]));
+        $usernameExists = $module::$PARTICIPANT->usernameIsTaken($username);
+        $emailExists = $module::$PARTICIPANT->checkEmailExists($username);
+        $preventEmailLogin = $module->getProjectSetting("prevent-email-login") === true;
     }
 
     // Check if password is empty
@@ -69,20 +72,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $login_err = $module->tt("login_err3") . "<br>" . $module->tt("login_err4", $lockout_duration_remaining);
                 $module->log("Login Attempted - IP Locked Out", [
                     "rcpro_ip"       => $ip,
-                    "rcpro_username" => $username
+                    "rcpro_username" => $usernameExists ? $username : "",
+                    "rcpro_email" => $emailExists ? $username : ""
                 ]);
 
-                // Check if username exists, if yes then verify password
+                // Check if username/email exists, if yes then verify password
                 // --> USERNAME DOES NOT EXIST
-            } else if (!$module::$PARTICIPANT->usernameIsTaken($username)) {
+            } else if (!$usernameExists && !($emailExists && !$preventEmailLogin)) {
 
-                // Username doesn't exist, display a generic error message
+                // Username/email doesn't exist, display a generic error message
                 $Login->incrementFailedIp($ip);
                 $attempts = $Login->checkAttempts(NULL, $ip);
                 $remainingAttempts = $module::$SETTINGS->getLoginAttempts() - $attempts;
-                $module->log("Login Attempted - Username does not exist", [
+                $module->log("Login Attempted - Username/Email does not exist", [
                     "rcpro_ip"       => $ip,
-                    "rcpro_username" => $username
+                    "rcpro_username" => $usernameExists ? $username : "",
+                    "rcpro_email" => $emailExists ? $username : ""
                 ]);
                 if ($remainingAttempts <= 0) {
                     $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err6", $module::$SETTINGS->getLockoutDurationSeconds());
@@ -91,10 +96,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err7", $remainingAttempts);
                 }
 
-                // --> USERNAME EXISTS
+                // --> USERNAME/EMAIL EXISTS
             } else {
 
-                $participant = $module::$PARTICIPANT->getParticipant($username);
+                $participant = $usernameExists ? $module::$PARTICIPANT->getParticipant($username) : $module::$PARTICIPANT->getParticipantFromEmail($username);
                 $stored_hash = $Login->getHash($participant["log_id"]);
 
                 // Check that this username is not locked out
@@ -104,7 +109,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $login_err = $module->tt("login_err3") . "<br>" . $module->tt("login_err4", $lockout_duration_remaining);
                     $module->log("Login Attempted - Username Locked Out", [
                         "rcpro_ip"             => $ip,
-                        "rcpro_username"       => $username,
+                        "rcpro_username"       => $participant["rcpro_username"],
+                        "rcpro_email"          => $participant["email"],
                         "rcpro_participant_id" => $participant["log_id"]
                     ]);
 
@@ -114,7 +120,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // TODO: Give option to resend password email?
                     $module->log("No password hash stored.", [
                         "rcpro_participant_id" => $participant["log_id"],
-                        "rcpro_username"       => $username
+                        "rcpro_username"       => $participant["rcpro_username"]
                     ]);
                     $login_err = $module->tt("login_err8");
 
@@ -128,7 +134,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     $module->log("Login Successful", [
                         "rcpro_ip"             => $ip,
-                        "rcpro_username"       => $username,
+                        "rcpro_username"       => $participant["rcpro_username"],
                         "rcpro_participant_id" => $participant["log_id"]
                     ]);
 
@@ -164,10 +170,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // display a generic error message
                     $module->log("Login Unsuccessful - Incorrect Password", [
                         "rcpro_ip"             => $ip,
-                        "rcpro_username"       => $username,
+                        "rcpro_username"       => $participant["rcpro_username"],
                         "rcpro_participant_id" => $participant["log_id"]
                     ]);
-                    $Login->incrementFailedLogin($participant["log_id"], $username);
+                    $Login->incrementFailedLogin($participant["log_id"], $participant["rcpro_username"]);
                     $Login->incrementFailedIp($ip);
                     $attempts = $Login->checkAttempts($participant["log_id"], $ip);
                     $remainingAttempts = $module::$SETTINGS->getLoginAttempts() - $attempts;
@@ -175,7 +181,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err6", $module::$SETTINGS->getLockoutDurationSeconds());
                         $module->log("USERNAME LOCKOUT", [
                             "rcpro_ip"             => $ip,
-                            "rcpro_username"       => $username,
+                            "rcpro_username"       => $participant["rcpro_username"],
                             "rcpro_participant_id" => $participant["log_id"]
                         ]);
                     } else {
@@ -212,7 +218,7 @@ if (!empty($login_err)) {
 
 <form action="<?= $module->getUrl("src/login.php", true); ?>" method="post">
     <div class="form-group">
-        <label><?= $module->tt("login_username_label") ?></label>
+        <label><?= $module->getProjectSetting("prevent-email-login") ? $module->tt("login_username_label") : $module->tt("login_username_label2") ?></label>
         <input type="text" name="username" class="form-control <?= (!empty($username_err)) ? 'is-invalid' : ''; ?>" value="<?= $username; ?>">
         <span class="invalid-feedback"><?= $username_err; ?></span>
     </div>

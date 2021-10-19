@@ -50,6 +50,11 @@
     ],
     "project-settings": [
         {
+            "key": "prevent-email-login",
+            "name": "<strong>Prevent Email Login</strong>:<br>Should participants be prevented from using their email address to log in to the system. Checking this will require that they login using their participant username only",
+            "type": "checkbox"
+        },
+        {
             "key" : "primary-contact",
             "name": "<font style='font-size:large; font-weight:bold; color: #000000'>Study Contact for Participants</font>",
             "type": "descriptive"

@@ -92,6 +92,7 @@ These are settings/configuration options accessible in the normal External Modul
 
 | Setting                 |   Type   | Description                                                                                                                                                             | Default Value |
 | :---------------------- | :------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-----------: |
+| **Prevent Email Login** | Checkbox | If checked, this prevents a participant from logging into a survey using their email address. They must use their REDCapPRO username to log in.                         |   Unchecked   |
 | **Language File**       | Dropdown | The language that text in the module will appear in. This overrides the default system setting. See the [Translation](#translation) section below for more information. |    English    |
 | **Study Contact Name**  |   Text   | The name of the study staff member that study participants should contact with questions/problems. This will appear in emails sent to the participant                   |      N/A      |
 | **Study Contact Email** |  Email   | Email address that participants should contact (currently Study Contact Name must be defined for this to be presented to participants)                                  |      N/A      |

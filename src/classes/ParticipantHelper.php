@@ -271,6 +271,27 @@ class ParticipantHelper
     }
 
     /**
+     * Returns an array with participant information given an email address
+     * 
+     * @param string $email
+     * 
+     * @return array|NULL user information
+     */
+    public function getParticipantFromEmail(string $email)
+    {
+        if ($email === NULL) {
+            return NULL;
+        }
+        $SQL = "SELECT log_id, rcpro_username, email, fname, lname WHERE message = 'PARTICIPANT' AND email = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+        try {
+            $result = self::$module->queryLogs($SQL, [$email]);
+            return $result->fetch_assoc();
+        } catch (\Exception $e) {
+            self::$module->logError("Error fetching participant information", $e);
+        }
+    }
+
+    /**
      * Fetch participant id corresponding with given email
      * 
      * @param string $email
