@@ -110,7 +110,7 @@ class REDCapPRO extends AbstractExternalModule
                 echo "<p style='text-align:center;'>" . $this->tt("not_enrolled_message1") . "<br>";
                 $study_contact = $this->getContactPerson($this->tt("not_enrolled_subject"));
                 echo $this->tt("not_enrolled_message2");
-                if (isset($study_contact["name"])) {
+                if (isset($study_contact["info"])) {
                     echo "<br>" . $study_contact["info"];
                 }
                 echo "</p>";
@@ -138,7 +138,7 @@ class REDCapPRO extends AbstractExternalModule
                     echo "<p style='text-align:center;'>" . $this->tt("wrong_dag_message1") . "<br>";
                     $study_contact = $this->getContactPerson($this->tt("wrong_dag_subject"));
                     echo $this->tt("not_enrolled_message2");
-                    if (isset($study_contact["name"])) {
+                    if (isset($study_contact["info"])) {
                         echo "<br>" . $study_contact["info"];
                     }
                     echo "</p>";
@@ -338,9 +338,9 @@ class REDCapPRO extends AbstractExternalModule
         $email = $this->getProjectSetting("pc-email");
         $phone = $this->getProjectSetting("pc-phone");
 
-        $name_string = "<strong>" . $this->tt("email_contact_name_string") . "</strong>" . $name;
-        $email_string = isset($email) ? $this->createEmailLink($email, $subject) : "";
-        $phone_string = isset($phone) ? "<br><strong>" . $this->tt("email_contact_phone_string") . "</strong>" . $phone : "";
+        $name_string = isset($name) && $name !== "" ? "<strong>" . $this->tt("email_contact_name_string") . "</strong>" . $name : "";
+        $email_string = isset($email) && $email !== "" ? $this->createEmailLink($email, $subject) : "";
+        $phone_string = isset($phone) && $phone !== "" ? "<br><strong>" . $this->tt("email_contact_phone_string") . "</strong>" . $phone : "";
         $info  = "${name_string} ${email_string} ${phone_string}";
 
         return [
@@ -357,7 +357,7 @@ class REDCapPRO extends AbstractExternalModule
     public function sendEmailUpdateEmail(string $username, string $new_email, string $old_email)
     {
         $subject = $this->tt("email_update_subject");
-        $from    = "noreply@REDCapPRO.com";
+        $from    = $this::$SETTINGS->getEmailFromAddress();
         $old_email_clean = \REDCap::escapeHtml($old_email);
         $new_email_clean = \REDCap::escapeHtml($new_email);
         $body    = "<html><body><div>
@@ -372,7 +372,7 @@ class REDCapPRO extends AbstractExternalModule
         $body .= "<p><strong>" . $this->tt("email_update_message2") . "</strong>";
         if (defined("PROJECT_ID")) {
             $study_contact = $this->getContactPerson($this->tt("email_update_subject"));
-            if (isset($study_contact["name"])) {
+            if (isset($study_contact["info"])) {
                 $body .= "<br>" . $study_contact["info"];
             }
         }
@@ -407,7 +407,7 @@ class REDCapPRO extends AbstractExternalModule
 
             // create email
             $subject = $this->tt("email_new_participant_subject");
-            $from    = "noreply@REDCapPRO.com";
+            $from    = $this::$SETTINGS->getEmailFromAddress();
             $body    = "<html><body><div>
             <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
             <p>" . $this->tt("email_new_participant_greeting", [$fname, $lname]) . "
@@ -423,7 +423,7 @@ class REDCapPRO extends AbstractExternalModule
             $body .= "<p>" . $this->tt("email_new_participant_message7");
             if (defined("PROJECT_ID")) {
                 $study_contact = $this->getContactPerson($subject);
-                if (isset($study_contact["name"])) {
+                if (isset($study_contact["info"])) {
                     $body .= "<br>" . $study_contact["info"];
                 }
             }
@@ -453,7 +453,7 @@ class REDCapPRO extends AbstractExternalModule
 
             // create email
             $subject = $this->tt("email_password_reset_subject");
-            $from = "noreply@REDCapPRO.com";
+            $from = $this::$SETTINGS->getEmailFromAddress();
             $body = "<html><body><div>
             <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
             <p>" . $this->tt("email_password_reset_greeting") . "
@@ -467,7 +467,7 @@ class REDCapPRO extends AbstractExternalModule
             $body .= "<p>" . $this->tt("email_password_reset_message6");
             if (defined("PROJECT_ID")) {
                 $study_contact = $this->getContactPerson($subject);
-                if (isset($study_contact["name"])) {
+                if (isset($study_contact["info"])) {
                     $body .= "<br>" . $study_contact["info"];
                 }
             }
@@ -502,7 +502,7 @@ class REDCapPRO extends AbstractExternalModule
     public function sendUsernameEmail(string $email, string $username)
     {
         $subject = $this->tt("email_username_subject");
-        $from    = "noreply@REDCapPRO.com";
+        $from    = $this::$SETTINGS->getEmailFromAddress();
         $body    = "<html><body><div>
         <img src='" . $this::$LOGO_URL . "' alt='img' width='500px'><br>
         <p>" . $this->tt("email_username_greeting") . "</p>
@@ -514,7 +514,7 @@ class REDCapPRO extends AbstractExternalModule
         $body .= $this->tt("email_username_message4");
         if (defined("PROJECT_ID")) {
             $study_contact = $this->getContactPerson($subject);
-            if (isset($study_contact["name"])) {
+            if (isset($study_contact["info"])) {
                 $body .= "<br>" . $study_contact["info"];
             }
         }
@@ -687,13 +687,8 @@ class REDCapPRO extends AbstractExternalModule
             if (isset($settings["lockout-seconds"]) && $settings["lockout-seconds"] < 0) {
                 $message = "The minimum lockout duration is 0 seconds.";
             }
-        } else {
-            // Project Settings
-            $preventEmailLoginSystem = $this->getSystemSetting("prevent-email-login-system") == true;
-            if ($preventEmailLoginSystem && !$settings["prevent-email-login"]) {
-                $message = "Email logins are deactivated at the system level.\nPlease check the setting here to avoid confusion.";
-            }
         }
+
         return $message;
     }
 }

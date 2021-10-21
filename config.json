@@ -18,8 +18,13 @@
     ],
     "system-settings": [
         {
+            "key" : "email-from-address",
+            "name": "<strong>Email From Address</strong>:<br>This will be the <em>From</em> email address for all system emails. This can help if emails are being sent to spam or are not delivered (default is noreply@REDCapPRO.com)",
+            "type": "email"
+        },
+        {
             "key": "prevent-email-login-system",
-            "name": "<strong>Prevent Email Login</strong>:<br>Should participants be prevented from using their email address to log in to the system. Checking this will require that they login using their participant username only.<br><em>Note: this overrides the associated project-level setting</em>",
+            "name": "<strong>Prevent Email Login</strong>:<br>Should participants be prevented from using their email address to log in to the system. Checking this will require that they login using their participant username only.<br><em>Note: if checked, this overrides the associated project-level setting</em>",
             "type": "checkbox"
         },
         {
@@ -51,37 +56,6 @@
             "name": "<strong>Lockout Duration</strong>:<br>Length of a lockout due to failed login attempts, in seconds (default is 300 seconds)",
             "type": "text",
             "validation": "integer"
-        }
-    ],
-    "project-settings": [
-        {
-            "key": "prevent-email-login",
-            "name": "<strong>Prevent Email Login</strong>:<br>Should participants be prevented from using their email address to log in to the system. Checking this will require that they login using their participant username only.<br><em>Note: this is overridden by the associated system-level setting</em>",
-            "type": "checkbox"
-        },
-        {
-            "key" : "primary-contact",
-            "name": "<font style='font-size:large; font-weight:bold; color: #000000'>Study Contact for Participants</font>",
-            "type": "descriptive"
-        },
-        {
-            "key"     : "pc-name",
-            "name"    : "Name",
-            "required": true,
-            "type"    : "text"
-        },
-        {
-            "key"     : "pc-email",
-            "name"    : "Email",
-            "required": false,
-            "type"    : "email"
-        },
-        {
-            "key"       : "pc-phone",
-            "name"      : "Phone number",
-            "required"  : false,
-            "type"      : "text",
-            "validation": "phone"
         }
     ],
     "links": {

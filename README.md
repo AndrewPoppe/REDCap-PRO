@@ -21,6 +21,7 @@
     - [Enroll](#enroll)
     - [Register](#register)
     - [Study Staff](#study-staff)
+    - [Settings](#settings)
     - [Logs](#logs)
   - [REDCapPRO Control Center Menu](#redcappro-control-center-menu)
     - [Projects](#projects)
@@ -79,24 +80,20 @@ These are settings/configuration options accessible in the normal External Modul
 
 ### System Settings
 
-| Setting              |   Type   | Description                                                                                                                                                                                              | Default Value |
-| :------------------- | :------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-----------: |
-| **Language File**    | Dropdown | The language that text in the module will appear in. This system setting can be overridden by the corresponding project setting. See the [Translation](#translation) section below for more information. |    English    |
-| **Warning Time**     |  Number  | Number of minutes to wait before warning participant of inactivity timeout                                                                                                                               |   1 minute    |
-| **Timeout Time**     |  Number  | Number of minutes to wait before logging participant out due to inactivity                                                                                                                               |   5 minutes   |
-| **Password Length**  | Integer  | Minimum length of participant's password in characters                                                                                                                                                   | 8 characters  |
-| **Login Attempts**   | Integer  | Number of consecutive failed login attempts before being locked out                                                                                                                                      |  3 attempts   |
-| **Lockout Duration** | Integer  | Length of a lockout due to failed login attempts, in seconds                                                                                                                                             |  300 seconds  |
+| Setting                 |   Type   | Description                                                                                                                                                                                                                                            |     Default Value     |
+| :---------------------- | :------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------: |
+| **Language File**       | Dropdown | The language that participant-facing text in the module will appear in. This system setting can be overridden by the corresponding project setting. See the [Translation](#translation) section below for more information.                            |        English        |
+| **Email From Address**  |  Email   | This will be the From email address for all system emails. This can help if emails are being sent to spam or are not delivered.                                                                                                                        | noreply@REDCapPRO.com |
+| **Prevent Email Login** | Checkbox | Should participants be prevented from using their email address to log in to the system. Checking this will require that they login using their participant username only.<br>*Note: if checked, this overrides the associated project-level setting.* |       Unchecked       |
+| **Warning Time**        |  Number  | Number of minutes to wait before warning participant of inactivity timeout                                                                                                                                                                             |       1 minute        |
+| **Timeout Time**        |  Number  | Number of minutes to wait before logging participant out due to inactivity                                                                                                                                                                             |       5 minutes       |
+| **Password Length**     | Integer  | Minimum length of participant's password in characters                                                                                                                                                                                                 |     8 characters      |
+| **Login Attempts**      | Integer  | Number of consecutive failed login attempts before being locked out                                                                                                                                                                                    |      3 attempts       |
+| **Lockout Duration**    | Integer  | Length of a lockout due to failed login attempts, in seconds                                                                                                                                                                                           |      300 seconds      |
 
 ### Project Settings
 
-| Setting                 |   Type   | Description                                                                                                                                                             | Default Value |
-| :---------------------- | :------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-----------: |
-| **Prevent Email Login** | Checkbox | If checked, this prevents participants from using their email address to log in to surveys. Instead, they must use their REDCapPRO username to log in.                  |   Unchecked   |
-| **Language File**       | Dropdown | The language that text in the module will appear in. This overrides the default system setting. See the [Translation](#translation) section below for more information. |    English    |
-| **Study Contact Name**  |   Text   | The name of the study staff member that study participants should contact with questions/problems. This will appear in emails sent to the participant                   |      N/A      |
-| **Study Contact Email** |  Email   | Email address that participants should contact (currently Study Contact Name must be defined for this to be presented to participants)                                  |      N/A      |
-| **Study Contact Phone** |  Phone   | Phone number that participants should contact (currently Study Contact Name must be defined for this to be presented to participants)                                   |      N/A      |
+Project configuration is done within the project's **REDCapPRO** menu. 
 
 ### Translation
 
@@ -153,10 +150,20 @@ guide:
 
 *<u>Note</u>: REDCap administrators have full Manager permissions in **REDCapPRO** no matter what `role` they have in the project (or if they appear in the staff list at all)*
 
+### Settings
+This tab contains some project-level configuration options. This tab is only 
+accessible by managers.
+| Setting                 |   Type   | Description                                                                                                                                                                                                                                                                | Default Value |
+| :---------------------- | :------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-----------: |
+| **Language**            | Dropdown | The language that participant-facing text in the module will appear in. This overrides the default system setting. See the [Translation](#translation) section for more information.                                                                                       |    English    |
+| **Prevent Email Login** | Checkbox | If checked, this prevents participants from using their email address to log in to surveys. Instead, they must use their REDCapPRO username to log in. <br>*If email logins are prevented at the system level, this setting will not appear in the project setttings tab.* |   Unchecked   |
+| **Study Contact Name**  |   Text   | The name of the study staff member that study participants should contact with questions/problems. This will appear in emails sent to the participant                                                                                                                      |      N/A      |
+| **Study Contact Email** |  Email   | Email address that participants should contact.                                                                                                                                                                                                                            |      N/A      |
+| **Study Contact Phone** |  Phone   | Phone number that participants should contact.                                                                                                                                                                                                                             |      N/A      |
 ### Logs
 This tab allows Managers to view the logs of **REDCapPRO** relevant to this study
 project. It only contains information about actions taken in this project or on
-surveys tied to this project. 
+surveys tied to this project. This tab is only accessible by Managers.
 
 ## REDCapPRO Control Center Menu
 

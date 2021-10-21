@@ -61,63 +61,13 @@ class ProjectSettings
         return $result;
     }
 
-
-    /**
-     * Gets the requested project setting and sets the provided value if no 
-     * setting is found.
-     * 
-     * @param mixed $pid
-     * @param string $setting
-     * @param mixed $default
-     * 
-     * @return mixed setting value
-     */
-    private function getProjectSetting(string $setting, $pid, $default = null)
+    public function getEmailFromAddress()
     {
-        $value = self::$module->getProjectSetting($setting, $pid);
-        if (!isset($value)) {
-            $value = $default;
-            self::$module->setProjectSetting($setting, $value, $pid);
-        }
-        return $value;
-    }
-
-    /**
-     * Grab project-level settings and return as array
-     * 
-     * @param mixed $pid
-     * 
-     * @return array|Exception
-     */
-    public function getProjectSettings($pid)
-    {
-        try {
-
-            $result = [
-                "primary-contact" => [
-                    "name"  => $this->getProjectSetting("pc-name", $pid),
-                    "email" => $this->getProjectSetting("pc-email", $pid),
-                    "phone" => $this->getProjectSetting("pc-phone", $pid),
-                ],
-                "language" => $this->getProjectSetting("reserved-language-project", $pid),
-                "prevent-email-login" => self::$module->getProjectSetting("prevent-email-login"),
-            ];
-        } catch (\Exception $e) {
-            self::$module->logError("Error fetching project settings", $e);
+        $result = \REDCap::escapeHtml(self::$module->getSystemSetting("email-from-address"));
+        if ($result === "") {
+            $result = "noreply@REDCapPRO.com";
         }
         return $result;
-    }
-
-    /**
-     * Set project setting values
-     * 
-     * @param array $settings
-     * @param mixed $pid
-     * 
-     * @return 
-     */
-    public function setProjectSettings(array $settings, $pid)
-    {
     }
 
     /**
