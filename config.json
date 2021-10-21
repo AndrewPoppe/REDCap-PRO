@@ -18,6 +18,11 @@
     ],
     "system-settings": [
         {
+            "key": "prevent-email-login-system",
+            "name": "<strong>Prevent Email Login</strong>:<br>Should participants be prevented from using their email address to log in to the system. Checking this will require that they login using their participant username only.<br><em>Note: this overrides the associated project-level setting</em>",
+            "type": "checkbox"
+        },
+        {
             "key": "warning-time",
             "name": "<strong>Warning Time</strong>:<br>Number of minutes to wait before warning participant of inactivity timeout (default is 1 minute)",
             "type": "text",
@@ -51,7 +56,7 @@
     "project-settings": [
         {
             "key": "prevent-email-login",
-            "name": "<strong>Prevent Email Login</strong>:<br>Should participants be prevented from using their email address to log in to the system. Checking this will require that they login using their participant username only",
+            "name": "<strong>Prevent Email Login</strong>:<br>Should participants be prevented from using their email address to log in to the system. Checking this will require that they login using their participant username only.<br><em>Note: this is overridden by the associated system-level setting</em>",
             "type": "checkbox"
         },
         {

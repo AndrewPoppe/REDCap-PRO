@@ -109,6 +109,11 @@ class UI
                             Study Staff</a>
                         </li>
                         <li class='nav-item'>
+                            <a class='nav-link " . ($page === "Settings" ? "active" : "") . "' href='" . self::$module->getUrl("src/settings.php") . "'>
+                            <i class='fas fa-cog'></i>
+                            Settings</a>
+                        </li>
+                        <li class='nav-item'>
                             <a class='nav-link " . ($page === "Logs" ? "active" : "") . "' href='" . self::$module->getUrl("src/logs.php") . "'>
                             <i class='fas fa-list'></i>
                             Logs</a>

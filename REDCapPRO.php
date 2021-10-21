@@ -687,6 +687,12 @@ class REDCapPRO extends AbstractExternalModule
             if (isset($settings["lockout-seconds"]) && $settings["lockout-seconds"] < 0) {
                 $message = "The minimum lockout duration is 0 seconds.";
             }
+        } else {
+            // Project Settings
+            $preventEmailLoginSystem = $this->getSystemSetting("prevent-email-login-system") == true;
+            if ($preventEmailLoginSystem && !$settings["prevent-email-login"]) {
+                $message = "Email logins are deactivated at the system level.\nPlease check the setting here to avoid confusion.";
+            }
         }
         return $message;
     }
