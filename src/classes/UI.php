@@ -34,7 +34,7 @@ class UI
                 <body>
                     <div class="center">
                         <div class="wrapper">
-                            <img id="rcpro-logo" src="' . self::$module->getUrl("images/RCPro_Logo.svg") . '" width="500px">
+                            <img id="rcpro-logo" src="' . self::$module->getUrl("images/RCPro_Logo_Alternate.svg") . '" width="500px">
                             <hr>
                             <div style="text-align: center;"><h2>' . $title . '</h2></div>';
     }
