@@ -45,16 +45,18 @@ class REDCapPRO extends AbstractExternalModule
     function __construct()
     {
         parent::__construct();
-        self::$AUTH = new Auth(self::$APPTITLE);
-        self::$SETTINGS = new ProjectSettings($this);
-        self::$UI = new UI($this);
-        self::$PARTICIPANT = new ParticipantHelper($this);
-        self::$PROJECT = new ProjectHelper($this, self::$PARTICIPANT);
-        self::$DAG = new DAG($this);
+        self::$AUTH         = new Auth(self::$APPTITLE);
+        self::$SETTINGS     = new ProjectSettings($this);
+        self::$UI           = new UI($this);
+        self::$PARTICIPANT  = new ParticipantHelper($this);
+        self::$PROJECT      = new ProjectHelper($this, self::$PARTICIPANT);
+        self::$DAG          = new DAG($this);
     }
 
     function redcap_every_page_top($project_id)
     {
+
+        //$this->query("DELETE FROM redcap_external_module_settings WHERE external_module_id = ?", [1]);
         if (strpos($_SERVER["PHP_SELF"], "surveys") !== false) {
             return;
         }
