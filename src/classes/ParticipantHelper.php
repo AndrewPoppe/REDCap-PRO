@@ -74,6 +74,26 @@ class ParticipantHelper
     }
 
     /**
+     * Returns whether a participant with the given ID exists in the system
+     * This is regardless of whether the participant is active or has set a
+     * password.
+     * 
+     * @param mixed $rcpro_participant_id
+     * 
+     * @return boolean true = exists
+     */
+    public function checkParticipantExists($rcpro_participant_id)
+    {
+        $SQL = "log_id = ? AND message = 'PARTICIPANT' AND (project_id IS NULL OR project_id IS NOT NULL)";
+        try {
+            $res = self::$module->countLogs($SQL, [$rcpro_participant_id]);
+            return $res > 0;
+        } catch (\Exception $e) {
+            self::$module->logError("Error checking whether participant exists", $e);
+        }
+    }
+
+    /**
      * Adds participant entry into log table.
      * 
      * In so doing, it creates a unique username.
@@ -113,7 +133,8 @@ class ParticipantHelper
                 "token"            => "",
                 "token_ts"         => time(),
                 "token_valid"      => 0,
-                "redcap_user"      => USERID
+                "redcap_user"      => USERID,
+                "active"           => 1
             ]);
             if (!$id) {
                 throw new REDCapProException(["rcpro_username" => $username]);
@@ -172,6 +193,30 @@ class ParticipantHelper
     }
 
     /**
+     * Sets active status of participant to 0
+     * 
+     * @param mixed $rcpro_participant_id
+     * 
+     * @return [type]
+     */
+    public function deactivateParticipant($rcpro_participant_id)
+    {
+        return $this->setActiveStatus($rcpro_participant_id, 0);
+    }
+
+    /**
+     * Sets active status of participant to 1
+     * 
+     * @param mixed $rcpro_participant_id
+     * 
+     * @return [type]
+     */
+    public function reactivateParticipant($rcpro_participant_id)
+    {
+        return $this->setActiveStatus($rcpro_participant_id, 1);
+    }
+
+    /**
      * Determines whether the current participant is enrolled in the project
      * 
      * @param int $rcpro_participant_id
@@ -214,7 +259,7 @@ class ParticipantHelper
      */
     public function getAllParticipants()
     {
-        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, pw WHERE message = 'PARTICIPANT' AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, pw, active WHERE message = 'PARTICIPANT' AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = self::$module->queryLogs($SQL, []);
             $participants  = array();
@@ -261,7 +306,7 @@ class ParticipantHelper
         if ($username === NULL) {
             return NULL;
         }
-        $SQL = "SELECT log_id, rcpro_username, email, fname, lname WHERE message = 'PARTICIPANT' AND rcpro_username = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, active WHERE message = 'PARTICIPANT' AND rcpro_username = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = self::$module->queryLogs($SQL, [$username]);
             return $result->fetch_assoc();
@@ -282,7 +327,7 @@ class ParticipantHelper
         if ($email === NULL) {
             return NULL;
         }
-        $SQL = "SELECT log_id, rcpro_username, email, fname, lname WHERE message = 'PARTICIPANT' AND email = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, active WHERE message = 'PARTICIPANT' AND email = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = self::$module->queryLogs($SQL, [$email]);
             return $result->fetch_assoc();
@@ -433,6 +478,25 @@ class ParticipantHelper
     }
 
     /**
+     * Returns whether participant is active or not
+     * 
+     * @param mixed $rcpro_participant_id
+     * 
+     * @return bool true is active, false is deactivated
+     */
+    public function isParticipantActive($rcpro_participant_id)
+    {
+        $SQL = "SELECT active WHERE log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+        try {
+            $res = self::$module->queryLogs($SQL, $rcpro_participant_id);
+            $status_arr = $res->fetch_assoc();
+            return !isset($status_arr["active"]) || $status_arr["active"] == 1;
+        } catch (\Exception $e) {
+            self::$module->logError("Error getting active status", $e);
+        }
+    }
+
+    /**
      * Use provided search string to find registered participants
      * 
      * @param string $search_term - text to search for
@@ -441,15 +505,53 @@ class ParticipantHelper
      */
     public function searchParticipants(string $search_term)
     {
-        $SQL = "SELECT fname, lname, email, log_id, rcpro_username 
+        $SQL = "SELECT fname, lname, email, log_id, rcpro_username, active 
                 WHERE message = 'PARTICIPANT' 
                 AND (project_id IS NULL OR project_id IS NOT NULL) 
-                AND (fname LIKE ? OR lname LIKE ? OR email LIKE ? OR rcpro_username LIKE ?)
+                AND (email LIKE ?)
                 LIMIT 5";
         try {
-            return self::$module->queryLogs($SQL, [$search_term, $search_term, $search_term, $search_term]);
+            return self::$module->queryLogs($SQL, [$search_term]);
         } catch (\Exception $e) {
             self::$module->logError("Error performing livesearch", $e);
+        }
+    }
+
+    /**
+     * Sets active status of participant
+     * 
+     * @param mixed $rcpro_participant_id
+     * @param int $value
+     * 
+     * @return [type]
+     */
+    private function setActiveStatus($rcpro_participant_id, int $value)
+    {
+        if (self::$module->countLogs("log_id = ? AND active is not null", $rcpro_participant_id) > 0) {
+            $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
+        } else {
+            $SQL = "INSERT INTO redcap_external_modules_log_parameters (value, name, log_id) VALUES (?, 'active', ?)";
+        }
+        try {
+            $res = self::$module->query($SQL, [$value, $rcpro_participant_id]);
+            if ($res) {
+                self::$module->log("Set participant active status", [
+                    "rcpro_participant_id" => $rcpro_participant_id,
+                    "rcpro_username" => $this->getUserName($rcpro_participant_id),
+                    "active" => $value,
+                    "redcap_user" => USERID
+                ]);
+            } else {
+                self::$module->log("Failed to set participant active status", [
+                    "rcpro_participant_id" => $rcpro_participant_id,
+                    "rcpro_username" => $this->getUserName($rcpro_participant_id),
+                    "active" => $value,
+                    "redcap_user" => USERID
+                ]);
+            }
+            return $res;
+        } catch (\Exception $e) {
+            self::$module->logError("Error setting participant active status", $e);
         }
     }
 

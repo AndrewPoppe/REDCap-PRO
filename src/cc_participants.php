@@ -67,6 +67,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $title = "Successfully changed participant's email address.";
                 }
             }
+
+            // DEACTIVATE OR REACTIVATE A PARTICIPANT
+        } else if (!empty($_POST["toUpdateActivity"])) {
+            $toUpdate = intval($_POST["toUpdateActivity"]);
+            $function = "update participant's active status";
+            $reactivate = $_POST["statusAction"] === "reactivate";
+            if (!$module::$PARTICIPANT->checkParticipantExists($toUpdate)) {
+                $icon = "error";
+                $title = "The provided participant does not exist in the system.";
+            } else {
+                if ($reactivate) {
+                    $result = $module::$PARTICIPANT->reactivateParticipant($toUpdate);
+                } else {
+                    $result = $module::$PARTICIPANT->deactivateParticipant($toUpdate);
+                }
+                if (!$result) {
+                    $verb = $reactivate ? "reactivating" : "deactivating";
+                    $icon = "error";
+                    $title = "Trouble $verb this participant.";
+                } else {
+                    $verb = $reactivate ? "reactivated" : "deactivated";
+                    $icon = "success";
+                    $title = "Successfully $verb this participant.";
+                }
+            }
         }
     } catch (\Exception $e) {
         $icon = "error";
@@ -114,13 +139,13 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                         <tr>
                             <th id="uid">User_ID</th>
                             <th id="uname" class="dt-center">Username</th>
+                            <th id="active" class="dt-center">Active</th>
                             <th id="pw_set" class="dt-center">Password Set</th>
                             <th id="fname" class="dt-center">First Name</th>
                             <th id="lname" class="dt-center">Last Name</th>
                             <th id="email">Email</th>
                             <th id="projects" class="dt-center">Enrolled Projects</th>
-                            <th id="resetpwbutton" class="dt-center">Reset Password</th>
-                            <th id="rcpro_changeemail" class="dt-center">Change Email Address</th>
+                            <th id="actions" class="dt-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -152,40 +177,70 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                                     })
                                 })();
                                 EOL;
+                            $isActive = $module::$PARTICIPANT->isParticipantActive($rcpro_participant_id);
                         ?>
                             <tr>
                                 <td class="rcpro_participant_link" onclick="<?= $onclick ?>"><?= $participant["log_id"] ?></td>
                                 <td class="dt-center"><?= $username_clean ?></td>
-                                <td class="dt-center"><i title='Password Set' class='fas <?= ($password_set ? "fa-check-circle" : "fa-fw") ?>' style='margin-left:2px;margin-right:2px;color:#009000;'></i></td>
+                                <td class="dt-center"><i data-filterValue="<?= $isActive ?>" title='<?= $isActive ? "Active" : "Inactive" ?>' class='fas <?= $isActive ? "fa-check" : "fa-ban" ?>' style='color:<?= $isActive ? "#009000" : "Tomato" ?>'></td>
+                                <td class="dt-center"><i data-filterValue="<?= $password_set ?>" title='Password Set' class='fas <?= ($password_set ? "fa-check-circle" : "fa-fw") ?>' style='margin-left:2px;margin-right:2px;color:#009000;'></i></td>
                                 <td class="dt-center"><?= $fname_clean ?></td>
                                 <td class="dt-center"><?= $lname_clean ?></td>
                                 <td><?= $email_clean ?></td>
                                 <?= createProjectsCell($projects_array); ?>
-                                <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
-                                    $("#toReset").val("<?= $participant["log_id"] ?>");
-                                    $("#toDisenroll").val("");
-                                    $("#toChangeEmail").val("");
-                                    $("#participants-form").submit();
-                                    })();'>Reset</button>
-                                </td>
-                                <td class="dt-center"><button type="button" class="btn btn-secondary btn-sm" onclick='(function(){
-                                    Swal.fire({
-                                            title: "Enter the new email address for <?= "${fname_clean} ${lname_clean}" ?>",
-                                            input: "email",
-                                            inputPlaceholder: "<?= $email_clean ?>",
-                                            confirmButtonText: "Change Email",
-                                            showCancelButton: true,
-                                            confirmButtonColor: "#900000"
-                                        }).then((result) => {
-                                            if (result.isConfirmed) {
-                                                $("#toReset").val("");
-                                                $("#toDisenroll").val("");
-                                                $("#toChangeEmail").val("<?= $participant["log_id"] ?>");
-                                                $("#newEmail").val(result.value); 
-                                                $("#participants-form").submit();
-                                            }
-                                        });
-                                    })();'>Change</button>
+                                <td class="dt-center">
+                                    <div style="display:flex; justify-content:center; align-items:center;">
+                                        <a onclick='(function(){
+                                            $("#toReset").val("<?= $participant["log_id"] ?>");
+                                            $("#toDisenroll").val("");
+                                            $("#toChangeEmail").val("");
+                                            $("#participants-form").submit();
+                                            })();' title="Reset Password" style="cursor:pointer; padding:0 5px;">
+                                            <i class="fas fa-key"></i>
+                                        </a>
+                                        <a onclick='(function(){
+                                            Swal.fire({
+                                                    title: "Enter the new email address for <?= "${fname_clean} ${lname_clean}" ?>",
+                                                    input: "email",
+                                                    inputPlaceholder: "<?= $email_clean ?>",
+                                                    confirmButtonText: "Change Email",
+                                                    showCancelButton: true,
+                                                    confirmButtonColor: "#900000",
+                                                    allowEnterKey: false
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        $("#toReset").val("");
+                                                        $("#toDisenroll").val("");
+                                                        $("#toChangeEmail").val("<?= $participant["log_id"] ?>");
+                                                        $("#newEmail").val(result.value); 
+                                                        $("#participants-form").submit();
+                                                    }
+                                                });
+                                            })();' title="Change Email Address" style="cursor:pointer; padding:0 5px;">
+                                            <i class="fas fa-envelope"></i>
+                                        </a>
+                                        <a onclick='(function(){
+                                            Swal.fire({
+                                                    title: "Are you sure you want to <?= ($isActive ? "deactivate" : "reactivate") . " ${fname_clean} ${lname_clean}?" ?> ",
+                                                    confirmButtonText: "<?= $isActive ? "Deactivate" : "Reactivate" ?> ",
+                                                    showCancelButton: true,
+                                                    confirmButtonColor: "#900000",
+                                                    allowEnterKey: false
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        $("#toReset").val("");
+                                                        $("#toDisenroll").val("");
+                                                        $("#toChangeEmail").val();
+                                                        $("#newEmail").val(); 
+                                                        $("#toUpdateActivity").val("<?= $participant["log_id"] ?>");
+                                                        $("#statusAction").val("<?= $isActive ? "deactivate" : "reactivate" ?>");
+                                                        $("#participants-form").submit();
+                                                    }
+                                                });
+                                            })();' title="<?= $isActive ? "Deactivate" : "Reactivate" ?> Participant" style="cursor:pointer; padding:0 5px; color:<?= $isActive ? "tomato" : "#009000" ?>">
+                                            <i class="fas <?= $isActive ? "fa-user-slash" : "fa-user-plus" ?>"></i>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         <?php } ?>
@@ -196,6 +251,8 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
             <input type="hidden" id="toChangeEmail" name="toChangeEmail">
             <input type="hidden" id="newEmail" name="newEmail">
             <input type="hidden" id="toDisenroll" name="toDisenroll">
+            <input type="hidden" id="toUpdateActivity" name="toUpdateActivity">
+            <input type="hidden" id="statusAction" name="statusAction">
             <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
         <?php } ?>
     </form>
@@ -213,8 +270,38 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                     return JSON.parse(localStorage.getItem('DataTables_ccpart_' + settings.sInstance))
                 },
                 scrollY: '50vh',
+                sScrollX: '100%',
                 scrollCollapse: true,
-                pageLength: 100
+                pageLength: 100,
+                columnDefs: [{
+                        "targets": 2,
+                        "data": function(row, type, val, meta) {
+                            if (type === "set") {
+                                row.active = val;
+                                row.active_display = val;
+                                row.active_filter = val;
+                                return;
+                            } else if (type === "filter" || type === "sort") {
+                                return $(row.active_filter).data().filtervalue;
+                            }
+                            return row.active;
+                        }
+                    },
+                    {
+                        "targets": 3,
+                        "data": function(row, type, val, meta) {
+                            if (type === "set") {
+                                row.pw_set = val;
+                                row.pw_set_display = val;
+                                row.pw_set_filter = val;
+                                return;
+                            } else if (type === "filter" || type === "sort") {
+                                return $(row.pw_set_filter).data().filtervalue;
+                            }
+                            return row.pw_set;
+                        }
+                    }
+                ]
             });
             $('#participants-form').removeClass('dataTableParentHidden');
             $('#loading-container').hide();
