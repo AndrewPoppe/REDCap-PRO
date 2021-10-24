@@ -64,7 +64,7 @@ class ProjectSettings
     public function getEmailFromAddress()
     {
         $result = \REDCap::escapeHtml(self::$module->getSystemSetting("email-from-address"));
-        if ($result === "") {
+        if (!isset($result) || $result === "") {
             $result = "noreply@REDCapPRO.com";
         }
         return $result;
