@@ -180,10 +180,11 @@ This table lists all registered participants in the system. It lists every study
 project that each participant is enrolled in. It allows the following actions to
 be taken on a participant:
 
-| Action         | Description                                                                  |
-| -------------- | ---------------------------------------------------------------------------- |
-| Reset Password | Sends an email to the participant which contains a password reset link       |
-| Change Email   | Updates the email address in the **REDCapPRO** database for this participant |
+| Action                        | Description                                                                                                                                                                    |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Reset Password                | Sends an email to the participant which contains a password reset link                                                                                                         |
+| Change Email                  | Updates the email address in the **REDCapPRO** database for this participant                                                                                                   |
+| Reactivate/Deactivate Account | A deactivated participant is unable to be enrolled in additional projects. However, they are still able to interact normally with projects to which they are already enrolled. |
 
 ### Staff
 This table lists all REDCap users that have a `role` above No Access in any 
