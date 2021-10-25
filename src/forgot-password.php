@@ -19,7 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $err = null;
 
-    // Validate username
+    // Validate username/email
     if (empty(trim($_POST["username"]))) {
         $err = $module->tt("forgot_password_err1");
     } else {
@@ -27,7 +27,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         // Check input errors before sending reset email
         if (!$err) {
             $rcpro_participant_id = $module::$PARTICIPANT->getParticipantIdFromUsername($username);
-            if (!empty($rcpro_participant_id)) {
+            if (!isset($rcpro_participant_id)) {
+                $rcpro_participant_id = $module::$PARTICIPANT->getParticipantIdFromEmail($username);
+            }
+            if (isset($rcpro_participant_id)) {
                 $module->log("Password Reset Email Sent", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $username
