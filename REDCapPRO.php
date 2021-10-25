@@ -55,8 +55,6 @@ class REDCapPRO extends AbstractExternalModule
 
     function redcap_every_page_top($project_id)
     {
-
-        //$this->query("DELETE FROM redcap_external_module_settings WHERE external_module_id = ?", [1]);
         if (strpos($_SERVER["PHP_SELF"], "surveys") !== false) {
             return;
         }

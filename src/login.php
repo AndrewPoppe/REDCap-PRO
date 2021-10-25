@@ -50,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $username = \REDCap::escapeHtml(trim($_POST["username"]));
         $usernameExists = $module::$PARTICIPANT->usernameIsTaken($username);
         $emailExists = $module::$PARTICIPANT->checkEmailExists($username);
-        $emailLoginsAllowed = $Login->emailLoginsAllowed($module->getProjectId());
+        $emailLoginsAllowed = $module::$SETTINGS->emailLoginsAllowed($module->getProjectId());
     }
 
     // Check if password is empty
@@ -218,7 +218,7 @@ if (!empty($login_err)) {
 
 <form action="<?= $module->getUrl("src/login.php", true); ?>" method="post">
     <div class="form-group">
-        <label><?= $Login->emailLoginsAllowed($module->getProjectId()) ? $module->tt("login_username_label2") : $module->tt("login_username_label") ?></label>
+        <label><?= $module::$SETTINGS->emailLoginsAllowed($module->getProjectId()) ? $module->tt("login_username_label2") : $module->tt("login_username_label") ?></label>
         <input type="text" name="username" class="form-control <?= (!empty($username_err)) ? 'is-invalid' : ''; ?>" value="<?= $username; ?>">
         <span class="invalid-feedback"><?= $username_err; ?></span>
     </div>

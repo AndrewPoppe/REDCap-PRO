@@ -95,4 +95,19 @@ class ProjectSettings
         }
         return $langs;
     }
+
+    /**
+     * Checks whether email login is allowed in this project
+     * 
+     * @param int $pid The redcap project ID
+     * 
+     * @return bool Whether email logins are allowed in this project
+     */
+    public function emailLoginsAllowed(int $pid)
+    {
+        $emailLoginPreventedSystem  = self::$module->getSystemSetting("prevent-email-login-system");
+        $emailLoginPreventedProject = self::$module->getProjectSetting("prevent-email-login", $pid);
+
+        return !($emailLoginPreventedSystem === true || $emailLoginPreventedProject === true);
+    }
 }
