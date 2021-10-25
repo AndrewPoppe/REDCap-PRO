@@ -78,7 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 // Check if username/email exists, if yes then verify password
                 // --> USERNAME DOES NOT EXIST
-            } else if (!$usernameExists && !($emailExists && !$preventEmailLogin)) {
+            } else if (!$usernameExists && !($emailExists && $emailLoginsAllowed)) {
 
                 // Username/email doesn't exist, display a generic error message
                 $Login->incrementFailedIp($ip);
