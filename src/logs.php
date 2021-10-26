@@ -136,6 +136,18 @@ $tableData = $module->queryLogs("SELECT " . implode(", ", $columns));
                             window.location.reload();
                         }
                     },
+                    {
+                        extend: 'csv',
+                        exportOptions: {
+                            columns: ':visible'
+                        }
+                    },
+                    {
+                        extend: 'excel',
+                        exportOptions: {
+                            columns: ':visible'
+                        }
+                    },
                 ],
                 scrollX: true,
                 scrollY: '50vh',
