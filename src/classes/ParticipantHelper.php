@@ -39,13 +39,23 @@ class ParticipantHelper
         try {
             $result = self::$module->query($SQL, [$new_email, $rcpro_participant_id]);
             if ($result) {
-                self::$module->log("Changed Email Address", [
-                    "rcpro_participant_id" => $rcpro_participant_id,
-                    "old_email"            => $current_email,
-                    "new_email"            => $new_email,
-                    "redcap_user"          => USERID
-                ]);
+
                 $username = $this->getUserName($rcpro_participant_id);
+
+                // Get all projects to which participant is currently enrolled
+                $project_ids = $this->getEnrolledProjects($rcpro_participant_id);
+                array_push($project_ids, NULL);
+                foreach ($project_ids as $project_id) {
+                    self::$module->log("Changed Email Address", [
+                        "rcpro_participant_id" => $rcpro_participant_id,
+                        "rcpro_username"       => $username,
+                        "old_email"            => $current_email,
+                        "new_email"            => $new_email,
+                        "redcap_user"          => USERID,
+                        "project_id"           => $project_id
+                    ]);
+                }
+
                 return self::$module->sendEmailUpdateEmail($username, $new_email, $current_email);
             } else {
                 throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
@@ -291,6 +301,30 @@ class ParticipantHelper
             return $result->fetch_assoc()["email"];
         } catch (\Exception $e) {
             self::$module->logError("Error fetching email address", $e);
+        }
+    }
+
+
+    /**
+     * Fetch array of REDCap PIDs for all projects this participant is enrolled
+     * in.
+     * 
+     * @param int $rcpro_participant_id
+     * 
+     * @return array
+     */
+    public function getEnrolledProjects(int $rcpro_participant_id)
+    {
+        $SQL = "SELECT project_id WHERE message = 'LINK' AND rcpro_participant_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+        try {
+            $result = self::$module->queryLogs($SQL, $rcpro_participant_id);
+            $project_ids = array();
+            while ($row = $result->fetch_assoc()) {
+                array_push($project_ids, $row["project_id"]);
+            }
+            return $project_ids;
+        } catch (\Exception $e) {
+            self::$module->logError("Error fetching enrolled projects", $e);
         }
     }
 
