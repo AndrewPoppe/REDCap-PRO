@@ -126,6 +126,7 @@ itself is available to Monitors and above.
 | Data Access Group | Column | Contains the DAG the participant is currently in *Note that this is independent of which DAG a REDCap record that corresponds with this participant might be assigned to* |        *Monitor*         |
 | Data Access Group | Action | Ability to reassign DAG. Only DAGs available to the REDCap User are available as options to switch to                                                                     |    <u>Normal User</u>    |
 | Reset Password    | Action | Sends an email to the participant which contains a password reset link                                                                                                    |        *Monitor*         |
+| Change Name       | Action | Updates the name in the **REDCapPRO** database for this participant                                                                                                       |    <u>**Manager**</u>    |
 | Change Email      | Action | Updates the email address in the **REDCapPRO** database for this participant                                                                                              |    <u>**Manager**</u>    |
 | Disenroll         | Action | Removes the participant from this study project                                                                                                                           |    <u>Normal User</u>    |
 
@@ -161,9 +162,9 @@ accessible by managers.
 | **Study Contact Email** |  Email   | Email address that participants should contact.                                                                                                                                                                                                                            |      N/A      |
 | **Study Contact Phone** |  Phone   | Phone number that participants should contact.                                                                                                                                                                                                                             |      N/A      |
 ### Logs
-This tab allows Managers to view the logs of **REDCapPRO** relevant to this study
-project. It only contains information about actions taken in this project or on
-surveys tied to this project. This tab is only accessible by Managers.
+This tab allows Managers to view and export the logs of **REDCapPRO** relevant to this study
+project. It only contains information about actions taken in this project, on
+surveys tied to this project, or certain actions taken regarding participants enrolled in this project. This tab is only accessible by Managers.
 
 ## REDCapPRO Control Center Menu
 
@@ -183,6 +184,7 @@ be taken on a participant:
 | Action                        | Description                                                                                                                                                                    |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Reset Password                | Sends an email to the participant which contains a password reset link                                                                                                         |
+| Update Name                   | Updates the name in the **REDCapPRO** database for this participant                                                                                                            |
 | Change Email                  | Updates the email address in the **REDCapPRO** database for this participant                                                                                                   |
 | Reactivate/Deactivate Account | A deactivated participant is unable to be enrolled in additional projects. However, they are still able to interact normally with projects to which they are already enrolled. |
 
