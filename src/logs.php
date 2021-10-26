@@ -41,6 +41,8 @@ $columns = [
     "redcap_user_acted_upon",
     "new_email",
     "old_email",
+    "new_name",
+    "old_name",
     "new_role",
     "old_role",
     "error_code",

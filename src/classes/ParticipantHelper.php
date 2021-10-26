@@ -44,7 +44,6 @@ class ParticipantHelper
 
                 // Get all projects to which participant is currently enrolled
                 $project_ids = $this->getEnrolledProjects($rcpro_participant_id);
-                array_push($project_ids, NULL);
                 foreach ($project_ids as $project_id) {
                     self::$module->log("Changed Email Address", [
                         "rcpro_participant_id" => $rcpro_participant_id,
@@ -62,6 +61,40 @@ class ParticipantHelper
             }
         } catch (\Exception $e) {
             self::$module->logError("Error changing email address", $e);
+        }
+    }
+
+    public function changeName(int $rcpro_participant_id, $fname, $lname)
+    {
+        $SQL1 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'fname'";
+        $SQL2 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'lname'";
+        $participant = $this->getParticipant($this->getUserName($rcpro_participant_id));
+        try {
+            $result1 = self::$module->query($SQL1, [$fname, $rcpro_participant_id]);
+            if (!$result1) {
+                throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
+            }
+
+            $result2 = self::$module->query($SQL2, [$lname, $rcpro_participant_id]);
+            if (!$result2) {
+                throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
+            }
+
+            // Get all projects to which participant is currently enrolled
+            $project_ids = $this->getEnrolledProjects($rcpro_participant_id);
+            foreach ($project_ids as $project_id) {
+                self::$module->log("Updated Participant Name", [
+                    "rcpro_participant_id" => $rcpro_participant_id,
+                    "rcpro_username"       => $participant["rcpro_username"],
+                    "old_name"            => $participant["fname"] . " " . $participant["lname"],
+                    "new_name"            => $fname . " " . $lname,
+                    "redcap_user"          => USERID,
+                    "project_id"           => $project_id
+                ]);
+            }
+            return $result1 && $result2;
+        } catch (\Exception $e) {
+            self::$module->logError("Error updating participant's name", $e);
         }
     }
 

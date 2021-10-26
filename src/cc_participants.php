@@ -50,6 +50,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $title = "Successfully reset password for participant.";
             }
 
+            // UPDATE THE PARTICIPANT'S NAME
+        } else if (!empty($_POST["toChangeName"])) {
+            $function = "update participant's name";
+            $rcpro_participant_id = intval($_POST["toChangeName"]);
+            $newFirstName = trim($_POST["newFirstName"]);
+            $newLastName = trim($_POST["newLastName"]);
+            // Check that names are valid
+            if ($newFirstName === "" || $newLastName === "") {
+                $title = "You need to provide valid first and last names.";
+                $icon = "error";
+            }
+
+            // Try to change name
+            else {
+                $result = $module::$PARTICIPANT->changeName($rcpro_participant_id, $newFirstName, $newLastName);
+                if (!$result) {
+                    $title = "Trouble updating participant's name.";
+                    $icon = "error";
+                } else {
+                    $title = "Successfully updated participant's name.";
+                    $icon = "success";
+                }
+            }
+
             // CHANGE THE PARTICIPANT'S EMAIL ADDRESS
         } else if (!empty($_POST["toChangeEmail"])) {
             $function = "change participant's email address";
@@ -191,12 +215,48 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                                 <td class="dt-center">
                                     <div style="display:flex; justify-content:center; align-items:center;">
                                         <a onclick='(function(){
+                                            clearForm();
                                             $("#toReset").val("<?= $participant["log_id"] ?>");
-                                            $("#toDisenroll").val("");
-                                            $("#toChangeEmail").val("");
                                             $("#participants-form").submit();
                                             })();' title="Reset Password" style="cursor:pointer; padding:0 5px;">
                                             <i class="fas fa-key"></i>
+                                        </a>
+                                        <a onclick='(function(){
+                                            Swal.fire({
+                                                    title: "Enter the new name for this participant", 
+                                                    html: `<input id="swal-fname" class="swal2-input" value="<?= $fname_clean ?>"><input id="swal-lname" class="swal2-input" value="<?= $lname_clean ?>">`,
+                                                    confirmButtonText: "Change Participant Name",
+                                                    showCancelButton: true,
+                                                    allowEnterKey: false,
+                                                    confirmButtonColor: "<?= $module::$COLORS["primary"] ?>",
+                                                    preConfirm: () => {
+                                                        return {
+                                                            fname: document.getElementById("swal-fname").value,
+                                                            lname: document.getElementById("swal-lname").value
+                                                        }
+                                                    }
+                                                }).then(function(result) {
+                                                    if (result.isConfirmed) {
+                                                        fname = trim(result.value.fname);
+                                                        lname = trim(result.value.lname);
+                                                        if (!fname || !lname) {
+                                                            Swal.fire({
+                                                                title: "You must provide a first and last name",
+                                                                icon: "error",
+                                                                showConfirmButton: false,
+                                                                showCancelButton: false
+                                                            });
+                                                        } else {
+                                                            clearForm();
+                                                            $("#toChangeName").val("<?= $participant["log_id"] ?>");
+                                                            $("#newFirstName").val(result.value.fname); 
+                                                            $("#newLastName").val(result.value.lname); 
+                                                            $("#participants-form").submit();
+                                                        }
+                                                    }
+                                                });
+                                            })();' title="Update Participant Name" style="cursor:pointer; padding:0 5px;">
+                                            <i class="fas fa-user"></i>
                                         </a>
                                         <a onclick='(function(){
                                             Swal.fire({
@@ -205,12 +265,11 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                                                     inputPlaceholder: "<?= $email_clean ?>",
                                                     confirmButtonText: "Change Email",
                                                     showCancelButton: true,
-                                                    confirmButtonColor: "#900000",
+                                                    confirmButtonColor: "<?= $module::$COLORS["primary"] ?>",
                                                     allowEnterKey: false
                                                 }).then((result) => {
                                                     if (result.isConfirmed) {
-                                                        $("#toReset").val("");
-                                                        $("#toDisenroll").val("");
+                                                        clearForm();
                                                         $("#toChangeEmail").val("<?= $participant["log_id"] ?>");
                                                         $("#newEmail").val(result.value); 
                                                         $("#participants-form").submit();
@@ -223,15 +282,14 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                                             Swal.fire({
                                                     title: "Are you sure you want to <?= ($isActive ? "deactivate" : "reactivate") . " ${fname_clean} ${lname_clean}?" ?> ",
                                                     confirmButtonText: "<?= $isActive ? "Deactivate" : "Reactivate" ?> ",
+                                                    icon: "warning",
+                                                    iconColor: "<?= $module::$COLORS["primary"] ?>",
                                                     showCancelButton: true,
-                                                    confirmButtonColor: "#900000",
+                                                    confirmButtonColor: "<?= $module::$COLORS["primary"] ?>",
                                                     allowEnterKey: false
                                                 }).then((result) => {
                                                     if (result.isConfirmed) {
-                                                        $("#toReset").val("");
-                                                        $("#toDisenroll").val("");
-                                                        $("#toChangeEmail").val();
-                                                        $("#newEmail").val(); 
+                                                        clearForm();
                                                         $("#toUpdateActivity").val("<?= $participant["log_id"] ?>");
                                                         $("#statusAction").val("<?= $isActive ? "deactivate" : "reactivate" ?>");
                                                         $("#participants-form").submit();
@@ -250,6 +308,9 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
             <input type="hidden" id="toReset" name="toReset">
             <input type="hidden" id="toChangeEmail" name="toChangeEmail">
             <input type="hidden" id="newEmail" name="newEmail">
+            <input type="hidden" id="toChangeName" name="toChangeName">
+            <input type="hidden" id="newFirstName" name="newFirstName">
+            <input type="hidden" id="newLastName" name="newLastName">
             <input type="hidden" id="toDisenroll" name="toDisenroll">
             <input type="hidden" id="toUpdateActivity" name="toUpdateActivity">
             <input type="hidden" id="statusAction" name="statusAction">
@@ -260,6 +321,20 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
 <script>
     (function($, window, document) {
         $(document).ready(function() {
+
+            // Function for resetting manage-form values
+            window.clearForm = function() {
+                $("#toReset").val("");
+                $("#toChangeEmail").val("");
+                $("#newEmail").val("");
+                $("#toChangeName").val("");
+                $("#newFirstName").val("");
+                $("#newLastName").val("");
+                $("#toDisenroll").val("");
+                $("#toUpdateActivity").val("");
+                $("#statusAction").val("");
+            }
+
             let dataTable = $('#RCPRO_TABLE').DataTable({
                 dom: 'lBfrtip',
                 stateSave: true,

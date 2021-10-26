@@ -21,7 +21,6 @@ $project_dags[NULL] = "Unassigned";
 $projectHasDags = count($project_dags) > 1;
 
 // Management Functions
-
 function disenroll(int $rcpro_participant_id)
 {
     global $role, $module, $rcpro_project_id;
@@ -57,6 +56,40 @@ function resetPassword(int $rcpro_participant_id)
     } else {
         $icon = "success";
         $title = "Successfully reset password for participant.";
+    }
+    return [$function, false, $icon, $title];
+}
+
+function changeName(int $rcpro_participant_id, string $newFirstName, string $newLastName)
+{
+    global $role, $module;
+    $function = "change participant's name";
+
+    $trimmedFirstName = trim($newFirstName);
+    $trimmedLastName = trim($newLastName);
+
+    // Check role
+    if ($role <= 2) {
+        $title = "You do not have the required role to do that.";
+        $icon = "error";
+    }
+
+    // Check that names are valid
+    else if ($trimmedFirstName === "" || $trimmedLastName === "") {
+        $title = "You need to provide valid first and last names.";
+        $icon = "error";
+    }
+
+    // Try to change name
+    else {
+        $result = $module::$PARTICIPANT->changeName($rcpro_participant_id, $trimmedFirstName, $trimmedLastName);
+        if (!$result) {
+            $title = "Trouble updating participant's name.";
+            $icon = "error";
+        } else {
+            $title = "Successfully updated participant's name.";
+            $icon = "success";
+        }
     }
     return [$function, false, $icon, $title];
 }
@@ -160,7 +193,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $showConfirm = false;
         $error = false;
 
-        $rcpro_participant_id = intval(coalesce_string($_POST["toDisenroll"], $_POST["toReset"], $_POST["toChangeEmail"], $_POST["toSwitchDag"]));
+        $rcpro_participant_id = intval(coalesce_string($_POST["toDisenroll"], $_POST["toReset"], $_POST["toChangeEmail"], $_POST["toSwitchDag"], $_POST["toChangeName"]));
 
         if (!$error && $rcpro_participant_id === 0) {
             $function = "make a change to this participant's account";
@@ -198,6 +231,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // SEND A PASSWORD RESET EMAIL
         else if (!$error && !empty($_POST["toReset"])) {
             list($function, $showConfirm, $icon, $title) = resetPassword(intval($_POST["toReset"]));
+        }
+
+        // CHANGE THE PARTICIPANT'S NAME
+        else if (!$error && !empty($_POST["toChangeName"])) {
+            list($function, $showConfirm, $icon, $title) = changeName(intval($_POST["toChangeName"]), $_POST["newFirstName"], $_POST["newLastName"]);
         }
 
         // CHANGE THE PARTICIPANT'S EMAIL ADDRESS
@@ -351,6 +389,46 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                             if (row[0].length) {
                                 let dataset = row.nodes()[0].dataset;
                                 Swal.fire({
+                                    title: "Enter the new name for this participant", 
+                                    html: `<input id="swal-fname" class="swal2-input" value="${dataset.fname}"><input id="swal-lname" class="swal2-input" value="${dataset.lname}">`,
+                                    confirmButtonText: "Change Participant Name",
+                                    showCancelButton: true,
+                                    allowEnterKey: false,
+                                    confirmButtonColor: "<?= $module::$COLORS["primary"] ?>",
+                                    preConfirm: () => {
+                                        return {
+                                            fname: document.getElementById("swal-fname").value,
+                                            lname: document.getElementById("swal-lname").value
+                                        }
+                                    }
+                                }).then(function(result) {
+                                    if (result.isConfirmed) {
+                                        fname = trim(result.value.fname);
+                                        lname = trim(result.value.lname);
+                                        if (!fname || !lname) {
+                                            Swal.fire({
+                                                title: "You must provide a first and last name",
+                                                icon: "error",
+                                                showConfirmButton: false,
+                                                showCancelButton: false
+                                            });
+                                        } else {
+                                            clearForm();
+                                            $("#toChangeName").val(dataset.id);
+                                            $("#newFirstName").val(fname); 
+                                            $("#newLastName").val(lname); 
+                                            $("#manage-form").submit();
+                                        }
+                                    }
+                                });
+                            }
+                        })();'>Change Name</button>
+                        <button type="button" class="btn btn-secondary rcpro-form-button" onclick='(function(){
+                            let table = $("#RCPRO_TABLE").DataTable();
+                            let row = table.rows( { selected: true } );
+                            if (row[0].length) {
+                                let dataset = row.nodes()[0].dataset;
+                                Swal.fire({
                                     title: "Enter the new email address for "+dataset.fname+" "+dataset.lname,
                                     input: "email",
                                     inputPlaceholder: dataset.email,
@@ -396,6 +474,9 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                 <input type="hidden" id="toReset" name="toReset">
                 <input type="hidden" id="toChangeEmail" name="toChangeEmail">
                 <input type="hidden" id="newEmail" name="newEmail">
+                <input type="hidden" id="toChangeName" name="toChangeName">
+                <input type="hidden" id="newFirstName" name="newFirstName">
+                <input type="hidden" id="newLastName" name="newLastName">
                 <input type="hidden" id="toDisenroll" name="toDisenroll">
                 <input type="hidden" id="toSwitchDag" name="toSwitchDag">
                 <input type="hidden" id="newDag" name="newDag">
@@ -412,6 +493,9 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                 $("#toReset").val("");
                 $("#toChangeEmail").val("");
                 $("#newEmail").val("");
+                $("#toChangeName").val("");
+                $("#newFirstName").val("");
+                $("#newLastName").val("");
                 $("#toDisenroll").val("");
                 $("#toSwitchDag").val("");
                 $("#newDag").val("");
