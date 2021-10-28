@@ -5,14 +5,14 @@ namespace YaleREDCap\REDCapPRO;
 use ExternalModules\AbstractExternalModule;
 
 require_once("src/classes/Auth.php");
+require_once("src/classes/DAG.php");
 require_once("src/classes/Instrument.php");
+require_once("src/classes/ParticipantHelper.php");
+require_once("src/classes/Project.php");
+require_once("src/classes/ProjectHelper.php");
 require_once("src/classes/ProjectSettings.php");
 require_once("src/classes/REDCapProException.php");
 require_once("src/classes/UI.php");
-require_once("src/classes/ParticipantHelper.php");
-require_once("src/classes/ProjectHelper.php");
-require_once("src/classes/DAG.php");
-require_once("src/classes/Project.php");
 
 /**
  * Main EM Class
@@ -251,6 +251,9 @@ class REDCapPRO extends AbstractExternalModule
             self::$PROJECT->setProjectActive($pid, 1);
         }
         $this->changeUserRole(USERID, NULL, 3);
+        $this->log("Module Enabled", [
+            "redcap_user" => USERID
+        ]);
     }
 
     /**
@@ -264,6 +267,9 @@ class REDCapPRO extends AbstractExternalModule
     function redcap_module_project_disable($version, $project_id)
     {
         self::$PROJECT->setProjectActive($project_id, 0);
+        $this->log("Module Disabled", [
+            "redcap_user" => USERID
+        ]);
     }
 
     // General Utilities 

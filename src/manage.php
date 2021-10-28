@@ -193,10 +193,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $showConfirm = false;
         $error = false;
 
-        $rcpro_participant_id = intval(coalesce_string($_POST["toDisenroll"], $_POST["toReset"], $_POST["toChangeEmail"], $_POST["toSwitchDag"], $_POST["toChangeName"]));
+        $rcpro_participant_id = intval(
+            coalesce_string(
+                $_POST["toDisenroll"],
+                $_POST["toReset"],
+                $_POST["toChangeEmail"],
+                $_POST["toSwitchDag"],
+                $_POST["toChangeName"]
+            )
+        );
 
+        $generic_function = "make a change to this participant's account";
         if (!$error && $rcpro_participant_id === 0) {
-            $function = "make a change to this participant's account";
+            $function = $generic_function;
             $icon = "error";
             $title = "No participant was chosen";
             $error = true;
@@ -204,7 +213,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Check that the participant is actually enrolled in this project
         if (!$error && !$module::$PROJECT->participantEnrolled($rcpro_participant_id, $rcpro_project_id)) {
-            $function = "make a change to this participant's account";
+            $function = $generic_function;
             $icon = "error";
             $title = "Participant is Not Enrolled";
             $error = true;
@@ -216,7 +225,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $participant_dag = intval($module::$DAG->getParticipantDag($rcpro_link_id));
             $user_dag = $module::$DAG->getCurrentDag(USERID, PROJECT_ID);
             if (isset($user_dag) && $participant_dag !== $user_dag) {
-                $function = "make a change to this participant's account";
+                $function = $generic_function;
                 $icon = "error";
                 $title = "Wrong Data Access Group";
                 $error = true;

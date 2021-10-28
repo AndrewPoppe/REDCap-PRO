@@ -60,7 +60,8 @@ $columns = [
     "lockout_ts",
     "token",
     "token_ts",
-    "token_valid"
+    "token_valid",
+    "search"
 ];
 
 $tableData = $module->queryLogs("SELECT " . implode(', ', $columns));

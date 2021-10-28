@@ -24,6 +24,12 @@ if (isset($_POST["id"]) && isset($project_id)) {
 
     $rcpro_participant_id = intval($_POST["id"]);
 
+    // Log submission
+    $module->log("Submitted Enroll Form", [
+        "rcpro_participant_id" => $rcpro_participant_id,
+        "redcap_user"          => USERID
+    ]);
+
     // If participant is not active, don't enroll them
     if (!$module::$PARTICIPANT->isParticipantActive($rcpro_participant_id)) {
 
@@ -47,6 +53,10 @@ if (isset($_POST["id"]) && isset($project_id)) {
 
 // set csrf token
 $module::$AUTH->set_csrf_token();
+
+// Initialize Javascript object
+$module->initializeJavascriptModuleObject();
+$jsname = $module->getJavascriptModuleObjectName();
 ?>
 
 <div class="wrapper enroll-wrapper" hidden>
@@ -54,6 +64,8 @@ $module::$AUTH->set_csrf_token();
     <p>Search for a participant by their email address and enroll the selected participant in this project.</p>
     <p><em>If the participant does not have an account, you can register them </em><strong><a href="<?= $module->getUrl("src/register.php"); ?>">here</a></strong>.</p>
     <script>
+        let module = <?= $jsname ?>;
+
         function showResult(str) {
             if (str.length < 3) {
                 document.getElementById("searchResults").innerHTML = "";
@@ -73,6 +85,11 @@ $module::$AUTH->set_csrf_token();
         }
 
         function populateSelection(fname, lname, email, id, username) {
+            module.log("Populated Enroll Selection", {
+                rcpro_participant_id: id,
+                rcpro_username: username,
+                redcap_user: "<?= USERID ?>"
+            });
             $("#fname").val(fname);
             $("#lname").val(lname);
             $("#email").val(email);
@@ -119,6 +136,10 @@ $module::$AUTH->set_csrf_token();
             if (isEmailFieldValid()) {
                 let searchValue = inputField.val();
                 let searchValueClean = encodeURIComponent(searchValue);
+                module.log("Searched on Enroll Tab", {
+                    search: searchValue,
+                    redcap_user: "<?= USERID ?>"
+                });
                 showResult(searchValue);
                 return;
             }
