@@ -21,6 +21,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         return;
     }
 
+    // Log submission
+    $module->logForm("Submitted Register Form", $_POST);
+
     // Validate Name
     $fname = trim($_POST["REDCapPRO_FName"]);
     $fname_clean = \REDCap::escapeHtml($fname);

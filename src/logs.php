@@ -63,6 +63,7 @@ $columns = [
 ];
 
 $tableData = $module->queryLogs("SELECT " . implode(", ", $columns));
+$module->initializeJavascriptModuleObject();
 
 ?>
 
@@ -108,6 +109,8 @@ $tableData = $module->queryLogs("SELECT " . implode(", ", $columns));
 </div>
 <script>
     (function($, window, document) {
+        let module = <?= $module->getJavascriptModuleObjectName() ?>;
+        module.userid = "<?= USERID ?>";
         $(document).ready(function() {
             $('#RCPRO_Logs').DataTable({
                 dom: 'lBfrtip',
@@ -141,12 +144,26 @@ $tableData = $module->queryLogs("SELECT " . implode(", ", $columns));
                         extend: 'csv',
                         exportOptions: {
                             columns: ':visible'
+                        },
+                        customize: function(csv) {
+                            module.log("Exported logs", {
+                                export_type: "csv",
+                                redcap_user: module.userid
+                            });
+                            return csv;
                         }
                     },
                     {
                         extend: 'excel',
                         exportOptions: {
                             columns: ':visible'
+                        },
+                        customize: function(excel) {
+                            module.log("Exported logs", {
+                                export_type: "excel",
+                                redcap_user: module.userid
+                            });
+                            return excel;
                         }
                     },
                 ],

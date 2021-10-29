@@ -22,7 +22,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         return;
     }
 
+    // Log submission
+    $module->logForm("Submitted Settings Form", $_POST);
 
+    // Validate Settings
     $post_settings = $_POST;
     $new_settings = array();
     try {
@@ -124,7 +127,7 @@ $module::$AUTH->set_csrf_token();
                     <div class="card-header">
                         <span class="fa-stack">
                             <i class="fas fa-envelope fa-stack-1x"></i>
-                            <i class="fas fa-ban fa-stack-2x" style="color: tomato"></i>
+                            <i class="fas fa-ban fa-stack-2x" style="color: <?= $module::$COLORS["ban"] ?>"></i>
                         </span>
                         <nbsp></nbsp>
                         <strong>Prevent Email Login</strong>

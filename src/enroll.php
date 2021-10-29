@@ -25,10 +25,7 @@ if (isset($_POST["id"]) && isset($project_id)) {
     $rcpro_participant_id = intval($_POST["id"]);
 
     // Log submission
-    $module->log("Submitted Enroll Form", [
-        "rcpro_participant_id" => $rcpro_participant_id,
-        "redcap_user"          => USERID
-    ]);
+    $module->logForm("Submitted Enroll Form", $_POST);
 
     // If participant is not active, don't enroll them
     if (!$module::$PARTICIPANT->isParticipantActive($rcpro_participant_id)) {

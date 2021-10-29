@@ -29,6 +29,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         return;
     }
 
+    // Log submission
+    $module->logForm("Submitted Manage Staff Form", $_POST);
+
     try {
         foreach ($userList as $user) {
             $username = $user->getUsername();
