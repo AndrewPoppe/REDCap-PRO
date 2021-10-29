@@ -55,6 +55,11 @@ class REDCapPRO extends AbstractExternalModule
         self::$DAG          = new DAG($this);
     }
 
+
+    //////////////\\\\\\\\\\\\\\       
+    /////   REDCAP HOOKS   \\\\\ 
+    //////////////\\\\\\\\\\\\\\
+
     function redcap_every_page_top($project_id)
     {
         if (strpos($_SERVER["PHP_SELF"], "surveys") !== false) {
@@ -306,39 +311,20 @@ class REDCapPRO extends AbstractExternalModule
         ]);
     }
 
-    // General Utilities 
-
     /**
-     * Returns all REDCap users of the module (all staff)
+     * This hook controls whether the configure button is displayed.
      * 
-     * @return [array]
+     * We want it shown in the control center, but not in projects.
+     * 
+     * @param mixed $project_id
+     * 
+     * @return void
      */
-    function getAllUsers()
+    function redcap_module_configure_button_display($project_id)
     {
-        global $module;
-        $projects = $module->getProjectsWithModuleEnabled();
-        $users = array();
-        foreach ($projects as $pid) {
-            $project = new Project($this, $pid);
-            $staff_arr = $project->getStaff();
-            $all_staff = $staff_arr["allStaff"];
-            foreach ($all_staff as $user) {
-                if (isset($users[$user])) {
-                    array_push($users[$user]['projects'], $pid);
-                } else {
-                    $newUser = $module->getUser($user);
-                    $newUserArr = [
-                        "username" => $user,
-                        "email" => $newUser->getEmail(),
-                        "name" => $module->getUserFullname($user),
-                        "projects" => [$pid]
-                    ];
-                    $users[$user] = $newUserArr;
-                }
-            }
-        }
-        return $users;
+        return empty($project_id);
     }
+
 
     //////////////////\\\\\\\\\\\\\\\\\\\       
     /////   EMAIL-RELATED METHODS   \\\\\ 
@@ -570,10 +556,6 @@ class REDCapPRO extends AbstractExternalModule
     }
 
 
-
-
-
-
     /////////////////////\\\\\\\\\\\\\\\\\\\\\\       
     /////   REDCAP USER-RELATED METHODS   \\\\\ 
     /////////////////////\\\\\\\\\\\\\\\\\\\\\\
@@ -671,6 +653,38 @@ class REDCapPRO extends AbstractExternalModule
     //////////////////\\\\\\\\\\\\\\\\\\\       
     /////   MISCELLANEOUS METHODS   \\\\\ 
     //////////////////\\\\\\\\\\\\\\\\\\\
+
+    /**
+     * Returns all REDCap users of the module (all staff)
+     * 
+     * @return [array]
+     */
+    function getAllUsers()
+    {
+        global $module;
+        $projects = $module->getProjectsWithModuleEnabled();
+        $users = array();
+        foreach ($projects as $pid) {
+            $project = new Project($this, $pid);
+            $staff_arr = $project->getStaff();
+            $all_staff = $staff_arr["allStaff"];
+            foreach ($all_staff as $user) {
+                if (isset($users[$user])) {
+                    array_push($users[$user]['projects'], $pid);
+                } else {
+                    $newUser = $module->getUser($user);
+                    $newUserArr = [
+                        "username" => $user,
+                        "email" => $newUser->getEmail(),
+                        "name" => $module->getUserFullname($user),
+                        "projects" => [$pid]
+                    ];
+                    $users[$user] = $newUserArr;
+                }
+            }
+        }
+        return $users;
+    }
 
     /**
      * Logs errors thrown during operation
