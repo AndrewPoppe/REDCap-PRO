@@ -188,6 +188,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         return;
     }
 
+    // Log submission
+    $module->logForm("Submitted Manage Participants Form", $_POST);
+
     try {
         $function = NULL;
         $showConfirm = false;
@@ -332,7 +335,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                             ?>
                                 <tr data-id="<?= $participant["log_id"] ?>" data-username="<?= $username_clean ?>" data-fname="<?= $fname_clean ?>" data-lname="<?= $lname_clean ?>" data-email="<?= $email_clean ?>">
                                     <td>
-                                        <?= "<i title='Password Set' class='fas " . ($password_set ? "fa-check-circle" : "fa-fw") . "' style='margin-left:2px;margin-right:2px;color:#009000;'></i>&nbsp; $username_clean" ?>
+                                        <?= "<i title='Password Set' class='fas " . ($password_set ? "fa-check-circle" : "fa-fw") . "' style='margin-left:2px;margin-right:2px;color:" . $module::$COLORS["green"] . ";'></i>&nbsp; $username_clean" ?>
                                     </td>
                                     <?php if ($role > 1) { ?>
                                         <td class="dt-center"><?= $fname_clean ?></td>

@@ -36,7 +36,9 @@ class REDCapPRO extends AbstractExternalModule
         "lightGrey"        => "#f9f9f9",
         "mediumGrey"       => "#dddddd",
         "darkGrey"         => "#6c757d",
-        "blue"             => "#000090"
+        "blue"             => "#000090",
+        "green"            => "#009000",
+        "ban"              => "tomato"
     ];
 
     static $LOGO_URL           = "https://i.imgur.com/5Xq2Vqt.png";
@@ -252,7 +254,8 @@ class REDCapPRO extends AbstractExternalModule
         }
         $this->changeUserRole(USERID, NULL, 3);
         $this->log("Module Enabled", [
-            "redcap_user" => USERID
+            "redcap_user" => USERID,
+            "version" => $version
         ]);
     }
 
@@ -268,7 +271,38 @@ class REDCapPRO extends AbstractExternalModule
     {
         self::$PROJECT->setProjectActive($project_id, 0);
         $this->log("Module Disabled", [
-            "redcap_user" => USERID
+            "redcap_user" => USERID,
+            "version" => $version
+        ]);
+    }
+
+    /**
+     * Hook that is triggered when the module is enabled system-wide
+     * 
+     * @param mixed $version
+     * 
+     * @return void
+     */
+    function redcap_module_system_enable($version)
+    {
+        $this->log("Module Enabled - System", [
+            "redcap_user" => USERID,
+            "version" => $version
+        ]);
+    }
+
+    /**
+     * Hook that is triggered when the module is disabled system-wide
+     * 
+     * @param mixed $version
+     * 
+     * @return void
+     */
+    function redcap_module_system_disable($version)
+    {
+        $this->log("Module Disabled - System", [
+            "redcap_user" => USERID,
+            "version" => $version
         ]);
     }
 
@@ -663,6 +697,27 @@ class REDCapPRO extends AbstractExternalModule
     }
 
     /**
+     * Logs form submission attempts by the user
+     * 
+     * @param string $message
+     * @param array $parameters
+     * 
+     * @return void
+     */
+    public function logForm(string $message, $parameters)
+    {
+        $logParameters = array();
+        foreach ($parameters as $key => $value) {
+            $logParameters[$key] = \REDCap::escapeHtml($value);
+        }
+        $logParametersString = json_encode($logParameters);
+        $this->log($message, [
+            "parameters" => $logParametersString,
+            "redcap_user" => USERID
+        ]);
+    }
+
+    /**
      * Make sure settings meet certain conditions.
      * 
      * This is called when a user clicks "Save" in either system or project
@@ -697,52 +752,15 @@ class REDCapPRO extends AbstractExternalModule
             }
         }
 
+        // Log configuration save attempt
+        $logParameters = json_encode($settings);
+        $this->log("Configuration Saved", [
+            "parameters" => $logParameters,
+            "redcap_user" => USERID,
+            "message" => $message,
+            "success" => is_null($message)
+        ]);
+
         return $message;
     }
 }
-
-
-
-    
-
-    /*
-        Instead of creating a user table, we'll use the built-in log table (and log parameters table)
-
-        So, there will be a message called "PARTICIPANT" 
-        The log_id will be the id of the participant (rcpro_participant_id)
-        The log's timestamp will act as the creation time
-        and the parameters will be:
-            * rcpro_username              - the coded username for this participant
-            * email                 - email address
-            * fname                 - first name
-            * lname                 - last name
-            * pw (hashed)           - hashed password
-            * last_modified_ts      - timstamp of any updates to this log (php DateTime converted to unix timestamp)
-            * failed_attempts       - number of failed login attempts for this username (not ip)
-            * lockout_ts            - timestamp that a lockout will end (php DateTime converted to unix timestamp)
-            * token                 - password set/reset token
-            * token_ts              - timestamp the token is valid until (php DateTime converted to unix timestamp)
-            * token_valid           - bool? 0/1? what is best here?
-    */
-
-    /*
-        Insteam of a Project table:
-        There will be a message called PROJECT
-        The log_id will serve as the rcpro_project_id
-        The timestamp will be the creation timestamp
-        The parameters will be:
-            * pid               - REDCap project id for this project
-            * active            - whether the project is active or not. bool? 0/1?
-    */
-
-    /*
-        Instead of a Link table:
-        There will be a message called LINK
-        The log_id will serve as the link id
-        The timestamp will be the creation timestamp
-        The parameters will be:
-            * project           - rcpro_project_id (int)
-            * participant       - rcpro_participant_id (int)
-            * active            - bool? 0/1? This is whether the participant is enrolled 
-                                  (i.e., if the link is active)
-    */

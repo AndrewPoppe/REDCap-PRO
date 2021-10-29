@@ -36,6 +36,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         return;
     }
 
+    // Log submission
+    $module->logForm("Submitted Control Center Participants Form", $_POST);
+
     try {
         $function = NULL;
         // SEND A PASSWORD RESET EMAIL
@@ -206,8 +209,8 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                             <tr>
                                 <td class="rcpro_participant_link" onclick="<?= $onclick ?>"><?= $participant["log_id"] ?></td>
                                 <td class="dt-center"><?= $username_clean ?></td>
-                                <td class="dt-center"><i data-filterValue="<?= $isActive ?>" title='<?= $isActive ? "Active" : "Inactive" ?>' class='fas <?= $isActive ? "fa-check" : "fa-ban" ?>' style='color:<?= $isActive ? "#009000" : "Tomato" ?>'></td>
-                                <td class="dt-center"><i data-filterValue="<?= $password_set ?>" title='Password Set' class='fas <?= ($password_set ? "fa-check-circle" : "fa-fw") ?>' style='margin-left:2px;margin-right:2px;color:#009000;'></i></td>
+                                <td class="dt-center"><i data-filterValue="<?= $isActive ?>" title='<?= $isActive ? "Active" : "Inactive" ?>' class='fas <?= $isActive ? "fa-check" : "fa-ban" ?>' style='color:<?= $isActive ? $module::$COLORS["green"] : $module::$COLORS["ban"] ?>'></td>
+                                <td class="dt-center"><i data-filterValue="<?= $password_set ?>" title='Password Set' class='fas <?= ($password_set ? "fa-check-circle" : "fa-fw") ?>' style='margin-left:2px;margin-right:2px;color:<?= $module::$COLORS["green"] ?>;'></i></td>
                                 <td class="dt-center"><?= $fname_clean ?></td>
                                 <td class="dt-center"><?= $lname_clean ?></td>
                                 <td><?= $email_clean ?></td>
@@ -295,7 +298,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                                                         $("#participants-form").submit();
                                                     }
                                                 });
-                                            })();' title="<?= $isActive ? "Deactivate" : "Reactivate" ?> Participant" style="cursor:pointer; padding:0 5px; color:<?= $isActive ? "tomato" : "#009000" ?>">
+                                            })();' title="<?= $isActive ? "Deactivate" : "Reactivate" ?> Participant" style="cursor:pointer; padding:0 5px; color:<?= $isActive ? $module::$COLORS["ban"] : $module::$COLORS["green"] ?>">
                                             <i class="fas <?= $isActive ? "fa-user-slash" : "fa-user-plus" ?>"></i>
                                         </a>
                                     </div>
