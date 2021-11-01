@@ -20,15 +20,18 @@ $user_dags = $module::$DAG->getPossibleDags(USERID, PROJECT_ID);
 $project_dags[NULL] = "Unassigned";
 $projectHasDags = count($project_dags) > 1;
 
+// constants
+$no_permission = "You do not have the required role to do that.";
+
 // Management Functions
 function disenroll(int $rcpro_participant_id)
 {
-    global $role, $module, $rcpro_project_id;
+    global $role, $module, $rcpro_project_id, $no_permission;
     $function = "disenroll participant";
 
     // Check role
     if ($role <= 1) {
-        $title = "You do not have the required role to do that.";
+        $title = $no_permission;
         $icon = "error";
     } else {
         $rcpro_username = $module::$PARTICIPANT->getUserName($rcpro_participant_id);
@@ -62,7 +65,7 @@ function resetPassword(int $rcpro_participant_id)
 
 function changeName(int $rcpro_participant_id, string $newFirstName, string $newLastName)
 {
-    global $role, $module;
+    global $role, $module, $no_permission;
     $function = "change participant's name";
 
     $trimmedFirstName = trim($newFirstName);
@@ -70,7 +73,7 @@ function changeName(int $rcpro_participant_id, string $newFirstName, string $new
 
     // Check role
     if ($role <= 2) {
-        $title = "You do not have the required role to do that.";
+        $title = $no_permission;
         $icon = "error";
     }
 
@@ -96,12 +99,12 @@ function changeName(int $rcpro_participant_id, string $newFirstName, string $new
 
 function changeEmail(int $rcpro_participant_id, string $newEmail)
 {
-    global $role, $module;
+    global $role, $module, $no_permission;
     $function = "change participant's email address";
 
     // Check role
     if ($role <= 2) {
-        $title = "You do not have the required role to do that.";
+        $title = $no_permission;
         $icon = "error";
     }
 
@@ -127,12 +130,12 @@ function changeEmail(int $rcpro_participant_id, string $newEmail)
 
 function switchDAG(int $rcpro_participant_id, ?string $newDAG)
 {
-    global $role, $module, $project_dags, $rcpro_project_id;
+    global $role, $module, $project_dags, $rcpro_project_id, $no_permission;
     $function = "switch participant's Data Access Group";
 
     // Check role
     if ($role < 2) {
-        $title = "You do not have the required role to do that.";
+        $title = $no_permission;
         $icon = "error";
     }
 
