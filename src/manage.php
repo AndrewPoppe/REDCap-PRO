@@ -311,7 +311,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                         <caption>Study Participants</caption>
                         <thead>
                             <tr>
-                                <th id="rcpro_username" class="text-right">Username</th>
+                                <th id="rcpro_username" class="dt-center">Username</th>
                                 <?php if ($role > 1) { ?>
                                     <th id="rcpro_fname" class="dt-center">First Name</th>
                                     <th id="rcpro_lname" class="dt-center">Last Name</th>
@@ -337,7 +337,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                                 $dag_name_clean = count($dag_name) === 1 ? \REDCap::escapeHtml($dag_name) : "Unassigned";
                             ?>
                                 <tr data-id="<?= $participant["log_id"] ?>" data-username="<?= $username_clean ?>" data-fname="<?= $fname_clean ?>" data-lname="<?= $lname_clean ?>" data-email="<?= $email_clean ?>">
-                                    <td>
+                                    <td class="dt-center">
                                         <?= "<i title='Password Set' class='fas " . ($password_set ? "fa-check-circle" : "fa-fw") . "' style='margin-left:2px;margin-right:2px;color:" . $module::$COLORS["green"] . ";'></i>&nbsp; $username_clean" ?>
                                     </td>
                                     <?php if ($role > 1) { ?>
