@@ -141,7 +141,11 @@ class DAG
      */
     public function updateDag(int $rcpro_link_id, ?int $dag_id)
     {
-        $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'project_dag'";
+        if (self::$module->countLogs("log_id = ? AND project_dag is not null", $rcpro_link_id) > 0) {
+            $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'project_dag'";
+        } else {
+            $SQL = "INSERT INTO redcap_external_modules_log_parameters (value, name, log_id) VALUES (?, 'project_dag', ?)";
+        }
         try {
             return self::$module->query($SQL, [$dag_id, $rcpro_link_id]);
         } catch (\Exception $e) {
