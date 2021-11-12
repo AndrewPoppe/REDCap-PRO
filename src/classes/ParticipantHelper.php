@@ -355,6 +355,9 @@ class ParticipantHelper
             while ($row = $result->fetch_assoc()) {
                 array_push($project_ids, $row["project_id"]);
             }
+            if (count($project_ids) === 0) {
+                array_push($project_ids, NULL);
+            }
             return $project_ids;
         } catch (\Exception $e) {
             self::$module->logError("Error fetching enrolled projects", $e);
