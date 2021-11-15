@@ -42,6 +42,9 @@ class ParticipantHelper
 
                 $username = $this->getUserName($rcpro_participant_id);
 
+                // Get current project (or "system" if initiated in the control center)
+                $current_pid = $this::$module->getProjectId() ?? "system";
+
                 // Get all projects to which participant is currently enrolled
                 $project_ids = $this->getEnrolledProjects($rcpro_participant_id);
                 foreach ($project_ids as $project_id) {
@@ -51,7 +54,8 @@ class ParticipantHelper
                         "old_email"            => $current_email,
                         "new_email"            => $new_email,
                         "redcap_user"          => USERID,
-                        "project_id"           => $project_id
+                        "project_id"           => $project_id,
+                        "initiating_project_id" => $current_pid
                     ]);
                 }
 
@@ -80,16 +84,20 @@ class ParticipantHelper
                 throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
             }
 
+            // Get current project (or "system" if initiated in the control center)
+            $current_pid = $this::$module->getProjectId() ?? "system";
+
             // Get all projects to which participant is currently enrolled
             $project_ids = $this->getEnrolledProjects($rcpro_participant_id);
             foreach ($project_ids as $project_id) {
                 self::$module->log("Updated Participant Name", [
-                    "rcpro_participant_id" => $rcpro_participant_id,
-                    "rcpro_username"       => $participant["rcpro_username"],
-                    "old_name"            => $participant["fname"] . " " . $participant["lname"],
-                    "new_name"            => $fname . " " . $lname,
-                    "redcap_user"          => USERID,
-                    "project_id"           => $project_id
+                    "rcpro_participant_id"  => $rcpro_participant_id,
+                    "rcpro_username"        => $participant["rcpro_username"],
+                    "old_name"              => $participant["fname"] . " " . $participant["lname"],
+                    "new_name"              => $fname . " " . $lname,
+                    "redcap_user"           => USERID,
+                    "project_id"            => $project_id,
+                    "initiating_project_id" => $current_pid
                 ]);
             }
             return $result1 && $result2;

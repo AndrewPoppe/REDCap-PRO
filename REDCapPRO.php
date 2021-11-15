@@ -503,12 +503,22 @@ class REDCapPRO extends AbstractExternalModule
 
             $result = \REDCap::email($to, $from, $subject, $body);
             $status = $result ? "Sent" : "Failed to send";
-            $this->log("Password Reset Email - ${status}", [
-                "rcpro_participant_id" => $rcpro_participant_id,
-                "rcpro_username"       => $username_clean,
-                "rcpro_email"          => $to,
-                "redcap_user"          => USERID
-            ]);
+
+            // Get current project (or "system" if initiated in the control center)
+            $current_pid = $this->getProjectId() ?? "system";
+
+            // Get all projects to which participant is currently enrolled
+            $project_ids = $this::$PARTICIPANT->getEnrolledProjects($rcpro_participant_id);
+            foreach ($project_ids as $project_id) {
+                $this->log("Password Reset Email - ${status}", [
+                    "rcpro_participant_id"  => $rcpro_participant_id,
+                    "rcpro_username"        => $username_clean,
+                    "rcpro_email"           => $to,
+                    "redcap_user"           => USERID,
+                    "project_id"            => $project_id,
+                    "initiating_project_id" => $current_pid
+                ]);
+            }
             return $result;
         } catch (\Exception $e) {
             $this->log("Password Reset Failed", [
