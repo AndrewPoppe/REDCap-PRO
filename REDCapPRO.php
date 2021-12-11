@@ -40,6 +40,7 @@ class REDCapPRO extends AbstractExternalModule
         "green"            => "#009000",
         "ban"              => "tomato"
     ];
+    static $MODULE_TOKEN;
 
     static $LOGO_URL           = "https://i.imgur.com/5Xq2Vqt.png";
     static $LOGO_ALTERNATE_URL = "https://i.imgur.com/fu0t8V1.png";
@@ -53,6 +54,7 @@ class REDCapPRO extends AbstractExternalModule
         self::$PARTICIPANT  = new ParticipantHelper($this);
         self::$PROJECT      = new ProjectHelper($this, self::$PARTICIPANT);
         self::$DAG          = new DAG($this);
+        self::$MODULE_TOKEN = $this->getModuleToken();
     }
 
 
@@ -318,11 +320,35 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @param mixed $project_id
      * 
-     * @return void
+     * @return bool
      */
     function redcap_module_configure_button_display($project_id)
     {
         return empty($project_id);
+    }
+
+
+    function redcap_module_system_change_version($version, $old_version)
+    {
+        $this->log("Module Version Changed", [
+            "version"     => $version,
+            "old_version" => $old_version,
+            "redcap_user" => USERID
+        ]);
+
+        $new_version_number = explode('v', $version)[1];
+        $old_version_number = explode('v', $old_version)[1];
+
+        // If upgrading from a previous version to version 99.99,
+        // assume all existing logs are genuine, create module token,
+        // and add the token to all existing logs.
+        $critical_version = 99.99;
+        if (
+            $new_version_number >= $critical_version &&
+            $old_version_number < $critical_version
+        ) {
+            $this->updateLogsWithToken();
+        }
     }
 
 
@@ -712,7 +738,8 @@ class REDCapPRO extends AbstractExternalModule
             "error_file"    => $e->getFile(),
             "error_line"    => $e->getLine(),
             "error_string"  => $e->__toString(),
-            "redcap_user"   => USERID
+            "redcap_user"   => USERID,
+            "module_token"  => self::$MODULE_TOKEN
         ];
         if (isset($e->rcpro)) {
             $params = array_merge($params, $e->rcpro);
@@ -737,8 +764,97 @@ class REDCapPRO extends AbstractExternalModule
         $logParametersString = json_encode($logParameters);
         $this->log($message, [
             "parameters" => $logParametersString,
-            "redcap_user" => USERID
+            "redcap_user" => USERID,
+            "module_token" => self::$MODULE_TOKEN
         ]);
+    }
+
+    /**
+     * Logs an event 
+     * 
+     * @param string $message
+     * @param array $parameters
+     * 
+     * @return void
+     */
+    public function logEvent(string $message, $parameters)
+    {
+        $parameters["module_token"] = self::$MODULE_TOKEN;
+        $this->log($message, $parameters);
+    }
+
+    /**
+     * Retrieves token used to validate logs created by this module
+     * 
+     * @return string
+     */
+    private function getModuleToken()
+    {
+        $moduleToken = $this->getSystemSetting("module_token");
+        if (!isset($moduleToken)) {
+            $moduleToken = $this->createModuleToken();
+            $this->saveModuleToken($moduleToken);
+        }
+        return $moduleToken;
+    }
+
+    private function saveModuleToken(string $moduleToken)
+    {
+        $this->setSystemSetting("module_token", $moduleToken);
+    }
+
+    /**
+     * Creates token used by module to validate logs
+     * 
+     * @return string
+     */
+    private function createModuleToken()
+    {
+        return bin2hex(random_bytes(64));
+    }
+
+    /**
+     * If moving from an early version of the module, need to update existing
+     * logs with the module token
+     * 
+     * @return null
+     */
+    private function updateLogsWithToken()
+    {
+        $logs = $this->queryLogs("SELECT log_id WHERE module_token IS NULL");
+        while ($row = $logs->fetch_assoc()) {
+            $SQL = "INSERT INTO redcap_external_modules_log_parameters (log_id, name, value) VALUES (?, ?, ?)";
+            $this->query($SQL, [$row["log_id"], "module_token", self::$MODULE_TOKEN]);
+        }
+    }
+
+    /**
+     * Automatically include check for module token in any select query
+     * 
+     * @param string $select_statement
+     * @param array $params
+     * @param bool $use_querylogs - whether to use queryLogs() or query()
+     * 
+     * @return mixed
+     */
+    public function selectLogs(string $selectStatement, array $params, bool $use_querylogs = true)
+    {
+        $verb = stripos($selectStatement, " where ") === false ? " WHERE" : " AND";
+        $selectStatementValidated = $selectStatement . $verb . " module_token = ?";
+        array_push($params, self::$MODULE_TOKEN);
+        if ($use_querylogs) {
+            return $this->queryLogs($selectStatementValidated, $params);
+        } else {
+            return $this->query($selectStatementValidated, $params);
+        }
+    }
+
+    public function countLogsValidated(string $whereClause, array $params)
+    {
+        $verb = (empty($whereClause) || trim($whereClause) === "") ? "" : " AND";
+        $whereClauseValidated = $whereClause . $verb . " module_token = ?";
+        array_push($params, self::$MODULE_TOKEN);
+        return $this->countLogs($whereClauseValidated, $params);
     }
 
     /**

@@ -12,10 +12,7 @@ if (!filter_var($q, FILTER_VALIDATE_EMAIL)) {
     return;
 }
 
-$wq = "%${q}%";
-
-
-$result = $module::$PARTICIPANT->searchParticipants($wq);
+$result = $module::$PARTICIPANT->searchParticipants($q);
 
 $hint = "";
 $rcpro_participant_id = null;

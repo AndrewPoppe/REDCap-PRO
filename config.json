@@ -1,6 +1,6 @@
 {
-    "name"       : "REDCapPRO",
-    "namespace"  : "YaleREDCap\\REDCapPRO",
+    "name": "REDCapPRO",
+    "namespace": "YaleREDCap\\REDCapPRO",
     "description": "<strong>Patient Reported Outcomes in REDCap</strong><br>This module provides a means of identifying and authenticating study participants when collecting survey data. It stores that information in the REDCap project's audit trail.<br><strong><a href='https://github.com/AndrewPoppe/REDCap-PRO#readme' style='color:#900000 !important;' target='_blank' rel='noreferrer noopen'>See full documentation here.</a></strong>",
     "permissions": [
         "redcap_survey_page_top",
@@ -9,18 +9,16 @@
         "redcap_module_project_enable",
         "redcap_module_project_disable",
         "redcap_module_system_enable",
-        "redcap_module_system_disable"
+        "redcap_module_system_disable",
+        "redcap_module_system_change_version"
     ],
-    "authors": [
-        {
-            "name"       : "Andrew Poppe",
-            "email"      : "andrew.poppe@yale.edu",
-            "institution": "Yale Center for Clinical Investigation"
-        }
-    ],
-    "system-settings": [
-        {
-            "key" : "email-from-address",
+    "authors": [{
+        "name": "Andrew Poppe",
+        "email": "andrew.poppe@yale.edu",
+        "institution": "Yale Center for Clinical Investigation"
+    }],
+    "system-settings": [{
+            "key": "email-from-address",
             "name": "<strong>Email From Address</strong>:<br>This will be the <em>From</em> email address for all system emails. This can help if emails are being sent to spam or are not delivered (default is noreply@REDCapPRO.com)",
             "type": "email"
         },
@@ -61,18 +59,15 @@
         }
     ],
     "links": {
-        "project": [
-        ],
-        "control-center": [
-           {
-                "name"                  : "<strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em>",
-                "key"                   : "redcappro",
-                "icon"                  : "fas fa-fingerprint",
-                "url"                   : "src/cc_projects.php",
-                "show-header-and-footer": true
-           }
-        ]
-     },
+        "project": [],
+        "control-center": [{
+            "name": "<strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em>",
+            "key": "redcappro",
+            "icon": "fas fa-fingerprint",
+            "url": "src/cc_projects.php",
+            "show-header-and-footer": true
+        }]
+    },
     "no-auth-pages": [
         "src/login",
         "src/logout",
@@ -83,9 +78,9 @@
     ],
     "framework-version": 5,
     "compatibility": {
-        "php-version-min"   : "7.3.0",
-        "php-version-max"   : "",
+        "php-version-min": "7.3.0",
+        "php-version-max": "",
         "redcap-version-min": "9.10.0",
         "redcap-version-max": ""
-     }
+    }
 }

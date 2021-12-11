@@ -56,7 +56,7 @@ class ProjectHelper
     {
         $SQL = "SELECT active WHERE pid = ? and message = 'PROJECT' and (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->queryLogs($SQL, [$pid]);
+            $result = self::$module->selectLogs($SQL, [$pid]);
             if ($result->num_rows == 0) {
                 return FALSE;
             }
@@ -180,7 +180,7 @@ class ProjectHelper
     {
         $SQL = "SELECT log_id WHERE message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->queryLogs($SQL, [$rcpro_participant_id, $rcpro_project_id]);
+            $result = self::$module->selectLogs($SQL, [$rcpro_participant_id, $rcpro_project_id]);
             return $result->fetch_assoc()["log_id"];
         } catch (\Exception $e) {
             self::$module->logError("Error fetching link id", $e);
@@ -198,7 +198,7 @@ class ProjectHelper
     {
         $SQL = "SELECT pid WHERE message = 'PROJECT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->queryLogs($SQL, [$rcpro_project_id]);
+            $result = self::$module->selectLogs($SQL, [$rcpro_project_id]);
             return $result->fetch_assoc()["pid"];
         } catch (\Exception $e) {
             self::$module->logError("Error fetching pid from project id", $e);
@@ -217,7 +217,7 @@ class ProjectHelper
     {
         $SQL = "SELECT log_id WHERE message = 'PROJECT' AND pid = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->queryLogs($SQL, [$pid]);
+            $result = self::$module->selectLogs($SQL, [$pid]);
             return $result->fetch_assoc()["log_id"];
         } catch (\Exception $e) {
             self::$module->logError("Error fetching project id from pid", $e);
@@ -237,7 +237,7 @@ class ProjectHelper
     {
         $SQL = "message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->countLogs($SQL, [$rcpro_participant_id, $rcpro_project_id]);
+            $result = self::$module->countLogsValidated($SQL, [$rcpro_participant_id, $rcpro_project_id]);
             return $result > 0;
         } catch (\Exception $e) {
             self::$module->logError("Error checking if link exists", $e);
@@ -256,7 +256,7 @@ class ProjectHelper
     {
         $SQL = "message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->countLogs($SQL, [$rcpro_participant_id, $rcpro_project_id]);
+            $result = self::$module->countLogsValidated($SQL, [$rcpro_participant_id, $rcpro_project_id]);
             return $result > 0;
         } catch (\Exception $e) {
             self::$module->logError("Error checking participant enrollment", $e);

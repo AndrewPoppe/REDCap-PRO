@@ -117,7 +117,7 @@ class ParticipantHelper
     {
         $SQL = "message = 'PARTICIPANT' AND email = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->countLogs($SQL, [$email]);
+            $result = self::$module->countLogsValidated($SQL, [$email]);
             return $result > 0;
         } catch (\Exception $e) {
             self::$module->logError("Error checking if email exists", $e);
@@ -137,7 +137,7 @@ class ParticipantHelper
     {
         $SQL = "log_id = ? AND message = 'PARTICIPANT' AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $res = self::$module->countLogs($SQL, [$rcpro_participant_id]);
+            $res = self::$module->countLogsValidated($SQL, [$rcpro_participant_id]);
             return $res > 0;
         } catch (\Exception $e) {
             self::$module->logError("Error checking whether participant exists", $e);
@@ -279,7 +279,7 @@ class ParticipantHelper
     {
         $SQL = "message = 'LINK' AND rcpro_project_id = ? AND rcpro_participant_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->countLogs($SQL, [$rcpro_project_id, $rcpro_participant_id]);
+            $result = self::$module->countLogsValidated($SQL, [$rcpro_project_id, $rcpro_participant_id]);
             return $result > 0;
         } catch (\Exception $e) {
             self::$module->logError("Error checking that participant is enrolled", $e);
@@ -310,9 +310,9 @@ class ParticipantHelper
      */
     public function getAllParticipants()
     {
-        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, pw, active WHERE message = 'PARTICIPANT' AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, pw, active WHERE message = 'PARTICIPANT' AND rcpro_username IS NOT NULL AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->queryLogs($SQL, []);
+            $result = self::$module->selectLogs($SQL, []);
             $participants  = array();
 
             // grab participant details
@@ -338,7 +338,7 @@ class ParticipantHelper
     {
         $SQL = "SELECT email WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->queryLogs($SQL, [$rcpro_participant_id]);
+            $result = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
             return $result->fetch_assoc()["email"];
         } catch (\Exception $e) {
             self::$module->logError("Error fetching email address", $e);
@@ -358,7 +358,7 @@ class ParticipantHelper
     {
         $SQL = "SELECT project_id WHERE message = 'LINK' AND rcpro_participant_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->queryLogs($SQL, $rcpro_participant_id);
+            $result = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
             $project_ids = array();
             while ($row = $result->fetch_assoc()) {
                 array_push($project_ids, $row["project_id"]);
@@ -386,7 +386,7 @@ class ParticipantHelper
         }
         $SQL = "SELECT log_id, rcpro_username, email, fname, lname, active WHERE message = 'PARTICIPANT' AND rcpro_username = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->queryLogs($SQL, [$username]);
+            $result = self::$module->selectLogs($SQL, [$username]);
             return $result->fetch_assoc();
         } catch (\Exception $e) {
             self::$module->logError("Error fetching participant information", $e);
@@ -407,7 +407,7 @@ class ParticipantHelper
         }
         $SQL = "SELECT log_id, rcpro_username, email, fname, lname, active WHERE message = 'PARTICIPANT' AND email = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->queryLogs($SQL, [$email]);
+            $result = self::$module->selectLogs($SQL, [$email]);
             return $result->fetch_assoc();
         } catch (\Exception $e) {
             self::$module->logError("Error fetching participant information", $e);
@@ -425,7 +425,7 @@ class ParticipantHelper
     {
         $SQL = "SELECT log_id WHERE message = 'PARTICIPANT' AND email = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->queryLogs($SQL, [$email]);
+            $result = self::$module->selectLogs($SQL, [$email]);
             return $result->fetch_assoc()["log_id"];
         } catch (\Exception $e) {
             self::$module->logError("Error fetching id from email", $e);
@@ -443,7 +443,7 @@ class ParticipantHelper
     {
         $SQL = "SELECT log_id WHERE message = 'PARTICIPANT' AND rcpro_username = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->queryLogs($SQL, [$username]);
+            $result = self::$module->selectLogs($SQL, [$username]);
             return $result->fetch_assoc()["log_id"];
         } catch (\Exception $e) {
             self::$module->logError("Error fetching id from username", $e);
@@ -461,7 +461,7 @@ class ParticipantHelper
     {
         $SQL = "SELECT log_id AS 'User_ID', rcpro_username AS Username, timestamp AS 'Registered At', redcap_user AS 'Registered By' WHERE log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result_obj = self::$module->queryLogs($SQL, [$rcpro_participant_id]);
+            $result_obj = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
             return $result_obj->fetch_assoc();
         } catch (\Exception $e) {
             self::$module->logError("Error getting participant info", $e);
@@ -483,13 +483,13 @@ class ParticipantHelper
         $SQL2 = "SELECT pid WHERE log_id = ? AND message = 'PROJECT' AND (project_id IS NULL OR project_id IS NOT NULL)";
         $projects = array();
         try {
-            $result1 = self::$module->queryLogs($SQL1, [$rcpro_participant_id]);
+            $result1 = self::$module->selectLogs($SQL1, [$rcpro_participant_id]);
             if (!$result1) {
                 throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
             }
             while ($row = $result1->fetch_assoc()) {
                 $rcpro_project_id = $row["rcpro_project_id"];
-                $result2 = self::$module->queryLogs($SQL2, [$rcpro_project_id]);
+                $result2 = self::$module->selectLogs($SQL2, [$rcpro_project_id]);
                 $redcap_pid = $result2->fetch_assoc()["pid"];
                 array_push($projects, [
                     "rcpro_project_id" => $rcpro_project_id,
@@ -520,12 +520,12 @@ class ParticipantHelper
             array_push($PARAMS, strval($dag));
         }
         try {
-            $result = self::$module->queryLogs($SQL, $PARAMS);
+            $result = self::$module->selectLogs($SQL, $PARAMS);
             $participants  = array();
 
             while ($row = $result->fetch_assoc()) {
                 $participantSQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, pw WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
-                $participantResult = self::$module->queryLogs($participantSQL, [$row["rcpro_participant_id"]]);
+                $participantResult = self::$module->selectLogs($participantSQL, [$row["rcpro_participant_id"]]);
                 $participant = $participantResult->fetch_assoc();
                 $participant["pw_set"] = (!isset($participant["pw"]) || $participant["pw"] === "") ? "False" : "True";
                 unset($participant["pw"]);
@@ -548,7 +548,7 @@ class ParticipantHelper
     {
         $SQL = "SELECT rcpro_username WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->queryLogs($SQL, [$rcpro_participant_id]);
+            $result = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
             return $result->fetch_assoc()["rcpro_username"];
         } catch (\Exception $e) {
             self::$module->logError("Error fetching username", $e);
@@ -566,7 +566,7 @@ class ParticipantHelper
     {
         $SQL = "SELECT active WHERE log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $res = self::$module->queryLogs($SQL, $rcpro_participant_id);
+            $res = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
             $status_arr = $res->fetch_assoc();
             return !isset($status_arr["active"]) || $status_arr["active"] == 1;
         } catch (\Exception $e) {
@@ -586,10 +586,9 @@ class ParticipantHelper
         $SQL = "SELECT fname, lname, email, log_id, rcpro_username, active 
                 WHERE message = 'PARTICIPANT' 
                 AND (project_id IS NULL OR project_id IS NOT NULL) 
-                AND (email LIKE ?)
-                LIMIT 5";
+                AND (email = ?)";
         try {
-            return self::$module->queryLogs($SQL, [$search_term]);
+            return self::$module->selectLogs($SQL, [$search_term]);
         } catch (\Exception $e) {
             self::$module->logError("Error performing livesearch", $e);
         }
@@ -605,7 +604,7 @@ class ParticipantHelper
      */
     private function setActiveStatus($rcpro_participant_id, int $value)
     {
-        if (self::$module->countLogs("log_id = ? AND active is not null", $rcpro_participant_id) > 0) {
+        if (self::$module->countLogsValidated("log_id = ? AND active is not null", [$rcpro_participant_id]) > 0) {
             $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
         } else {
             $SQL = "INSERT INTO redcap_external_modules_log_parameters (value, name, log_id) VALUES (?, 'active', ?)";
@@ -667,7 +666,7 @@ class ParticipantHelper
     {
         $SQL = "message = 'PARTICIPANT' AND rcpro_username = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->countLogs($SQL, [$username]);
+            $result = self::$module->countLogsValidated($SQL, [$username]);
             return $result > 0;
         } catch (\Exception $e) {
             self::$module->logError("Error checking if username is taken", $e);
@@ -685,7 +684,7 @@ class ParticipantHelper
     {
         $SQL = "SELECT log_id, rcpro_username WHERE message = 'PARTICIPANT' AND token = ? AND token_ts > ? AND token_valid = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->queryLogs($SQL, [$token, time()]);
+            $result = self::$module->selectLogs($SQL, [$token, time()]);
             if ($result->num_rows > 0) {
                 $result_array = $result->fetch_assoc();
                 self::$module->log("Password Token Verified", [

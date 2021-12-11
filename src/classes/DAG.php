@@ -122,7 +122,7 @@ class DAG
     {
         $SQL = "SELECT project_dag WHERE log_id = ?";
         try {
-            $result = self::$module->queryLogs($SQL, [$rcpro_link_id]);
+            $result = self::$module->selectLogs($SQL, [$rcpro_link_id]);
             if ($row = $result->fetch_assoc()) {
                 return $row["project_dag"];
             }
@@ -141,7 +141,7 @@ class DAG
      */
     public function updateDag(int $rcpro_link_id, ?int $dag_id)
     {
-        if (self::$module->countLogs("log_id = ? AND project_dag is not null", $rcpro_link_id) > 0) {
+        if (self::$module->countLogsValidated("log_id = ? AND project_dag is not null", [$rcpro_link_id]) > 0) {
             $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'project_dag'";
         } else {
             $SQL = "INSERT INTO redcap_external_modules_log_parameters (value, name, log_id) VALUES (?, 'project_dag', ?)";

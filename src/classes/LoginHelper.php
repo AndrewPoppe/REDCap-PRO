@@ -220,7 +220,7 @@ class LoginHelper
     {
         $SQL = "SELECT failed_attempts WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $res = self::$module->queryLogs($SQL, [$rcpro_participant_id]);
+            $res = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
             return $res->fetch_assoc()["failed_attempts"];
         } catch (\Exception $e) {
             self::$module->logError("Failed to check username attempts", $e);
@@ -239,9 +239,9 @@ class LoginHelper
      */
     public function getUsernameLockoutDuration(int $rcpro_participant_id)
     {
-        $SQL = "SELECT lockout_ts WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL);";
+        $SQL = "SELECT lockout_ts WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $res = self::$module->queryLogs($SQL, [$rcpro_participant_id]);
+            $res = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
             $lockout_ts = intval($res->fetch_assoc()["lockout_ts"]);
             $time_remaining = $lockout_ts - time();
             if ($time_remaining > 0) {
@@ -283,8 +283,8 @@ class LoginHelper
     public function getHash(int $rcpro_participant_id)
     {
         try {
-            $SQL = "SELECT pw WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL);";
-            $res = self::$module->queryLogs($SQL, [$rcpro_participant_id]);
+            $SQL = "SELECT pw WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+            $res = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
             return $res->fetch_assoc()['pw'];
         } catch (\Exception $e) {
             self::$module->logError("Error fetching password hash", $e);

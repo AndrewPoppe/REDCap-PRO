@@ -62,7 +62,7 @@ $columns = [
     "search"
 ];
 
-$tableData = $module->queryLogs("SELECT " . implode(", ", $columns));
+$tableData = $module->selectLogs("SELECT " . implode(", ", $columns), []);
 $module->initializeJavascriptModuleObject();
 
 ?>

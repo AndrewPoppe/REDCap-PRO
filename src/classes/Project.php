@@ -84,9 +84,9 @@ class Project
      */
     function getParticipantCount(?int $rcpro_project_id)
     {
-        $SQL = "SELECT log_id WHERE message = 'LINK' AND rcpro_project_id = ? AND active = 1";
+        $SQL = "message = 'LINK' AND rcpro_project_id = ? AND active = 1";
         try {
-            return self::$module->countLogs($SQL, [$rcpro_project_id]);
+            return self::$module->countLogsValidated($SQL, [$rcpro_project_id]);
         } catch (\Exception $e) {
             self::$module->logError("Error getting participant count", $e);
         }
