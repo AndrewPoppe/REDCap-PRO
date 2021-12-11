@@ -583,6 +583,10 @@ class ParticipantHelper
      */
     public function searchParticipants(string $search_term)
     {
+        self::$module->logEvent("Searched on Enroll Tab", [
+            "search"      => \REDCap::escapeHtml($search_term),
+            "redcap_user" => USERID
+        ]);
         $SQL = "SELECT fname, lname, email, log_id, rcpro_username, active 
                 WHERE message = 'PARTICIPANT' 
                 AND (project_id IS NULL OR project_id IS NOT NULL) 

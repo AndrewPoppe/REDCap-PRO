@@ -105,7 +105,6 @@ class Instrument
 ?>
             <script>
                 (function($, window, document) {
-                    let module = <?= self::$module->getJavascriptModuleObjectName() ?>;
                     let participants_json = '<?= $participants_json ?>';
                     let participants_obj = JSON.parse(participants_json);
                     let participants = Object.values(participants_obj);
@@ -158,9 +157,6 @@ class Instrument
                                     lname_input.val(participant.lname);
                                 }
                             <?php } ?>
-
-                            // Log this.
-                            module.log("Populated REDCapPRO User Info On Form", logParameters);
                         });
 
                 })(window.jQuery, window, document);

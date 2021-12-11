@@ -82,11 +82,6 @@ $jsname = $module->getJavascriptModuleObjectName();
         }
 
         function populateSelection(fname, lname, email, id, username) {
-            module.log("Populated Enroll Selection", {
-                rcpro_participant_id: id,
-                rcpro_username: username,
-                redcap_user: "<?= USERID ?>"
-            });
             $("#fname").val(fname);
             $("#lname").val(lname);
             $("#email").val(email);
@@ -133,10 +128,6 @@ $jsname = $module->getJavascriptModuleObjectName();
             if (isEmailFieldValid()) {
                 let searchValue = inputField.val();
                 let searchValueClean = encodeURIComponent(searchValue);
-                module.log("Searched on Enroll Tab", {
-                    search: searchValue,
-                    redcap_user: "<?= USERID ?>"
-                });
                 showResult(searchValue);
                 return;
             }
