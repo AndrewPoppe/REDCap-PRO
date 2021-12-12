@@ -339,13 +339,13 @@ class REDCapPRO extends AbstractExternalModule
         $new_version_number = explode('v', $version)[1];
         $old_version_number = explode('v', $old_version)[1];
 
-        // If upgrading from a previous version to version 99.99,
+        // If upgrading from a previous version to version 0.4.5,
         // assume all existing logs are genuine, create module token,
         // and add the token to all existing logs.
-        $critical_version = 99.99;
+        $critical_version = "0.4.5";
         if (
-            $new_version_number >= $critical_version &&
-            $old_version_number < $critical_version
+            version_compare($new_version_number, $critical_version, ">=") &&
+            version_compare($old_version_number, $critical_version, "<")
         ) {
             $this->updateLogsWithToken();
         }
