@@ -10,7 +10,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // Validate token
     if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        $module->log("Invalid CSRF Token");
+        $module->logEvent("Invalid CSRF Token");
         echo $module->tt("error_generic1");
         echo "<br>";
         echo $module->tt("error_generic2");
@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $rcpro_participant_id = $module::$PARTICIPANT->getParticipantIdFromEmail($email);
             if (!empty($rcpro_participant_id)) {
                 $username = $module::$PARTICIPANT->getUserName($rcpro_participant_id);
-                $module->log("Username Reminder Email Sent", [
+                $module->logEvent("Username Reminder Email Sent", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $username
                 ]);

@@ -152,7 +152,7 @@ function switchDAG(int $rcpro_participant_id, ?string $newDAG)
             $icon = "error";
         } else {
             $participant_info = $module::$PARTICIPANT->getParticipantInfo($rcpro_participant_id);
-            $module->log("Participant DAG Switched", [
+            $module->logEvent("Participant DAG Switched", [
                 "rcpro_participant_id" => $participant_info["User_ID"],
                 "rcpro_username"       => $participant_info["Username"],
                 "rcpro_project_id"     => $rcpro_project_id,

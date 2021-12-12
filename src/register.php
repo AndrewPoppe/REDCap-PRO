@@ -66,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $icon = "success";
             $title = "Participant Registered";
 
-            $module->log("Participant Registered", [
+            $module->logEvent("Participant Registered", [
                 "rcpro_username" => $username,
                 "redcap_user"    => USERID
             ]);

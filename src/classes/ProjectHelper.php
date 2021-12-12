@@ -32,7 +32,7 @@ class ProjectHelper
     public function addProject(int $pid)
     {
         try {
-            return self::$module->log("PROJECT", [
+            return self::$module->logEvent("PROJECT", [
                 "pid"         => $pid,
                 "active"      => 1,
                 "redcap_user" => USERID
@@ -80,14 +80,14 @@ class ProjectHelper
     private function createLink(int $rcpro_participant_id, int $rcpro_project_id, ?int $dag, ?string $rcpro_username)
     {
         try {
-            self::$module->log("LINK", [
+            self::$module->logEvent("LINK", [
                 "rcpro_project_id"     => $rcpro_project_id,
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "active"               => 1,
                 "redcap_user"          => USERID,
                 "project_dag"           => $dag
             ]);
-            self::$module->log("Enrolled Participant", [
+            self::$module->logEvent("Enrolled Participant", [
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "rcpro_username"       => $rcpro_username,
                 "rcpro_project_id"     => $rcpro_project_id,
@@ -114,7 +114,7 @@ class ProjectHelper
         try {
             $result = $this->setLinkActiveStatus($rcpro_participant_id, $rcpro_project_id, 0);
             if ($result) {
-                self::$module->log("Disenrolled Participant", [
+                self::$module->logEvent("Disenrolled Participant", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $rcpro_username,
                     "rcpro_project_id"     => $rcpro_project_id,
@@ -154,7 +154,7 @@ class ProjectHelper
         if ($this->linkAlreadyExists($rcpro_participant_id, $rcpro_project_id)) {
             $result = $this->setLinkActiveStatus($rcpro_participant_id, $rcpro_project_id, 1, $dag);
             if ($result) {
-                self::$module->log("Enrolled Participant", [
+                self::$module->logEvent("Enrolled Participant", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $rcpro_username,
                     "rcpro_project_id"     => $rcpro_project_id,
@@ -304,7 +304,7 @@ class ProjectHelper
         try {
             $result = self::$module->query($SQL, [$active, $rcpro_project_id]);
             if ($result) {
-                self::$module->log("Project Status Set", [
+                self::$module->logEvent("Project Status Set", [
                     "rcpro_project_id" => $rcpro_project_id,
                     "active_status"    => $active,
                     "redcap_user"      => USERID

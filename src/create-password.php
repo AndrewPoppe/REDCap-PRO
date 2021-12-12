@@ -104,7 +104,7 @@ $module::$UI->ShowParticipantHeader($module->tt("create_password_title"));
 
 if ($verified_user) {
 
-    $module->log("Participant opened create password page", [
+    $module->logEvent("Participant opened create password page", [
         "rcpro_username" => $verified_user["rcpro_username"]
     ]);
 

@@ -56,7 +56,7 @@ class LoginHelper
                 $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'lockout_ts';";
                 $res = self::$module->query($SQL, [$lockout_ts, $rcpro_participant_id]);
                 $status = $res ? "Successful" : "Failed";
-                self::$module->log("Login Lockout ${status}", [
+                self::$module->logEvent("Login Lockout ${status}", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $rcpro_username
                 ]);
@@ -123,7 +123,7 @@ class LoginHelper
             $ipStat["attempts"]++;
             if ($ipStat["attempts"] >= self::$SETTINGS->getLoginAttempts()) {
                 $ipStat["lockout_ts"] = time() + self::$SETTINGS->getLockoutDurationSeconds();
-                self::$module->log("Locked out IP address", [
+                self::$module->logEvent("Locked out IP address", [
                     "rcpro_ip"   => $ip,
                     "lockout_ts" => $ipStat["lockout_ts"]
                 ]);

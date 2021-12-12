@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate token
     if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        $module->log("Invalid CSRF Token");
+        $module->logEvent("Invalid CSRF Token");
         echo $module->tt("error_generic1");
         echo "<br>";
         echo $module->tt("error_generic2");
@@ -70,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($lockout_ts_ip !== FALSE) {
                 $lockout_duration_remaining = $lockout_ts_ip - time();
                 $login_err = $module->tt("login_err3") . "<br>" . $module->tt("login_err4", $lockout_duration_remaining);
-                $module->log("Login Attempted - IP Locked Out", [
+                $module->logEvent("Login Attempted - IP Locked Out", [
                     "rcpro_ip"       => $ip,
                     "rcpro_username" => $usernameExists ? $username : "",
                     "rcpro_email" => $emailExists ? $username : ""
@@ -84,14 +84,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $Login->incrementFailedIp($ip);
                 $attempts = $Login->checkAttempts(NULL, $ip);
                 $remainingAttempts = $module::$SETTINGS->getLoginAttempts() - $attempts;
-                $module->log("Login Attempted - Username/Email does not exist", [
+                $module->logEvent("Login Attempted - Username/Email does not exist", [
                     "rcpro_ip"       => $ip,
                     "rcpro_username" => $usernameExists ? $username : "",
                     "rcpro_email" => $emailExists ? $username : ""
                 ]);
                 if ($remainingAttempts <= 0) {
                     $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err6", $module::$SETTINGS->getLockoutDurationSeconds());
-                    $module->log("IP LOCKOUT", ["rcpro_ip" => $ip]);
+                    $module->logEvent("IP LOCKOUT", ["rcpro_ip" => $ip]);
                 } else {
                     $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err7", $remainingAttempts);
                 }
@@ -107,7 +107,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 if ($lockout_duration_remaining !== FALSE && $lockout_duration_remaining !== NULL) {
                     // --> Username is locked out
                     $login_err = $module->tt("login_err3") . "<br>" . $module->tt("login_err4", $lockout_duration_remaining);
-                    $module->log("Login Attempted - Username Locked Out", [
+                    $module->logEvent("Login Attempted - Username Locked Out", [
                         "rcpro_ip"             => $ip,
                         "rcpro_username"       => $participant["rcpro_username"],
                         "rcpro_email"          => $participant["email"],
@@ -118,7 +118,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 } else if (empty($stored_hash)) {
                     // --> No password hash exists
                     // TODO: Give option to resend password email?
-                    $module->log("No password hash stored.", [
+                    $module->logEvent("No password hash stored.", [
                         "rcpro_participant_id" => $participant["log_id"],
                         "rcpro_username"       => $participant["rcpro_username"]
                     ]);
@@ -132,7 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // SUCCESSFUL AUTHENTICATION //
                     ///////////////////////////////
 
-                    $module->log("Login Successful", [
+                    $module->logEvent("Login Successful", [
                         "rcpro_ip"             => $ip,
                         "rcpro_username"       => $participant["rcpro_username"],
                         "rcpro_participant_id" => $participant["log_id"]
@@ -168,7 +168,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     // --> Password is not valid
                     // display a generic error message
-                    $module->log("Login Unsuccessful - Incorrect Password", [
+                    $module->logEvent("Login Unsuccessful - Incorrect Password", [
                         "rcpro_ip"             => $ip,
                         "rcpro_username"       => $participant["rcpro_username"],
                         "rcpro_participant_id" => $participant["log_id"]
@@ -179,7 +179,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $remainingAttempts = $module::$SETTINGS->getLoginAttempts() - $attempts;
                     if ($remainingAttempts <= 0) {
                         $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err6", $module::$SETTINGS->getLockoutDurationSeconds());
-                        $module->log("USERNAME LOCKOUT", [
+                        $module->logEvent("USERNAME LOCKOUT", [
                             "rcpro_ip"             => $ip,
                             "rcpro_username"       => $participant["rcpro_username"],
                             "rcpro_participant_id" => $participant["log_id"]

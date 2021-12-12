@@ -48,7 +48,7 @@ class ParticipantHelper
                 // Get all projects to which participant is currently enrolled
                 $project_ids = $this->getEnrolledProjects($rcpro_participant_id);
                 foreach ($project_ids as $project_id) {
-                    self::$module->log("Changed Email Address", [
+                    self::$module->logEvent("Changed Email Address", [
                         "rcpro_participant_id" => $rcpro_participant_id,
                         "rcpro_username"       => $username,
                         "old_email"            => $current_email,
@@ -90,7 +90,7 @@ class ParticipantHelper
             // Get all projects to which participant is currently enrolled
             $project_ids = $this->getEnrolledProjects($rcpro_participant_id);
             foreach ($project_ids as $project_id) {
-                self::$module->log("Updated Participant Name", [
+                self::$module->logEvent("Updated Participant Name", [
                     "rcpro_participant_id"  => $rcpro_participant_id,
                     "rcpro_username"        => $participant["rcpro_username"],
                     "old_name"              => $participant["fname"] . " " . $participant["lname"],
@@ -172,7 +172,7 @@ class ParticipantHelper
             return NULL;
         }
         try {
-            $id = self::$module->log("PARTICIPANT", [
+            $id = self::$module->logEvent("PARTICIPANT", [
                 "rcpro_username"   => $username,
                 "email"            => $email_clean,
                 "fname"            => $fname_clean,
@@ -190,7 +190,7 @@ class ParticipantHelper
             if (!$id) {
                 throw new REDCapProException(["rcpro_username" => $username]);
             }
-            self::$module->log("Participant Created", [
+            self::$module->logEvent("Participant Created", [
                 "rcpro_user_id"  => $id,
                 "rcpro_username" => $username,
                 "redcap_user"    => USERID
@@ -616,14 +616,14 @@ class ParticipantHelper
         try {
             $res = self::$module->query($SQL, [$value, $rcpro_participant_id]);
             if ($res) {
-                self::$module->log("Set participant active status", [
+                self::$module->logEvent("Set participant active status", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username" => $this->getUserName($rcpro_participant_id),
                     "active" => $value,
                     "redcap_user" => USERID
                 ]);
             } else {
-                self::$module->log("Failed to set participant active status", [
+                self::$module->logEvent("Failed to set participant active status", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username" => $this->getUserName($rcpro_participant_id),
                     "active" => $value,
@@ -649,7 +649,7 @@ class ParticipantHelper
         try {
             $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'pw';";
             $res = self::$module->query($SQL, [$hash, $rcpro_participant_id]);
-            self::$module->log("Password Hash Stored", [
+            self::$module->logEvent("Password Hash Stored", [
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "rcpro_username"       => $this->getUserName($rcpro_participant_id)
             ]);
@@ -691,7 +691,7 @@ class ParticipantHelper
             $result = self::$module->selectLogs($SQL, [$token, time()]);
             if ($result->num_rows > 0) {
                 $result_array = $result->fetch_assoc();
-                self::$module->log("Password Token Verified", [
+                self::$module->logEvent("Password Token Verified", [
                     'rcpro_participant_id' => $result_array['log_id'],
                     'rcpro_username'       => $result_array['rcpro_username']
                 ]);

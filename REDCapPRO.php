@@ -107,7 +107,7 @@ class REDCapPRO extends AbstractExternalModule
             // Determine whether participant is enrolled in the study.
             $rcpro_participant_id = self::$AUTH->get_participant_id();
             if (!self::$PARTICIPANT->enrolledInProject($rcpro_participant_id, $rcpro_project_id)) {
-                $this->log("Participant not enrolled", [
+                $this->logEvent("Participant not enrolled", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_project_id"     => $rcpro_project_id,
                     "instrument"           => $instrument,
@@ -135,7 +135,7 @@ class REDCapPRO extends AbstractExternalModule
                 $rcpro_dag = self::$DAG->getParticipantDag($rcpro_link_id);
 
                 if ($group_id !== $rcpro_dag) {
-                    $this->log("Participant wrong DAG", [
+                    $this->logEvent("Participant wrong DAG", [
                         "rcpro_participant_id" => $rcpro_participant_id,
                         "instrument"           => $instrument,
                         "event"                => $event_id,
@@ -168,7 +168,7 @@ class REDCapPRO extends AbstractExternalModule
                 $event_id,                                                          // event
                 $project_id                                                         // project id
             );
-            $this->log("REDCapPRO Survey Accessed", [
+            $this->logEvent("REDCapPRO Survey Accessed", [
                 "rcpro_username"  => self::$AUTH->get_username(),
                 "rcpro_user_id"   => self::$AUTH->get_participant_id(),
                 "record"          => $record,
@@ -260,7 +260,7 @@ class REDCapPRO extends AbstractExternalModule
             self::$PROJECT->setProjectActive($pid, 1);
         }
         $this->changeUserRole(USERID, NULL, 3);
-        $this->log("Module Enabled", [
+        $this->logEvent("Module Enabled", [
             "redcap_user" => USERID,
             "version" => $version
         ]);
@@ -277,7 +277,7 @@ class REDCapPRO extends AbstractExternalModule
     function redcap_module_project_disable($version, $project_id)
     {
         self::$PROJECT->setProjectActive($project_id, 0);
-        $this->log("Module Disabled", [
+        $this->logEvent("Module Disabled", [
             "redcap_user" => USERID,
             "version" => $version
         ]);
@@ -292,7 +292,7 @@ class REDCapPRO extends AbstractExternalModule
      */
     function redcap_module_system_enable($version)
     {
-        $this->log("Module Enabled - System", [
+        $this->logEvent("Module Enabled - System", [
             "redcap_user" => USERID,
             "version" => $version
         ]);
@@ -307,7 +307,7 @@ class REDCapPRO extends AbstractExternalModule
      */
     function redcap_module_system_disable($version)
     {
-        $this->log("Module Disabled - System", [
+        $this->logEvent("Module Disabled - System", [
             "redcap_user" => USERID,
             "version" => $version
         ]);
@@ -330,7 +330,7 @@ class REDCapPRO extends AbstractExternalModule
 
     function redcap_module_system_change_version($version, $old_version)
     {
-        $this->log("Module Version Changed", [
+        $this->logEvent("Module Version Changed", [
             "version"     => $version,
             "old_version" => $old_version,
             "redcap_user" => USERID
@@ -536,7 +536,7 @@ class REDCapPRO extends AbstractExternalModule
             // Get all projects to which participant is currently enrolled
             $project_ids = $this::$PARTICIPANT->getEnrolledProjects($rcpro_participant_id);
             foreach ($project_ids as $project_id) {
-                $this->log("Password Reset Email - ${status}", [
+                $this->logEvent("Password Reset Email - ${status}", [
                     "rcpro_participant_id"  => $rcpro_participant_id,
                     "rcpro_username"        => $username_clean,
                     "rcpro_email"           => $to,
@@ -547,7 +547,7 @@ class REDCapPRO extends AbstractExternalModule
             }
             return $result;
         } catch (\Exception $e) {
-            $this->log("Password Reset Failed", [
+            $this->logEvent("Password Reset Failed", [
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "redcap_user"          => USERID
             ]);
@@ -631,7 +631,7 @@ class REDCapPRO extends AbstractExternalModule
             $this->setProjectSetting("users", $roles["2"]);
             $this->setProjectSetting("monitors", $roles["1"]);
 
-            $this->log("Changed user role", [
+            $this->logEvent("Changed user role", [
                 "redcap_user" => USERID,
                 "redcap_user_acted_upon" => $username,
                 "old_role" => $oldRole,
@@ -744,7 +744,7 @@ class REDCapPRO extends AbstractExternalModule
         if (isset($e->rcpro)) {
             $params = array_merge($params, $e->rcpro);
         }
-        $this->log($message, $params);
+        $this->logEvent($message, $params);
     }
 
     /**
@@ -762,7 +762,7 @@ class REDCapPRO extends AbstractExternalModule
             $logParameters[$key] = \REDCap::escapeHtml($value);
         }
         $logParametersString = json_encode($logParameters);
-        $this->log($message, [
+        $this->logEvent($message, [
             "parameters" => $logParametersString,
             "redcap_user" => USERID,
             "module_token" => self::$MODULE_TOKEN
@@ -780,7 +780,7 @@ class REDCapPRO extends AbstractExternalModule
     public function logEvent(string $message, $parameters)
     {
         $parameters["module_token"] = self::$MODULE_TOKEN;
-        $this->log($message, $parameters);
+        $this->logEvent($message, $parameters);
     }
 
     /**
@@ -894,7 +894,7 @@ class REDCapPRO extends AbstractExternalModule
 
         // Log configuration save attempt
         $logParameters = json_encode($settings);
-        $this->log("Configuration Saved", [
+        $this->logEvent("Configuration Saved", [
             "parameters" => $logParameters,
             "redcap_user" => USERID,
             "message" => $message,
