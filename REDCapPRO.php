@@ -775,12 +775,12 @@ class REDCapPRO extends AbstractExternalModule
      * @param string $message
      * @param array $parameters
      * 
-     * @return void
+     * @return mixed
      */
     public function logEvent(string $message, $parameters)
     {
         $parameters["module_token"] = self::$MODULE_TOKEN;
-        $this->logEvent($message, $parameters);
+        return $this->log($message, $parameters);
     }
 
     /**
