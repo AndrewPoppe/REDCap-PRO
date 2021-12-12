@@ -110,8 +110,17 @@ $module->initializeJavascriptModuleObject();
 </div>
 <script>
     (function($, window, document) {
-        let module = <?= $module->getJavascriptModuleObjectName() ?>;
-        module.userid = "<?= USERID ?>";
+
+        function logExport(type) {
+            $.ajax({
+                'type': 'POST',
+                'url': "<?= $module->getUrl("src/logger.php") ?>",
+                'data': JSON.stringify({
+                    export_type: type
+                })
+            });
+        }
+
         $(document).ready(function() {
             let dataTable = $('#RCPRO_TABLE').DataTable({
                 //pageLength: 1000,
@@ -148,10 +157,7 @@ $module->initializeJavascriptModuleObject();
                             columns: ':visible'
                         },
                         customize: function(csv) {
-                            module.log("Exported logs", {
-                                export_type: "csv",
-                                redcap_user: module.userid
-                            });
+                            logExport("csv");
                             return csv;
                         }
                     },
@@ -161,10 +167,7 @@ $module->initializeJavascriptModuleObject();
                             columns: ':visible'
                         },
                         customize: function(excel) {
-                            module.log("Exported logs", {
-                                export_type: "excel",
-                                redcap_user: module.userid
-                            });
+                            logExport("excel");
                             return excel;
                         }
                     },
