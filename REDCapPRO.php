@@ -40,7 +40,6 @@ class REDCapPRO extends AbstractExternalModule
         "green"            => "#009000",
         "ban"              => "tomato"
     ];
-    static $MODULE_TOKEN;
 
     static $LOGO_URL           = "https://i.imgur.com/5Xq2Vqt.png";
     static $LOGO_ALTERNATE_URL = "https://i.imgur.com/fu0t8V1.png";
@@ -54,7 +53,6 @@ class REDCapPRO extends AbstractExternalModule
         self::$PARTICIPANT  = new ParticipantHelper($this);
         self::$PROJECT      = new ProjectHelper($this, self::$PARTICIPANT);
         self::$DAG          = new DAG($this);
-        self::$MODULE_TOKEN = $this->getModuleToken();
     }
 
 
@@ -342,7 +340,7 @@ class REDCapPRO extends AbstractExternalModule
         // If upgrading from a previous version to version 0.4.5,
         // assume all existing logs are genuine, create module token,
         // and add the token to all existing logs.
-        $critical_version = "0.4.5";
+        $critical_version = "0.4.6";
         if (
             version_compare($new_version_number, $critical_version, ">=") &&
             version_compare($old_version_number, $critical_version, "<")
@@ -739,7 +737,7 @@ class REDCapPRO extends AbstractExternalModule
             "error_line"    => $e->getLine(),
             "error_string"  => $e->__toString(),
             "redcap_user"   => USERID,
-            "module_token"  => self::$MODULE_TOKEN
+            "module_token"  => $this->getModuleToken()
         ];
         if (isset($e->rcpro)) {
             $params = array_merge($params, $e->rcpro);
@@ -765,7 +763,7 @@ class REDCapPRO extends AbstractExternalModule
         $this->logEvent($message, [
             "parameters" => $logParametersString,
             "redcap_user" => USERID,
-            "module_token" => self::$MODULE_TOKEN
+            "module_token" => $this->getModuleToken()
         ]);
     }
 
@@ -779,7 +777,7 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function logEvent(string $message, $parameters)
     {
-        $parameters["module_token"] = self::$MODULE_TOKEN;
+        $parameters["module_token"] = $this->getModuleToken();
         return $this->log($message, $parameters);
     }
 
@@ -824,7 +822,7 @@ class REDCapPRO extends AbstractExternalModule
         $logs = $this->queryLogs("SELECT log_id WHERE module_token IS NULL");
         while ($row = $logs->fetch_assoc()) {
             $SQL = "INSERT INTO redcap_external_modules_log_parameters (log_id, name, value) VALUES (?, ?, ?)";
-            $this->query($SQL, [$row["log_id"], "module_token", self::$MODULE_TOKEN]);
+            $this->query($SQL, [$row["log_id"], "module_token", $this->getModuleToken()]);
         }
     }
 
@@ -841,7 +839,7 @@ class REDCapPRO extends AbstractExternalModule
     {
         $verb = stripos($selectStatement, " where ") === false ? " WHERE" : " AND";
         $selectStatementValidated = $selectStatement . $verb . " module_token = ?";
-        array_push($params, self::$MODULE_TOKEN);
+        array_push($params, $this->getModuleToken());
         if ($use_querylogs) {
             return $this->queryLogs($selectStatementValidated, $params);
         } else {
@@ -853,7 +851,7 @@ class REDCapPRO extends AbstractExternalModule
     {
         $verb = (empty($whereClause) || trim($whereClause) === "") ? "" : " AND";
         $whereClauseValidated = $whereClause . $verb . " module_token = ?";
-        array_push($params, self::$MODULE_TOKEN);
+        array_push($params, $this->getModuleToken());
         return $this->countLogs($whereClauseValidated, $params);
     }
 
