@@ -1,6 +1,7 @@
 <?php
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$redcap_username = $module->getREDCapUsername(true);
+$role = $module->getUserRole($redcap_username); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role < 2) {
     header("location:" . $module->getUrl("src/home.php"));
 }
@@ -33,7 +34,7 @@ if (isset($_POST["id"]) && isset($project_id)) {
         echo "<script defer>Swal.fire({'title':'This participant is not currently active in REDCapPRO', 'html':'Contact your REDCap Administrator with questions.', 'icon':'info', 'showConfirmButton': false});</script>";
     } else {
 
-        $redcap_dag = $module::$DAG->getCurrentDag(USERID, PROJECT_ID);
+        $redcap_dag = $module::$DAG->getCurrentDag($user->getUsername(), PROJECT_ID);
         $pid = intval($project_id);
         $rcpro_username = $module::$PARTICIPANT->getUserName($rcpro_participant_id);
         $result = $module::$PROJECT->enrollParticipant($rcpro_participant_id, $pid, $redcap_dag, $rcpro_username);
@@ -179,7 +180,7 @@ $jsname = $module->getJavascriptModuleObjectName();
                 </div>
 
                 <?php if ($module::$DAG->getProjectDags()) {
-                    $userDag = $module::$DAG->getCurrentDag(USERID, PROJECT_ID);
+                    $userDag = $module::$DAG->getCurrentDag($redcap_username, PROJECT_ID);
                     $dagName = isset($userDag) ? \REDCap::getGroupNames(false, $userDag) : "No Assignment";
                 ?>
                     <div class="mb-3 row">

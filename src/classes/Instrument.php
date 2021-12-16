@@ -131,7 +131,7 @@ class Instrument
                             username_input.val(participant.rcpro_username);
                             let logParameters = {
                                 rcpro_username: participant.rcpro_username,
-                                redcap_user: "<?= USERID ?>"
+                                redcap_user: "<?= self::$module->getREDCapUsername() ?>"
                             };
 
                             // If there is an email field, update it

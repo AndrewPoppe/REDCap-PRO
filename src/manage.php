@@ -1,6 +1,7 @@
 <?php
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$redcap_username = $module->getREDCapUsername(true);
+$role = $module->getUserRole($redcap_username); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role === 0) {
     header("location:" . $module->getUrl("src/home.php"));
 }
@@ -10,13 +11,14 @@ require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module::$UI->ShowHeader("Manage");
 echo "<title>" . $module::$APPTITLE . " - Manage</title>";
 
-// RCPRO Project ID 
+// RCPRO Project ID
+$project_id = $module->getProjectId();
 $rcpro_project_id = $module::$PROJECT->getProjectIdFromPID($project_id);
 
 // DAGs
-$rcpro_user_dag = $module::$DAG->getCurrentDag(USERID, $project_id);
+$rcpro_user_dag = $module::$DAG->getCurrentDag($redcap_username, $project_id);
 $project_dags = $module::$DAG->getProjectDags();
-$user_dags = $module::$DAG->getPossibleDags(USERID, PROJECT_ID);
+$user_dags = $module::$DAG->getPossibleDags($redcap_username, $project_id);
 $project_dags[NULL] = "Unassigned";
 $projectHasDags = count($project_dags) > 1;
 
@@ -229,7 +231,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (!$error && $projectHasDags) {
             $rcpro_link_id = $module::$PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
             $participant_dag = intval($module::$DAG->getParticipantDag($rcpro_link_id));
-            $user_dag = $module::$DAG->getCurrentDag(USERID, PROJECT_ID);
+            $user_dag = $module::$DAG->getCurrentDag($redcap_username, PROJECT_ID);
             if (isset($user_dag) && $participant_dag !== $user_dag) {
                 $function = $generic_function;
                 $icon = "error";

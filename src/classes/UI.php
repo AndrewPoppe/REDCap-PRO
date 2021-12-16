@@ -46,7 +46,8 @@ class UI
 
     public function ShowHeader(string $page)
     {
-        $role = SUPER_USER ? 3 : self::$module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+        $redcap_username = self::$module->getREDCapUsername(true);
+        $role = self::$module->getUserRole($redcap_username); // 3=admin/manager, 2=user, 1=monitor, 0=not found
         $header = "
         <style>
             .rcpro-nav a {

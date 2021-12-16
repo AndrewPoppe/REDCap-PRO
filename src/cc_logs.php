@@ -1,6 +1,7 @@
 <?php
 
-if (!SUPER_USER) {
+$user = $module->getUser();
+if (!$user->isSuperUser()) {
     return;
 }
 

@@ -35,7 +35,7 @@ class ProjectHelper
             return self::$module->logEvent("PROJECT", [
                 "pid"         => $pid,
                 "active"      => 1,
-                "redcap_user" => USERID
+                "redcap_user" => self::$module->getREDCapUsername()
             ]);
         } catch (\Exception $e) {
             self::$module->logError("Error creating project entry", $e);
@@ -80,18 +80,19 @@ class ProjectHelper
     private function createLink(int $rcpro_participant_id, int $rcpro_project_id, ?int $dag, ?string $rcpro_username)
     {
         try {
+            $redcap_username = self::$module->getREDCapUsername();
             self::$module->logEvent("LINK", [
                 "rcpro_project_id"     => $rcpro_project_id,
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "active"               => 1,
-                "redcap_user"          => USERID,
+                "redcap_user"          => $redcap_username,
                 "project_dag"           => $dag
             ]);
             self::$module->logEvent("Enrolled Participant", [
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "rcpro_username"       => $rcpro_username,
                 "rcpro_project_id"     => $rcpro_project_id,
-                "redcap_user"          => USERID,
+                "redcap_user"          => $redcap_username,
                 "project_dag"           => $dag
             ]);
             return TRUE;
@@ -118,7 +119,7 @@ class ProjectHelper
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $rcpro_username,
                     "rcpro_project_id"     => $rcpro_project_id,
-                    "redcap_user"          => USERID
+                    "redcap_user"          => self::$module->getREDCapUsername()
                 ]);
             }
             return $result;
@@ -158,7 +159,7 @@ class ProjectHelper
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $rcpro_username,
                     "rcpro_project_id"     => $rcpro_project_id,
-                    "redcap_user"          => USERID,
+                    "redcap_user"          => self::$module->getREDCapUsername(),
                     "project_dag"          => $dag
                 ]);
             }
@@ -307,7 +308,7 @@ class ProjectHelper
                 self::$module->logEvent("Project Status Set", [
                     "rcpro_project_id" => $rcpro_project_id,
                     "active_status"    => $active,
-                    "redcap_user"      => USERID
+                    "redcap_user"      => self::$module->getREDCapUsername()
                 ]);
             }
         } catch (\Exception $e) {

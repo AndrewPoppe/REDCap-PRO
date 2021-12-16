@@ -1,6 +1,8 @@
 <?php
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$redcap_username = $module->getREDCapUsername(true);
+$role = $module->getUserRole($redcap_username); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$isSuperUser = $module->getUser($redcap_username)->isSuperUser();
 if ($role < 3) {
     exit;
 }
@@ -16,11 +18,11 @@ if ($qstring["prefix"] !== "redcap_pro") {
 
 if (
     $qstring["page"] === "src/logs" ||
-    ($qstring["page"] === "src/cc_logs" && SUPER_USER)
+    ($qstring["page"] === "src/cc_logs" && $isSuperUser)
 ) {
     $module->logEvent("Exported logs", [
         "export_type" => $_POST["export_type"],
-        "redcap_user" => USERID,
+        "redcap_user" => $module->getREDCapUsername(),
         "export_page" => $qstring["page"]
     ]);
 }

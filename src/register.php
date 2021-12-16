@@ -1,6 +1,7 @@
 <?php
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$redcap_username = $module->getREDCapUsername(true);
+$role = $module->getUserRole($redcap_username); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role < 2) {
     header("location:" . $module->getUrl("src/home.php"));
 }
@@ -61,14 +62,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!$any_error) {
         $icon = $title = $html = "";
         try {
-            $username = $module::$PARTICIPANT->createParticipant($email, $fname_clean, $lname_clean);
-            $module->sendNewParticipantEmail($username, $email, $fname_clean, $lname_clean);
+            $rcpro_username = $module::$PARTICIPANT->createParticipant($email, $fname_clean, $lname_clean);
+            $module->sendNewParticipantEmail($rcpro_username, $email, $fname_clean, $lname_clean);
             $icon = "success";
             $title = "Participant Registered";
 
             $module->logEvent("Participant Registered", [
-                "rcpro_username" => $username,
-                "redcap_user"    => USERID
+                "rcpro_username" => $rcpro_username,
+                "redcap_user"    => $module->getREDCapUsername()
             ]);
         } catch (\Exception $e) {
             $module->logError("Error creating participant", $e);

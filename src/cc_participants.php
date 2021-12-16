@@ -22,7 +22,8 @@ function createProjectsCell(array $projects)
 
 ?>
 <?php
-if (!SUPER_USER) {
+$user = $module->getUser();
+if (!$user->isSuperUser()) {
     return;
 }
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';

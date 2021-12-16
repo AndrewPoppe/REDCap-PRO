@@ -1,5 +1,6 @@
 <?php
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$redcap_username = $module->getREDCapUsername(true);
+$role = $module->getUserRole($redcap_username); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role < 3) {
     header("location:" . $module->getUrl("src/home.php"));
 }

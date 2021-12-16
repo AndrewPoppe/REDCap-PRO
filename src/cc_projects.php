@@ -4,7 +4,8 @@ namespace YaleREDCap\REDCapPRO;
 
 require_once("classes/Project.php");
 
-if (!SUPER_USER) {
+$user = $module->getUser();
+if (!$user->isSuperUser()) {
     return;
 }
 ?>

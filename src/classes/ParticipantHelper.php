@@ -53,7 +53,7 @@ class ParticipantHelper
                         "rcpro_username"       => $username,
                         "old_email"            => $current_email,
                         "new_email"            => $new_email,
-                        "redcap_user"          => USERID,
+                        "redcap_user"          => self::$module->getREDCapUsername(),
                         "project_id"           => $project_id,
                         "initiating_project_id" => $current_pid
                     ]);
@@ -95,7 +95,7 @@ class ParticipantHelper
                     "rcpro_username"        => $participant["rcpro_username"],
                     "old_name"              => $participant["fname"] . " " . $participant["lname"],
                     "new_name"              => $fname . " " . $lname,
-                    "redcap_user"           => USERID,
+                    "redcap_user"           => self::$module->getREDCapUsername(),
                     "project_id"            => $project_id,
                     "initiating_project_id" => $current_pid
                 ]);
@@ -157,12 +157,13 @@ class ParticipantHelper
      */
     public function createParticipant(string $email, string $fname, string $lname)
     {
-        $username     = $this->createUsername();
-        $email_clean  = \REDCap::escapeHtml($email);
-        $fname_clean  = \REDCap::escapeHtml($fname);
-        $lname_clean  = \REDCap::escapeHtml($lname);
-        $counter      = 0;
-        $counterLimit = 90000000;
+        $username        = $this->createUsername();
+        $email_clean     = \REDCap::escapeHtml($email);
+        $fname_clean     = \REDCap::escapeHtml($fname);
+        $lname_clean     = \REDCap::escapeHtml($lname);
+        $counter         = 0;
+        $counterLimit    = 90000000;
+        $redcap_username = self::$module->getREDCapUsername();
         while ($this->usernameIsTaken($username) && $counter < $counterLimit) {
             $username = $this->createUsername();
             $counter++;
@@ -184,7 +185,7 @@ class ParticipantHelper
                 "token"            => "",
                 "token_ts"         => time(),
                 "token_valid"      => 0,
-                "redcap_user"      => USERID,
+                "redcap_user"      => $redcap_username,
                 "active"           => 1
             ]);
             if (!$id) {
@@ -193,7 +194,7 @@ class ParticipantHelper
             self::$module->logEvent("Participant Created", [
                 "rcpro_user_id"  => $id,
                 "rcpro_username" => $username,
-                "redcap_user"    => USERID
+                "redcap_user"    => $redcap_username
             ]);
             return $username;
         } catch (\Exception $e) {
@@ -585,7 +586,7 @@ class ParticipantHelper
     {
         self::$module->logEvent("Searched on Enroll Tab", [
             "search"      => \REDCap::escapeHtml($search_term),
-            "redcap_user" => USERID
+            "redcap_user" => self::$module->getREDCapUsername()
         ]);
         $SQL = "SELECT fname, lname, email, log_id, rcpro_username, active 
                 WHERE message = 'PARTICIPANT' 
@@ -614,20 +615,21 @@ class ParticipantHelper
             $SQL = "INSERT INTO redcap_external_modules_log_parameters (value, name, log_id) VALUES (?, 'active', ?)";
         }
         try {
+            $redcap_username = self::$module->getREDCapUsername();
             $res = self::$module->query($SQL, [$value, $rcpro_participant_id]);
             if ($res) {
                 self::$module->logEvent("Set participant active status", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username" => $this->getUserName($rcpro_participant_id),
                     "active" => $value,
-                    "redcap_user" => USERID
+                    "redcap_user" => $redcap_username
                 ]);
             } else {
                 self::$module->logEvent("Failed to set participant active status", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username" => $this->getUserName($rcpro_participant_id),
                     "active" => $value,
-                    "redcap_user" => USERID
+                    "redcap_user" => $redcap_username
                 ]);
             }
             return $res;
