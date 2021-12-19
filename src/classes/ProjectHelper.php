@@ -288,30 +288,4 @@ class ProjectHelper
             self::$module->logError("Error setting link activity", $e);
         }
     }
-
-    /**
-     * Set a project either active or inactive in Project Table
-     * 
-     * @param int $pid PID of project
-     * @param int $active 0 to set inactive, 1 to set active
-     * 
-     * @return boolean success
-     */
-    public function setProjectActive(int $pid, int $active)
-    {
-        $rcpro_project_id = $this->getProjectIdFromPID($pid);
-        $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
-        try {
-            $result = self::$module->query($SQL, [$active, $rcpro_project_id]);
-            if ($result) {
-                self::$module->logEvent("Project Status Set", [
-                    "rcpro_project_id" => $rcpro_project_id,
-                    "active_status"    => $active,
-                    "redcap_user"      => USERID
-                ]);
-            }
-        } catch (\Exception $e) {
-            self::$module->logError("Error setting project active status", $e);
-        }
-    }
 }

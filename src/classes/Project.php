@@ -10,25 +10,52 @@ namespace YaleREDCap\REDCapPRO;
  */
 class Project
 {
-    public static $module;
-    public static $rcpro_project_id;
-    public static $redcap_pid;
-    public static $info;
-    public static $staff;
 
     /**
      * Constructor
      * 
      * @param REDCapPRO $module EM instance
-     * @param int $redcap_pid REDCap project ID
+     * @param array $params
      * @return void 
      */
-    function __construct(REDCapPRO $module, int $redcap_pid)
+    function __construct(REDCapPRO $module, array $params)
     {
-        self::$module           = $module;
-        self::$redcap_pid       = $redcap_pid;
-        self::$info             = $this->getProjectInfo();
-        self::$staff            = $this->getStaff();
+        $this->module = $module;
+
+        if (isset($params["rcpro_project_id"])) {
+            $this->rcpro_project_id = $params["rcpro_project_id"];
+            $this->redcap_pid = $this->getRedcapPid();
+        } else if (isset($params["redcap_pid"])) {
+            $this->redcap_pid = $params["redcap_pid"];
+            $this->rcpro_project_id = $this->getRcproProjectId();
+        } else {
+            throw new REDCapProException();
+        }
+
+        $this->info = $this->getProjectInfo();
+        $this->staff = $this->getStaff();
+    }
+
+    function getRedcapPid()
+    {
+        $SQL = "SELECT project_id WHERE log_id = ?";
+        try {
+            $result = $this->module->selectLogs($SQL, [$this->rcpro_project_id]);
+            return $result->fetch_assoc()["project_id"];
+        } catch (\Exception $e) {
+            $this->module->logError("Error fetching REDCap PID", $e);
+        }
+    }
+
+    function getRcproProjectId()
+    {
+        $SQL = "SELECT log_id WHERE project_id = ?";
+        try {
+            $result = $this->module->selectLogs($SQL, [$this->redcap_pid]);
+            return $result->fetch_assoc()["log_id"];
+        } catch (\Exception $e) {
+            $this->module->logError("Error fetching RCPRO Project ID", $e);
+        }
     }
 
     /**
@@ -37,14 +64,14 @@ class Project
      * 
      * @return array Project information 
      */
-    function getProjectInfo()
+    public function getProjectInfo()
     {
         $SQL = "SELECT * FROM redcap_projects WHERE project_id = ?";
         try {
-            $result_obj = self::$module->query($SQL, [self::$redcap_pid]);
+            $result_obj = $this->module->query($SQL, [$this->redcap_pid]);
             return $result_obj->fetch_assoc();
         } catch (\Exception $e) {
-            self::$module->logError("Error getting project info", $e);
+            $this->module->logError("Error getting project info", $e);
         }
     }
 
@@ -53,9 +80,9 @@ class Project
      * 
      * @return string current status of project
      */
-    function getStatus()
+    public function getStatus()
     {
-        $status_value = !is_null(self::$info["completed_time"]) ? "Completed" : self::$info["status"];
+        $status_value = !is_null($this->info["completed_time"]) ? "Completed" : $this->info["status"];
         switch ($status_value) {
             case 0:
                 $result = "Development";
@@ -79,25 +106,24 @@ class Project
     /**
      * Returns count of participants in a project
      * 
-     * @param int $rcpro_project_id RCPRO project ID
      * @return int|NULL Number of participants in project
      */
-    function getParticipantCount(?int $rcpro_project_id)
+    public function getParticipantCount()
     {
         $SQL = "message = 'LINK' AND rcpro_project_id = ? AND active = 1";
         try {
-            return self::$module->countLogsValidated($SQL, [$rcpro_project_id]);
+            return $this->module->countLogsValidated($SQL, [$this->rcpro_project_id]);
         } catch (\Exception $e) {
-            self::$module->logError("Error getting participant count", $e);
+            $this->module->logError("Error getting participant count", $e);
         }
     }
 
-    function getStaff()
+    public function getStaff()
     {
         try {
-            $managers = self::$module->getProjectSetting("managers", self::$redcap_pid);
-            $users    = self::$module->getProjectSetting("users", self::$redcap_pid);
-            $monitors = self::$module->getProjectSetting("monitors", self::$redcap_pid);
+            $managers = $this->module->getProjectSetting("managers", $this->redcap_pid);
+            $users    = $this->module->getProjectSetting("users", $this->redcap_pid);
+            $monitors = $this->module->getProjectSetting("monitors", $this->redcap_pid);
             $managers = is_null($managers) ? [] : $managers;
             $users    = is_null($users) ? [] : $users;
             $monitors = is_null($monitors) ? [] : $monitors;
@@ -110,7 +136,7 @@ class Project
                 "allStaff" => $allStaff
             ];
         } catch (\Exception $e) {
-            self::$module->logError("Error getting project staff", $e);
+            $this->module->logError("Error getting project staff", $e);
         }
     }
 
@@ -121,14 +147,38 @@ class Project
      * 
      * @return int Number of records in the Project 
      */
-    function getRecordCount()
+    public function getRecordCount()
     {
         $SQL = "SELECT COUNT(record) num FROM redcap_record_list WHERE project_id = ?";
         try {
-            $result_obj = self::$module->query($SQL, [self::$redcap_pid]);
+            $result_obj = $this->module->query($SQL, [$this->redcap_pid]);
             return $result_obj->fetch_assoc()["num"];
         } catch (\Exception $e) {
-            self::$module->logError("Error getting record count", $e);
+            $this->module->logError("Error getting record count", $e);
+        }
+    }
+
+    /**
+     * Set a project either active or inactive in Project Table
+     * 
+     * @param int $active 0 to set inactive, 1 to set active
+     * 
+     * @return boolean success
+     */
+    public function setActive(int $active)
+    {
+        $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
+        try {
+            $result = $this->module->query($SQL, [$active, $this->rcpro_project_id]);
+            if ($result) {
+                $this->module->logEvent("Project Status Set", [
+                    "rcpro_project_id" => $this->rcpro_project_id,
+                    "active_status"    => $active,
+                    "redcap_user"      => USERID
+                ]);
+            }
+        } catch (\Exception $e) {
+            $this->module->logError("Error setting project active status", $e);
         }
     }
 }

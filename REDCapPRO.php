@@ -4,16 +4,22 @@ namespace YaleREDCap\REDCapPRO;
 
 use ExternalModules\AbstractExternalModule;
 
-require_once("src/classes/Auth.php");
-require_once("src/classes/DAG.php");
-require_once("src/classes/Instrument.php");
-require_once("src/classes/ParticipantHelper.php");
-require_once("src/classes/Project.php");
-require_once("src/classes/ProjectHelper.php");
-require_once("src/classes/ProjectSettings.php");
-require_once("src/classes/REDCapProException.php");
-require_once("src/classes/UI.php");
+foreach (glob("src/classes/*.php") as $filename) {
+    require_once($filename);
+}
 
+// require_once("src/classes/Auth.php");
+// require_once("src/classes/DAG.php");
+// require_once("src/classes/Instrument.php");
+// require_once("src/classes/ParticipantHelper.php");
+// require_once("src/classes/Project.php");
+// require_once("src/classes/ProjectHelper.php");
+// require_once("src/classes/ProjectSettings.php");
+// require_once("src/classes/REDCapProException.php");
+// require_once("src/classes/UI.php");
+
+// require_once("src/classes/Participant.php");
+// require_once("src/classes/User.php");
 /**
  * Main EM Class
  */
@@ -255,7 +261,8 @@ class REDCapPRO extends AbstractExternalModule
         if (!self::$PROJECT->checkProject($pid)) {
             self::$PROJECT->addProject($pid);
         } else {
-            self::$PROJECT->setProjectActive($pid, 1);
+            $project = new Project($this, ["redcap_pid" => $pid]);
+            $project->setActive(1);
         }
         $this->changeUserRole(USERID, NULL, 3);
         $this->logEvent("Module Enabled", [
@@ -272,9 +279,10 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return void
      */
-    function redcap_module_project_disable($version, $project_id)
+    function redcap_module_project_disable($version, $pid)
     {
-        self::$PROJECT->setProjectActive($project_id, 0);
+        $project = new Project($this, ["redcap_pid" => $pid]);
+        $project->setActive(0);
         $this->logEvent("Module Disabled", [
             "redcap_user" => USERID,
             "version" => $version
@@ -695,22 +703,20 @@ class REDCapPRO extends AbstractExternalModule
      */
     function getAllUsers()
     {
-        global $module;
-        $projects = $module->getProjectsWithModuleEnabled();
+        $projects = $this->getProjectsWithModuleEnabled();
         $users = array();
         foreach ($projects as $pid) {
-            $project = new Project($this, $pid);
-            $staff_arr = $project->getStaff();
-            $all_staff = $staff_arr["allStaff"];
+            $project = new Project($this, ["redcap_pid" => $pid]);
+            $all_staff = $project->staff["allStaff"];
             foreach ($all_staff as $user) {
                 if (isset($users[$user])) {
                     array_push($users[$user]['projects'], $pid);
                 } else {
-                    $newUser = $module->getUser($user);
+                    $newUser = $this->getUser($user);
                     $newUserArr = [
                         "username" => $user,
                         "email" => $newUser->getEmail(),
-                        "name" => $module->getUserFullname($user),
+                        "name" => $this->getUserFullname($user),
                         "projects" => [$pid]
                     ];
                     $users[$user] = $newUserArr;
