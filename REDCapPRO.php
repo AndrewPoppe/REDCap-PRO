@@ -7,19 +7,6 @@ use ExternalModules\AbstractExternalModule;
 foreach (glob("src/classes/*.php") as $filename) {
     require_once($filename);
 }
-
-// require_once("src/classes/Auth.php");
-// require_once("src/classes/DAG.php");
-// require_once("src/classes/Instrument.php");
-// require_once("src/classes/ParticipantHelper.php");
-// require_once("src/classes/Project.php");
-// require_once("src/classes/ProjectHelper.php");
-// require_once("src/classes/ProjectSettings.php");
-// require_once("src/classes/REDCapProException.php");
-// require_once("src/classes/UI.php");
-
-// require_once("src/classes/Participant.php");
-// require_once("src/classes/User.php");
 /**
  * Main EM Class
  */
@@ -31,7 +18,6 @@ class REDCapPRO extends AbstractExternalModule
     static $SETTINGS;
     static $UI;
     static $PARTICIPANT;
-    static $PROJECT;
     static $DAG;
     static $COLORS = [
         "primary"          => "#900000",
@@ -57,7 +43,6 @@ class REDCapPRO extends AbstractExternalModule
         self::$SETTINGS     = new ProjectSettings($this);
         self::$UI           = new UI($this);
         self::$PARTICIPANT  = new ParticipantHelper($this);
-        self::$PROJECT      = new ProjectHelper($this, self::$PARTICIPANT);
         self::$DAG          = new DAG($this);
     }
 
@@ -105,15 +90,18 @@ class REDCapPRO extends AbstractExternalModule
         // Participant is logged in to their account
         if (self::$AUTH->is_logged_in()) {
 
-            // Get RCPRO project ID
-            $rcpro_project_id = self::$PROJECT->getProjectIdFromPID($project_id);
+            // Get RCPRO project
+            $project = new Project($this, ["redcap_pid" => $project_id]);
+
+            // Get Participant
+            $rcpro_participant_id = self::$AUTH->get_participant_id();
+            $participant = new Participant($this, ["rcpro_participant_id" => $rcpro_participant_id]);
 
             // Determine whether participant is enrolled in the study.
-            $rcpro_participant_id = self::$AUTH->get_participant_id();
-            if (!self::$PARTICIPANT->enrolledInProject($rcpro_participant_id, $rcpro_project_id)) {
+            if (!$project->isParticipantEnrolled($participant)) {
                 $this->logEvent("Participant not enrolled", [
-                    "rcpro_participant_id" => $rcpro_participant_id,
-                    "rcpro_project_id"     => $rcpro_project_id,
+                    "rcpro_participant_id" => $participant->rcpro_participant_id,
+                    "rcpro_project_id"     => $project->rcpro_project_id,
                     "instrument"           => $instrument,
                     "event"                => $event_id,
                     "group_id"             => $group_id,
@@ -135,7 +123,7 @@ class REDCapPRO extends AbstractExternalModule
 
             // Determine whether participant is in the appropriate DAG
             if (isset($group_id)) {
-                $rcpro_link_id = self::$PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
+                $rcpro_link_id = $project->getLinkId($participant);
                 $rcpro_dag = self::$DAG->getParticipantDag($rcpro_link_id);
 
                 if ($group_id !== $rcpro_dag) {
@@ -258,10 +246,10 @@ class REDCapPRO extends AbstractExternalModule
      */
     function redcap_module_project_enable($version, $pid)
     {
-        if (!self::$PROJECT->checkProject($pid)) {
-            self::$PROJECT->addProject($pid);
+        $project = new Project($this, ["redcap_pid" => $pid]);
+        if (!$project->checkProject()) {
+            $project->addProject();
         } else {
-            $project = new Project($this, ["redcap_pid" => $pid]);
             $project->setActive(1);
         }
         $this->changeUserRole(USERID, NULL, 3);

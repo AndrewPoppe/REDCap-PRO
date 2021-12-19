@@ -22,89 +22,9 @@ class ParticipantHelper
         self::$module = $module;
     }
 
-    /**
-     * Updates the email address for the given participant
-     * 
-     * It then sends a confirmation email to the new address, cc'ing the old
-     * 
-     * @param int $rcpro_participant_id
-     * @param string $new_email - email address that 
-     * 
-     * @return bool|NULL
-     */
-    public function changeEmailAddress(int $rcpro_participant_id, string $new_email)
-    {
-        $current_email = $this->getEmail($rcpro_participant_id);
-        $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'email'";
-        try {
-            $result = self::$module->query($SQL, [$new_email, $rcpro_participant_id]);
-            if ($result) {
 
-                $username = $this->getUserName($rcpro_participant_id);
 
-                // Get current project (or "system" if initiated in the control center)
-                $current_pid = $this::$module->getProjectId() ?? "system";
 
-                // Get all projects to which participant is currently enrolled
-                $project_ids = $this->getEnrolledProjects($rcpro_participant_id);
-                foreach ($project_ids as $project_id) {
-                    self::$module->logEvent("Changed Email Address", [
-                        "rcpro_participant_id" => $rcpro_participant_id,
-                        "rcpro_username"       => $username,
-                        "old_email"            => $current_email,
-                        "new_email"            => $new_email,
-                        "redcap_user"          => USERID,
-                        "project_id"           => $project_id,
-                        "initiating_project_id" => $current_pid
-                    ]);
-                }
-
-                return self::$module->sendEmailUpdateEmail($username, $new_email, $current_email);
-            } else {
-                throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
-            }
-        } catch (\Exception $e) {
-            self::$module->logError("Error changing email address", $e);
-        }
-    }
-
-    public function changeName(int $rcpro_participant_id, $fname, $lname)
-    {
-        $SQL1 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'fname'";
-        $SQL2 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'lname'";
-        $participant = $this->getParticipant($this->getUserName($rcpro_participant_id));
-        try {
-            $result1 = self::$module->query($SQL1, [$fname, $rcpro_participant_id]);
-            if (!$result1) {
-                throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
-            }
-
-            $result2 = self::$module->query($SQL2, [$lname, $rcpro_participant_id]);
-            if (!$result2) {
-                throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
-            }
-
-            // Get current project (or "system" if initiated in the control center)
-            $current_pid = $this::$module->getProjectId() ?? "system";
-
-            // Get all projects to which participant is currently enrolled
-            $project_ids = $this->getEnrolledProjects($rcpro_participant_id);
-            foreach ($project_ids as $project_id) {
-                self::$module->logEvent("Updated Participant Name", [
-                    "rcpro_participant_id"  => $rcpro_participant_id,
-                    "rcpro_username"        => $participant["rcpro_username"],
-                    "old_name"              => $participant["fname"] . " " . $participant["lname"],
-                    "new_name"              => $fname . " " . $lname,
-                    "redcap_user"           => USERID,
-                    "project_id"            => $project_id,
-                    "initiating_project_id" => $current_pid
-                ]);
-            }
-            return $result1 && $result2;
-        } catch (\Exception $e) {
-            self::$module->logError("Error updating participant's name", $e);
-        }
-    }
 
     /**
      * Determine whether email address already exists in database
