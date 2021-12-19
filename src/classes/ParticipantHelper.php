@@ -327,23 +327,7 @@ class ParticipantHelper
         }
     }
 
-    /**
-     * Fetch email corresponding with given participant id
-     * 
-     * @param int $rcpro_participant_id
-     * 
-     * @return string|NULL email address
-     */
-    public function getEmail(int $rcpro_participant_id)
-    {
-        $SQL = "SELECT email WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
-        try {
-            $result = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
-            return $result->fetch_assoc()["email"];
-        } catch (\Exception $e) {
-            self::$module->logError("Error fetching email address", $e);
-        }
-    }
+
 
 
     /**
@@ -414,23 +398,7 @@ class ParticipantHelper
         }
     }
 
-    /**
-     * Fetch participant id corresponding with given email
-     * 
-     * @param string $email
-     * 
-     * @return int|NULL RCPRO participant id
-     */
-    public function getParticipantIdFromEmail(string $email)
-    {
-        $SQL = "SELECT log_id WHERE message = 'PARTICIPANT' AND email = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
-        try {
-            $result = self::$module->selectLogs($SQL, [$email]);
-            return $result->fetch_assoc()["log_id"];
-        } catch (\Exception $e) {
-            self::$module->logError("Error fetching id from email", $e);
-        }
-    }
+
 
     /**
      * Fetch participant id corresponding with given username
@@ -537,23 +505,7 @@ class ParticipantHelper
         }
     }
 
-    /**
-     * Fetch username for given participant id
-     * 
-     * @param int $rcpro_participant_id - participant id
-     * 
-     * @return string|NULL username
-     */
-    public function getUserName(int $rcpro_participant_id)
-    {
-        $SQL = "SELECT rcpro_username WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
-        try {
-            $result = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
-            return $result->fetch_assoc()["rcpro_username"];
-        } catch (\Exception $e) {
-            self::$module->logError("Error fetching username", $e);
-        }
-    }
+
 
     /**
      * Returns whether participant is active or not
