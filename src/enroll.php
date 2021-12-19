@@ -1,5 +1,7 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role < 2) {
     header("location:" . $module->getUrl("src/home.php"));
@@ -22,7 +24,9 @@ if (isset($_POST["id"]) && isset($project_id)) {
         header("location:" . $module->getUrl("src/enroll.php"));
     }
 
+    // Get Participant
     $rcpro_participant_id = intval($_POST["id"]);
+    $participant = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
 
     // Log submission
     $module->logForm("Submitted Enroll Form", $_POST);
@@ -33,10 +37,15 @@ if (isset($_POST["id"]) && isset($project_id)) {
         echo "<script defer>Swal.fire({'title':'This participant is not currently active in REDCapPRO', 'html':'Contact your REDCap Administrator with questions.', 'icon':'info', 'showConfirmButton': false});</script>";
     } else {
 
-        $redcap_dag = $module::$DAG->getCurrentDag(USERID, PROJECT_ID);
+        // Get Project
         $pid = intval($project_id);
-        $rcpro_username = $module::$PARTICIPANT->getUserName($rcpro_participant_id);
-        $result = $module::$PROJECT->enrollParticipant($rcpro_participant_id, $pid, $redcap_dag, $rcpro_username);
+        $project = new Project($module, ["redcap_pid" => $pid]);
+
+        // Get DAG if applicable
+        $redcap_dag = $module::$DAG->getCurrentDag(USERID, PROJECT_ID);
+
+        // Enroll
+        $result = $project->enrollParticipant($participant, $redcap_dag);
 
         if ($result === -1) {
             echo "<script defer>Swal.fire({'title':'This participant is already enrolled in this project', 'icon':'info', 'showConfirmButton': false});</script>";

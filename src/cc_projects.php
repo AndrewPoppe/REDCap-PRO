@@ -48,7 +48,7 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
                 <?php
                 foreach ($redcap_project_ids as $id) {
                     $thisProject                = new Project($module, ["redcap_pid" => $id]);
-                    $rcpro_project_id           = $module::$PROJECT->getProjectIdFromPID($thisProject->redcap_pid);
+                    $rcpro_project_id           = $project->rcpro_project_id;
                     $project_rcpro_home         = $module->getUrl("src/home.php?pid=${id}");
                     $project_home               = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "index.php?pid=${id}";
                     $project_rcpro_manage       = $module->getUrl("src/manage.php?pid=${id}");

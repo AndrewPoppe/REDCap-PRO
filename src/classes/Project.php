@@ -152,6 +152,36 @@ class Project
     }
 
     /**
+     * get array of enrolled participants
+     * 
+     * @param int|NULL $dag Data Access Group to filter search by
+     * 
+     * @return Participant[] Participants enrolled in project
+     */
+    public function getParticipants(?int $dag)
+    {
+        $SQL = "SELECT rcpro_participant_id WHERE message = 'LINK' AND rcpro_project_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $PARAMS = [$this->rcpro_project_id];
+        if (isset($dag)) {
+            $SQL .= " AND project_dag IS NOT NULL AND project_dag = ?";
+            array_push($PARAMS, strval($dag));
+        }
+        try {
+            $result = $this->module->selectLogs($SQL, $PARAMS);
+            $participants  = array();
+            while ($row = $result->fetch_assoc()) {
+                $id = $row["rcpro_participant_id"];
+                $participants[$id] = new Participant($this->module, [
+                    "rcpro_participant_id" => $id
+                ]);
+            }
+            return $participants;
+        } catch (\Exception $e) {
+            $this->module->logError("Error fetching project participants", $e);
+        }
+    }
+
+    /**
      * Returns count of participants in a project
      * 
      * @return int|NULL Number of participants in project

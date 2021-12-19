@@ -184,4 +184,195 @@ class Participant
             $this->module->logError("Error updating participant's name", $e);
         }
     }
+
+    /**
+     * Create and store token for resetting participant's password
+     * 
+     * @param int $hours_valid - how long should the token be valid for
+     * 
+     * @return string token
+     */
+    public function createResetToken(int $hours_valid = 1)
+    {
+        $token = bin2hex(random_bytes(32));
+        $token_ts = time() + ($hours_valid * 60 * 60);
+        $SQL1 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'token'";
+        $SQL2 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'token_ts'";
+        $SQL3 = "UPDATE redcap_external_modules_log_parameters SET value = 1 WHERE log_id = ? AND name = 'token_valid'";
+        try {
+            $result1 = $this->module->query($SQL1, [$token, $this->rcpro_participant_id]);
+            $result2 = $this->module->query($SQL2, [$token_ts, $this->rcpro_participant_id]);
+            $result3 = $this->module->query($SQL3, [$this->rcpro_participant_id]);
+            if (!$result1 || !$result2 || !$result3) {
+                throw new REDCapProException(["rcpro_participant_id" => $this->rcpro_participant_id]);
+            }
+            return $token;
+        } catch (\Exception $e) {
+            $this->module->logError("Error creating reset token", $e);
+        }
+    }
+
+    /**
+     * Sets active status of participant to 0
+     * 
+     * @return [type]
+     */
+    public function deactivate()
+    {
+        return $this->setActiveStatus(0);
+    }
+
+
+    /**
+     * Sets active status of participant to 1
+     * 
+     * @return [type]
+     */
+    public function reactivate()
+    {
+        return $this->setActiveStatus(1);
+    }
+
+    /**
+     * Sets active status of participant
+     * 
+     * @param int $value
+     * 
+     * @return [type]
+     */
+    private function setActiveStatus(int $value)
+    {
+        if ($this->module->countLogsValidated("log_id = ? AND active is not null", [$this->rcpro_participant_id]) > 0) {
+            $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
+        } else {
+            $SQL = "INSERT INTO redcap_external_modules_log_parameters (value, name, log_id) VALUES (?, 'active', ?)";
+        }
+        try {
+            $res = $this->module->query($SQL, [$value, $this->rcpro_participant_id]);
+            if ($res) {
+                $this->module->logEvent("Set participant active status", [
+                    "rcpro_participant_id" => $this->rcpro_participant_id,
+                    "rcpro_username" => $this->rcpro_username,
+                    "active" => $value,
+                    "redcap_user" => USERID
+                ]);
+            } else {
+                $this->module->logEvent("Failed to set participant active status", [
+                    "rcpro_participant_id" => $this->rcpro_participant_id,
+                    "rcpro_username" => $this->rcpro_username,
+                    "active" => $value,
+                    "redcap_user" => USERID
+                ]);
+            }
+            return $res;
+        } catch (\Exception $e) {
+            $this->module->logError("Error setting participant active status", $e);
+        }
+    }
+
+
+    /**
+     * Whether the participant is active or has been deactivated
+     * 
+     * @return bool True is active, false is deactivated.
+     */
+    function isActive(): bool
+    {
+        $SQL = "SELECT active WHERE log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+        try {
+            $res = $this->module->selectLogs($SQL, [$this->rcpro_participant_id]);
+            $status_arr = $res->fetch_assoc();
+            return !isset($status_arr["active"]) || $status_arr["active"] == 1;
+        } catch (\Exception $e) {
+            $this->module->logError("Error getting active status", $e);
+        }
+    }
+
+    function isEnrolled(Project $project)
+    {
+        $link = new Link($this->module, $project, $this);
+        return $link->exists() && $link->isActive();
+    }
+
+    /**
+     * Sets the password reset token as invalid/expired
+     * 
+     * @return bool|null success or failure
+     */
+    public function expirePasswordResetToken()
+    {
+        $SQL = "UPDATE redcap_external_modules_log_parameters SET value = 0 WHERE log_id = ? AND name = 'token_valid'";
+        try {
+            return $this->module->query($SQL, [$this->rcpro_participant_id]);
+        } catch (\Exception $e) {
+            $this->module->logError("Error expiring password reset token.", $e);
+        }
+    }
+
+    /**
+     * Fetch array of REDCap PIDs for all projects this participant is enrolled
+     * in.
+     * 
+     * @return Project[] a redcap_pid for each enrolled project
+     */
+    public function getEnrolledProjects(): array
+    {
+        $SQL = "SELECT project_id WHERE message = 'LINK' AND rcpro_participant_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+        try {
+            $result = $this->module->selectLogs($SQL, [$this->rcpro_participant_id]);
+            $projects = array();
+            while ($row = $result->fetch_assoc()) {
+                $redcap_pid = $row["project_id"];
+                $project = new Project($this->module, [
+                    "redcap_pid" => $redcap_pid
+                ]);
+                $projects[$redcap_pid] = $project;
+            }
+            if (empty($projects)) {
+                array_push($projects, NULL);
+            }
+            return $projects;
+        } catch (\Exception $e) {
+            $this->module->logError("Error fetching enrolled projects", $e);
+        }
+    }
+
+    /**
+     * Gets various info about a participant
+     * 
+     * @return array info about participant:
+     * User_ID, Username, Registered At, Registered By 
+     */
+    public function getInfo(): array
+    {
+        $SQL = "SELECT log_id AS 'User_ID', rcpro_username AS Username, timestamp AS 'Registered At', redcap_user AS 'Registered By' WHERE log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+        try {
+            $result_obj = $this->module->selectLogs($SQL, [$this->rcpro_participant_id]);
+            return $result_obj->fetch_assoc();
+        } catch (\Exception $e) {
+            $this->module->logError("Error getting participant info", $e);
+        }
+    }
+
+    /**
+     * Stores hashed password for the given participant
+     * 
+     * @param string $hash - hashed password
+     * 
+     * @return bool|NULL success/failure/null
+     */
+    public function storeHash(string $hash): bool
+    {
+        try {
+            $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'pw'";
+            $res = $this->module->query($SQL, [$hash, $this->rcpro_participant_id]);
+            $this->module->logEvent("Password Hash Stored", [
+                "rcpro_participant_id" => $this->rcpro_participant_id,
+                "rcpro_username"       => $this->rcpro_username
+            ]);
+            return $res;
+        } catch (\Exception $e) {
+            $this->module->logError("Error storing password hash", $e);
+        }
+    }
 }
