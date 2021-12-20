@@ -8,6 +8,7 @@ class Participant
     function __construct(REDCapPRO $module, $params)
     {
         $this->module = $module;
+        $this->exists = false;
 
         if (isset($params["rcpro_participant_id"])) {
             $this->rcpro_participant_id = $params["rcpro_participant_id"];
@@ -21,8 +22,10 @@ class Participant
             $this->email                = $params["email"];
             $this->rcpro_participant_id = $this->getParticipantId();
             $this->rcpro_username       = $this->getUsername();
-        } else {
-            throw new REDCapProException();
+        }
+
+        if (isset($this->rcpro_participant_id) && isset($this->rcpro_username)) {
+            $this->exists = true;
         }
     }
 
@@ -385,6 +388,22 @@ class Participant
             return isset($pw) && $pw !== "";
         } catch (\Exception $e) {
             $this->module->logError("Error checking if password is set", $e);
+        }
+    }
+
+    /**
+     * Get hashed password for participant.
+     * 
+     * @return string hashed password
+     */
+    public function getHash(): string
+    {
+        try {
+            $SQL = "SELECT pw WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+            $res = $this->module->selectLogs($SQL, [$this->rcpro_participant_id]);
+            return $res->fetch_assoc()['pw'];
+        } catch (\Exception $e) {
+            $this->module->logError("Error fetching password hash", $e);
         }
     }
 }

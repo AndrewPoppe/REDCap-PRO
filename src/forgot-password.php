@@ -1,5 +1,7 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
 # Initialize authentication session on page
 $module::$AUTH->init();
 
@@ -24,22 +26,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $err = $module->tt("forgot_password_err1");
     } else {
         $username = \REDCap::escapeHtml(trim($_POST["username"]));
-        // Check input errors before sending reset email
-        if (!$err) {
-            $rcpro_participant_id = $module::$PARTICIPANT->getParticipantIdFromUsername($username);
-            if (!isset($rcpro_participant_id)) {
-                $rcpro_participant_id = $module::$PARTICIPANT->getParticipantIdFromEmail($username);
-            }
-            if (isset($rcpro_participant_id)) {
-                $module->logEvent("Password Reset Email Sent", [
-                    "rcpro_participant_id" => $rcpro_participant_id,
-                    "rcpro_username"       => $username
-                ]);
-                $module->sendPasswordResetEmail($rcpro_participant_id);
-            }
-            echo '<div style="text-align: center; font-size: large;"><p><br>' . $module->tt("forgot_password_message1") . '</p></div>';
-            return;
+
+        // First, assume the participant typed their REDCapPRO username
+        $participant = new Participant($module, ["rcpro_username" => $username]);
+
+        // If the participant does not exist, try again assuming
+        // the participant typed their email address
+        if (!$participant->exists) {
+            $participant = new Participant($module, ["email" => $username]);
         }
+
+        // If there is such a participant, send the password reset email
+        if ($participant->exists) {
+            $module->logEvent("Password Reset", [
+                "rcpro_participant_id" => $participant->rcpro_participant_id,
+                "rcpro_username"       => $participant->rcpro_username
+            ]);
+            $module->sendPasswordResetEmail($participant);
+        }
+        echo '<div style="text-align: center; font-size: large;"><p><br>' . $module->tt("forgot_password_message1") . '</p></div>';
+        return;
     }
 }
 

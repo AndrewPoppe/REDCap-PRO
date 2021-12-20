@@ -2,19 +2,9 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-require_once("classes/Project.php");
-
 if (!SUPER_USER) {
     return;
 }
-
-$user = new User(["name" => "joe"]);
-$participant = new Participant($module);
-
-$participant->addUser($user);
-var_dump($participant->users);
-
-
 
 ?>
 
@@ -47,7 +37,7 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
             <tbody>
                 <?php
                 foreach ($redcap_project_ids as $id) {
-                    $thisProject                = new Project($module, ["redcap_pid" => $id]);
+                    $project                    = new Project($module, ["redcap_pid" => $id]);
                     $rcpro_project_id           = $project->rcpro_project_id;
                     $project_rcpro_home         = $module->getUrl("src/home.php?pid=${id}");
                     $project_home               = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "index.php?pid=${id}";
@@ -66,23 +56,23 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
                         </td>
                         <!-- Title -->
                         <td>
-                            <?= $thisProject->info["app_title"] ?>
+                            <?= $project->info["app_title"] ?>
                         </td>
                         <!-- Status -->
                         <td class='dt-center'>
-                            <?= $thisProject->getStatus() ?>
+                            <?= $project->getStatus() ?>
                         </td>
                         <!-- # Participants -->
                         <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_rcpro_manage ?>', '_blank').focus();})()">
-                            <?= $thisProject->getParticipantCount($rcpro_project_id) ?>
+                            <?= $project->getParticipantCount($rcpro_project_id) ?>
                         </td>
                         <!-- # Staff Members -->
                         <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_rcpro_manage_users ?>', '_blank').focus();})()">
-                            <?= count($thisProject->staff["allStaff"]) ?>
+                            <?= count($project->staff["allStaff"]) ?>
                         </td>
                         <!-- # Records -->
                         <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_records ?>', '_blank').focus();})()">
-                            <?= $thisProject->getRecordCount() ?>
+                            <?= $project->getRecordCount() ?>
                         </td>
                     </tr>
                 <?php } ?>

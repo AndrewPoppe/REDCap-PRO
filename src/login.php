@@ -1,6 +1,6 @@
 <?php
 
-use YaleREDCap\REDCapPRO\LoginHelper;
+namespace YaleREDCap\REDCapPRO;
 
 // Initialize Authentication
 $module::$AUTH->init();
@@ -48,8 +48,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $username_err = $module->tt("login_err1");
     } else {
         $username = \REDCap::escapeHtml(trim($_POST["username"]));
-        $usernameExists = $module::$PARTICIPANT->usernameIsTaken($username);
-        $emailExists = $module::$PARTICIPANT->checkEmailExists($username);
+        $usernameExists = $module->PARTICIPANT_HELPER->usernameIsTaken($username);
+        $emailExists = $module->PARTICIPANT_HELPER->checkEmailExists($username);
         $emailLoginsAllowed = $module::$SETTINGS->emailLoginsAllowed($module->getProjectId());
     }
 
@@ -99,19 +99,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // --> USERNAME/EMAIL EXISTS
             } else {
 
-                $participant = $usernameExists ? $module::$PARTICIPANT->getParticipant($username) : $module::$PARTICIPANT->getParticipantFromEmail($username);
-                $stored_hash = $Login->getHash($participant["log_id"]);
+                $participant = $usernameExists ? new Participant($module, ["rcpro_username" => $username]) : new Participant($module, ["email" => $username]);
+                $stored_hash = $participant->getHash();
 
                 // Check that this username is not locked out
-                $lockout_duration_remaining = $Login->getUsernameLockoutDuration($participant["log_id"]);
+                $lockout_duration_remaining = $Login->getUsernameLockoutDuration($participant->rcpro_participant_id);
                 if ($lockout_duration_remaining !== FALSE && $lockout_duration_remaining !== NULL) {
                     // --> Username is locked out
                     $login_err = $module->tt("login_err3") . "<br>" . $module->tt("login_err4", $lockout_duration_remaining);
                     $module->logEvent("Login Attempted - Username Locked Out", [
                         "rcpro_ip"             => $ip,
-                        "rcpro_username"       => $participant["rcpro_username"],
-                        "rcpro_email"          => $participant["email"],
-                        "rcpro_participant_id" => $participant["log_id"]
+                        "rcpro_username"       => $participant->rcpro_username,
+                        "rcpro_email"          => $participant->email,
+                        "rcpro_participant_id" => $participant->rcpro_participant_id
                     ]);
 
                     // Check that there is a stored password hash
@@ -119,8 +119,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // --> No password hash exists
                     // TODO: Give option to resend password email?
                     $module->logEvent("No password hash stored.", [
-                        "rcpro_participant_id" => $participant["log_id"],
-                        "rcpro_username"       => $participant["rcpro_username"]
+                        "rcpro_participant_id" => $participant->rcpro_participant_id,
+                        "rcpro_username"       => $participant->rcpro_username
                     ]);
                     $login_err = $module->tt("login_err8");
 
@@ -134,19 +134,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     $module->logEvent("Login Successful", [
                         "rcpro_ip"             => $ip,
-                        "rcpro_username"       => $participant["rcpro_username"],
-                        "rcpro_participant_id" => $participant["log_id"]
+                        "rcpro_username"       => $participant->rcpro_username,
+                        "rcpro_participant_id" => $participant->rcpro_participant_id
                     ]);
 
                     // Rehash password if necessary
                     if (password_needs_rehash($stored_hash, PASSWORD_DEFAULT)) {
                         $new_hash = password_hash($password, PASSWORD_DEFAULT);
-                        $module::$PARTICIPANT->storeHash($new_hash, $participant["log_id"]);
+                        $participant->storeHash($new_hash);
                     }
 
                     // Reset failed attempts and failed IP
                     $Login->resetFailedIp($ip);
-                    $Login->resetFailedLogin($participant["log_id"]);
+                    $Login->resetFailedLogin($participant->rcpro_participant_id);
 
                     // Store data in session variables
                     $module::$AUTH->set_login_values($participant);
@@ -170,19 +170,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // display a generic error message
                     $module->logEvent("Login Unsuccessful - Incorrect Password", [
                         "rcpro_ip"             => $ip,
-                        "rcpro_username"       => $participant["rcpro_username"],
-                        "rcpro_participant_id" => $participant["log_id"]
+                        "rcpro_username"       => $participant->rcpro_username,
+                        "rcpro_participant_id" => $participant->rcpro_participant_id
                     ]);
-                    $Login->incrementFailedLogin($participant["log_id"], $participant["rcpro_username"]);
+                    $Login->incrementFailedLogin($participant->rcpro_participant_id, $participant->rcpro_username);
                     $Login->incrementFailedIp($ip);
-                    $attempts = $Login->checkAttempts($participant["log_id"], $ip);
+                    $attempts = $Login->checkAttempts($participant->rcpro_participant_id, $ip);
                     $remainingAttempts = $module::$SETTINGS->getLoginAttempts() - $attempts;
                     if ($remainingAttempts <= 0) {
                         $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err6", $module::$SETTINGS->getLockoutDurationSeconds());
                         $module->logEvent("USERNAME LOCKOUT", [
                             "rcpro_ip"             => $ip,
-                            "rcpro_username"       => $participant["rcpro_username"],
-                            "rcpro_participant_id" => $participant["log_id"]
+                            "rcpro_username"       => $participant->rcpro_username,
+                            "rcpro_participant_id" => $participant->rcpro_participant_id
                         ]);
                     } else {
                         $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err7", $remainingAttempts);

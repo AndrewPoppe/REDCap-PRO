@@ -117,14 +117,15 @@ class Auth
         $_SESSION[self::$APPTITLE . "_survey_link_active"] = $state;
     }
 
-    public function set_login_values($participant)
+    public function set_login_values(Participant $participant)
     {
-        $_SESSION["username"] = $participant["rcpro_username"];
-        $_SESSION[self::$APPTITLE . "_participant_id"] = $participant["log_id"];
-        $_SESSION[self::$APPTITLE . "_username"] = $participant["rcpro_username"];
-        $_SESSION[self::$APPTITLE . "_email"] = $participant["email"];
-        $_SESSION[self::$APPTITLE . "_fname"] = $participant["fname"];
-        $_SESSION[self::$APPTITLE . "_lname"] = $participant["lname"];
+        $_SESSION["username"] = $participant->rcpro_username;
+        $_SESSION[self::$APPTITLE . "_participant_id"] = $participant->rcpro_participant_id;
+        $_SESSION[self::$APPTITLE . "_username"] = $participant->rcpro_username;
+        $_SESSION[self::$APPTITLE . "_email"] = $participant->email;
+        $name = $participant->getName();
+        $_SESSION[self::$APPTITLE . "_fname"] = $name["fname"];
+        $_SESSION[self::$APPTITLE . "_lname"] = $name["lname"];
         $_SESSION[self::$APPTITLE . "_loggedin"] = true;
     }
 }

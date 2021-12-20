@@ -1,5 +1,7 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
 // Initialize Authentication
 $module::$AUTH->init();
 
@@ -18,7 +20,7 @@ $new_password_err = $confirm_password_err = "";
 
 
 // Verify password reset token
-$verified_user = $module::$PARTICIPANT->verifyPasswordResetToken($qstring["t"]);
+$verified_participant = $module->PARTICIPANT_HELPER->verifyPasswordResetToken($qstring["t"]);
 
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -73,11 +75,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (!$any_error) {
 
         // Grab all user details
-        $participant = $module::$PARTICIPANT->getParticipant($_POST["username"]);
+        $this_participant = new Participant($module, ["rcpro_username" => $_POST["username"]]);
 
         // Update password
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
-        $result = $module::$PARTICIPANT->storeHash($password_hash, $participant["log_id"]);
+        $result = $this_participant->storeHash($password_hash);
         if (empty($result) || $result === FALSE) {
             echo $module->tt("error_generic1");
             echo $module->tt("error_generic2");
@@ -85,10 +87,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
 
         // Password was successfully set. Expire the token.
-        $module::$PARTICIPANT->expirePasswordResetToken($participant["log_id"]);
+        $this_participant->expirePasswordResetToken();
 
         // Store data in session variables
-        $module::$AUTH->set_login_values($participant);
+        $module::$AUTH->set_login_values($this_participant);
 
         $module::$UI->ShowParticipantHeader($module->tt("create_password_set"));
         echo "<div style='text-align:center;'><p>" . $module->tt("ui_close_tab") . "</p></div>";
@@ -102,17 +104,20 @@ $module::$AUTH->set_csrf_token();
 
 $module::$UI->ShowParticipantHeader($module->tt("create_password_title"));
 
-if ($verified_user) {
+if ($verified_participant) {
+
+    // create participant
+    $participant = new Participant($module, ["rcpro_participant_id" => $verified_participant["log_id"]]);
 
     $module->logEvent("Participant opened create password page", [
-        "rcpro_username" => $verified_user["rcpro_username"]
+        "rcpro_username" => $participant->rcpro_username
     ]);
 
     echo "<p>" . $module->tt("create_password_message3") . "</p>";
 ?>
     <form action="<?= $module->getUrl("src/create-password.php", true) . "&t=" . urlencode($qstring["t"]); ?>" method="post">
         <div class="form-group">
-            <span><?= $module->tt("create_password_username_label") ?><span style="color: #900000; font-weight: bold;"><?= $verified_user["rcpro_username"]; ?></span></span>
+            <span><?= $module->tt("create_password_username_label") ?><span style="color: #900000; font-weight: bold;"><?= $participant->rcpro_username; ?></span></span>
         </div>
         <div class="form-group">
             <label><?= $module->tt("create_password_new_label") ?></label>
@@ -128,7 +133,7 @@ if ($verified_user) {
             <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
         </div>
         <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
-        <input type="hidden" name="username" value="<?= $verified_user["rcpro_username"] ?>">
+        <input type="hidden" name="username" value="<?= $participant->rcpro_username ?>">
     </form>
     </div>
     </body>

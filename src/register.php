@@ -44,7 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $email_err = "Please enter a valid email address.";
         $any_error = TRUE;
     } else {
-        $result = $module::$PARTICIPANT->checkEmailExists($param_email);
+        $result = $module->PARTICIPANT_HELPER->checkEmailExists($param_email);
         if ($result === NULL) {
             echo "Oops! Something went wrong. Please try again later.";
             return;
@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!$any_error) {
         $icon = $title = $html = "";
         try {
-            $username = $module::$PARTICIPANT->createParticipant($email, $fname_clean, $lname_clean);
+            $username = $module->PARTICIPANT_HELPER->createParticipant($email, $fname_clean, $lname_clean);
             $module->sendNewParticipantEmail($username, $email, $fname_clean, $lname_clean);
             $icon = "success";
             $title = "Participant Registered";

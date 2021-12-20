@@ -32,7 +32,7 @@ if (isset($_POST["id"]) && isset($project_id)) {
     $module->logForm("Submitted Enroll Form", $_POST);
 
     // If participant is not active, don't enroll them
-    if (!$module::$PARTICIPANT->isParticipantActive($rcpro_participant_id)) {
+    if (!$participant->isActive()) {
 
         echo "<script defer>Swal.fire({'title':'This participant is not currently active in REDCapPRO', 'html':'Contact your REDCap Administrator with questions.', 'icon':'info', 'showConfirmButton': false});</script>";
     } else {

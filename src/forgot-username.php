@@ -1,5 +1,7 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
 # Initialize authentication session on page
 $module::$AUTH->init();
 
@@ -24,20 +26,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $err = $module->tt("forgot_username_err1");
     } else {
         $email = \REDCap::escapeHtml(trim($_POST["email"]));
-        // Check input errors before sending reset email
-        if (!$err) {
-            $rcpro_participant_id = $module::$PARTICIPANT->getParticipantIdFromEmail($email);
-            if (!empty($rcpro_participant_id)) {
-                $username = $module::$PARTICIPANT->getUserName($rcpro_participant_id);
-                $module->logEvent("Username Reminder Email Sent", [
-                    "rcpro_participant_id" => $rcpro_participant_id,
-                    "rcpro_username"       => $username
-                ]);
-                $module->sendUsernameEmail($email, $username);
-            }
-            echo $module->tt("forgot_username_message1");
-            return;
+        $participant = new Participant($module, ["email" => $email]);
+
+        if ($participant->exists) {
+            $module->logEvent("Username Reminder Email Sent", [
+                "rcpro_participant_id" => $participant->rcpro_participant_id,
+                "rcpro_username"       => $participant->rcpro_username
+            ]);
+            $module->sendUsernameEmail($email, $username);
         }
+        echo $module->tt("forgot_username_message1");
+        return;
     }
 }
 

@@ -1,5 +1,7 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
 # Initialize authentication session on page
 $module::$AUTH->init();
 
@@ -18,7 +20,8 @@ $new_password_err = $confirm_password_err = "";
 
 
 // Verify password reset token
-$verified_participant = $module::$PARTICIPANT->verifyPasswordResetToken($qstring["t"]);
+$verified_participant = $module->PARTICIPANT_HELPER->verifyPasswordResetToken($qstring["t"]);
+$participant = new Participant($module, ["rcpro_participant_id" => $verified_participant["log_id"]]);
 
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -72,12 +75,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Check input errors before updating the database
     if (!$any_error) {
 
-        // Grab all user details
-        $participant = $module::$PARTICIPANT->getParticipant($_POST["username"]);
-
         // Update password
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
-        $result = $module::$PARTICIPANT->storeHash($password_hash, $participant["log_id"]);
+        $result = $participant->storeHash($password_hash);
         if (empty($result) || $result === FALSE) {
             echo $module->tt("error_generic1");
             echo "<br>";
@@ -86,7 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
 
         // Password was successfully set. Expire the token.
-        $module::$PARTICIPANT->expirePasswordResetToken($participant["log_id"]);
+        $participant->expirePasswordResetToken();
 
         // Store data in session variables
         $module::$AUTH->set_login_values($participant);
@@ -107,14 +107,14 @@ $module::$AUTH->set_csrf_token();
 
 $module::$UI->ShowParticipantHeader($module->tt("reset_password_title"));
 
-if ($verified_participant) {
+if ($participant->exists) {
 ?>
     <div style="text-align: center;">
         <p><?= $module->tt("reset_password_message1") ?></p>
     </div>
     <form action="<?= $module->getUrl("src/reset-password.php", true) . "&t=" . $qstring["t"]; ?>" method="post">
         <div class="form-group">
-            <span><?= $module->tt("reset_password_username_label") ?><span style="color: #900000; font-weight: bold;"><?= $verified_participant["rcpro_username"]; ?></span></span>
+            <span><?= $module->tt("reset_password_username_label") ?><span style="color: #900000; font-weight: bold;"><?= $participant->rcpro_username ?></span></span>
         </div>
         <div class="form-group">
             <label><?= $module->tt("reset_password_password_label") ?></label>
@@ -130,7 +130,7 @@ if ($verified_participant) {
             <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
         </div>
         <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
-        <input type="hidden" name="username" value="<?= $verified_participant["rcpro_username"] ?>">
+        <input type="hidden" name="username" value="<?= $participant->rcpro_username ?>">
     </form>
 <?php } else { ?>
     <div class='red' style="text-align: center;">

@@ -272,22 +272,4 @@ class LoginHelper
         $ipAttempts = $this->checkIpAttempts($ip);
         return max($usernameAttempts, $ipAttempts);
     }
-
-    /**
-     * Get hashed password for participant.
-     * 
-     * @param int $rcpro_participant_id - id key for participant
-     * 
-     * @return string|NULL hashed password or null
-     */
-    public function getHash(int $rcpro_participant_id)
-    {
-        try {
-            $SQL = "SELECT pw WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
-            $res = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
-            return $res->fetch_assoc()['pw'];
-        } catch (\Exception $e) {
-            self::$module->logError("Error fetching password hash", $e);
-        }
-    }
 }

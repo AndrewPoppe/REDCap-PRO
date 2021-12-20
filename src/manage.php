@@ -105,6 +105,9 @@ function changeEmail(int $rcpro_participant_id, string $newEmail)
     global $role, $module, $no_permission;
     $function = "change participant's email address";
 
+    // Create participant object
+    $participant = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
+
     // Check role
     if ($role <= 2) {
         $title = $no_permission;
@@ -112,14 +115,14 @@ function changeEmail(int $rcpro_participant_id, string $newEmail)
     }
 
     // Check that email is not already associated with a participant
-    else if ($module::$PARTICIPANT->checkEmailExists($newEmail)) {
+    else if ($module->PARTICIPANT_HELPER->checkEmailExists($newEmail)) {
         $title = "The provided email address is already associated with a REDCapPRO account.";
         $icon = "error";
     }
 
     // Try to change email
     else {
-        $result = $module::$PARTICIPANT->changeEmailAddress($rcpro_participant_id, $newEmail);
+        $result = $participant->changeEmailAddress($newEmail);
         if (!$result) {
             $title = "Trouble changing participant's email address.";
             $icon = "error";
@@ -155,10 +158,9 @@ function switchDAG(int $rcpro_participant_id, ?string $newDAG)
             $title = "Trouble switching participant's Data Access Group.";
             $icon = "error";
         } else {
-            $participant_info = $module::$PARTICIPANT->getParticipantInfo($rcpro_participant_id);
             $module->logEvent("Participant DAG Switched", [
-                "rcpro_participant_id" => $participant_info["User_ID"],
-                "rcpro_username"       => $participant_info["Username"],
+                "rcpro_participant_id" => $participant->rcpro_participant_id,
+                "rcpro_username"       => $participant->rcpro_username,
                 "rcpro_project_id"     => $project->rcpro_project_id,
                 "rcpro_link_id"        => $link->id,
                 "project_dag"          => $newDAG
@@ -264,9 +266,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $module::$AUTH->set_csrf_token();
 
 // Get list of participants
-$participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_id, $rcpro_user_dag);
-
-
+$participants = $project->getParticipants($rcpro_user_dag);
 
 ?>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
@@ -314,21 +314,21 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($participantList as $participant) {
-                                $username_clean = \REDCap::escapeHtml($participant["rcpro_username"]);
-                                $password_set   = $participant["pw_set"] === 'True';
+                            <?php foreach ($participants as $participant) {
+                                $username_clean = \REDCap::escapeHtml($participant->rcpro_username);
+                                $password_set   = $participant->isPasswordSet();
                                 if ($role > 1) {
-                                    $fname_clean    = \REDCap::escapeHtml($participant["fname"]);
-                                    $lname_clean    = \REDCap::escapeHtml($participant["lname"]);
-                                    $email_clean    = \REDCap::escapeHtml($participant["email"]);
+                                    $name           = $participant->getName();
+                                    $fname_clean    = \REDCap::escapeHtml($name["fname"]);
+                                    $lname_clean    = \REDCap::escapeHtml($name["lname"]);
+                                    $email_clean    = \REDCap::escapeHtml($participant->email);
                                 }
-                                $participant    = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
                                 $link           = new Link($module, $project, $participant);
                                 $dag_id         = $module::$DAG->getParticipantDag($link->id);
                                 $dag_name       = \REDCap::getGroupNames(false, $dag_id);
                                 $dag_name_clean = count($dag_name) === 1 ? \REDCap::escapeHtml($dag_name) : "Unassigned";
                             ?>
-                                <tr data-id="<?= $participant["log_id"] ?>" data-username="<?= $username_clean ?>" data-fname="<?= $fname_clean ?>" data-lname="<?= $lname_clean ?>" data-email="<?= $email_clean ?>">
+                                <tr data-id="<?= $participant->rcpro_participant_id ?>" data-username="<?= $username_clean ?>" data-fname="<?= $fname_clean ?>" data-lname="<?= $lname_clean ?>" data-email="<?= $email_clean ?>">
                                     <td class="dt-center">
                                         <?= "<i title='Password Set' class='fas " . ($password_set ? "fa-check-circle" : "fa-fw") . "' style='margin-left:2px;margin-right:2px;color:" . $module::$COLORS["green"] . ";'></i>&nbsp; $username_clean" ?>
                                     </td>
@@ -358,7 +358,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                                                     }).then(function(resp) {
                                                         if (resp.isConfirmed) {
                                                             clearForm();
-                                                            $("#toSwitchDag").val("<?= $participant["log_id"] ?>");
+                                                            $("#toSwitchDag").val("<?= $participant->rcpro_participant_id ?>");
                                                             $("#newDag").val(newDAG); 
                                                             $("#manage-form").submit();
                                                         } else {

@@ -2,8 +2,6 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-require_once("src/classes/ProjectHelper.php");
-
 /**
  * Holds methods related to REDCapPRO Participants
  * 
@@ -18,7 +16,7 @@ class ParticipantHelper
      */
     function __construct(REDCapPRO $module)
     {
-        $this->$module = $module;
+        $this->module = $module;
     }
 
     /**

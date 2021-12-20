@@ -489,11 +489,10 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return void
      */
-    public function sendPasswordResetEmail($rcpro_participant_id)
+    public function sendPasswordResetEmail(Participant $participant)
     {
         try {
             // generate token
-            $participant = new Participant($this, ["rcpro_participant_id" => $rcpro_participant_id]);
             $token    = $participant->createResetToken();
             $to       = $participant->email;
             $username_clean = \REDCap::escapeHtml($participant->rcpro_username);
@@ -527,21 +526,26 @@ class REDCapPRO extends AbstractExternalModule
             $current_pid = $this->getProjectId() ?? "system";
 
             // Get all projects to which participant is currently enrolled
-            $project_ids = $participant->getEnrolledProjects();
-            foreach ($project_ids as $project_id) {
+            $projects = $participant->getEnrolledProjects();
+
+            // Determine who initiated this reset
+            $redcap_user = defined(USERID) ? USERID : NULL;
+
+            foreach ($projects as $project) {
                 $this->logEvent("Password Reset Email - ${status}", [
-                    "rcpro_participant_id"  => $rcpro_participant_id,
+                    "rcpro_participant_id"  => $participant->rcpro_participant_id,
                     "rcpro_username"        => $username_clean,
                     "rcpro_email"           => $to,
-                    "redcap_user"           => USERID,
-                    "project_id"            => $project_id,
+                    "redcap_user"           => $redcap_user,
+                    "project_id"            => $project->redcap_pid,
+                    "rcpro_project_id"      => $project->rcpro_project_id,
                     "initiating_project_id" => $current_pid
                 ]);
             }
             return $result;
         } catch (\Exception $e) {
             $this->logEvent("Password Reset Failed", [
-                "rcpro_participant_id" => $rcpro_participant_id,
+                "rcpro_participant_id" => $participant->rcpro_participant_id,
                 "redcap_user"          => USERID
             ]);
             $this->logError("Error sending password reset email", $e);
