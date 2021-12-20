@@ -9,6 +9,7 @@ class Link
         $this->module = $module;
         $this->project = $project;
         $this->participant = $participant;
+        $this->id = $this->getId();
     }
 
     /**
@@ -105,7 +106,7 @@ class Link
     }
 
     /**
-     * Fetch link id given participant
+     * Fetch link id
      * 
      * @return int link id
      */

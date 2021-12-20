@@ -17,7 +17,6 @@ class REDCapPRO extends AbstractExternalModule
     static $AUTH;
     static $SETTINGS;
     static $UI;
-    static $PARTICIPANT;
     static $DAG;
     static $COLORS = [
         "primary"          => "#900000",
@@ -39,11 +38,11 @@ class REDCapPRO extends AbstractExternalModule
     function __construct()
     {
         parent::__construct();
-        self::$AUTH         = new Auth(self::$APPTITLE);
-        self::$SETTINGS     = new ProjectSettings($this);
-        self::$UI           = new UI($this);
-        self::$PARTICIPANT  = new ParticipantHelper($this);
-        self::$DAG          = new DAG($this);
+        self::$AUTH                = new Auth(self::$APPTITLE);
+        self::$SETTINGS            = new ProjectSettings($this);
+        self::$UI                  = new UI($this);
+        $this->PARTICIPANT_HELPER  = new ParticipantHelper($this);
+        self::$DAG                 = new DAG($this);
     }
 
 
@@ -449,9 +448,9 @@ class REDCapPRO extends AbstractExternalModule
     {
         // generate token
         try {
-            $rcpro_participant_id = self::$PARTICIPANT->getParticipantIdFromUsername($username);
-            $hours_valid          = 24;
-            $token                = self::$PARTICIPANT->createResetToken($rcpro_participant_id, $hours_valid);
+            $participant = new Participant($this, ["rcpro_username" => $username]);
+            $hours_valid = 24;
+            $token       = $participant->createResetToken($hours_valid);
 
             // create email
             $subject = $this->tt("email_new_participant_subject");
@@ -494,10 +493,10 @@ class REDCapPRO extends AbstractExternalModule
     {
         try {
             // generate token
-            $token    = self::$PARTICIPANT->createResetToken($rcpro_participant_id);
-            $to       = self::$PARTICIPANT->getEmail($rcpro_participant_id);
-            $username = self::$PARTICIPANT->getUserName($rcpro_participant_id);
-            $username_clean = \REDCap::escapeHtml($username);
+            $participant = new Participant($this, ["rcpro_participant_id" => $rcpro_participant_id]);
+            $token    = $participant->createResetToken();
+            $to       = $participant->email;
+            $username_clean = \REDCap::escapeHtml($participant->rcpro_username);
 
             // create email
             $subject = $this->tt("email_password_reset_subject");
@@ -528,7 +527,7 @@ class REDCapPRO extends AbstractExternalModule
             $current_pid = $this->getProjectId() ?? "system";
 
             // Get all projects to which participant is currently enrolled
-            $project_ids = $this::$PARTICIPANT->getEnrolledProjects($rcpro_participant_id);
+            $project_ids = $participant->getEnrolledProjects();
             foreach ($project_ids as $project_id) {
                 $this->logEvent("Password Reset Email - ${status}", [
                     "rcpro_participant_id"  => $rcpro_participant_id,
@@ -895,4 +894,20 @@ class REDCapPRO extends AbstractExternalModule
 
         return $message;
     }
+}
+
+/**
+ * Function to pick the first non-empty string value from the given arguments
+ * If you want a default value in case all of the given variables are empty,  
+ * pass an extra parameter as the last value.
+ *
+ * @return  mixed  The first non-empty value from the arguments passed   
+ */
+function coalesce_string()
+{
+    $args = func_get_args();
+
+    while (count($args) && !($arg = array_shift($args)));
+
+    return intval($arg) !== 0 ? $arg : null;
 }

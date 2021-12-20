@@ -22,6 +22,24 @@ class ParticipantHelper
     }
 
     /**
+     * Determine whether email address already exists in database
+     * 
+     * @param string $email
+     * 
+     * @return boolean True if email already exists, False if not
+     */
+    public function checkEmailExists(string $email)
+    {
+        $SQL = "message = 'PARTICIPANT' AND email = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+        try {
+            $result = $this->module->countLogsValidated($SQL, [$email]);
+            return $result > 0;
+        } catch (\Exception $e) {
+            $this->module->logError("Error checking if email exists", $e);
+        }
+    }
+
+    /**
      * Returns whether a participant with the given ID exists in the system
      * This is regardless of whether the participant is active or has set a
      * password.
@@ -115,20 +133,19 @@ class ParticipantHelper
     /**
      * Grabs all registered participants
      * 
-     * @return array|NULL of user arrays or null if error
+     * @return Participant[] Array of Participants
      */
-    public function getAllParticipants()
+    public function getAllParticipants(): array
     {
-        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, pw, active WHERE message = 'PARTICIPANT' AND rcpro_username IS NOT NULL AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $SQL = "SELECT log_id WHERE message = 'PARTICIPANT' AND rcpro_username IS NOT NULL AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result = $this->module->selectLogs($SQL, []);
             $participants  = array();
 
             // grab participant details
             while ($row = $result->fetch_assoc()) {
-                $row["pw_set"] = (!isset($row["pw"]) || $row["pw"] === "") ? "False" : "True";
-                unset($row["pw"]);
-                $participants[$row["log_id"]] = $row;
+                $participant = new Participant($this->module, ["rcpro_participant_id" => $row["log_id"]]);
+                $participants[$row["log_id"]] = $participant;
             }
             return $participants;
         } catch (\Exception $e) {

@@ -133,7 +133,7 @@ function changeEmail(int $rcpro_participant_id, string $newEmail)
 
 function switchDAG(int $rcpro_participant_id, ?string $newDAG)
 {
-    global $role, $module, $project_dags, $rcpro_project_id, $no_permission;
+    global $role, $module, $project_dags, $project, $no_permission;
     $function = "switch participant's Data Access Group";
 
     // Check role
@@ -148,8 +148,9 @@ function switchDAG(int $rcpro_participant_id, ?string $newDAG)
         $icon = "error";
     } else {
         $newDAG = $newDAG === "" ? NULL : $newDAG;
-        $link_id = $module::$PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
-        $result = $module::$DAG->updateDag($link_id, $newDAG);
+        $participant = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
+        $link = new Link($module, $project, $participant);
+        $result = $module::$DAG->updateDag($link->id, $newDAG);
         if (!$result) {
             $title = "Trouble switching participant's Data Access Group.";
             $icon = "error";
@@ -158,8 +159,8 @@ function switchDAG(int $rcpro_participant_id, ?string $newDAG)
             $module->logEvent("Participant DAG Switched", [
                 "rcpro_participant_id" => $participant_info["User_ID"],
                 "rcpro_username"       => $participant_info["Username"],
-                "rcpro_project_id"     => $rcpro_project_id,
-                "rcpro_link_id"        => $link_id,
+                "rcpro_project_id"     => $project->rcpro_project_id,
+                "rcpro_link_id"        => $link->id,
                 "project_dag"          => $newDAG
             ]);
             $title = "Successfully switched participant's Data Access Group.";
@@ -167,22 +168,6 @@ function switchDAG(int $rcpro_participant_id, ?string $newDAG)
         }
     }
     return [$function, false, $icon, $title];
-}
-
-/**
- * Function to pick the first non-empty string value from the given arguments
- * If you want a default value in case all of the given variables are empty,  
- * pass an extra parameter as the last value.
- *
- * @return  mixed  The first non-empty value from the arguments passed   
- */
-function coalesce_string()
-{
-    $args = func_get_args();
-
-    while (count($args) && !($arg = array_shift($args)));
-
-    return intval($arg) !== 0 ? $arg : null;
 }
 
 // Dealing with an action
@@ -212,6 +197,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             )
         );
 
+        // Get Participant associated with this id
+        $participant = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
+
         $generic_function = "make a change to this participant's account";
         if (!$error && $rcpro_participant_id === 0) {
             $function = $generic_function;
@@ -221,7 +209,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // Check that the participant is actually enrolled in this project
-        if (!$error && !$module::$PROJECT->participantEnrolled($rcpro_participant_id, $rcpro_project_id)) {
+        if (!$error && !$project->isParticipantEnrolled($participant)) {
             $function = $generic_function;
             $icon = "error";
             $title = "Participant is Not Enrolled";
@@ -230,8 +218,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Check that the Data Access Group of the participant matches that of the user
         if (!$error && $projectHasDags) {
-            $rcpro_link_id = $module::$PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
-            $participant_dag = intval($module::$DAG->getParticipantDag($rcpro_link_id));
+            $link = new Link($module, $project, $participant);
+            $participant_dag = intval($module::$DAG->getParticipantDag($link->id));
             $user_dag = $module::$DAG->getCurrentDag(USERID, PROJECT_ID);
             if (isset($user_dag) && $participant_dag !== $user_dag) {
                 $function = $generic_function;
@@ -334,8 +322,9 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                                     $lname_clean    = \REDCap::escapeHtml($participant["lname"]);
                                     $email_clean    = \REDCap::escapeHtml($participant["email"]);
                                 }
-                                $link_id        = $module::$PROJECT->getLinkId($participant["log_id"], $rcpro_project_id);
-                                $dag_id         = $module::$DAG->getParticipantDag($link_id);
+                                $participant    = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
+                                $link           = new Link($module, $project, $participant);
+                                $dag_id         = $module::$DAG->getParticipantDag($link->id);
                                 $dag_name       = \REDCap::getGroupNames(false, $dag_id);
                                 $dag_name_clean = count($dag_name) === 1 ? \REDCap::escapeHtml($dag_name) : "Unassigned";
                             ?>

@@ -1,5 +1,6 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
 
 function createProjectsCell(array $projects)
 {
@@ -41,10 +42,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     try {
         $function = NULL;
+        $rcpro_participant_id = intval(coalesce_string(
+            $_POST["toReset"],
+            $_POST["toChangeName"],
+            $_POST["toChangeEmail"],
+            $_POST["toUpdateActivity"]
+        ));
+        $participant = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
+
         // SEND A PASSWORD RESET EMAIL
         if (!empty($_POST["toReset"])) {
             $function = "send password reset email";
-            $result = $module->sendPasswordResetEmail($_POST["toReset"]);
+            $result = $module->sendPasswordResetEmail($rcpro_participant_id);
             if (!$result) {
                 $icon = "error";
                 $title = "Trouble sending password reset email.";
@@ -56,7 +65,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // UPDATE THE PARTICIPANT'S NAME
         } else if (!empty($_POST["toChangeName"])) {
             $function = "update participant's name";
-            $rcpro_participant_id = intval($_POST["toChangeName"]);
             $newFirstName = trim($_POST["newFirstName"]);
             $newLastName = trim($_POST["newLastName"]);
             // Check that names are valid
@@ -67,7 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Try to change name
             else {
-                $result = $module::$PARTICIPANT->changeName($rcpro_participant_id, $newFirstName, $newLastName);
+                $result = $participant->changeName($newFirstName, $newLastName);
                 if (!$result) {
                     $title = "Trouble updating participant's name.";
                     $icon = "error";
@@ -81,11 +89,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else if (!empty($_POST["toChangeEmail"])) {
             $function = "change participant's email address";
             $newEmail = $_POST["newEmail"];
-            if ($module::$PARTICIPANT->checkEmailExists($newEmail)) {
+            if ($module->PARTICIPANT_HELPER->checkEmailExists($newEmail)) {
                 $icon = "error";
                 $title = "The provided email address is already associated with a REDCapPRO account.";
             } else {
-                $result = $module::$PARTICIPANT->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
+                $result = $participant->changeEmailAddress($newEmail);
                 if (!$result) {
                     $icon = "error";
                     $title = "Trouble changing participant's email address.";
@@ -97,17 +105,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // DEACTIVATE OR REACTIVATE A PARTICIPANT
         } else if (!empty($_POST["toUpdateActivity"])) {
-            $toUpdate = intval($_POST["toUpdateActivity"]);
             $function = "update participant's active status";
             $reactivate = $_POST["statusAction"] === "reactivate";
-            if (!$module::$PARTICIPANT->checkParticipantExists($toUpdate)) {
+            if (!$module->PARTICIPANT_HELPER->checkParticipantExists($rcpro_participant_id)) {
                 $icon = "error";
                 $title = "The provided participant does not exist in the system.";
             } else {
                 if ($reactivate) {
-                    $result = $module::$PARTICIPANT->reactivateParticipant($toUpdate);
+                    $result = $participant->reactivate();
                 } else {
-                    $result = $module::$PARTICIPANT->deactivateParticipant($toUpdate);
+                    $result = $participant->deactivate();
                 }
                 if (!$result) {
                     $verb = $reactivate ? "reactivating" : "deactivating";
@@ -131,7 +138,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $module::$AUTH->set_csrf_token();
 
 // Get array of participants
-$participants = $module::$PARTICIPANT->getAllParticipants();
+$participants = $module->PARTICIPANT_HELPER->getAllParticipants();
 
 ?>
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
@@ -177,14 +184,14 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                     </thead>
                     <tbody>
                         <?php foreach ($participants as $participant) {
-                            $username_clean       = \REDCap::escapeHtml($participant["rcpro_username"]);
-                            $password_set         = $participant["pw_set"] === 'True';
-                            $fname_clean          = \REDCap::escapeHtml($participant["fname"]);
-                            $lname_clean          = \REDCap::escapeHtml($participant["lname"]);
-                            $email_clean          = \REDCap::escapeHtml($participant["email"]);
-                            $rcpro_participant_id = intval($participant["log_id"]);
-                            $projects_array       = $module::$PARTICIPANT->getParticipantProjects($rcpro_participant_id);
-                            $info                 = $module::$PARTICIPANT->getParticipantInfo($rcpro_participant_id);
+                            $username_clean       = \REDCap::escapeHtml($participant->rcpro_username);
+                            $password_set         = $participant->isPasswordSet();
+                            $name                 = $participant->getName();
+                            $fname_clean          = \REDCap::escapeHtml($name["fname"]);
+                            $lname_clean          = \REDCap::escapeHtml($name["lname"]);
+                            $email_clean          = \REDCap::escapeHtml($participant->email);
+                            $projects_array       = $participant->getEnrolledProjects();
+                            $info                 = $participant->getInfo();
                             $allData              = "<div style='display: block; text-align:left;'><ul>";
                             foreach ($info as $title => $value) {
                                 $value_clean = \REDCap::escapeHtml($value);
@@ -204,7 +211,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                                     })
                                 })();
                                 EOL;
-                            $isActive = $module::$PARTICIPANT->isParticipantActive($rcpro_participant_id);
+                            $isActive = $participant->isActive();
                         ?>
                             <tr>
                                 <td class="rcpro_participant_link" onclick="<?= $onclick ?>"><?= $participant["log_id"] ?></td>

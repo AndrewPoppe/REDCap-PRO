@@ -375,4 +375,16 @@ class Participant
             $this->module->logError("Error storing password hash", $e);
         }
     }
+
+    public function isPasswordSet(): bool
+    {
+        try {
+            $SQL = "SELECT pw WHERE log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+            $result = $this->module->selectLogs($SQL, [$this->rcpro_participant_id]);
+            $pw = $result->fetch_assoc()["pw"];
+            return isset($pw) && $pw !== "";
+        } catch (\Exception $e) {
+            $this->module->logError("Error checking if password is set", $e);
+        }
+    }
 }
