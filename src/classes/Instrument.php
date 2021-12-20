@@ -4,8 +4,6 @@ namespace YaleREDCap\REDCapPRO;
 
 class Instrument
 {
-    public static $instrument_name;
-    public static $rcpro_dag;
     public static $PARTICIPANT;
     public $dd;
     public $username;
@@ -16,9 +14,8 @@ class Instrument
     function __construct($module, $instrument_name, $rcpro_dag)
     {
         $this->module = $module;
-        self::$PARTICIPANT = $module::$PARTICIPANT;
-        self::$instrument_name = $instrument_name;
-        self::$rcpro_dag = $rcpro_dag;
+        $this->instrument_name = $instrument_name;
+        $this->rcpro_dag = $rcpro_dag;
         $this->dd = $this->getDD();
         $this->username = $this->getUsernameField();
         if (isset($this->username)) {
@@ -30,7 +27,7 @@ class Instrument
 
     function getDD()
     {
-        $json = \REDCap::getDataDictionary("json", false, null, [self::$instrument_name], false);
+        $json = \REDCap::getDataDictionary("json", false, null, [$this->instrument_name], false);
         return json_decode($json, true);
     }
 
@@ -87,14 +84,15 @@ class Instrument
     {
         if (isset($this->username)) {
             $project = new Project($this->module, ["redcap_pid" => PROJECT_ID]);
-            $participants = self::$PARTICIPANT->getProjectParticipants($project->rcpro_project_id, self::$rcpro_dag);
+            $participants = $project->getParticipants($this->rcpro_dag);
             $options = "<option value=''>''</option>";
             $participants_json = json_encode($participants);
             foreach ($participants as $participant) {
-                $inst_username = \REDCap::escapeHtml($participant["rcpro_username"]);
-                $inst_email    = \REDCap::escapeHtml($participant["email"]);
-                $inst_fname    = \REDCap::escapeHtml($participant["fname"]);
-                $inst_lname    = \REDCap::escapeHtml($participant["lname"]);
+                $inst_username = \REDCap::escapeHtml($participant->rcpro_username);
+                $inst_email    = \REDCap::escapeHtml($participant->email);
+                $inst_name     = $participant->getName();
+                $inst_fname    = \REDCap::escapeHtml($inst_name["fname"]);
+                $inst_lname    = \REDCap::escapeHtml($inst_name["lname"]);
                 $options      .= "<option value='$inst_username' >$inst_username - $inst_fname $inst_lname - $inst_email</option>";
             }
             $replacement =  "<select id='username_selector'>$options</select>";

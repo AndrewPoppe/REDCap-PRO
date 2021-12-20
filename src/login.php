@@ -3,22 +3,22 @@
 namespace YaleREDCap\REDCapPRO;
 
 // Initialize Authentication
-$module::$AUTH->init();
+$module->AUTH->init();
 
 // Login Helper
 require_once("classes/LoginHelper.php");
 $Login = new LoginHelper($module);
 
 // Check if the user is already logged in, if yes then redirect then to the survey
-if ($module::$AUTH->is_logged_in()) {
-    $survey_url = $module::$AUTH->get_survey_url();
-    $survey_url_active = $module::$AUTH->is_survey_link_active();
+if ($module->AUTH->is_logged_in()) {
+    $survey_url = $module->AUTH->get_survey_url();
+    $survey_url_active = $module->AUTH->is_survey_link_active();
 
     if (empty($survey_url) || empty($survey_url_active) || $survey_url_active !== TRUE) {
         return;
     }
 
-    $module::$AUTH->deactivate_survey_link();
+    $module->AUTH->deactivate_survey_link();
     header("location: ${survey_url}");
     return;
 }
@@ -35,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     parse_str($_SERVER['QUERY_STRING'], $qstring);
 
     // Validate token
-    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
+    if (!$module->AUTH->validate_csrf_token($_POST['token'])) {
         $module->logEvent("Invalid CSRF Token");
         echo $module->tt("error_generic1");
         echo "<br>";
@@ -50,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $username = \REDCap::escapeHtml(trim($_POST["username"]));
         $usernameExists = $module->PARTICIPANT_HELPER->usernameIsTaken($username);
         $emailExists = $module->PARTICIPANT_HELPER->checkEmailExists($username);
-        $emailLoginsAllowed = $module::$SETTINGS->emailLoginsAllowed($module->getProjectId());
+        $emailLoginsAllowed = $module->SETTINGS->emailLoginsAllowed($module->getProjectId());
     }
 
     // Check if password is empty
@@ -83,14 +83,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Username/email doesn't exist, display a generic error message
                 $Login->incrementFailedIp($ip);
                 $attempts = $Login->checkAttempts(NULL, $ip);
-                $remainingAttempts = $module::$SETTINGS->getLoginAttempts() - $attempts;
+                $remainingAttempts = $module->SETTINGS->getLoginAttempts() - $attempts;
                 $module->logEvent("Login Attempted - Username/Email does not exist", [
                     "rcpro_ip"       => $ip,
                     "rcpro_username" => $usernameExists ? $username : "",
                     "rcpro_email" => $emailExists ? $username : ""
                 ]);
                 if ($remainingAttempts <= 0) {
-                    $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err6", $module::$SETTINGS->getLockoutDurationSeconds());
+                    $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err6", $module->SETTINGS->getLockoutDurationSeconds());
                     $module->logEvent("IP LOCKOUT", ["rcpro_ip" => $ip]);
                 } else {
                     $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err7", $remainingAttempts);
@@ -149,11 +149,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $Login->resetFailedLogin($participant->rcpro_participant_id);
 
                     // Store data in session variables
-                    $module::$AUTH->set_login_values($participant);
+                    $module->AUTH->set_login_values($participant);
 
                     // Redirect user to appropriate page
-                    if ($module::$AUTH->is_survey_url_set()) {
-                        header("location: " . $module::$AUTH->get_survey_url());
+                    if ($module->AUTH->is_survey_url_set()) {
+                        header("location: " . $module->AUTH->get_survey_url());
                     } else if (isset($qstring["s"])) {
                         header("location: " . APP_PATH_SURVEY_FULL . $_SERVER['QUERY_STRING']);
                     } else {
@@ -176,9 +176,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $Login->incrementFailedLogin($participant->rcpro_participant_id, $participant->rcpro_username);
                     $Login->incrementFailedIp($ip);
                     $attempts = $Login->checkAttempts($participant->rcpro_participant_id, $ip);
-                    $remainingAttempts = $module::$SETTINGS->getLoginAttempts() - $attempts;
+                    $remainingAttempts = $module->SETTINGS->getLoginAttempts() - $attempts;
                     if ($remainingAttempts <= 0) {
-                        $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err6", $module::$SETTINGS->getLockoutDurationSeconds());
+                        $login_err = $module->tt("login_err5") . "<br>" . $module->tt("login_err6", $module->SETTINGS->getLockoutDurationSeconds());
                         $module->logEvent("USERNAME LOCKOUT", [
                             "rcpro_ip"             => $ip,
                             "rcpro_username"       => $participant->rcpro_username,
@@ -200,10 +200,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // set csrf token
-$module::$AUTH->set_csrf_token();
+$module->AUTH->set_csrf_token();
 
 // This method starts the html doc
-$module::$UI->ShowParticipantHeader($module->tt("login_title"));
+$module->UI->ShowParticipantHeader($module->tt("login_title"));
 ?>
 
 <div style="text-align: center;">
@@ -218,7 +218,7 @@ if (!empty($login_err)) {
 
 <form action="<?= $module->getUrl("src/login.php", true); ?>" method="post">
     <div class="form-group">
-        <label><?= $module::$SETTINGS->emailLoginsAllowed($module->getProjectId()) ? $module->tt("login_username_label2") : $module->tt("login_username_label") ?></label>
+        <label><?= $module->SETTINGS->emailLoginsAllowed($module->getProjectId()) ? $module->tt("login_username_label2") : $module->tt("login_username_label") ?></label>
         <input type="text" name="username" class="form-control <?= (!empty($username_err)) ? 'is-invalid' : ''; ?>" value="<?= $username; ?>">
         <span class="invalid-feedback"><?= $username_err; ?></span>
     </div>
@@ -230,7 +230,7 @@ if (!empty($login_err)) {
     <div class="form-group d-grid">
         <input type="submit" class="btn btn-primary" value="<?= $module->tt("login_button_text") ?>">
     </div>
-    <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+    <input type="hidden" name="token" value="<?= $module->AUTH->get_csrf_token(); ?>">
 </form>
 <hr>
 <div style="text-align: center;">
@@ -250,4 +250,4 @@ if (!empty($login_err)) {
         text-shadow: 0px 0px 5px #900000;
     }
 </style>
-<?php $module::$UI->EndParticipantPage(); ?>
+<?php $module->UI->EndParticipantPage(); ?>

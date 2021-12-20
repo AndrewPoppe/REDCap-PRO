@@ -2,7 +2,7 @@
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 echo "<title>" . $module::$APPTITLE . " - Home</title>";
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module::$UI->ShowHeader("Home");
+$module->UI->ShowHeader("Home");
 ?>
 
 

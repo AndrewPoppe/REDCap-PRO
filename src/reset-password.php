@@ -3,7 +3,7 @@
 namespace YaleREDCap\REDCapPRO;
 
 # Initialize authentication session on page
-$module::$AUTH->init();
+$module->AUTH->init();
 
 # Parse query string to grab token.
 parse_str($_SERVER['QUERY_STRING'], $qstring);
@@ -27,7 +27,7 @@ $participant = new Participant($module, ["rcpro_participant_id" => $verified_par
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // Validate token
-    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
+    if (!$module->AUTH->validate_csrf_token($_POST['token'])) {
         echo $module->tt("error_generic1");
         echo "<br>";
         echo $module->tt("error_generic2");
@@ -41,7 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     } else {
         $new_password = trim($_POST["new_password"]);
         // Validate password strength
-        $pw_len_req   = $module::$SETTINGS->getPasswordLength();
+        $pw_len_req   = $module->SETTINGS->getPasswordLength();
         $uppercase    = preg_match('@[A-Z]@', $new_password);
         $lowercase    = preg_match('@[a-z]@', $new_password);
         $number       = preg_match('@[0-9]@', $new_password);
@@ -89,23 +89,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $participant->expirePasswordResetToken();
 
         // Store data in session variables
-        $module::$AUTH->set_login_values($participant);
+        $module->AUTH->set_login_values($participant);
 
-        if ($module::$AUTH->is_survey_url_set()) {
-            header("location: " . $module::$AUTH->get_survey_url());
+        if ($module->AUTH->is_survey_url_set()) {
+            header("location: " . $module->AUTH->get_survey_url());
         } else {
-            $module::$UI->ShowParticipantHeader($module->tt("reset_password_title2"));
+            $module->UI->ShowParticipantHeader($module->tt("reset_password_title2"));
             echo "<div style='text-align:center;'><p>" . $module->tt("ui_close_tab") . "</p></div>";
-            $module::$UI->EndParticipantPage();
+            $module->UI->EndParticipantPage();
         }
         return;
     }
 }
 
 // set csrf token
-$module::$AUTH->set_csrf_token();
+$module->AUTH->set_csrf_token();
 
-$module::$UI->ShowParticipantHeader($module->tt("reset_password_title"));
+$module->UI->ShowParticipantHeader($module->tt("reset_password_title"));
 
 if ($participant->exists) {
 ?>
@@ -129,7 +129,7 @@ if ($participant->exists) {
         <div class="form-group d-grid">
             <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
         </div>
-        <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+        <input type="hidden" name="token" value="<?= $module->AUTH->get_csrf_token(); ?>">
         <input type="hidden" name="username" value="<?= $participant->rcpro_username ?>">
     </form>
 <?php } else { ?>
@@ -137,4 +137,4 @@ if ($participant->exists) {
         <?= $module->tt("reset_password_err5") ?>
     </div>
 <?php } ?>
-<?php $module::$UI->EndParticipantPage(); ?>
+<?php $module->UI->EndParticipantPage(); ?>

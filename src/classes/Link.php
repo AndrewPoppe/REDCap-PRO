@@ -84,10 +84,10 @@ class Link
     {
         $SQL1 = "UPDATE redcap_external_modules_log_parameters SET value = 1 WHERE log_id = ? AND name = 'active'";
         try {
-            $result = $this->module->query($SQL1, [$this->link_id]);
+            $result = $this->module->query($SQL1, [$this->id]);
             if ($result && isset($dag)) {
                 $SQL2 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'project_dag'";
-                $result = $this->module->query($SQL2, [$dag, $this->link_id]);
+                $result = $this->module->query($SQL2, [$dag, $this->id]);
             }
             return $result;
         } catch (\Exception $e) {
@@ -99,7 +99,7 @@ class Link
     {
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = 0 WHERE log_id = ? AND name = 'active'";
         try {
-            return $this->module->query($SQL, [$this->link_id]);
+            return $this->module->query($SQL, [$this->id]);
         } catch (\Exception $e) {
             $this->module->logError("Error deactivating link", $e);
         }

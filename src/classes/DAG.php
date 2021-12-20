@@ -7,7 +7,7 @@ class DAG
 
     function __construct($module)
     {
-        $this->$module = $module;
+        $this->module = $module;
     }
 
     /**

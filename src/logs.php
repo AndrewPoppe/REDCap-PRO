@@ -5,7 +5,7 @@ if ($role < 3) {
 }
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module::$UI->ShowHeader("Logs");
+$module->UI->ShowHeader("Logs");
 ?>
 
 <title><?= $module::$APPTITLE ?> - Enroll</title>

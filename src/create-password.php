@@ -3,7 +3,7 @@
 namespace YaleREDCap\REDCapPRO;
 
 // Initialize Authentication
-$module::$AUTH->init();
+$module->AUTH->init();
 
 # Parse query string to grab token.
 parse_str($_SERVER['QUERY_STRING'], $qstring);
@@ -26,10 +26,10 @@ $verified_participant = $module->PARTICIPANT_HELPER->verifyPasswordResetToken($q
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // Validate token
-    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        $module::$UI->ShowParticipantHeader($module->tt("error_title"));
+    if (!$module->AUTH->validate_csrf_token($_POST['token'])) {
+        $module->UI->ShowParticipantHeader($module->tt("error_title"));
         echo "<div style='text-align: center;'>" . $module->tt("error_generic1") . "<br>" . $module->tt("error_csrf1") . "</div>";
-        $module::$UI->EndParticipantPage();
+        $module->UI->EndParticipantPage();
         return;
     }
 
@@ -40,7 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $any_error = TRUE;
     } else {
         // Validate password strength
-        $pw_len_req   = $module::$SETTINGS->getPasswordLength();
+        $pw_len_req   = $module->SETTINGS->getPasswordLength();
         $uppercase    = preg_match('@[A-Z]@', $new_password);
         $lowercase    = preg_match('@[a-z]@', $new_password);
         $number       = preg_match('@[0-9]@', $new_password);
@@ -90,19 +90,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $this_participant->expirePasswordResetToken();
 
         // Store data in session variables
-        $module::$AUTH->set_login_values($this_participant);
+        $module->AUTH->set_login_values($this_participant);
 
-        $module::$UI->ShowParticipantHeader($module->tt("create_password_set"));
+        $module->UI->ShowParticipantHeader($module->tt("create_password_set"));
         echo "<div style='text-align:center;'><p>" . $module->tt("ui_close_tab") . "</p></div>";
-        $module::$UI->EndParticipantPage();
+        $module->UI->EndParticipantPage();
         return;
     }
 }
 
 // set csrf token
-$module::$AUTH->set_csrf_token();
+$module->AUTH->set_csrf_token();
 
-$module::$UI->ShowParticipantHeader($module->tt("create_password_title"));
+$module->UI->ShowParticipantHeader($module->tt("create_password_title"));
 
 if ($verified_participant) {
 
@@ -132,7 +132,7 @@ if ($verified_participant) {
         <div class="form-group">
             <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
         </div>
-        <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+        <input type="hidden" name="token" value="<?= $module->AUTH->get_csrf_token(); ?>">
         <input type="hidden" name="username" value="<?= $participant->rcpro_username ?>">
     </form>
     </div>

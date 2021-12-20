@@ -2,17 +2,11 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-require_once("ProjectSettings.php");
-
 class LoginHelper
 {
-
-    public static $module;
-    public static $SETTINGS;
     function __construct($module)
     {
-        self::$module = $module;
-        self::$SETTINGS = new ProjectSettings($module);
+        $this->module = $module;
     }
 
 
@@ -28,13 +22,13 @@ class LoginHelper
     {
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = value+1 WHERE log_id = ? AND name = 'failed_attempts'";
         try {
-            $res = self::$module->query($SQL, [$rcpro_participant_id]);
+            $res = $this->module->query($SQL, [$rcpro_participant_id]);
 
             // Lockout username if necessary
             $this->lockoutLogin($rcpro_participant_id, $rcpro_username);
             return $res;
         } catch (\Exception $e) {
-            self::$module->logError("Error incrementing failed login", $e);
+            $this->module->logError("Error incrementing failed login", $e);
         }
     }
 
@@ -51,12 +45,12 @@ class LoginHelper
     {
         try {
             $attempts = $this->checkUsernameAttempts($rcpro_participant_id);
-            if ($attempts >= self::$SETTINGS->getLoginAttempts()) {
-                $lockout_ts = time() + self::$SETTINGS->getLockoutDurationSeconds();
+            if ($attempts >= $this->module->SETTINGS->getLoginAttempts()) {
+                $lockout_ts = time() + $this->module->SETTINGS->getLockoutDurationSeconds();
                 $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'lockout_ts';";
-                $res = self::$module->query($SQL, [$lockout_ts, $rcpro_participant_id]);
+                $res = $this->module->query($SQL, [$lockout_ts, $rcpro_participant_id]);
                 $status = $res ? "Successful" : "Failed";
-                self::$module->logEvent("Login Lockout ${status}", [
+                $this->module->logEvent("Login Lockout ${status}", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $rcpro_username
                 ]);
@@ -65,7 +59,7 @@ class LoginHelper
                 return TRUE;
             }
         } catch (\Exception $e) {
-            self::$module->logError("Error doing login lockout", $e);
+            $this->module->logError("Error doing login lockout", $e);
             return FALSE;
         }
     }
@@ -81,9 +75,9 @@ class LoginHelper
     {
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value=0 WHERE log_id=? AND name='failed_attempts';";
         try {
-            return self::$module->query($SQL, [$rcpro_participant_id]);
+            return $this->module->query($SQL, [$rcpro_participant_id]);
         } catch (\Exception $e) {
-            self::$module->logError("Error resetting failed login count", $e);
+            $this->module->logError("Error resetting failed login count", $e);
             return NULL;
         }
     }
@@ -110,10 +104,10 @@ class LoginHelper
      */
     public function incrementFailedIp(string $ip)
     {
-        if (self::$module->getSystemSetting('ip_lockouts') === null) {
-            self::$module->setSystemSetting('ip_lockouts', json_encode(array()));
+        if ($this->module->getSystemSetting('ip_lockouts') === null) {
+            $this->module->setSystemSetting('ip_lockouts', json_encode(array()));
         }
-        $ipLockouts = json_decode(self::$module->getSystemSetting('ip_lockouts'), true);
+        $ipLockouts = json_decode($this->module->getSystemSetting('ip_lockouts'), true);
         if (isset($ipLockouts[$ip])) {
             $ipStat = $ipLockouts[$ip];
         } else {
@@ -121,9 +115,9 @@ class LoginHelper
         }
         if (isset($ipStat["attempts"])) {
             $ipStat["attempts"]++;
-            if ($ipStat["attempts"] >= self::$SETTINGS->getLoginAttempts()) {
-                $ipStat["lockout_ts"] = time() + self::$SETTINGS->getLockoutDurationSeconds();
-                self::$module->logEvent("Locked out IP address", [
+            if ($ipStat["attempts"] >= $this->module->SETTINGS->getLoginAttempts()) {
+                $ipStat["lockout_ts"] = time() + $this->module->SETTINGS->getLockoutDurationSeconds();
+                $this->module->logEvent("Locked out IP address", [
                     "rcpro_ip"   => $ip,
                     "lockout_ts" => $ipStat["lockout_ts"]
                 ]);
@@ -132,7 +126,7 @@ class LoginHelper
             $ipStat["attempts"] = 1;
         }
         $ipLockouts[$ip] = $ipStat;
-        self::$module->setSystemSetting('ip_lockouts', json_encode($ipLockouts));
+        $this->module->setSystemSetting('ip_lockouts', json_encode($ipLockouts));
         return $ipStat["attempts"];
     }
 
@@ -146,10 +140,10 @@ class LoginHelper
     public function resetFailedIp(string $ip)
     {
         try {
-            if (self::$module->getSystemSetting('ip_lockouts') === null) {
-                self::$module->setSystemSetting('ip_lockouts', json_encode(array()));
+            if ($this->module->getSystemSetting('ip_lockouts') === null) {
+                $this->module->setSystemSetting('ip_lockouts', json_encode(array()));
             }
-            $ipLockouts = json_decode(self::$module->getSystemSetting('ip_lockouts'), true);
+            $ipLockouts = json_decode($this->module->getSystemSetting('ip_lockouts'), true);
             if (isset($ipLockouts[$ip])) {
                 $ipStat = $ipLockouts[$ip];
             } else {
@@ -158,10 +152,10 @@ class LoginHelper
             $ipStat["attempts"] = 0;
             $ipStat["lockout_ts"] = NULL;
             $ipLockouts[$ip] = $ipStat;
-            self::$module->setSystemSetting('ip_lockouts', json_encode($ipLockouts));
+            $this->module->setSystemSetting('ip_lockouts', json_encode($ipLockouts));
             return TRUE;
         } catch (\Exception $e) {
-            self::$module->logError("IP Login Attempt Reset Failed", $e);
+            $this->module->logError("IP Login Attempt Reset Failed", $e);
             return FALSE;
         }
     }
@@ -175,10 +169,10 @@ class LoginHelper
      */
     private function checkIpAttempts(string $ip)
     {
-        if (self::$module->getSystemSetting('ip_lockouts') === null) {
-            self::$module->setSystemSetting('ip_lockouts', json_encode(array()));
+        if ($this->module->getSystemSetting('ip_lockouts') === null) {
+            $this->module->setSystemSetting('ip_lockouts', json_encode(array()));
         }
-        $ipLockouts = json_decode(self::$module->getSystemSetting('ip_lockouts'), true);
+        $ipLockouts = json_decode($this->module->getSystemSetting('ip_lockouts'), true);
         if (isset($ipLockouts[$ip])) {
             $ipStat = $ipLockouts[$ip];
             if (isset($ipStat["attempts"])) {
@@ -197,10 +191,10 @@ class LoginHelper
      */
     public function checkIpLockedOut(string $ip)
     {
-        if (self::$module->getSystemSetting('ip_lockouts') === null) {
-            self::$module->setSystemSetting('ip_lockouts', json_encode(array()));
+        if ($this->module->getSystemSetting('ip_lockouts') === null) {
+            $this->module->setSystemSetting('ip_lockouts', json_encode(array()));
         }
-        $ipLockouts = json_decode(self::$module->getSystemSetting('ip_lockouts'), true);
+        $ipLockouts = json_decode($this->module->getSystemSetting('ip_lockouts'), true);
         $ipStat = $ipLockouts[$ip];
 
         if (isset($ipStat) && $ipStat["lockout_ts"] !== null && $ipStat["lockout_ts"] >= time()) {
@@ -220,10 +214,10 @@ class LoginHelper
     {
         $SQL = "SELECT failed_attempts WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $res = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
+            $res = $this->module->selectLogs($SQL, [$rcpro_participant_id]);
             return $res->fetch_assoc()["failed_attempts"];
         } catch (\Exception $e) {
-            self::$module->logError("Failed to check username attempts", $e);
+            $this->module->logError("Failed to check username attempts", $e);
             return 0;
         }
     }
@@ -241,14 +235,14 @@ class LoginHelper
     {
         $SQL = "SELECT lockout_ts WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $res = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
+            $res = $this->module->selectLogs($SQL, [$rcpro_participant_id]);
             $lockout_ts = intval($res->fetch_assoc()["lockout_ts"]);
             $time_remaining = $lockout_ts - time();
             if ($time_remaining > 0) {
                 return $time_remaining;
             }
         } catch (\Exception $e) {
-            self::$module->logError("Failed to check username lockout", $e);
+            $this->module->logError("Failed to check username lockout", $e);
         }
     }
 

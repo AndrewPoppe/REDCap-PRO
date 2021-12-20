@@ -4,16 +4,14 @@ namespace YaleREDCap\REDCapPRO;
 
 class ProjectSettings
 {
-    public static $module;
-
     function __construct($module)
     {
-        self::$module = $module;
+        $this->module = $module;
     }
 
     public function getTimeoutWarningMinutes()
     {
-        $result = self::$module->getSystemSetting("warning-time");
+        $result = $this->module->getSystemSetting("warning-time");
         if (!floatval($result)) {
             // DEFAULT TO 1 MINUTE IF NOT SET
             $result = 1;
@@ -23,7 +21,7 @@ class ProjectSettings
 
     public function getTimeoutMinutes()
     {
-        $result = self::$module->getSystemSetting("timeout-time");
+        $result = $this->module->getSystemSetting("timeout-time");
         if (!floatval($result)) {
             // DEFAULT TO 5 MINUTES IF NOT SET
             $result = 5;
@@ -33,7 +31,7 @@ class ProjectSettings
 
     public function getPasswordLength()
     {
-        $result = self::$module->getSystemSetting("password-length");
+        $result = $this->module->getSystemSetting("password-length");
         if (!intval($result)) {
             // DEFAULT TO 8 CHARACTERS IF NOT SET
             $result = 8;
@@ -43,7 +41,7 @@ class ProjectSettings
 
     public function getLoginAttempts()
     {
-        $result = self::$module->getSystemSetting("login-attempts");
+        $result = $this->module->getSystemSetting("login-attempts");
         if (!intval($result)) {
             // DEFAULT TO 3 ATTEMPTS IF NOT SET
             $result = 3;
@@ -53,7 +51,7 @@ class ProjectSettings
 
     public function getLockoutDurationSeconds()
     {
-        $result = self::$module->getSystemSetting("lockout-seconds");
+        $result = $this->module->getSystemSetting("lockout-seconds");
         if (!intval($result)) {
             // DEFAULT TO 300 SECONDS IF NOT SET
             $result = 300;
@@ -63,7 +61,7 @@ class ProjectSettings
 
     public function getEmailFromAddress()
     {
-        $result = \REDCap::escapeHtml(self::$module->getSystemSetting("email-from-address"));
+        $result = \REDCap::escapeHtml($this->module->getSystemSetting("email-from-address"));
         if (!isset($result) || $result === "") {
             $result = "noreply@REDCapPRO.com";
         }
@@ -83,7 +81,7 @@ class ProjectSettings
     public function getLanguageFiles()
     {
         $langs = array();
-        $path = self::$module->getModulePath() . DS . "lang" . DS;
+        $path = $this->module->getModulePath() . DS . "lang" . DS;
         if (is_dir($path)) {
             $files = glob($path . "*.{i,I}{n,N}{i,I}", GLOB_BRACE);
             foreach ($files as $filename) {
@@ -105,8 +103,8 @@ class ProjectSettings
      */
     public function emailLoginsAllowed(int $pid)
     {
-        $emailLoginPreventedSystem  = self::$module->getSystemSetting("prevent-email-login-system");
-        $emailLoginPreventedProject = self::$module->getProjectSetting("prevent-email-login", $pid);
+        $emailLoginPreventedSystem  = $this->module->getSystemSetting("prevent-email-login-system");
+        $emailLoginPreventedProject = $this->module->getProjectSetting("prevent-email-login", $pid);
 
         return !($emailLoginPreventedSystem === true || $emailLoginPreventedProject === true);
     }

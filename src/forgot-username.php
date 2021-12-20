@@ -3,15 +3,15 @@
 namespace YaleREDCap\REDCapPRO;
 
 # Initialize authentication session on page
-$module::$AUTH->init();
+$module->AUTH->init();
 
-$module::$UI->ShowParticipantHeader($module->tt("forgot_username_title"));
+$module->UI->ShowParticipantHeader($module->tt("forgot_username_title"));
 
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // Validate token
-    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
+    if (!$module->AUTH->validate_csrf_token($_POST['token'])) {
         $module->logEvent("Invalid CSRF Token");
         echo $module->tt("error_generic1");
         echo "<br>";
@@ -41,7 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 // set csrf token
-$module::$AUTH->set_csrf_token();
+$module->AUTH->set_csrf_token();
 
 echo '<div style="text-align: center;"><p>' . $module->tt("forgot_username_message2") . '</p></div>';
 ?>
@@ -54,7 +54,7 @@ echo '<div style="text-align: center;"><p>' . $module->tt("forgot_username_messa
     <div class="form-group d-grid">
         <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
     </div>
-    <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+    <input type="hidden" name="token" value="<?= $module->AUTH->get_csrf_token(); ?>">
 </form>
 <hr>
 <div style="text-align: center;">
@@ -71,4 +71,4 @@ echo '<div style="text-align: center;"><p>' . $module->tt("forgot_username_messa
         text-shadow: 0px 0px 5px #900000;
     }
 </style>
-<?php $module::$UI->EndParticipantPage(); ?>
+<?php $module->UI->EndParticipantPage(); ?>

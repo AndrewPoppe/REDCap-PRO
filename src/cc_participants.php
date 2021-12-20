@@ -27,12 +27,12 @@ if (!SUPER_USER) {
     return;
 }
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
-$module::$UI->ShowControlCenterHeader("Participants");
+$module->UI->ShowControlCenterHeader("Participants");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate token
-    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
+    if (!$module->AUTH->validate_csrf_token($_POST['token'])) {
         header("location:" . $module->getUrl("src/cc_participants.php"));
         return;
     }
@@ -135,7 +135,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // set csrf token
-$module::$AUTH->set_csrf_token();
+$module->AUTH->set_csrf_token();
 
 // Get array of participants
 $participants = $module->PARTICIPANT_HELPER->getAllParticipants();
@@ -324,7 +324,7 @@ $participants = $module->PARTICIPANT_HELPER->getAllParticipants();
             <input type="hidden" id="toDisenroll" name="toDisenroll">
             <input type="hidden" id="toUpdateActivity" name="toUpdateActivity">
             <input type="hidden" id="statusAction" name="statusAction">
-            <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+            <input type="hidden" name="token" value="<?= $module->AUTH->get_csrf_token(); ?>">
         <?php } ?>
     </form>
 </div>

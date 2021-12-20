@@ -13,7 +13,7 @@ if (!SUPER_USER) {
 
 <?php
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
-$module::$UI->ShowControlCenterHeader("Projects");
+$module->UI->ShowControlCenterHeader("Projects");
 $redcap_project_ids = $module->getProjectsWithModuleEnabled();
 ?>
 <div id="loading-container" class="loader-container">

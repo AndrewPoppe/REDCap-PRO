@@ -9,7 +9,7 @@ $_SESSION = array();
 session_destroy();
 
 // This method starts the html doc
-$module::$UI->ShowParticipantHeader($module->tt("logout_title"));
+$module->UI->ShowParticipantHeader($module->tt("logout_title"));
 ?>
 <style>
     .swal2-timer-progress-bar {
@@ -35,4 +35,4 @@ $module::$UI->ShowParticipantHeader($module->tt("logout_title"));
     });
 </script>
 
-<?php $module::$UI->EndParticipantPage(); ?>
+<?php $module->UI->EndParticipantPage(); ?>

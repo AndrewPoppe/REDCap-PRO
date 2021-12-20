@@ -9,16 +9,16 @@ if ($role === 0) {
 
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module::$UI->ShowHeader("Manage");
+$module->UI->ShowHeader("Manage");
 echo "<title>" . $module::$APPTITLE . " - Manage</title>";
 
 // RCPRO Project ID
 $project = new Project($module, ["redcap_pid" => $project_id]);
 
 // DAGs
-$rcpro_user_dag = $module::$DAG->getCurrentDag(USERID, $project_id);
-$project_dags = $module::$DAG->getProjectDags();
-$user_dags = $module::$DAG->getPossibleDags(USERID, PROJECT_ID);
+$rcpro_user_dag = $module->DAG->getCurrentDag(USERID, $project_id);
+$project_dags = $module->DAG->getProjectDags();
+$user_dags = $module->DAG->getPossibleDags(USERID, PROJECT_ID);
 $project_dags[NULL] = "Unassigned";
 $projectHasDags = count($project_dags) > 1;
 
@@ -153,7 +153,7 @@ function switchDAG(int $rcpro_participant_id, ?string $newDAG)
         $newDAG = $newDAG === "" ? NULL : $newDAG;
         $participant = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
         $link = new Link($module, $project, $participant);
-        $result = $module::$DAG->updateDag($link->id, $newDAG);
+        $result = $module->DAG->updateDag($link->id, $newDAG);
         if (!$result) {
             $title = "Trouble switching participant's Data Access Group.";
             $icon = "error";
@@ -176,7 +176,7 @@ function switchDAG(int $rcpro_participant_id, ?string $newDAG)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate token
-    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
+    if (!$module->AUTH->validate_csrf_token($_POST['token'])) {
         header("location:" . $module->getUrl("src/manage.php"));
         return;
     }
@@ -221,8 +221,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Check that the Data Access Group of the participant matches that of the user
         if (!$error && $projectHasDags) {
             $link = new Link($module, $project, $participant);
-            $participant_dag = intval($module::$DAG->getParticipantDag($link->id));
-            $user_dag = $module::$DAG->getCurrentDag(USERID, PROJECT_ID);
+            $participant_dag = intval($module->DAG->getParticipantDag($link->id));
+            $user_dag = $module->DAG->getCurrentDag(USERID, PROJECT_ID);
             if (isset($user_dag) && $participant_dag !== $user_dag) {
                 $function = $generic_function;
                 $icon = "error";
@@ -263,7 +263,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // set csrf token
-$module::$AUTH->set_csrf_token();
+$module->AUTH->set_csrf_token();
 
 // Get list of participants
 $participants = $project->getParticipants($rcpro_user_dag);
@@ -292,7 +292,7 @@ $participants = $project->getParticipants($rcpro_user_dag);
     </div>
     <div id="parent" class="dataTableParentHidden" style="display:hidden;">
         <form class="rcpro-form manage-form" id="manage-form" action="<?= $module->getUrl("src/manage.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
-            <?php if (count($participantList) === 0) { ?>
+            <?php if (count($participants) === 0) { ?>
                 <div>
                     <p>No participants have been enrolled in this study</p>
                 </div>
@@ -324,7 +324,7 @@ $participants = $project->getParticipants($rcpro_user_dag);
                                     $email_clean    = \REDCap::escapeHtml($participant->email);
                                 }
                                 $link           = new Link($module, $project, $participant);
-                                $dag_id         = $module::$DAG->getParticipantDag($link->id);
+                                $dag_id         = $module->DAG->getParticipantDag($link->id);
                                 $dag_name       = \REDCap::getGroupNames(false, $dag_id);
                                 $dag_name_clean = count($dag_name) === 1 ? \REDCap::escapeHtml($dag_name) : "Unassigned";
                             ?>
@@ -487,7 +487,7 @@ $participants = $project->getParticipants($rcpro_user_dag);
                 <input type="hidden" id="toDisenroll" name="toDisenroll">
                 <input type="hidden" id="toSwitchDag" name="toSwitchDag">
                 <input type="hidden" id="newDag" name="newDag">
-                <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+                <input type="hidden" name="token" value="<?= $module->AUTH->get_csrf_token(); ?>">
             <?php } ?>
         </form>
     </div>

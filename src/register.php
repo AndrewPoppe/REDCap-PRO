@@ -6,7 +6,7 @@ if ($role < 2) {
 }
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module::$UI->ShowHeader("Register");
+$module->UI->ShowHeader("Register");
 echo "<title>" . $module::$APPTITLE . " - Register</title>";
 
 // Track all errors
@@ -16,7 +16,7 @@ $any_error = FALSE;
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate token
-    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
+    if (!$module->AUTH->validate_csrf_token($_POST['token'])) {
         header("location:" . $module->getUrl("src/register.php"));
         return;
     }
@@ -97,7 +97,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // set csrf token
-$module::$AUTH->set_csrf_token();
+$module->AUTH->set_csrf_token();
 
 ?>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
@@ -125,7 +125,7 @@ $module::$AUTH->set_csrf_token();
         <div class="form-group">
             <button type="submit" class="btn btn-rcpro" value="Submit">Submit</button>
         </div>
-        <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+        <input type="hidden" name="token" value="<?= $module->AUTH->get_csrf_token(); ?>">
     </form>
 </div>
 

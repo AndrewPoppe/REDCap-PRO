@@ -6,18 +6,18 @@ if ($role < 3) {
 }
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module::$UI->ShowHeader("Settings");
+$module->UI->ShowHeader("Settings");
 echo "<title>" . $module::$APPTITLE . " - Settings</title>
 <link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>";
 
 // Get possible languages
-$langs = $module::$SETTINGS->getLanguageFiles();
+$langs = $module->SETTINGS->getLanguageFiles();
 
 // Update settings if requested
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate token
-    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
+    if (!$module->AUTH->validate_csrf_token($_POST['token'])) {
         header("location:" . $module->getUrl("src/settings.php"));
         return;
     }
@@ -84,7 +84,7 @@ $settings = $module->getProjectSettings();
 $preventEmailLoginSystem = $module->getSystemSetting("prevent-email-login-system");
 
 // set csrf token
-$module::$AUTH->set_csrf_token();
+$module->AUTH->set_csrf_token();
 
 ?>
 
@@ -185,7 +185,7 @@ $module::$AUTH->set_csrf_token();
                     })()">Cancel</button>
                 <button type="submit" id="rcpro-submit-button" class="btn btn-rcpro" value="Submit" disabled>Save Settings</button>
             </div>
-            <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+            <input type="hidden" name="token" value="<?= $module->AUTH->get_csrf_token(); ?>">
         </form>
     </div>
 </div>
