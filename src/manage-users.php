@@ -1,5 +1,7 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role < 3) {
     header("location:" . $module->getUrl("src/home.php"));
@@ -13,7 +15,6 @@ echo "<title>" . $module::$APPTITLE . " - Staff</title>
 
 
 <?php
-$proj_id = $module::$PROJECT->getProjectIdFromPID($project_id);
 
 // Get list of users
 $project = $module->getProject();

@@ -1,5 +1,7 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role === 0) {
     header("location:" . $module->getUrl("src/home.php"));
@@ -10,8 +12,8 @@ require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module::$UI->ShowHeader("Manage");
 echo "<title>" . $module::$APPTITLE . " - Manage</title>";
 
-// RCPRO Project ID 
-$rcpro_project_id = $module::$PROJECT->getProjectIdFromPID($project_id);
+// RCPRO Project ID
+$project = new Project($module, ["redcap_pid" => $project_id]);
 
 // DAGs
 $rcpro_user_dag = $module::$DAG->getCurrentDag(USERID, $project_id);
@@ -26,7 +28,7 @@ $no_permission = "You do not have the required role to do that.";
 // Management Functions
 function disenroll(int $rcpro_participant_id)
 {
-    global $role, $module, $rcpro_project_id, $no_permission;
+    global $role, $module, $project, $no_permission;
     $function = "disenroll participant";
 
     // Check role
@@ -34,8 +36,8 @@ function disenroll(int $rcpro_participant_id)
         $title = $no_permission;
         $icon = "error";
     } else {
-        $rcpro_username = $module::$PARTICIPANT->getUserName($rcpro_participant_id);
-        $result = $module::$PROJECT->disenrollParticipant($rcpro_participant_id, $rcpro_project_id, $rcpro_username);
+        $participant = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
+        $result = $project->disenrollParticipant($participant);
         if (!$result) {
             $title = "Trouble disenrolling participant.";
             $icon = "error";
@@ -85,7 +87,8 @@ function changeName(int $rcpro_participant_id, string $newFirstName, string $new
 
     // Try to change name
     else {
-        $result = $module::$PARTICIPANT->changeName($rcpro_participant_id, $trimmedFirstName, $trimmedLastName);
+        $participant = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
+        $result = $participant->changeName($trimmedFirstName, $trimmedLastName);
         if (!$result) {
             $title = "Trouble updating participant's name.";
             $icon = "error";
