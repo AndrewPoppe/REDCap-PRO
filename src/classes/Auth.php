@@ -16,11 +16,16 @@ class Auth
      */
     function __construct($title = null)
     {
-        $this->APPTITLE             = $title;
-        $this->TOKEN_COOKIE         = $this->APPTITLE . "_token";
-        $this->LOGGED_IN_COOKIE     = $this->APPTITLE . "_loggedin";
-        $this->SURVEY_URL_COOKIE    = $this->APPTITLE . "_survey_url";
-        $this->SURVEY_ACTIVE_COOKIE = $this->APPTITLE . "_survey_link_active";
+        $this->APPTITLE              = $title;
+        $this->TOKEN_COOKIE          = $this->APPTITLE . "_token";
+        $this->LOGGED_IN_COOKIE      = $this->APPTITLE . "_loggedin";
+        $this->SURVEY_URL_COOKIE     = $this->APPTITLE . "_survey_url";
+        $this->SURVEY_ACTIVE_COOKIE  = $this->APPTITLE . "_survey_link_active";
+        $this->PARTICIPANT_ID_COOKIE = $this->APPTITLE . "_participant_id";
+        $this->USERNAME_COOKIE       = $this->APPTITLE . "_username";
+        $this->EMAIL_COOKIE          = $this->APPTITLE . "_email";
+        $this->FNAME_COOKIE          = $this->APPTITLE . "_fname";
+        $this->LNAME_COOKIE          = $this->APPTITLE . "_lname";
     }
 
     /**
@@ -125,7 +130,7 @@ class Auth
      */
     public function get_participant_id(): string
     {
-        return $_SESSION[$this->APPTITLE . "_participant_id"];
+        return $_SESSION[$this->PARTICIPANT_ID_COOKIE];
     }
 
     /**
@@ -133,7 +138,7 @@ class Auth
      */
     public function get_username(): string
     {
-        return $_SESSION[$this->APPTITLE . "_username"];
+        return $_SESSION[$this->USERNAME_COOKIE];
     }
 
     // SETS
@@ -181,13 +186,13 @@ class Auth
      */
     public function set_login_values(Participant $participant): void
     {
-        $name = $participant->getName();
-        $_SESSION["username"] = $participant->rcpro_username;
-        $_SESSION[$this->APPTITLE . "_participant_id"] = $participant->rcpro_participant_id;
-        $_SESSION[$this->APPTITLE . "_username"] = $participant->rcpro_username;
-        $_SESSION[$this->APPTITLE . "_email"] = $participant->email;
-        $_SESSION[$this->APPTITLE . "_fname"] = $name["fname"];
-        $_SESSION[$this->APPTITLE . "_lname"] = $name["lname"];
-        $_SESSION[$this->LOGGED_IN_COOKIE] = true;
+        $name                                   = $participant->getName();
+        $_SESSION["username"]                   = $participant->rcpro_username;
+        $_SESSION[$this->PARTICIPANT_ID_COOKIE] = $participant->rcpro_participant_id;
+        $_SESSION[$this->USERNAME_COOKIE]       = $participant->rcpro_username;
+        $_SESSION[$this->EMAIL_COOKIE]          = $participant->email;
+        $_SESSION[$this->FNAME_COOKIE]          = $name["fname"];
+        $_SESSION[$this->LNAME_COOKIE]          = $name["lname"];
+        $_SESSION[$this->LOGGED_IN_COOKIE]      = true;
     }
 }

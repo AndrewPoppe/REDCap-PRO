@@ -114,7 +114,7 @@ if ($participant->exists) {
     </div>
     <form action="<?= $module->getUrl("src/reset-password.php", true) . "&t=" . $qstring["t"]; ?>" method="post">
         <div class="form-group">
-            <span><?= $module->tt("reset_password_username_label") ?><span style="color: #900000; font-weight: bold;"><?= $participant->rcpro_username ?></span></span>
+            <span><?= $module->tt("reset_password_username_label") ?><span style="color: #900000; font-weight: bold;"><?= \REDCap::escapeHtml($participant->rcpro_username) ?></span></span>
         </div>
         <div class="form-group">
             <label><?= $module->tt("reset_password_password_label") ?></label>
@@ -130,7 +130,7 @@ if ($participant->exists) {
             <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
         </div>
         <input type="hidden" name="token" value="<?= $module->AUTH->get_csrf_token(); ?>">
-        <input type="hidden" name="username" value="<?= $participant->rcpro_username ?>">
+        <input type="hidden" name="username" value="<?= \REDCap::escapeHtml($participant->rcpro_username) ?>">
     </form>
 <?php } else { ?>
     <div class='red' style="text-align: center;">
