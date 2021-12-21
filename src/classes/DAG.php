@@ -5,7 +5,9 @@ namespace YaleREDCap\REDCapPRO;
 class DAG
 {
 
-    function __construct($module)
+    private $module;
+
+    function __construct(REDCapPRO $module)
     {
         $this->module = $module;
     }

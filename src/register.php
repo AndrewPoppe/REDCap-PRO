@@ -2,7 +2,8 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$currentUser = new REDCapProUser($module, USERID);
+$role = $currentUser->getUserRole($module->getProjectId());
 if ($role < 2) {
     header("location:" . $module->getUrl("src/home.php"));
 }
@@ -10,6 +11,7 @@ if ($role < 2) {
 // Helpers
 $Auth = new Auth($module::$APPTITLE);
 $UI = new UI($module);
+$ParticipantHelper = new ParticipantHelper($module);
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $UI->ShowHeader("Register");
@@ -50,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $email_err = "Please enter a valid email address.";
         $any_error = TRUE;
     } else {
-        $result = $module->PARTICIPANT_HELPER->checkEmailExists($param_email);
+        $result = $ParticipantHelper->checkEmailExists($param_email);
         if ($result === NULL) {
             echo "Oops! Something went wrong. Please try again later.";
             return;
@@ -67,14 +69,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!$any_error) {
         $icon = $title = $html = "";
         try {
-            $username = $module->PARTICIPANT_HELPER->createParticipant($email, $fname_clean, $lname_clean);
-            $module->sendNewParticipantEmail($username, $email, $fname_clean, $lname_clean);
+            $rcpro_username = $ParticipantHelper->createParticipant($email, $fname_clean, $lname_clean);
+            $module->sendNewParticipantEmail($rcpro_username, $email, $fname_clean, $lname_clean);
             $icon = "success";
             $title = "Participant Registered";
 
             $module->logEvent("Participant Registered", [
-                "rcpro_username" => $username,
-                "redcap_user"    => USERID
+                "rcpro_username" => $rcpro_username,
+                "redcap_user"    => $currentUser->username
             ]);
         } catch (\Exception $e) {
             $module->logError("Error creating participant", $e);

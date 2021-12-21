@@ -2,7 +2,8 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$currentUser = new REDCapProUser($module, USERID);
+$role = $currentUser->getUserRole($module->getProjectId());
 if ($role === 0) {
     header("location:" . $module->getUrl("src/home.php"));
 }
@@ -20,9 +21,9 @@ echo "<title>" . $module::$APPTITLE . " - Manage</title>";
 $project = new Project($module, ["redcap_pid" => $project_id]);
 
 // DAGs
-$rcpro_user_dag = $DAG->getCurrentDag(USERID, $project_id);
+$rcpro_user_dag = $DAG->getCurrentDag($currentUser->username, $module->getProjectId());
 $project_dags = $DAG->getProjectDags();
-$user_dags = $DAG->getPossibleDags(USERID, PROJECT_ID);
+$user_dags = $DAG->getPossibleDags($currentUser->username, $module->getProjectId());
 $project_dags[NULL] = "Unassigned";
 $projectHasDags = count($project_dags) > 1;
 
@@ -110,6 +111,7 @@ function changeEmail(int $rcpro_participant_id, string $newEmail)
     $function = "change participant's email address";
 
     // Create participant object
+    $ParticipantHelper = new ParticipantHelper($module);
     $participant = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
 
     // Check role
@@ -119,7 +121,7 @@ function changeEmail(int $rcpro_participant_id, string $newEmail)
     }
 
     // Check that email is not already associated with a participant
-    else if ($module->PARTICIPANT_HELPER->checkEmailExists($newEmail)) {
+    else if ($ParticipantHelper->checkEmailExists($newEmail)) {
         $title = "The provided email address is already associated with a REDCapPRO account.";
         $icon = "error";
     }
@@ -226,7 +228,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (!$error && $projectHasDags) {
             $link = new Link($module, $project, $participant);
             $participant_dag = intval($DAG->getParticipantDag($link->id));
-            $user_dag = $DAG->getCurrentDag(USERID, PROJECT_ID);
+            $user_dag = $DAG->getCurrentDag($currentUser->username, $module->getProjectId());
             if (isset($user_dag) && $participant_dag !== $user_dag) {
                 $function = $generic_function;
                 $icon = "error";

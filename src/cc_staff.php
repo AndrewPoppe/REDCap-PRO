@@ -2,6 +2,9 @@
 
 namespace YaleREDCap\REDCapPRO;
 
+if (!SUPER_USER) {
+    exit;
+}
 
 function createProjectsCell(array $projects)
 {
@@ -22,11 +25,6 @@ $UI = new UI($module);
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $UI->ShowControlCenterHeader("Staff");
 echo '<link rel="stylesheet" type="text/css" href="' . $module->getUrl("src/css/rcpro_cc.php") . '">';
-
-if (!SUPER_USER) {
-    return;
-}
-
 
 // Get array of staff (users)
 $users = $module->getAllUsers();

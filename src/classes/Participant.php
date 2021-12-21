@@ -5,7 +5,9 @@ namespace YaleREDCap\REDCapPRO;
 class Participant
 {
 
-    function __construct(REDCapPRO $module, $params)
+    private $module;
+
+    function __construct(REDCapPRO $module, array $params)
     {
         $this->module = $module;
         $this->exists = false;

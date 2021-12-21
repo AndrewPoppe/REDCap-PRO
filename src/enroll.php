@@ -2,7 +2,8 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$currentUser = new REDCapProUser($module, USERID);
+$role = $currentUser->getUserRole($module->getProjectId());
 if ($role < 2) {
     header("location:" . $module->getUrl("src/home.php"));
 }
@@ -47,7 +48,7 @@ if (isset($_POST["id"]) && isset($project_id)) {
         $project = new Project($module, ["redcap_pid" => $pid]);
 
         // Get DAG if applicable
-        $redcap_dag = $DAG->getCurrentDag(USERID, PROJECT_ID);
+        $redcap_dag = $DAG->getCurrentDag($currentUser->username, $module->getProjectId());
 
         // Enroll
         $result = $project->enrollParticipant($participant, $redcap_dag);
@@ -193,7 +194,7 @@ $jsname = $module->getJavascriptModuleObjectName();
                 </div>
 
                 <?php if ($DAG->getProjectDags()) {
-                    $userDag = $DAG->getCurrentDag(USERID, PROJECT_ID);
+                    $userDag = $DAG->getCurrentDag($currentUser->username, $module->getProjectId());
                     $dagName = isset($userDag) ? \REDCap::getGroupNames(false, $userDag) : "No Assignment";
                 ?>
                     <div class="mb-3 row">

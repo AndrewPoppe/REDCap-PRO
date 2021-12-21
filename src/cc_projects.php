@@ -3,7 +3,7 @@
 namespace YaleREDCap\REDCapPRO;
 
 if (!SUPER_USER) {
-    return;
+    exit;
 }
 
 // Helpers

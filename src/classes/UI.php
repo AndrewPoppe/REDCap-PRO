@@ -4,7 +4,10 @@ namespace YaleREDCap\REDCapPRO;
 
 class UI
 {
-    function __construct($module)
+
+    private $module;
+
+    function __construct(REDCapPRO $module)
     {
         $this->module = $module;
     }

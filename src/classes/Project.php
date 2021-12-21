@@ -11,6 +11,13 @@ namespace YaleREDCap\REDCapPRO;
 class Project
 {
 
+    private $module;
+    public $info;
+    public $staff;
+    public $project;
+    public $rcpro_project_id;
+    public $redcap_pid;
+
     /**
      * Constructor
      * 
@@ -39,6 +46,7 @@ class Project
 
         $this->info = $this->getProjectInfo();
         $this->staff = $this->getStaff();
+        $this->project = $this->module->getProject($this->redcap_pid);
     }
 
     /**
@@ -365,5 +373,19 @@ class Project
         } catch (\Exception $e) {
             $this->module->logError("Error checking participant enrollment", $e);
         }
+    }
+
+
+    /**
+     * @return REDCapProUser[]
+     */
+    public function getUsers()
+    {
+        $users = $this->project->getUsers();
+        $rcpro_users = [];
+        foreach ($users as $user) {
+            array_push($rcpro_users, new REDCapProUser($this->module, $user->getUsername()));
+        }
+        return $rcpro_users;
     }
 }

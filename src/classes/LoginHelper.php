@@ -4,7 +4,9 @@ namespace YaleREDCap\REDCapPRO;
 
 class LoginHelper
 {
-    function __construct($module)
+    private $module;
+
+    function __construct(REDCapPRO $module)
     {
         $this->module = $module;
     }

@@ -2,7 +2,8 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$currentUser = new REDCapProUser($module, USERID);
+$role = $currentUser->getUserRole($module->getProjectId());
 if ($role < 3) {
     header("location:" . $module->getUrl("src/home.php"));
 }

@@ -5,7 +5,8 @@ namespace YaleREDCap\REDCapPRO;
 // Helpers
 $UI = new UI($module);
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$currentUser = new REDCapProUser($module, USERID);
+$role = $currentUser->getUserRole($module->getProjectId());
 echo "<title>" . $module::$APPTITLE . " - Home</title>";
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $UI->ShowHeader("Home");

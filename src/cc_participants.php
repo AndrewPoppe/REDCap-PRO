@@ -2,6 +2,10 @@
 
 namespace YaleREDCap\REDCapPRO;
 
+if (!SUPER_USER) {
+    exit;
+}
+
 function createProjectsCell(array $projects)
 {
     global $module;
@@ -20,11 +24,6 @@ function createProjectsCell(array $projects)
     return $result;
 }
 
-?>
-<?php
-if (!SUPER_USER) {
-    return;
-}
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 
 // Helpers

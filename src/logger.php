@@ -1,6 +1,7 @@
 <?php
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$currentUser = new REDCapProUser($module, USERID);
+$role = $currentUser->getUserRole($module->getProjectId());
 if ($role < 3) {
     exit;
 }
@@ -20,7 +21,7 @@ if (
 ) {
     $module->logEvent("Exported logs", [
         "export_type" => $_POST["export_type"],
-        "redcap_user" => USERID,
+        "redcap_user" => $currentUser->username,
         "export_page" => $qstring["page"]
     ]);
 }

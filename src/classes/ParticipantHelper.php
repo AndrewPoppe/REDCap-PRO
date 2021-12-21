@@ -9,6 +9,9 @@ namespace YaleREDCap\REDCapPRO;
  */
 class ParticipantHelper
 {
+
+    private $module;
+
     /**
      * Constructor
      * 

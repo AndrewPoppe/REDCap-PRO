@@ -4,15 +4,15 @@ namespace YaleREDCap\REDCapPRO;
 
 class Instrument
 {
-    public $module;
-    public $instrument_name;
-    public $dd;
-    public $username;
-    public $email;
-    public $fname;
-    public $lname;
+    private $module;
+    private $instrument_name;
+    private $dd;
+    private $username;
+    private $email;
+    private $fname;
+    private $lname;
 
-    function __construct($module, $instrument_name, $rcpro_dag)
+    function __construct(REDCapPRO $module, string $instrument_name, int $rcpro_dag)
     {
         $this->module = $module;
         $this->instrument_name = $instrument_name;

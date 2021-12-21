@@ -2,7 +2,8 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$currentUser = new REDCapProUser($module, USERID);
+$role = $currentUser->getUserRole($module->getProjectId());
 if ($role < 3) {
     header("location:" . $module->getUrl("src/home.php"));
 }
@@ -21,7 +22,7 @@ echo "<title>" . $module::$APPTITLE . " - Staff</title>
 <?php
 
 // Get list of users
-$project = $module->getProject();
+$project = new Project($module, ["redcap_pid" => $module->getProjectId()]);
 $userList = $project->getUsers();
 
 
@@ -39,11 +40,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     try {
         foreach ($userList as $user) {
-            $username = $user->getUsername();
+            $username = $user->username;
             $newRole = strval($_POST["role_select_${username}"]);
-            $oldRole = strval($module->getUserRole($username));
+            $oldRole = strval($user->getUserRole($project->redcap_pid));
             if (isset($newRole) && $newRole !== $oldRole) {
-                $module->changeUserRole($username, $oldRole, $newRole);
+                $currentUser->changeUserRole($username, $project->redcap_pid, $oldRole, $newRole);
             }
         }
 ?>
@@ -115,11 +116,11 @@ $Auth->set_csrf_token();
                         </thead>
                         <tbody>
                             <?php foreach ($userList as $user) {
-                                $username       = $user->getUsername();
+                                $username       = $user->username;
                                 $username_clean = \REDCap::escapeHtml($username);
-                                $fullname_clean = \REDCap::escapeHtml($module->getUserFullname($username));
-                                $email_clean    = \REDCap::escapeHtml($user->getEmail());
-                                $role           = $module->getUserRole($username);
+                                $fullname_clean = \REDCap::escapeHtml($user->getUserFullname());
+                                $email_clean    = \REDCap::escapeHtml($user->user->getEmail());
+                                $role           = $user->getUserRole($project->redcap_pid);
                             ?>
                                 <tr>
                                     <td><?= $username_clean ?></td>

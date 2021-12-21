@@ -40,7 +40,8 @@ class REDCapPRO extends AbstractExternalModule
         if (strpos($_SERVER["PHP_SELF"], "surveys") !== false) {
             return;
         }
-        $role = SUPER_USER ? 3 : $this->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+        $user = new REDCapProUser($this, USERID);
+        $role = $user->getUserRole($project_id);
         if ($role > 0) {
 ?>
             <script>
@@ -211,7 +212,8 @@ class REDCapPRO extends AbstractExternalModule
 
     function redcap_data_entry_form($project_id, $record, $instrument, $event_id, $group_id, $repeat_instance = 1)
     {
-        $role = SUPER_USER ? 3 : $this->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+        $user = new REDCapProUser($this, USERID);
+        $role = $user->getUserRole($project_id);
         if ($role < 2) {
             return;
         }
@@ -588,101 +590,6 @@ class REDCapPRO extends AbstractExternalModule
         }
     }
 
-
-    /////////////////////\\\\\\\\\\\\\\\\\\\\\\       
-    /////   REDCAP USER-RELATED METHODS   \\\\\ 
-    /////////////////////\\\\\\\\\\\\\\\\\\\\\\
-
-    /**
-     * Updates the role of the given REDCap user 
-     * 
-     * @param string $username
-     * @param string|NULL $oldRole This is just for logging purposes
-     * @param string $newRole
-     * 
-     * @return void
-     */
-    public function changeUserRole(string $username, ?string $oldRole, string $newRole)
-    {
-        try {
-            $roles = array(
-                "3" => $this->getProjectSetting("managers"),
-                "2" => $this->getProjectSetting("users"),
-                "1" => $this->getProjectSetting("monitors")
-            );
-
-            $oldRole = strval($oldRole);
-            $newRole = strval($newRole);
-
-            foreach ($roles as $role => $users) {
-                if (($key = array_search($username, $users)) !== false) {
-                    unset($users[$key]);
-                    $roles[$role] = array_values($users);
-                }
-            }
-            if ($newRole !== "0") {
-                $roles[$newRole][] = $username;
-            }
-
-            $this->setProjectSetting("managers", $roles["3"]);
-            $this->setProjectSetting("users", $roles["2"]);
-            $this->setProjectSetting("monitors", $roles["1"]);
-
-            $this->logEvent("Changed user role", [
-                "redcap_user" => USERID,
-                "redcap_user_acted_upon" => $username,
-                "old_role" => $oldRole,
-                "new_role" => $newRole
-            ]);
-        } catch (\Exception $e) {
-            $this->logError("Error changing user role", $e);
-        }
-    }
-
-    /**
-     * Gets the full name of REDCap user with given username
-     * 
-     * @param string $username
-     * 
-     * @return string|null Full Name
-     */
-    public function getUserFullname(string $username)
-    {
-        $SQL = 'SELECT CONCAT(user_firstname, " ", user_lastname) AS name FROM redcap_user_information WHERE username = ?';
-        try {
-            $result = $this->query($SQL, [$username]);
-            return $result->fetch_assoc()["name"];
-        } catch (\Exception $e) {
-            $this->logError("Error getting user full name", $e);
-        }
-    }
-
-    /**
-     * Gets the REDCapPRO role for the given REDCap user
-     * @param string $username REDCap username
-     * 
-     * @return int role
-     */
-    public function getUserRole(string $username)
-    {
-        $managers = $this->getProjectSetting("managers");
-        $users    = $this->getProjectSetting("users");
-        $monitors = $this->getProjectSetting("monitors");
-
-        $result = 0;
-
-        if (in_array($username, $managers)) {
-            $result = 3;
-        } else if (in_array($username, $users)) {
-            $result = 2;
-        } else if (in_array($username, $monitors)) {
-            $result = 1;
-        }
-
-        return $result;
-    }
-
-
     //////////////////\\\\\\\\\\\\\\\\\\\       
     /////   MISCELLANEOUS METHODS   \\\\\ 
     //////////////////\\\\\\\\\\\\\\\\\\\
@@ -703,11 +610,11 @@ class REDCapPRO extends AbstractExternalModule
                 if (isset($users[$user])) {
                     array_push($users[$user]['projects'], $pid);
                 } else {
-                    $newUser = $this->getUser($user);
+                    $newUser = new REDCapProUser($this, $user);
                     $newUserArr = [
                         "username" => $user,
-                        "email" => $newUser->getEmail(),
-                        "name" => $this->getUserFullname($user),
+                        "email" => $newUser->user->getEmail(),
+                        "name" => $newUser->getUserFullname($user),
                         "projects" => [$pid]
                     ];
                     $users[$user] = $newUserArr;
