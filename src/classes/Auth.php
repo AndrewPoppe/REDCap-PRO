@@ -7,6 +7,20 @@ namespace YaleREDCap\REDCapPRO;
  */
 class Auth
 {
+    /**
+     * @var string
+     */
+
+    private $APPTITLE;
+    private $TOKEN_COOKIE;
+    private $LOGGED_IN_COOKIE;
+    private $SURVEY_URL_COOKIE;
+    private $SURVEY_ACTIVE_COOKIE;
+    private $PARTICIPANT_ID_COOKIE;
+    private $USERNAME_COOKIE;
+    private $EMAIL_COOKIE;
+    private $FNAME_COOKIE;
+    private $LNAME_COOKIE;
 
     /**
      * constructor

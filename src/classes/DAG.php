@@ -21,9 +21,10 @@ class DAG
      * 
      * @param string $redcap_username Username of REDCap User (staff)
      * @param int $redcap_pid REDCap's PID for this project
+     * 
      * @return array DAG IDs available to user for this project
      */
-    public function getPossibleDags(string $redcap_username, int $redcap_pid)
+    public function getPossibleDags(string $redcap_username, int $redcap_pid): array
     {
 
         // Get all dags in project
@@ -133,8 +134,7 @@ class DAG
     /**
      * Switch a participant's DAG in the given project
      * 
-     * @param int $rcpro_participant_id 
-     * @param int $rcpro_project_id 
+     * @param int $rcpro_link_id 
      * @param int $dag_id 
      * @return mixed 
      */

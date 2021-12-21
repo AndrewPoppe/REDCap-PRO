@@ -4,6 +4,11 @@ namespace YaleREDCap\REDCapPRO;
 
 class Link
 {
+    private $module;
+    private $project;
+    private $participant;
+    public $id;
+
     function __construct(REDCapPRO $module, Project $project, Participant $participant)
     {
         $this->module = $module;
@@ -95,6 +100,11 @@ class Link
         }
     }
 
+    /**
+     * Deactivate an existing link
+     * 
+     * @return [type]
+     */
     function deactivate()
     {
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = 0 WHERE log_id = ? AND name = 'active'";

@@ -20,19 +20,24 @@ function createProjectsCell(array $projects)
     return $result;
 }
 
-
 ?>
 <?php
 if (!SUPER_USER) {
     return;
 }
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
-$module->UI->ShowControlCenterHeader("Participants");
+
+// Helpers
+$UI = new UI($module);
+$Auth = new Auth($module::$APPTITLE);
+$ParticipantHelper = new ParticipantHelper($module);
+
+$UI->ShowControlCenterHeader("Participants");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate token
-    if (!$module->AUTH->validate_csrf_token($_POST['token'])) {
+    if (!$Auth->validate_csrf_token($_POST['token'])) {
         header("location:" . $module->getUrl("src/cc_participants.php"));
         return;
     }
@@ -89,7 +94,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else if (!empty($_POST["toChangeEmail"])) {
             $function = "change participant's email address";
             $newEmail = $_POST["newEmail"];
-            if ($module->PARTICIPANT_HELPER->checkEmailExists($newEmail)) {
+            if ($ParticipantHelper->checkEmailExists($newEmail)) {
                 $icon = "error";
                 $title = "The provided email address is already associated with a REDCapPRO account.";
             } else {
@@ -107,7 +112,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else if (!empty($_POST["toUpdateActivity"])) {
             $function = "update participant's active status";
             $reactivate = $_POST["statusAction"] === "reactivate";
-            if (!$module->PARTICIPANT_HELPER->checkParticipantExists($rcpro_participant_id)) {
+            if (!$ParticipantHelper->checkParticipantExists($rcpro_participant_id)) {
                 $icon = "error";
                 $title = "The provided participant does not exist in the system.";
             } else {
@@ -135,10 +140,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // set csrf token
-$module->AUTH->set_csrf_token();
+$Auth->set_csrf_token();
 
 // Get array of participants
-$participants = $module->PARTICIPANT_HELPER->getAllParticipants();
+$participants = $ParticipantHelper->getAllParticipants();
 
 ?>
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
@@ -324,7 +329,7 @@ $participants = $module->PARTICIPANT_HELPER->getAllParticipants();
             <input type="hidden" id="toDisenroll" name="toDisenroll">
             <input type="hidden" id="toUpdateActivity" name="toUpdateActivity">
             <input type="hidden" id="statusAction" name="statusAction">
-            <input type="hidden" name="token" value="<?= $module->AUTH->get_csrf_token(); ?>">
+            <input type="hidden" name="token" value="<?= $Auth->get_csrf_token(); ?>">
         <?php } ?>
     </form>
 </div>

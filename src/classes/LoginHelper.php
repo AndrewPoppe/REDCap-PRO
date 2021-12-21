@@ -44,9 +44,10 @@ class LoginHelper
     private function lockoutLogin(int $rcpro_participant_id, ?string $rcpro_username = NULL)
     {
         try {
+            $ProjectSettings = new ProjectSettings($this->module);
             $attempts = $this->checkUsernameAttempts($rcpro_participant_id);
-            if ($attempts >= $this->module->SETTINGS->getLoginAttempts()) {
-                $lockout_ts = time() + $this->module->SETTINGS->getLockoutDurationSeconds();
+            if ($attempts >= $ProjectSettings->getLoginAttempts()) {
+                $lockout_ts = time() + $ProjectSettings->getLockoutDurationSeconds();
                 $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'lockout_ts';";
                 $res = $this->module->query($SQL, [$lockout_ts, $rcpro_participant_id]);
                 $status = $res ? "Successful" : "Failed";
@@ -104,6 +105,7 @@ class LoginHelper
      */
     public function incrementFailedIp(string $ip)
     {
+        $ProjectSettings = new ProjectSettings($this->module);
         if ($this->module->getSystemSetting('ip_lockouts') === null) {
             $this->module->setSystemSetting('ip_lockouts', json_encode(array()));
         }
@@ -115,8 +117,8 @@ class LoginHelper
         }
         if (isset($ipStat["attempts"])) {
             $ipStat["attempts"]++;
-            if ($ipStat["attempts"] >= $this->module->SETTINGS->getLoginAttempts()) {
-                $ipStat["lockout_ts"] = time() + $this->module->SETTINGS->getLockoutDurationSeconds();
+            if ($ipStat["attempts"] >= $ProjectSettings->getLoginAttempts()) {
+                $ipStat["lockout_ts"] = time() + $ProjectSettings->getLockoutDurationSeconds();
                 $this->module->logEvent("Locked out IP address", [
                     "rcpro_ip"   => $ip,
                     "lockout_ts" => $ipStat["lockout_ts"]

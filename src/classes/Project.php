@@ -182,6 +182,31 @@ class Project
     }
 
     /**
+     * Get array of formatted info about this project's participants
+     * 
+     * @param int|null $dag
+     * 
+     * @return array array of participant info
+     */
+    public function getParticipantsInfo(?int $dag): array
+    {
+        $participants = $this->getParticipants($dag);
+        $participants_info = [];
+        foreach ($participants as $participant) {
+            $name = $participant->getName();
+            $participants_info[$participant->rcpro_participant_id] = [
+                "rcpro_participant_id" => $participant->rcpro_participant_id,
+                "rcpro_username" => $participant->rcpro_username,
+                "email" => $participant->email,
+                "fname" => $name["fname"],
+                "lname" => $name["lname"],
+                "pw_set" => $participant->isPasswordSet()
+            ];
+        }
+        return $participants_info;
+    }
+
+    /**
      * Returns count of participants in a project
      * 
      * @return int|NULL Number of participants in project

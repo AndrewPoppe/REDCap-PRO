@@ -1,12 +1,18 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role < 2) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
+// Helpers
+$Auth = new Auth($module::$APPTITLE);
+$UI = new UI($module);
+
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->UI->ShowHeader("Register");
+$UI->ShowHeader("Register");
 echo "<title>" . $module::$APPTITLE . " - Register</title>";
 
 // Track all errors
@@ -16,7 +22,7 @@ $any_error = FALSE;
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate token
-    if (!$module->AUTH->validate_csrf_token($_POST['token'])) {
+    if (!$Auth->validate_csrf_token($_POST['token'])) {
         header("location:" . $module->getUrl("src/register.php"));
         return;
     }
@@ -97,7 +103,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // set csrf token
-$module->AUTH->set_csrf_token();
+$Auth->set_csrf_token();
 
 ?>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
@@ -125,7 +131,7 @@ $module->AUTH->set_csrf_token();
         <div class="form-group">
             <button type="submit" class="btn btn-rcpro" value="Submit">Submit</button>
         </div>
-        <input type="hidden" name="token" value="<?= $module->AUTH->get_csrf_token(); ?>">
+        <input type="hidden" name="token" value="<?= $Auth->get_csrf_token(); ?>">
     </form>
 </div>
 

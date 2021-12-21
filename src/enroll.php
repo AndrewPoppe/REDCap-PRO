@@ -7,8 +7,13 @@ if ($role < 2) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
+// Helpers
+$Auth = new Auth($module::$APPTITLE);
+$UI = new UI($module);
+$DAG = new DAG($module);
+
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->UI->ShowHeader("Enroll");
+$UI->ShowHeader("Enroll");
 
 echo "<title>" . $module::$APPTITLE . " - Enroll</title>";
 
@@ -20,7 +25,7 @@ echo "<title>" . $module::$APPTITLE . " - Enroll</title>";
 if (isset($_POST["id"]) && isset($project_id)) {
 
     // Validate token
-    if (!$module->AUTH->validate_csrf_token($_POST['token'])) {
+    if (!$Auth->validate_csrf_token($_POST['token'])) {
         header("location:" . $module->getUrl("src/enroll.php"));
     }
 
@@ -42,7 +47,7 @@ if (isset($_POST["id"]) && isset($project_id)) {
         $project = new Project($module, ["redcap_pid" => $pid]);
 
         // Get DAG if applicable
-        $redcap_dag = $module->DAG->getCurrentDag(USERID, PROJECT_ID);
+        $redcap_dag = $DAG->getCurrentDag(USERID, PROJECT_ID);
 
         // Enroll
         $result = $project->enrollParticipant($participant, $redcap_dag);
@@ -58,7 +63,7 @@ if (isset($_POST["id"]) && isset($project_id)) {
 }
 
 // set csrf token
-$module->AUTH->set_csrf_token();
+$Auth->set_csrf_token();
 
 // Initialize Javascript object
 $module->initializeJavascriptModuleObject();
@@ -187,8 +192,8 @@ $jsname = $module->getJavascriptModuleObjectName();
                     </div>
                 </div>
 
-                <?php if ($module->DAG->getProjectDags()) {
-                    $userDag = $module->DAG->getCurrentDag(USERID, PROJECT_ID);
+                <?php if ($DAG->getProjectDags()) {
+                    $userDag = $DAG->getCurrentDag(USERID, PROJECT_ID);
                     $dagName = isset($userDag) ? \REDCap::getGroupNames(false, $userDag) : "No Assignment";
                 ?>
                     <div class="mb-3 row">
@@ -200,7 +205,7 @@ $jsname = $module->getJavascriptModuleObjectName();
                 <?php } ?>
 
                 <input type="text" id="id" name="id" class="form-control" readonly hidden>
-                <input type="hidden" name="token" value="<?= $module->AUTH->get_csrf_token(); ?>">
+                <input type="hidden" name="token" value="<?= $Auth->get_csrf_token(); ?>">
                 <div>
                     <hr>
                     <button type="submit" class="btn btn-rcpro">Enroll Participant</button>

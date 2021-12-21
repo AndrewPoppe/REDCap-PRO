@@ -7,8 +7,12 @@ if ($role < 3) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
+// Helpers
+$Auth = new Auth($module::$APPTITLE);
+$UI = new UI($module);
+
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->UI->ShowHeader("Users");
+$UI->ShowHeader("Users");
 echo "<title>" . $module::$APPTITLE . " - Staff</title>
 <link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>";
 ?>
@@ -25,7 +29,7 @@ $userList = $project->getUsers();
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate token
-    if (!$module->AUTH->validate_csrf_token($_POST['token'])) {
+    if (!$Auth->validate_csrf_token($_POST['token'])) {
         header("location:" . $module->getUrl("src/manage-users.php"));
         return;
     }
@@ -66,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // set csrf token
-$module->AUTH->set_csrf_token();
+$Auth->set_csrf_token();
 
 ?>
 
@@ -135,7 +139,7 @@ $module->AUTH->set_csrf_token();
                     <button class="btn btn-secondary rcpro-form-button role_select_button" id="role_select_reset" disabled>Reset</button>
                 </div>
             <?php } ?>
-            <input type="hidden" name="token" value="<?= $module->AUTH->get_csrf_token(); ?>">
+            <input type="hidden" name="token" value="<?= $Auth->get_csrf_token(); ?>">
         </form>
     </div>
 </div>

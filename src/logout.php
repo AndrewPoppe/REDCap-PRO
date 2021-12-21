@@ -1,4 +1,7 @@
 <?php
+
+namespace YaleREDCap\REDCapPRO;
+
 // Initialize the session
 session_start();
 
@@ -8,8 +11,11 @@ $_SESSION = array();
 // Destroy the session.
 session_destroy();
 
+// Helpers
+$UI = new UI($module);
+
 // This method starts the html doc
-$module->UI->ShowParticipantHeader($module->tt("logout_title"));
+$UI->ShowParticipantHeader($module->tt("logout_title"));
 ?>
 <style>
     .swal2-timer-progress-bar {
@@ -35,4 +41,4 @@ $module->UI->ShowParticipantHeader($module->tt("logout_title"));
     });
 </script>
 
-<?php $module->UI->EndParticipantPage(); ?>
+<?php $UI->EndParticipantPage(); ?>

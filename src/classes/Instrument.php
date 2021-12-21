@@ -4,7 +4,8 @@ namespace YaleREDCap\REDCapPRO;
 
 class Instrument
 {
-    public static $PARTICIPANT;
+    public $module;
+    public $instrument_name;
     public $dd;
     public $username;
     public $email;
@@ -84,19 +85,17 @@ class Instrument
     {
         if (isset($this->username)) {
             $project = new Project($this->module, ["redcap_pid" => PROJECT_ID]);
-            $participants = $project->getParticipants($this->rcpro_dag);
+            $participants = $project->getParticipantsInfo($this->rcpro_dag);
             $options = "<option value=''>''</option>";
             $participants_json = json_encode($participants);
             foreach ($participants as $participant) {
-                $inst_username = \REDCap::escapeHtml($participant->rcpro_username);
-                $inst_email    = \REDCap::escapeHtml($participant->email);
-                $inst_name     = $participant->getName();
-                $inst_fname    = \REDCap::escapeHtml($inst_name["fname"]);
-                $inst_lname    = \REDCap::escapeHtml($inst_name["lname"]);
+                $inst_username = \REDCap::escapeHtml($participant["rcpro_username"]);
+                $inst_email    = \REDCap::escapeHtml($participant["email"]);
+                $inst_fname    = \REDCap::escapeHtml($participant["fname"]);
+                $inst_lname    = \REDCap::escapeHtml($participant["lname"]);
                 $options      .= "<option value='$inst_username' >$inst_username - $inst_fname $inst_lname - $inst_email</option>";
             }
             $replacement =  "<select id='username_selector'>$options</select>";
-            $this->module->initializeJavascriptModuleObject();
 ?>
             <script>
                 (function($, window, document) {
@@ -124,10 +123,6 @@ class Instrument
                                 participant = participants.filter((p) => p.rcpro_username === val)[0];
                             }
                             username_input.val(participant.rcpro_username);
-                            let logParameters = {
-                                rcpro_username: participant.rcpro_username,
-                                redcap_user: "<?= USERID ?>"
-                            };
 
                             // If there is an email field, update it
                             <?php if (isset($this->email)) { ?>

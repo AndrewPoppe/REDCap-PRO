@@ -1,11 +1,14 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
 if (!SUPER_USER) {
     return;
 }
 
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
-$module->UI->ShowControlCenterHeader("Logs");
+$UI = new UI($module);
+$UI->ShowControlCenterHeader("Logs");
 
 ?>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">

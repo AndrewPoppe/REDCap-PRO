@@ -1,23 +1,30 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role < 3) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
+// Helpers
+$Auth = new Auth($module::$APPTITLE);
+$UI = new UI($module);
+$ProjectSettings = new ProjectSettings($module);
+
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->UI->ShowHeader("Settings");
+$UI->ShowHeader("Settings");
 echo "<title>" . $module::$APPTITLE . " - Settings</title>
 <link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>";
 
 // Get possible languages
-$langs = $module->SETTINGS->getLanguageFiles();
+$langs = $ProjectSettings->getLanguageFiles();
 
 // Update settings if requested
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate token
-    if (!$module->AUTH->validate_csrf_token($_POST['token'])) {
+    if (!$Auth->validate_csrf_token($_POST['token'])) {
         header("location:" . $module->getUrl("src/settings.php"));
         return;
     }
@@ -84,7 +91,7 @@ $settings = $module->getProjectSettings();
 $preventEmailLoginSystem = $module->getSystemSetting("prevent-email-login-system");
 
 // set csrf token
-$module->AUTH->set_csrf_token();
+$Auth->set_csrf_token();
 
 ?>
 
@@ -185,7 +192,7 @@ $module->AUTH->set_csrf_token();
                     })()">Cancel</button>
                 <button type="submit" id="rcpro-submit-button" class="btn btn-rcpro" value="Submit" disabled>Save Settings</button>
             </div>
-            <input type="hidden" name="token" value="<?= $module->AUTH->get_csrf_token(); ?>">
+            <input type="hidden" name="token" value="<?= $Auth->get_csrf_token(); ?>">
         </form>
     </div>
 </div>
