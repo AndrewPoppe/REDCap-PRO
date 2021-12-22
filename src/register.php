@@ -11,6 +11,7 @@ if ($role < 2) {
 // Helpers
 $Auth = new Auth($module);
 $UI = new UI($module);
+$ParticipantHelper = new ParticipantHelper($module);
 $Emailer = new Emailer($module);
 
 require_once constant("APP_PATH_DOCROOT") . 'ProjectGeneral/header.php';
@@ -52,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $email_err = "Please enter a valid email address.";
         $any_error = TRUE;
     } else {
-        $result = checkEmailExists($param_email);
+        $result = $ParticipantHelper->checkEmailExists($param_email);
         if ($result === NULL) {
             echo "Oops! Something went wrong. Please try again later.";
             return;
@@ -69,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!$any_error) {
         $icon = $title = $html = "";
         try {
-            $rcpro_username = createParticipant($email, $fname_clean, $lname_clean);
+            $rcpro_username = $ParticipantHelper->createParticipant($email, $fname_clean, $lname_clean);
             $Emailer->sendNewParticipantEmail($rcpro_username, $email, $fname_clean, $lname_clean);
             $icon = "success";
             $title = "Participant Registered";

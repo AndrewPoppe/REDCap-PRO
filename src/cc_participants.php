@@ -34,6 +34,7 @@ require_once constant("APP_PATH_DOCROOT") . 'ControlCenter/header.php';
 // Helpers
 $UI = new UI($module);
 $Auth = new Auth($module);
+$ParticipantHelper = new ParticipantHelper($module);
 $Emailer = new Emailer($module);
 
 $UI->ShowControlCenterHeader("Participants");
@@ -98,7 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else if (!empty($_POST["toChangeEmail"])) {
             $function = "change participant's email address";
             $newEmail = $_POST["newEmail"];
-            if (checkEmailExists($newEmail)) {
+            if ($ParticipantHelper->checkEmailExists($newEmail)) {
                 $icon = "error";
                 $title = "The provided email address is already associated with a REDCapPRO account.";
             } else {
@@ -116,7 +117,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else if (!empty($_POST["toUpdateActivity"])) {
             $function = "update participant's active status";
             $reactivate = $_POST["statusAction"] === "reactivate";
-            if (!checkParticipantExists($rcpro_participant_id)) {
+            if (!$ParticipantHelper->checkParticipantExists($rcpro_participant_id)) {
                 $icon = "error";
                 $title = "The provided participant does not exist in the system.";
             } else {
@@ -147,7 +148,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $Auth->set_csrf_token();
 
 // Get array of participants
-$participants = getAllParticipants();
+$participants = $ParticipantHelper->getAllParticipants();
 
 ?>
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>

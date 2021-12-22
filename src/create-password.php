@@ -5,6 +5,7 @@ namespace YaleREDCap\REDCapPRO;
 // Helpers
 $Auth = new Auth($module);
 $UI = new UI($module);
+$ParticipantHelper = new ParticipantHelper($module);
 
 // Initialize Authentication
 $Auth->init();
@@ -24,7 +25,7 @@ $new_password_err = $confirm_password_err = "";
 
 
 // Verify password reset token
-$verified_participant = verifyPasswordResetToken($qstring["t"]);
+$verified_participant = $ParticipantHelper->verifyPasswordResetToken($qstring["t"]);
 
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {

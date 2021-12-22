@@ -9,6 +9,7 @@ $Auth->init();
 // Helper Objects
 $LoginHelper = new LoginHelper($module);
 $ProjectSettings = new ProjectSettings($module);
+$ParticipantHelper = new ParticipantHelper($module);
 $UI = new UI($module);
 $Emailer = new Emailer($module);
 
@@ -51,8 +52,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $username_err = $module->tt("login_err1");
     } else {
         $username = \REDCap::escapeHtml(trim($_POST["username"]));
-        $usernameExists = usernameIsTaken($username);
-        $emailExists = checkEmailExists($username);
+        $usernameExists = $ParticipantHelper->usernameIsTaken($username);
+        $emailExists = $ParticipantHelper->checkEmailExists($username);
         $emailLoginsAllowed = $ProjectSettings->emailLoginsAllowed($module->getProjectId());
     }
 

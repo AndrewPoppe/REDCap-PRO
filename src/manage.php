@@ -113,6 +113,7 @@ function changeEmail(int $rcpro_participant_id, string $newEmail)
     $function = "change participant's email address";
 
     // Create participant object
+    $ParticipantHelper = new ParticipantHelper($module);
     $participant = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
 
     // Check role
@@ -122,7 +123,7 @@ function changeEmail(int $rcpro_participant_id, string $newEmail)
     }
 
     // Check that email is not already associated with a participant
-    else if (checkEmailExists($newEmail)) {
+    else if ($ParticipantHelper->checkEmailExists($newEmail)) {
         $title = "The provided email address is already associated with a REDCapPRO account.";
         $icon = "error";
     }
