@@ -2,18 +2,18 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-$currentUser = new REDCapProUser($module, USERID);
+$currentUser = new REDCapProUser($module);
 $role = $currentUser->getUserRole($module->getProjectId());
 if ($role < 3) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
 // Helpers
-$Auth = new Auth($module::$APPTITLE);
+$Auth = new Auth($module);
 $UI = new UI($module);
 $ProjectSettings = new ProjectSettings($module);
 
-require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+require_once constant("APP_PATH_DOCROOT") . 'ProjectGeneral/header.php';
 $UI->ShowHeader("Settings");
 echo "<title>" . $module::$APPTITLE . " - Settings</title>
 <link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>";
@@ -209,4 +209,4 @@ $Auth->set_csrf_token();
 </script>
 
 <?php
-include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+include constant("APP_PATH_DOCROOT") . 'ProjectGeneral/footer.php';

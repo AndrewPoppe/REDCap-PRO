@@ -2,11 +2,11 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-if (!SUPER_USER) {
+if (!constant("SUPER_USER")) {
     exit;
 }
 
-require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
+require_once constant("APP_PATH_DOCROOT") . 'ControlCenter/header.php';
 $UI = new UI($module);
 $UI->ShowControlCenterHeader("Logs");
 
@@ -194,4 +194,4 @@ $module->initializeJavascriptModuleObject();
         });
     }(window.jQuery, window, document));
 </script>
-<?php require_once APP_PATH_DOCROOT . 'ControlCenter/footer.php'; ?>
+<?php require_once constant("APP_PATH_DOCROOT") . 'ControlCenter/footer.php'; ?>

@@ -84,12 +84,12 @@ class ProjectSettings
     public function getLanguageFiles()
     {
         $langs = array();
-        $path = $this->module->getModulePath() . DS . "lang" . DS;
+        $path = $this->module->getModulePath() . constant("DS") . "lang" . constant("DS");
         if (is_dir($path)) {
-            $files = glob($path . "*.{i,I}{n,N}{i,I}", GLOB_BRACE);
+            $files = glob($path . "*.{i,I}{n,N}{i,I}", constant("GLOB_BRACE"));
             foreach ($files as $filename) {
                 if (is_file($filename)) {
-                    $lang = pathinfo($filename, PATHINFO_FILENAME);
+                    $lang = pathinfo($filename, constant("PATHINFO_FILENAME"));
                     $langs[$lang] = $filename;
                 }
             }

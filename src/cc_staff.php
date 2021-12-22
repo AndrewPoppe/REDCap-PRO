@@ -2,7 +2,7 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-if (!SUPER_USER) {
+if (!constant("SUPER_USER")) {
     exit;
 }
 
@@ -22,7 +22,7 @@ function createProjectsCell(array $projects)
 // Helpers
 $UI = new UI($module);
 
-require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
+require_once constant("APP_PATH_DOCROOT") . 'ControlCenter/header.php';
 $UI->ShowControlCenterHeader("Staff");
 echo '<link rel="stylesheet" type="text/css" href="' . $module->getUrl("src/css/rcpro_cc.php") . '">';
 
@@ -48,7 +48,7 @@ $users = $module->getAllUsers();
             </thead>
             <tbody>
                 <?php foreach ($users as $user) {
-                    $userLink = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "ControlCenter/view_users.php?username=" . $user["username"];
+                    $userLink = constant("APP_PATH_WEBROOT_FULL") . constant("APP_PATH_WEBROOT") . "ControlCenter/view_users.php?username=" . $user["username"];
                 ?>
                     <tr>
                         <td class="rcpro_user_link" onclick="(function(){window.location.href='<?= $userLink ?>';})();"><?= $user["username"] ?></td>
@@ -87,5 +87,5 @@ $users = $module->getAllUsers();
 </script>
 
 <?php
-require_once APP_PATH_DOCROOT . 'ControlCenter/footer.php';
+require_once constant("APP_PATH_DOCROOT") . 'ControlCenter/footer.php';
 ?>

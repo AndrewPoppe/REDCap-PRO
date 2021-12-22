@@ -12,9 +12,6 @@ class Project
 {
 
     private $module;
-    public $info;
-    public $staff;
-    public $project;
     public $rcpro_project_id;
     public $redcap_pid;
 
@@ -40,13 +37,14 @@ class Project
         }
 
         // If project does not exist and creation is requested, create it.
-        if (isset($params["create_project"]) && !$this->checkProject(false)) {
-            $this->addProject();
+        // Enables the project if it exists but is disabled
+        if (isset($params["create_project"])) {
+            if (!$this->checkProject()) {
+                $this->addProject();
+            } else {
+                $this->setActive(1);
+            }
         }
-
-        $this->info = $this->getProjectInfo();
-        $this->staff = $this->getStaff();
-        $this->project = $this->module->getProject($this->redcap_pid);
     }
 
     /**
@@ -85,7 +83,7 @@ class Project
             return $this->module->logEvent("PROJECT", [
                 "pid"         => $this->redcap_pid,
                 "active"      => 1,
-                "redcap_user" => USERID
+                "redcap_user" => constant("USERID")
             ]);
         } catch (\Exception $e) {
             $this->module->logError("Error creating project entry", $e);
@@ -138,7 +136,8 @@ class Project
      */
     public function getStatus()
     {
-        $status_value = !is_null($this->info["completed_time"]) ? "Completed" : $this->info["status"];
+        $info = $this->getProjectInfo();
+        $status_value = !is_null($info["completed_time"]) ? "Completed" : $info["status"];
         switch ($status_value) {
             case 0:
                 $result = "Development";
@@ -285,7 +284,7 @@ class Project
                 $this->module->logEvent("Project Status Set", [
                     "rcpro_project_id" => $this->rcpro_project_id,
                     "active_status"    => $active,
-                    "redcap_user"      => USERID
+                    "redcap_user"      => constant("USERID")
                 ]);
             }
         } catch (\Exception $e) {
@@ -310,7 +309,7 @@ class Project
                     "rcpro_participant_id" => $participant->rcpro_participant_id,
                     "rcpro_username"       => $participant->rcpro_username,
                     "rcpro_project_id"     => $this->rcpro_project_id,
-                    "redcap_user"          => USERID
+                    "redcap_user"          => constant("USERID")
                 ]);
             }
             return $result;
@@ -351,7 +350,7 @@ class Project
                 "rcpro_participant_id" => $participant->rcpro_participant_id,
                 "rcpro_username"       => $participant->rcpro_username,
                 "rcpro_project_id"     => $this->rcpro_project_id,
-                "redcap_user"          => USERID,
+                "redcap_user"          => constant("USERID"),
                 "project_dag"          => $dag
             ]);
         }
@@ -381,7 +380,8 @@ class Project
      */
     public function getUsers()
     {
-        $users = $this->project->getUsers();
+        $project = $this->module->getProject($this->redcap_pid);
+        $users = $project->getUsers();
         $rcpro_users = [];
         foreach ($users as $user) {
             array_push($rcpro_users, new REDCapProUser($this->module, $user->getUsername()));

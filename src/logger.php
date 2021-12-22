@@ -1,6 +1,8 @@
 <?php
 
-$currentUser = new REDCapProUser($module, USERID);
+namespace YaleREDCap\REDCapPRO;
+
+$currentUser = new REDCapProUser($module);
 $role = $currentUser->getUserRole($module->getProjectId());
 if ($role < 3) {
     exit;
@@ -17,7 +19,7 @@ if ($qstring["prefix"] !== "redcap_pro") {
 
 if (
     $qstring["page"] === "src/logs" ||
-    ($qstring["page"] === "src/cc_logs" && SUPER_USER)
+    ($qstring["page"] === "src/cc_logs" && defined("SUPER_USER") && constant("SUPER_USER"))
 ) {
     $module->logEvent("Exported logs", [
         "export_type" => $_POST["export_type"],

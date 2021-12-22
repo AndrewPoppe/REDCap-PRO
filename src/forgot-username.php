@@ -3,8 +3,9 @@
 namespace YaleREDCap\REDCapPRO;
 
 // Helpers
-$Auth = new Auth($module::$APPTITLE);
+$Auth = new Auth($module);
 $UI = new UI($module);
+$Emailer = new Emailer($module);
 
 // Initialize authentication session on page
 $Auth->init();
@@ -37,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 "rcpro_participant_id" => $participant->rcpro_participant_id,
                 "rcpro_username"       => $participant->rcpro_username
             ]);
-            $module->sendUsernameEmail($email, $username);
+            $Emailer->sendUsernameEmail($email, $username);
         }
         echo $module->tt("forgot_username_message1");
         return;

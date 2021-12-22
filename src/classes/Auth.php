@@ -7,10 +7,7 @@ namespace YaleREDCap\REDCapPRO;
  */
 class Auth
 {
-    /**
-     * @var string
-     */
-
+    private $module;
     private $APPTITLE;
     private $TOKEN_COOKIE;
     private $LOGGED_IN_COOKIE;
@@ -28,9 +25,10 @@ class Auth
      * @param mixed|null $title Title of EM
      * @return void 
      */
-    function __construct($title = null)
+    function __construct(REDCapPRO $module)
     {
-        $this->APPTITLE              = $title;
+        $this->module                = $module;
+        $this->APPTITLE              = $this->module::$APPTITLE;
         $this->TOKEN_COOKIE          = $this->APPTITLE . "_token";
         $this->LOGGED_IN_COOKIE      = $this->APPTITLE . "_loggedin";
         $this->SURVEY_URL_COOKIE     = $this->APPTITLE . "_survey_url";

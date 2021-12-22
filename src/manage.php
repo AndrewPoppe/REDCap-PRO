@@ -2,18 +2,19 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-$currentUser = new REDCapProUser($module, USERID);
+$currentUser = new REDCapProUser($module);
 $role = $currentUser->getUserRole($module->getProjectId());
 if ($role === 0) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
 // Helpers
-$Auth = new Auth($module::$APPTITLE);
+$Auth = new Auth($module);
 $UI = new UI($module);
 $DAG = new DAG($module);
+$Emailer = new Emailer($module);
 
-require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+require_once constant("APP_PATH_DOCROOT") . 'ProjectGeneral/header.php';
 $UI->ShowHeader("Manage");
 echo "<title>" . $module::$APPTITLE . " - Manage</title>";
 
@@ -56,10 +57,11 @@ function disenroll(int $rcpro_participant_id)
 
 function resetPassword(int $rcpro_participant_id)
 {
-    global $module;
+    global $module, $Emailer;
     $function = "send password reset email";
 
-    $result = $module->sendPasswordResetEmail($rcpro_participant_id);
+    $participant = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
+    $result = $Emailer->sendPasswordResetEmail($participant);
     if (!$result) {
         $icon = "error";
         $title = "Trouble sending password reset email.";
@@ -111,7 +113,6 @@ function changeEmail(int $rcpro_participant_id, string $newEmail)
     $function = "change participant's email address";
 
     // Create participant object
-    $ParticipantHelper = new ParticipantHelper($module);
     $participant = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
 
     // Check role
@@ -121,7 +122,7 @@ function changeEmail(int $rcpro_participant_id, string $newEmail)
     }
 
     // Check that email is not already associated with a participant
-    else if ($ParticipantHelper->checkEmailExists($newEmail)) {
+    else if (checkEmailExists($newEmail)) {
         $title = "The provided email address is already associated with a REDCapPRO account.";
         $icon = "error";
     }
@@ -142,7 +143,7 @@ function changeEmail(int $rcpro_participant_id, string $newEmail)
 
 function switchDAG(int $rcpro_participant_id, ?string $newDAG)
 {
-    global $role, $module, $project_dags, $project, $no_permission;
+    global $role, $module, $project_dags, $project, $no_permission, $DAG;
     $function = "switch participant's Data Access Group";
 
     // Check role
@@ -550,4 +551,4 @@ $participants = $project->getParticipants($rcpro_user_dag);
 </script>
 
 <?php
-include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+include constant("APP_PATH_DOCROOT") . 'ProjectGeneral/footer.php';

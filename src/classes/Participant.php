@@ -6,6 +6,10 @@ class Participant
 {
 
     private $module;
+    public $rcpro_participant_id;
+    public $rcpro_username;
+    public $email;
+    public $exists;
 
     function __construct(REDCapPRO $module, array $params)
     {
@@ -105,6 +109,7 @@ class Participant
     public function changeEmailAddress(string $new_email)
     {
         $current_email = $this->email;
+        $Emailer = new Emailer($this->module);
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'email'";
         try {
             $result = $this->module->query($SQL, [$new_email, $this->rcpro_participant_id]);
@@ -114,20 +119,20 @@ class Participant
                 $current_pid = $this->module->getProjectId() ?? "system";
 
                 // Get all projects to which participant is currently enrolled
-                $project_ids = $this->getEnrolledProjects();
-                foreach ($project_ids as $project_id) {
+                $projects = $this->getEnrolledProjects();
+                foreach ($projects as $project) {
                     $this->module->logEvent("Changed Email Address", [
                         "rcpro_participant_id" => $this->rcpro_participant_id,
                         "rcpro_username"       => $this->rcpro_username,
                         "old_email"            => $current_email,
                         "new_email"            => $new_email,
-                        "redcap_user"          => USERID,
-                        "project_id"           => $project_id,
+                        "redcap_user"          => constant("USERID"),
+                        "project_id"           => $project->redcap_pid,
                         "initiating_project_id" => $current_pid
                     ]);
                 }
 
-                return $this->module->sendEmailUpdateEmail($this->rcpro_username, $new_email, $current_email);
+                return $Emailer->sendEmailUpdateEmail($this->rcpro_username, $new_email, $current_email);
             } else {
                 throw new REDCapProException(["rcpro_participant_id" => $this->rcpro_participant_id]);
             }
@@ -172,15 +177,15 @@ class Participant
             $current_pid = $this->module->getProjectId() ?? "system";
 
             // Get all projects to which participant is currently enrolled
-            $project_ids = $this->getEnrolledProjects();
-            foreach ($project_ids as $project_id) {
+            $projects = $this->getEnrolledProjects();
+            foreach ($projects as $project) {
                 $this->module->logEvent("Updated Participant Name", [
                     "rcpro_participant_id"  => $this->rcpro_participant_id,
                     "rcpro_username"        => $this->rcpro_username,
                     "old_name"              => $current_name["fname"] . " " . $current_name["lname"],
                     "new_name"              => $fname . " " . $lname,
-                    "redcap_user"           => USERID,
-                    "project_id"            => $project_id,
+                    "redcap_user"           => constant("USERID"),
+                    "project_id"            => $project->redcap_pid,
                     "initiating_project_id" => $current_pid
                 ]);
             }
@@ -259,14 +264,14 @@ class Participant
                     "rcpro_participant_id" => $this->rcpro_participant_id,
                     "rcpro_username" => $this->rcpro_username,
                     "active" => $value,
-                    "redcap_user" => USERID
+                    "redcap_user" => constant("USERID")
                 ]);
             } else {
                 $this->module->logEvent("Failed to set participant active status", [
                     "rcpro_participant_id" => $this->rcpro_participant_id,
                     "rcpro_username" => $this->rcpro_username,
                     "active" => $value,
-                    "redcap_user" => USERID
+                    "redcap_user" => constant("USERID")
                 ]);
             }
             return $res;

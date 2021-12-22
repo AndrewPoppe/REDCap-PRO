@@ -2,18 +2,18 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-$currentUser = new REDCapProUser($module, USERID);
+$currentUser = new REDCapProUser($module);
 $role = $currentUser->getUserRole($module->getProjectId());
 if ($role < 2) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
 // Helpers
-$Auth = new Auth($module::$APPTITLE);
+$Auth = new Auth($module);
 $UI = new UI($module);
 $DAG = new DAG($module);
 
-require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+require_once constant("APP_PATH_DOCROOT") . 'ProjectGeneral/header.php';
 $UI->ShowHeader("Enroll");
 
 echo "<title>" . $module::$APPTITLE . " - Enroll</title>";
@@ -221,4 +221,4 @@ $jsname = $module->getJavascriptModuleObjectName();
 
 
 <?php
-include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+include constant("APP_PATH_DOCROOT") . 'ProjectGeneral/footer.php';

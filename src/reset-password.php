@@ -3,10 +3,9 @@
 namespace YaleREDCap\REDCapPRO;
 
 // Helpers
-$Auth = new Auth($module::$APPTITLE);
+$Auth = new Auth($module);
 $UI = new UI($module);
 $ProjectSettings = new ProjectSettings($module);
-$ParticipantHelper = new ParticipantHelper($module);
 
 # Initialize authentication session on page
 $Auth->init();
@@ -26,7 +25,7 @@ $new_password_err = $confirm_password_err = "";
 
 
 // Verify password reset token
-$verified_participant = $ParticipantHelper->verifyPasswordResetToken($qstring["t"]);
+$verified_participant = verifyPasswordResetToken($qstring["t"]);
 $participant = new Participant($module, ["rcpro_participant_id" => $verified_participant["log_id"]]);
 
 // Processing form data when form is submitted

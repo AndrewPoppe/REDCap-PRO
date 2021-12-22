@@ -5,13 +5,13 @@ namespace YaleREDCap\REDCapPRO;
 // Helpers
 $UI = new UI($module);
 
-$currentUser = new REDCapProUser($module, USERID);
+$currentUser = new REDCapProUser($module);
 $role = $currentUser->getUserRole($module->getProjectId());
 if ($role < 3) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
-require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+require_once constant("APP_PATH_DOCROOT") . 'ProjectGeneral/header.php';
 $UI->ShowHeader("Logs");
 ?>
 
@@ -198,5 +198,5 @@ $module->initializeJavascriptModuleObject();
     }(window.jQuery, window, document));
 </script>
 <?php
-include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+include constant("APP_PATH_DOCROOT") . 'ProjectGeneral/footer.php';
 ?>

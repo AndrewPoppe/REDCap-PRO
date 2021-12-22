@@ -2,14 +2,13 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-$currentUser = new REDCapProUser($module, USERID);
+$currentUser = new REDCapProUser($module);
 $role = $currentUser->getUserRole($module->getProjectId());
 if ($role < 2) {
     exit();
 }
 
 // Helpers
-$ParticipantHelper = new ParticipantHelper($module);
 
 $q = $_GET["q"];
 
@@ -18,7 +17,7 @@ if (!filter_var($q, FILTER_VALIDATE_EMAIL)) {
     return;
 }
 
-$result = $ParticipantHelper->searchParticipants($q);
+$result = searchParticipants($q);
 
 $hint = "";
 $rcpro_participant_id = null;

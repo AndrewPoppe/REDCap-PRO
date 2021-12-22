@@ -2,7 +2,7 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-if (!SUPER_USER) {
+if (!constant("SUPER_USER")) {
     exit;
 }
 
@@ -15,7 +15,7 @@ $UI = new UI($module);
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro_cc.php") ?>">
 
 <?php
-require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
+require_once constant("APP_PATH_DOCROOT") . 'ControlCenter/header.php';
 $UI->ShowControlCenterHeader("Projects");
 $redcap_project_ids = $module->getProjectsWithModuleEnabled();
 ?>
@@ -43,10 +43,10 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
                     $project                    = new Project($module, ["redcap_pid" => $id]);
                     $rcpro_project_id           = $project->rcpro_project_id;
                     $project_rcpro_home         = $module->getUrl("src/home.php?pid=${id}");
-                    $project_home               = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "index.php?pid=${id}";
+                    $project_home               = constant("APP_PATH_WEBROOT_FULL") . constant("APP_PATH_WEBROOT") . "index.php?pid=${id}";
                     $project_rcpro_manage       = $module->getUrl("src/manage.php?pid=${id}");
                     $project_rcpro_manage_users = $module->getUrl("src/manage-users.php?pid=${id}");
-                    $project_records            = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "DataEntry/record_status_dashboard.php?pid=${id}"
+                    $project_records            = constant("APP_PATH_WEBROOT_FULL") . constant("APP_PATH_WEBROOT") . "DataEntry/record_status_dashboard.php?pid=${id}"
                 ?>
                     <tr>
                         <!-- Project ID -->
@@ -59,7 +59,7 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
                         </td>
                         <!-- Title -->
                         <td>
-                            <?= $project->info["app_title"] ?>
+                            <?= $project->getProjectInfo()["app_title"] ?>
                         </td>
                         <!-- Status -->
                         <td class='dt-center'>
@@ -71,7 +71,7 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
                         </td>
                         <!-- # Staff Members -->
                         <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_rcpro_manage_users ?>', '_blank').focus();})()">
-                            <?= count($project->staff["allStaff"]) ?>
+                            <?= count($project->getStaff()["allStaff"]) ?>
                         </td>
                         <!-- # Records -->
                         <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_records ?>', '_blank').focus();})()">
@@ -109,5 +109,5 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
     }(window.jQuery, window, document));
 </script>
 <?php
-require_once APP_PATH_DOCROOT . 'ControlCenter/footer.php';
+require_once constant("APP_PATH_DOCROOT") . 'ControlCenter/footer.php';
 ?>

@@ -69,7 +69,7 @@ class Link
                 "rcpro_project_id"     => $this->project->rcpro_project_id,
                 "rcpro_participant_id" => $this->participant->rcpro_participant_id,
                 "active"               => 1,
-                "redcap_user"          => USERID,
+                "redcap_user"          => constant("USERID"),
                 "project_dag"           => $dag
             ]);
         } catch (\Exception $e) {

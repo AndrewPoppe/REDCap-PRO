@@ -17,8 +17,8 @@ class REDCapProUser
 
     function getUsername(string $username = NULL)
     {
-        if (!isset($username) && defined(USERID)) {
-            $username = USERID;
+        if (!isset($username) && defined("USERID")) {
+            $username = constant("USERID");
         }
         return $username;
     }
@@ -51,7 +51,7 @@ class REDCapProUser
 
         $result = 0;
 
-        $isSuperuser = $checkForSuperuser && defined(SUPER_USER) && SUPER_USER;
+        $isSuperuser = $checkForSuperuser && defined("SUPER_USER") && constant("SUPER_USER");
 
         if (in_array($this->username, $managers) || $isSuperuser) {
             $result = 3;
@@ -67,14 +67,18 @@ class REDCapProUser
     /**
      * Updates the role of the given REDCap user 
      * 
-     * @param string $username
+     * @param string|NULL $username Use current user's username if null
+     * @param int $redcap_pid
      * @param string|NULL $oldRole This is just for logging purposes
      * @param string $newRole
      * 
      * @return void
      */
-    public function changeUserRole(string $username, int $redcap_pid, ?string $oldRole, string $newRole)
+    public function changeUserRole(?string $username, int $redcap_pid, ?string $oldRole, string $newRole)
     {
+        if (!isset($username)) {
+            $username = $this->username;
+        }
         try {
             $roles = array(
                 "3" => $this->module->getProjectSetting("managers", $redcap_pid),

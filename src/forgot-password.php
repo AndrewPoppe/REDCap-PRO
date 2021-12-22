@@ -3,8 +3,9 @@
 namespace YaleREDCap\REDCapPRO;
 
 // Helpers
-$Auth = new Auth($module::$APPTITLE);
+$Auth = new Auth($module);
 $UI = new UI($module);
+$Emailer = new Emailer($module);
 
 // Initialize authentication session on page
 $Auth->init();
@@ -46,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 "rcpro_participant_id" => $participant->rcpro_participant_id,
                 "rcpro_username"       => $participant->rcpro_username
             ]);
-            $module->sendPasswordResetEmail($participant);
+            $Emailer->sendPasswordResetEmail($participant);
         }
         echo '<div style="text-align: center; font-size: large;"><p><br>' . $module->tt("forgot_password_message1") . '</p></div>';
         return;

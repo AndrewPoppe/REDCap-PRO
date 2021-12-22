@@ -5,10 +5,10 @@ namespace YaleREDCap\REDCapPRO;
 // Helpers
 $UI = new UI($module);
 
-$currentUser = new REDCapProUser($module, USERID);
+$currentUser = new REDCapProUser($module);
 $role = $currentUser->getUserRole($module->getProjectId());
 echo "<title>" . $module::$APPTITLE . " - Home</title>";
-require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+require_once constant("APP_PATH_DOCROOT") . 'ProjectGeneral/header.php';
 $UI->ShowHeader("Home");
 ?>
 
@@ -39,4 +39,4 @@ $UI->ShowHeader("Home");
 </div>
 
 <?php
-include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+include constant("APP_PATH_DOCROOT") . 'ProjectGeneral/footer.php';

@@ -2,20 +2,25 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-if (!SUPER_USER) {
+if (!constant("SUPER_USER")) {
     exit;
 }
 
+/**
+ * @param Project[] $projects
+ * 
+ * @return [type]
+ */
 function createProjectsCell(array $projects)
 {
     global $module;
     $result = "<td  class='dt-center'>";
     foreach ($projects as $project) {
-        if ($project["active"] == 1) {
+        if ($project->checkProject(true)) {
             $link_class = 'rcpro_project_link';
             $title = "Active";
 
-            $pid = trim($project["redcap_pid"]);
+            $pid = trim($project->redcap_pid);
             $url = $module->getUrl("src/manage.php?pid=${pid}");
             $result .= "<div><a class='${link_class}' title='${title}' href='${url}'>PID ${pid}</a></div>";
         }
@@ -24,12 +29,12 @@ function createProjectsCell(array $projects)
     return $result;
 }
 
-require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
+require_once constant("APP_PATH_DOCROOT") . 'ControlCenter/header.php';
 
 // Helpers
 $UI = new UI($module);
-$Auth = new Auth($module::$APPTITLE);
-$ParticipantHelper = new ParticipantHelper($module);
+$Auth = new Auth($module);
+$Emailer = new Emailer($module);
 
 $UI->ShowControlCenterHeader("Participants");
 
@@ -57,7 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // SEND A PASSWORD RESET EMAIL
         if (!empty($_POST["toReset"])) {
             $function = "send password reset email";
-            $result = $module->sendPasswordResetEmail($rcpro_participant_id);
+            $result = $Emailer->sendPasswordResetEmail($participant);
             if (!$result) {
                 $icon = "error";
                 $title = "Trouble sending password reset email.";
@@ -93,7 +98,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else if (!empty($_POST["toChangeEmail"])) {
             $function = "change participant's email address";
             $newEmail = $_POST["newEmail"];
-            if ($ParticipantHelper->checkEmailExists($newEmail)) {
+            if (checkEmailExists($newEmail)) {
                 $icon = "error";
                 $title = "The provided email address is already associated with a REDCapPRO account.";
             } else {
@@ -111,7 +116,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else if (!empty($_POST["toUpdateActivity"])) {
             $function = "update participant's active status";
             $reactivate = $_POST["statusAction"] === "reactivate";
-            if (!$ParticipantHelper->checkParticipantExists($rcpro_participant_id)) {
+            if (!checkParticipantExists($rcpro_participant_id)) {
                 $icon = "error";
                 $title = "The provided participant does not exist in the system.";
             } else {
@@ -142,7 +147,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $Auth->set_csrf_token();
 
 // Get array of participants
-$participants = $ParticipantHelper->getAllParticipants();
+$participants = getAllParticipants();
 
 ?>
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
@@ -218,7 +223,7 @@ $participants = $ParticipantHelper->getAllParticipants();
                             $isActive = $participant->isActive();
                         ?>
                             <tr>
-                                <td class="rcpro_participant_link" onclick="<?= $onclick ?>"><?= $participant["log_id"] ?></td>
+                                <td class="rcpro_participant_link" onclick="<?= $onclick ?>"><?= $participant->rcpro_participant_id ?></td>
                                 <td class="dt-center"><?= $username_clean ?></td>
                                 <td class="dt-center"><i data-filterValue="<?= $isActive ?>" title='<?= $isActive ? "Active" : "Inactive" ?>' class='fas <?= $isActive ? "fa-check" : "fa-ban" ?>' style='color:<?= $isActive ? $module::$COLORS["green"] : $module::$COLORS["ban"] ?>'></td>
                                 <td class="dt-center"><i data-filterValue="<?= $password_set ?>" title='Password Set' class='fas <?= ($password_set ? "fa-check-circle" : "fa-fw") ?>' style='margin-left:2px;margin-right:2px;color:<?= $module::$COLORS["green"] ?>;'></i></td>
@@ -230,7 +235,7 @@ $participants = $ParticipantHelper->getAllParticipants();
                                     <div style="display:flex; justify-content:center; align-items:center;">
                                         <a onclick='(function(){
                                             clearForm();
-                                            $("#toReset").val("<?= $participant["log_id"] ?>");
+                                            $("#toReset").val("<?= $participant->rcpro_participant_id ?>");
                                             $("#participants-form").submit();
                                             })();' title="Reset Password" style="cursor:pointer; padding:0 5px;">
                                             <i class="fas fa-key"></i>
@@ -262,7 +267,7 @@ $participants = $ParticipantHelper->getAllParticipants();
                                                             });
                                                         } else {
                                                             clearForm();
-                                                            $("#toChangeName").val("<?= $participant["log_id"] ?>");
+                                                            $("#toChangeName").val("<?= $participant->rcpro_participant_id ?>");
                                                             $("#newFirstName").val(result.value.fname); 
                                                             $("#newLastName").val(result.value.lname); 
                                                             $("#participants-form").submit();
@@ -284,7 +289,7 @@ $participants = $ParticipantHelper->getAllParticipants();
                                                 }).then((result) => {
                                                     if (result.isConfirmed) {
                                                         clearForm();
-                                                        $("#toChangeEmail").val("<?= $participant["log_id"] ?>");
+                                                        $("#toChangeEmail").val("<?= $participant->rcpro_participant_id ?>");
                                                         $("#newEmail").val(result.value); 
                                                         $("#participants-form").submit();
                                                     }
@@ -304,7 +309,7 @@ $participants = $ParticipantHelper->getAllParticipants();
                                                 }).then((result) => {
                                                     if (result.isConfirmed) {
                                                         clearForm();
-                                                        $("#toUpdateActivity").val("<?= $participant["log_id"] ?>");
+                                                        $("#toUpdateActivity").val("<?= $participant->rcpro_participant_id ?>");
                                                         $("#statusAction").val("<?= $isActive ? "deactivate" : "reactivate" ?>");
                                                         $("#participants-form").submit();
                                                     }
@@ -400,5 +405,5 @@ $participants = $ParticipantHelper->getAllParticipants();
     }(window.jQuery, window, document));
 </script>
 <?php
-require_once APP_PATH_DOCROOT . 'ControlCenter/footer.php';
+require_once constant("APP_PATH_DOCROOT") . 'ControlCenter/footer.php';
 ?>

@@ -2,18 +2,18 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-$currentUser = new REDCapProUser($module, USERID);
+$currentUser = new REDCapProUser($module);
 $role = $currentUser->getUserRole($module->getProjectId());
 if ($role < 2) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
 // Helpers
-$Auth = new Auth($module::$APPTITLE);
+$Auth = new Auth($module);
 $UI = new UI($module);
-$ParticipantHelper = new ParticipantHelper($module);
+$Emailer = new Emailer($module);
 
-require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+require_once constant("APP_PATH_DOCROOT") . 'ProjectGeneral/header.php';
 $UI->ShowHeader("Register");
 echo "<title>" . $module::$APPTITLE . " - Register</title>";
 
@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $email_err = "Please enter a valid email address.";
         $any_error = TRUE;
     } else {
-        $result = $ParticipantHelper->checkEmailExists($param_email);
+        $result = checkEmailExists($param_email);
         if ($result === NULL) {
             echo "Oops! Something went wrong. Please try again later.";
             return;
@@ -69,8 +69,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!$any_error) {
         $icon = $title = $html = "";
         try {
-            $rcpro_username = $ParticipantHelper->createParticipant($email, $fname_clean, $lname_clean);
-            $module->sendNewParticipantEmail($rcpro_username, $email, $fname_clean, $lname_clean);
+            $rcpro_username = createParticipant($email, $fname_clean, $lname_clean);
+            $Emailer->sendNewParticipantEmail($rcpro_username, $email, $fname_clean, $lname_clean);
             $icon = "success";
             $title = "Participant Registered";
 
@@ -138,4 +138,4 @@ $Auth->set_csrf_token();
 </div>
 
 <?php
-include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+include constant("APP_PATH_DOCROOT") . 'ProjectGeneral/footer.php';

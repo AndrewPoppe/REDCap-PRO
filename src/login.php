@@ -3,14 +3,14 @@
 namespace YaleREDCap\REDCapPRO;
 
 // Initialize Authentication
-$Auth = new Auth($module::$APPTITLE);
+$Auth = new Auth($module);
 $Auth->init();
 
 // Helper Objects
 $LoginHelper = new LoginHelper($module);
 $ProjectSettings = new ProjectSettings($module);
-$ParticipantHelper = new ParticipantHelper($module);
 $UI = new UI($module);
+$Emailer = new Emailer($module);
 
 // Check if the user is already logged in, if yes then redirect then to the survey
 if ($Auth->is_logged_in()) {
@@ -51,8 +51,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $username_err = $module->tt("login_err1");
     } else {
         $username = \REDCap::escapeHtml(trim($_POST["username"]));
-        $usernameExists = $ParticipantHelper->usernameIsTaken($username);
-        $emailExists = $ParticipantHelper->checkEmailExists($username);
+        $usernameExists = usernameIsTaken($username);
+        $emailExists = checkEmailExists($username);
         $emailLoginsAllowed = $ProjectSettings->emailLoginsAllowed($module->getProjectId());
     }
 
@@ -158,9 +158,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     if ($Auth->is_survey_url_set()) {
                         header("location: " . $Auth->get_survey_url());
                     } else if (isset($qstring["s"])) {
-                        header("location: " . APP_PATH_SURVEY_FULL . $_SERVER['QUERY_STRING']);
+                        header("location: " . constant("APP_PATH_SURVEY_FULL") . $_SERVER['QUERY_STRING']);
                     } else {
-                        $study_contact = $module->getContactPerson();
+                        $study_contact = $Emailer->getContactPerson();
                         echo $module->tt("login_err9");
                         if (isset($study_contact["name"])) {
                             echo ":<br>" . $study_contact["info"];

@@ -84,7 +84,7 @@ class Instrument
     function update_form()
     {
         if (isset($this->username)) {
-            $project = new Project($this->module, ["redcap_pid" => PROJECT_ID]);
+            $project = new Project($this->module, ["redcap_pid" => constant("PROJECT_ID")]);
             $participants = $project->getParticipantsInfo($this->rcpro_dag);
             $options = "<option value=''>''</option>";
             $participants_json = json_encode($participants);

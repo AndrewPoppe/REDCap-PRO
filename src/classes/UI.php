@@ -47,7 +47,7 @@ class UI
 
     public function ShowHeader(string $page)
     {
-        $role = SUPER_USER ? 3 : $this->module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+        $role = constant("SUPER_USER") ? 3 : $this->module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
         $header = "
         <style>
             .rcpro-nav a {
