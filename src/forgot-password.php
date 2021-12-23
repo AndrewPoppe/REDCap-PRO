@@ -47,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 "rcpro_participant_id" => $participant->rcpro_participant_id,
                 "rcpro_username"       => $participant->rcpro_username
             ]);
-            $Emailer->sendPasswordResetEmail($participant);
+            $Emailer->send_password_reset_email($participant);
         }
         echo '<div style="text-align: center; font-size: large;"><p><br>' . $module->tt("forgot_password_message1") . '</p></div>';
         return;

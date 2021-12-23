@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // SEND A PASSWORD RESET EMAIL
         if (!empty($_POST["toReset"])) {
             $function = "send password reset email";
-            $result = $Emailer->sendPasswordResetEmail($participant);
+            $result = $Emailer->send_password_reset_email($participant);
             if (!$result) {
                 $icon = "error";
                 $title = "Trouble sending password reset email.";

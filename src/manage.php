@@ -22,9 +22,9 @@ echo "<title>" . $module::$APPTITLE . " - Manage</title>";
 $project = new Project($module, ["redcap_pid" => $project_id]);
 
 // DAGs
-$rcpro_user_dag = $DAG->getCurrentDag($currentUser->username, $module->getProjectId());
-$project_dags = $DAG->getProjectDags();
-$user_dags = $DAG->getPossibleDags($currentUser->username, $module->getProjectId());
+$rcpro_user_dag = $DAG->get_current_dags($currentUser->username, $module->getProjectId());
+$project_dags = $DAG->get_project_dags();
+$user_dags = $DAG->get_possible_dags($currentUser->username, $module->getProjectId());
 $project_dags[NULL] = "Unassigned";
 $projectHasDags = count($project_dags) > 1;
 
@@ -61,7 +61,7 @@ function resetPassword(int $rcpro_participant_id)
     $function = "send password reset email";
 
     $participant = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
-    $result = $Emailer->sendPasswordResetEmail($participant);
+    $result = $Emailer->send_password_reset_email($participant);
     if (!$result) {
         $icon = "error";
         $title = "Trouble sending password reset email.";
@@ -161,7 +161,7 @@ function switchDAG(int $rcpro_participant_id, ?string $newDAG)
         $newDAG = $newDAG === "" ? NULL : $newDAG;
         $participant = new Participant($module, ["rcpro_participant_id" => $rcpro_participant_id]);
         $link = new Link($module, $project, $participant);
-        $result = $DAG->updateDag($link->id, $newDAG);
+        $result = $DAG->update_dag($link->id, $newDAG);
         if (!$result) {
             $title = "Trouble switching participant's Data Access Group.";
             $icon = "error";
@@ -229,8 +229,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Check that the Data Access Group of the participant matches that of the user
         if (!$error && $projectHasDags) {
             $link = new Link($module, $project, $participant);
-            $participant_dag = intval($DAG->getParticipantDag($link->id));
-            $user_dag = $DAG->getCurrentDag($currentUser->username, $module->getProjectId());
+            $participant_dag = intval($DAG->get_participant_dag($link->id));
+            $user_dag = $DAG->get_current_dags($currentUser->username, $module->getProjectId());
             if (isset($user_dag) && $participant_dag !== $user_dag) {
                 $function = $generic_function;
                 $icon = "error";
@@ -332,7 +332,7 @@ $participants = $project->getParticipants($rcpro_user_dag);
                                     $email_clean    = \REDCap::escapeHtml($participant->email);
                                 }
                                 $link           = new Link($module, $project, $participant);
-                                $dag_id         = $DAG->getParticipantDag($link->id);
+                                $dag_id         = $DAG->get_participant_dag($link->id);
                                 $dag_name       = \REDCap::getGroupNames(false, $dag_id);
                                 $dag_name_clean = count($dag_name) === 1 ? \REDCap::escapeHtml($dag_name) : "Unassigned";
                             ?>

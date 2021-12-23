@@ -71,7 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $icon = $title = $html = "";
         try {
             $rcpro_username = $ParticipantHelper->createParticipant($email, $fname_clean, $lname_clean);
-            $Emailer->sendNewParticipantEmail($rcpro_username, $email, $fname_clean, $lname_clean);
+            $Emailer->send_new_participant_email($rcpro_username, $email, $fname_clean, $lname_clean);
             $icon = "success";
             $title = "Participant Registered";
 

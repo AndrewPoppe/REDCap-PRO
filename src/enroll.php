@@ -48,7 +48,7 @@ if (isset($_POST["id"]) && isset($project_id)) {
         $project = new Project($module, ["redcap_pid" => $pid]);
 
         // Get DAG if applicable
-        $redcap_dag = $DAG->getCurrentDag($currentUser->username, $module->getProjectId());
+        $redcap_dag = $DAG->get_current_dags($currentUser->username, $module->getProjectId());
 
         // Enroll
         $result = $project->enrollParticipant($participant, $redcap_dag);
@@ -193,8 +193,8 @@ $jsname = $module->getJavascriptModuleObjectName();
                     </div>
                 </div>
 
-                <?php if ($DAG->getProjectDags()) {
-                    $userDag = $DAG->getCurrentDag($currentUser->username, $module->getProjectId());
+                <?php if ($DAG->get_project_dags()) {
+                    $userDag = $DAG->get_current_dags($currentUser->username, $module->getProjectId());
                     $dagName = isset($userDag) ? \REDCap::getGroupNames(false, $userDag) : "No Assignment";
                 ?>
                     <div class="mb-3 row">

@@ -26,11 +26,11 @@ class DAG
      * 
      * @return array DAG IDs available to user for this project
      */
-    public function getPossibleDags(string $redcap_username, int $redcap_pid): array
+    public function get_possible_dags(string $redcap_username, int $redcap_pid): array
     {
 
         // Get all dags in project
-        $allDags = array_keys($this->getProjectDags());
+        $allDags = array_keys($this->get_project_dags());
 
         // If there are none, then the user can't have any
         if (count($allDags) === 0) {
@@ -66,7 +66,7 @@ class DAG
             }
 
             // User might only be in one DAG and not in switcher
-            $current = $this->getCurrentDag($redcap_username, $redcap_pid);
+            $current = $this->get_current_dags($redcap_username, $redcap_pid);
             return isset($current) ? [$current] : $allDags;
         } catch (\Exception $e) {
             $this->module->logError("Error getting possible DAGs", $e);
@@ -81,7 +81,7 @@ class DAG
      * @return int|NULL DAG ID currently selected for this user. Returns -1 if 
      * the user is not in a DAG. 
      */
-    public function getCurrentDag(string $redcap_username, int $redcap_pid)
+    public function get_current_dags(string $redcap_username, int $redcap_pid)
     {
         $SQL = "SELECT group_id 
                 FROM redcap_user_rights
@@ -102,14 +102,11 @@ class DAG
     /**
      * Get all DAGs in the current project
      * 
-     * This is clearly just a wrapper around the REDCap module's method.
-     * It is included here for consistency with other DAG methods.
-     * 
-     * @return mixed array of group names with their corresponding group_id's as
+     * @return string[] array of group names with their corresponding group_id's as
      * array keys. Returns FALSE if no data access groups exist for the current 
      * project. 
      */
-    public function getProjectDags()
+    public function get_project_dags(): array
     {
         return \REDCap::getGroupNames();
     }
@@ -120,7 +117,7 @@ class DAG
      * @param int $rcpro_link_id 
      * @return mixed 
      */
-    public function getParticipantDag(int $rcpro_link_id)
+    public function get_participant_dag(int $rcpro_link_id)
     {
         $SQL = "SELECT project_dag WHERE log_id = ?";
         try {
@@ -140,7 +137,7 @@ class DAG
      * @param int $dag_id 
      * @return mixed 
      */
-    public function updateDag(int $rcpro_link_id, ?int $dag_id)
+    public function update_dag(int $rcpro_link_id, ?int $dag_id)
     {
         if ($this->module->countLogsValidated("log_id = ? AND project_dag is not null", [$rcpro_link_id]) > 0) {
             $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'project_dag'";

@@ -132,7 +132,7 @@ class Participant
                     ]);
                 }
 
-                return $Emailer->sendEmailUpdateEmail($this->rcpro_username, $new_email, $current_email);
+                return $Emailer->send_email_update_email($this->rcpro_username, $new_email, $current_email);
             } else {
                 throw new REDCapProException(["rcpro_participant_id" => $this->rcpro_participant_id]);
             }

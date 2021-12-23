@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 "rcpro_participant_id" => $participant->rcpro_participant_id,
                 "rcpro_username"       => $participant->rcpro_username
             ]);
-            $Emailer->sendUsernameEmail($email, $username);
+            $Emailer->send_username_reminder_email($email, $username);
         }
         echo $module->tt("forgot_username_message1");
         return;

@@ -161,7 +161,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     } else if (isset($qstring["s"])) {
                         header("location: " . constant("APP_PATH_SURVEY_FULL") . $_SERVER['QUERY_STRING']);
                     } else {
-                        $study_contact = $Emailer->getContactPerson();
+                        $study_contact = $Emailer->get_contact_person_details_array();
                         echo $module->tt("login_err9");
                         if (isset($study_contact["name"])) {
                             echo ":<br>" . $study_contact["info"];
