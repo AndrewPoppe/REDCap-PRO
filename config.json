@@ -74,7 +74,8 @@
         "src/reset-password",
         "src/create-password",
         "src/forgot-password",
-        "src/forgot-username"
+        "src/forgot-username",
+        "src/session_check"
     ],
     "framework-version": 5,
     "compatibility": {

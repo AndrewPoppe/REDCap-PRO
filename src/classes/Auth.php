@@ -11,7 +11,7 @@ class Auth
 {
 
     public static $APPTITLE;
-    public static $SESSION_NAME;
+    public static $SESSION_NAME = "REDCapPRO_SESSID";
 
     /**
      * constructor
@@ -22,7 +22,6 @@ class Auth
     function __construct($title = null)
     {
         self::$APPTITLE = $title;
-        self::$SESSION_NAME = "${title}_sessid";
     }
 
     /**
@@ -32,22 +31,48 @@ class Auth
      */
     public function init()
     {
-        $session_id = $_COOKIE["survey"];
-        if (isset($_COOKIE["PHPSESSID"])) {
-            \Session::destroy($_COOKIE["PHPSESSID"]);
+        // To ensure any REDCap user is logged out 
+        $redcap_session_id = $_COOKIE["PHPSESSID"];
+        if (isset($redcap_session_id)) {
+            \Session::destroy($redcap_session_id);
+            \Session::deletecookie("PHPSESSID");
+            session_destroy($redcap_session_id);
         }
+
+        // If we already have a session, use it.
+        // Otherwise, create a new session.
+        $session_id = $_COOKIE[self::$SESSION_NAME];
         if (!empty($session_id)) {
+            if ($session_id !== session_id()) {
+                \Session::destroy(session_id());
+                session_destroy();
+            }
             session_id($session_id);
         } else {
+            \Session::destroy(session_id());
+            session_destroy();
             $this->createSession();
         }
+
+        session_name(self::$SESSION_NAME);
         session_start();
+
+        $this->set_survey_username($_SESSION["username"]);
     }
 
     public function createSession()
     {
-        \Session::init("survey");
+        \Session::init(self::$SESSION_NAME);
         $this->set_csrf_token();
+    }
+
+    public function destroySession()
+    {
+        $session_id = $_COOKIE[self::$SESSION_NAME];
+        if (isset($session_id)) {
+            \Session::destroy($session_id);
+        }
+        \Session::deletecookie(self::$SESSION_NAME);
     }
 
     public function set_csrf_token()
@@ -124,6 +149,9 @@ class Auth
 
     public function set_login_values($participant)
     {
+
+        $this->set_survey_username($participant["rcpro_username"]);
+
         $_SESSION["username"] = $participant["rcpro_username"];
         $_SESSION[self::$APPTITLE . "_participant_id"] = $participant["log_id"];
         $_SESSION[self::$APPTITLE . "_username"] = $participant["rcpro_username"];
@@ -131,5 +159,22 @@ class Auth
         $_SESSION[self::$APPTITLE . "_fname"] = $participant["fname"];
         $_SESSION[self::$APPTITLE . "_lname"] = $participant["lname"];
         $_SESSION[self::$APPTITLE . "_loggedin"] = true;
+    }
+
+    public function set_survey_username($username)
+    {
+        $orig_id = session_id();
+        $survey_session_id = $_COOKIE["survey"];
+        if (isset($survey_session_id)) {
+            session_write_close();
+            session_name('survey');
+            session_id($survey_session_id);
+            session_start();
+            $_SESSION['username'] = $username;
+            session_write_close();
+            session_name(self::$SESSION_NAME);
+            session_id($orig_id);
+            session_start();
+        }
     }
 }

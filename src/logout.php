@@ -1,12 +1,15 @@
 <?php
 // Initialize the session
-session_start();
-
-// Unset all of the session variables
-$_SESSION = array();
+$module::$AUTH->init();
 
 // Destroy the session.
-session_destroy();
+$module::$AUTH->destroySession();
+
+// Unset all of the session variables
+session_unset();
+
+// Whether to cancel showing the popup
+$cancelPopup = $_GET['cancelPopup'];
 
 // This method starts the html doc
 $module::$UI->ShowParticipantHeader($module->tt("logout_title"));
@@ -23,16 +26,17 @@ $module::$UI->ShowParticipantHeader($module->tt("logout_title"));
 <div style="text-align: center;">
     <p><?= $module->tt("ui_close_tab") ?></p>
 </div>
-<script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
-<script>
-    Swal.fire({
-        imageUrl: "<?= $module->getUrl("images/RCPro_Favicon.svg") ?>",
-        imageWidth: '150px',
-        html: '<strong><?= $module->tt("logout_message1") ?></strong>',
-        allowOutsideClick: false,
-        confirmButtonText: "OK",
-        confirmButtonColor: "#900000"
-    });
-</script>
-
-<?php $module::$UI->EndParticipantPage(); ?>
+<?php if (!$cancelPopup) { ?>
+    <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
+    <script>
+        Swal.fire({
+            imageUrl: "<?= $module->getUrl("images/RCPro_Favicon.svg") ?>",
+            imageWidth: '150px',
+            html: '<strong><?= $module->tt("logout_message1") ?></strong>',
+            allowOutsideClick: false,
+            confirmButtonText: "OK",
+            confirmButtonColor: "#900000"
+        });
+    </script>
+<?php }
+$module::$UI->EndParticipantPage(); ?>
