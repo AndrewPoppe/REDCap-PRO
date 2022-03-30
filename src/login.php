@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate token
     if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        $module->logEvent("Invalid CSRF Token");
+        $module->logEvent("Invalid CSRF Token", []);
         echo $module->tt("error_generic1");
         echo "<br>";
         echo $module->tt("error_generic2");

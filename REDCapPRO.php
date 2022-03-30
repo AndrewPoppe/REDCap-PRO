@@ -65,6 +65,7 @@ class REDCapPRO extends AbstractExternalModule
         if (strpos($_SERVER["PHP_SELF"], "surveys") !== false) {
             return;
         }
+        $this::$AUTH->destroySession();
         $role = SUPER_USER ? 3 : $this->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
         if ($role > 0) {
 ?>
@@ -211,9 +212,11 @@ class REDCapPRO extends AbstractExternalModule
                 window.rcpro.module = " . $this->getJavascriptModuleObjectName() . ";
                 window.rcpro.logo = '" . $this->getUrl("images/RCPro_Favicon.svg") . "';
                 window.rcpro.logoutPage = '" . $this->getUrl("src/logout.php", true) . "';
+                window.rcpro.sessionCheckPage = '" . $this->getUrl("src/session_check.php", true) . "';
                 window.rcpro.timeout_minutes = " . self::$SETTINGS->getTimeoutMinutes() . ";
                 window.rcpro.warning_minutes = " . self::$SETTINGS->getTimeoutWarningMinutes() . ";
                 window.rcpro.initTimeout();
+                window.rcpro.initSessionCheck();
             </script>";
 
             // Participant is not logged into their account

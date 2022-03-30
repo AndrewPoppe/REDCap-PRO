@@ -1,6 +1,7 @@
 let rcpro = {
-    logo:"",
-    logoutPage:"",
+    logo: "",
+    logoutPage: "",
+    sessionCheckPage: "",
     module: null,
     timeout_minutes: 0,
     warning_minutes: 0,
@@ -8,7 +9,7 @@ let rcpro = {
     seconds: 0,
     stop: false
 }
-rcpro.warning_duration = rcpro.timeout_minutes - rcpro.warning_minutes;    
+rcpro.warning_duration = rcpro.timeout_minutes - rcpro.warning_minutes;
 rcpro.initTimeout = function() {
     let lastTS = Date.now();
     let timeout;
@@ -18,11 +19,11 @@ rcpro.initTimeout = function() {
             return
         }
         let newTS = Date.now();
-        rcpro.seconds = Math.floor((newTS - lastTS)/1000);
-        if (rcpro.seconds >= (rcpro.timeout_minutes*60)) {
+        rcpro.seconds = Math.floor((newTS - lastTS) / 1000);
+        if (rcpro.seconds >= (rcpro.timeout_minutes * 60)) {
             rcpro.logout();
         }
-        if (rcpro.seconds >= (rcpro.warning_minutes*60) && !rcpro.warningOpen) {
+        if (rcpro.seconds >= (rcpro.warning_minutes * 60) && !rcpro.warningOpen) {
             rcpro.warningOpen = true;
             rcpro.logoutWarning();
         }
@@ -42,7 +43,17 @@ rcpro.initTimeout = function() {
     });
     startTimer();
 };
-    
+
+rcpro.initSessionCheck = function() {
+    setInterval(async function() {
+        let result = await fetch(rcpro.sessionCheckPage)
+            .then(resp => resp.json());
+        if (result.redcap_session_active || !result.redcappro_logged_in) {
+            rcpro.logout(true);
+        }
+    }, 1000);
+}
+
 rcpro.logoutWarning = function() {
     let timerInterval;
     return Swal.fire({
@@ -56,8 +67,8 @@ rcpro.logoutWarning = function() {
             timerInterval = setInterval(() => {
                 const content = Swal.getHtmlContainer()
                 if (content) {
-                    let remaining = (rcpro.timeout_minutes*60) - rcpro.seconds;
-                    let rDate = new Date(remaining*1000);
+                    let remaining = (rcpro.timeout_minutes * 60) - rcpro.seconds;
+                    let rDate = new Date(remaining * 1000);
                     let formatted = `${rDate.getMinutes()}:${String(rDate.getSeconds()).padStart(2,0)}`;
                     content.innerHTML = `<strong>${rcpro.module.tt("timeout_message1", formatted)}</strong><br>${rcpro.module.tt("timeout_message2")}`;
                 }
@@ -69,10 +80,11 @@ rcpro.logoutWarning = function() {
         }
     });
 };
-rcpro.logout = function () {
+rcpro.logout = function(cancelPopup) {
     rcpro.stop = true;
     $('body').html('');
-    location.href = rcpro.logoutPage;
+    let logoutPage = cancelPopup ? rcpro.logoutPage + "&cancelPopup=true" : rcpro.logoutPage;
+    location.href = logoutPage;
 }
 
 window.rcpro = rcpro;
