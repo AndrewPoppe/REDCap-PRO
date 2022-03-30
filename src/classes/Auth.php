@@ -11,6 +11,7 @@ class Auth
 {
 
     public static $APPTITLE;
+    public static $SESSION_NAME;
 
     /**
      * constructor
@@ -21,6 +22,7 @@ class Auth
     function __construct($title = null)
     {
         self::$APPTITLE = $title;
+        self::$SESSION_NAME = "${title}_sessid";
     }
 
     /**
@@ -30,7 +32,10 @@ class Auth
      */
     public function init()
     {
-        $session_id = $_COOKIE["survey"] ?? $_COOKIE["PHPSESSID"];
+        $session_id = $_COOKIE["survey"];
+        if (isset($_COOKIE["PHPSESSID"])) {
+            \Session::destroy($_COOKIE["PHPSESSID"]);
+        }
         if (!empty($session_id)) {
             session_id($session_id);
         } else {
@@ -41,7 +46,7 @@ class Auth
 
     public function createSession()
     {
-        \Session::init();
+        \Session::init("survey");
         $this->set_csrf_token();
     }
 
