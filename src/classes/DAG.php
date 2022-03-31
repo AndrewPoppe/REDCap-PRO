@@ -76,18 +76,25 @@ class DAG
      * 
      * @param string $redcap_username Username of REDCap User (staff)
      * @param int $redcap_pid REDCap's PID for this project
-     * @return int|NULL DAG ID currently selected for this user. Returns -1 if 
+     * @return int|NULL DAG ID currently selected for this user. Returns null if 
      * the user is not in a DAG. 
      */
     public function getCurrentDag(string $redcap_username, int $redcap_pid)
     {
+
+        $user = self::$module->getUser($redcap_username);
+        $isSuperUser = $user->isSuperUser();
+        if ($isSuperUser) {
+            return null;
+        }
+
         $SQL = "SELECT group_id 
                 FROM redcap_user_rights
                 WHERE project_id = ?
                 AND username = ?";
         try {
             $result = self::$module->query($SQL, [$redcap_pid, $redcap_username]);
-            $dag = -1;
+            $dag = null;
             while ($row = $result->fetch_assoc()) {
                 $dag = $row["group_id"];
             }
