@@ -81,6 +81,13 @@ class DAG
      */
     public function getCurrentDag(string $redcap_username, int $redcap_pid)
     {
+
+        $user = self::$module->getUser($redcap_username);
+        $isSuperUser = $user->isSuperUser();
+        if ($isSuperUser) {
+            return null;
+        }
+
         $SQL = "SELECT group_id 
                 FROM redcap_user_rights
                 WHERE project_id = ?
