@@ -345,7 +345,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                                         <td class="dt-center"><?= $lname_clean ?></td>
                                         <td><?= $email_clean ?></td>
                                     <?php } ?>
-                                    <?php if ($role > 1 && $projectHasDags) { ?>
+                                    <?php if ($role > 1 && $projectHasDags && $rcpro_user_dag === null) { ?>
                                         <td class="dt-center">
                                             <select class="dag_select form-select form-select-sm" name="dag_select_<?= $username_clean ?>" id="dag_select_<?= $username_clean ?>" orig_value="<?= $dag_id ?>" form="manage-form" onchange='(function(){
                                                 let el = $("#dag_select_<?= $username_clean ?>");
@@ -375,9 +375,12 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                                                     });
                                                 }
                                                 })();'>
-                                                <?php foreach ($user_dags as $this_dag_id) { ?>
-                                                    <option value="<?= $this_dag_id ?>" <?= $this_dag_id == $dag_id ? "selected" : "" ?>><?= $project_dags[$this_dag_id] ?></option>
-                                                <?php } ?>
+                                                <?php
+                                                foreach ($project_dags as $project_dag_id => $project_dag_name) {
+                                                    $selected = $project_dag_id == $dag_id ? "selected" : "";
+                                                    echo "<option value='${project_dag_id}' ${selected}>${project_dag_name}</option>";
+                                                }
+                                                ?>
                                             </select>
                                         </td>
                                     <?php } else if ($projectHasDags) { ?>
