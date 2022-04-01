@@ -199,9 +199,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// set csrf token
-$module::$AUTH->set_csrf_token();
-
 // This method starts the html doc
 $module::$UI->ShowParticipantHeader($module->tt("login_title"));
 ?>
@@ -230,7 +227,7 @@ if (!empty($login_err)) {
     <div class="form-group d-grid">
         <input type="submit" class="btn btn-primary" value="<?= $module->tt("login_button_text") ?>">
     </div>
-    <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+    <input type="hidden" name="token" value="<?= $module::$AUTH->set_csrf_token(); ?>">
 </form>
 <hr>
 <div style="text-align: center;">

@@ -10,6 +10,20 @@ require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module::$UI->ShowHeader("Manage");
 echo "<title>" . $module::$APPTITLE . " - Manage</title>";
 
+// Check for errors
+if (isset($_GET["error"])) {
+?>
+    <script>
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "There was a problem. Please try again.",
+            showConfirmButton: false
+        });
+    </script>
+<?php
+}
+
 // RCPRO Project ID 
 $rcpro_project_id = $module::$PROJECT->getProjectIdFromPID($project_id);
 
@@ -187,7 +201,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate token
     if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        header("location:" . $module->getUrl("src/manage.php"));
+        header("location:" . $module->getUrl("src/manage.php?error"));
         return;
     }
 
@@ -268,9 +282,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $module->logError("Error attempting to ${function}", $e);
     }
 }
-
-// set csrf token
-$module::$AUTH->set_csrf_token();
 
 // Get list of participants
 $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_id, $rcpro_user_dag);
@@ -498,7 +509,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                 <input type="hidden" id="toDisenroll" name="toDisenroll">
                 <input type="hidden" id="toSwitchDag" name="toSwitchDag">
                 <input type="hidden" id="newDag" name="newDag">
-                <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+                <input type="hidden" name="token" value="<?= $module::$AUTH->set_csrf_token(); ?>">
             <?php } ?>
         </form>
     </div>

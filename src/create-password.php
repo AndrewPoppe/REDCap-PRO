@@ -97,9 +97,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
-// set csrf token
-$module::$AUTH->set_csrf_token();
-
 $module::$UI->ShowParticipantHeader($module->tt("create_password_title"));
 
 if ($verified_user) {
@@ -127,7 +124,7 @@ if ($verified_user) {
         <div class="form-group">
             <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
         </div>
-        <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+        <input type="hidden" name="token" value="<?= $module::$AUTH->set_csrf_token(); ?>">
         <input type="hidden" name="username" value="<?= $verified_user["rcpro_username"] ?>">
     </form>
     </div>

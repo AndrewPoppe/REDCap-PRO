@@ -15,11 +15,25 @@ echo "<title>" . $module::$APPTITLE . " - Enroll</title>";
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
 
 <?php
+// Check for errors
+if (isset($_GET["error"])) {
+?>
+    <script>
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "There was a problem. Please try again.",
+            showConfirmButton: false
+        });
+    </script>
+<?php
+}
+
 if (isset($_POST["id"]) && isset($project_id)) {
 
     // Validate token
     if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        header("location:" . $module->getUrl("src/enroll.php"));
+        header("location:" . $module->getUrl("src/enroll.php?error"));
     }
 
     $rcpro_participant_id = intval($_POST["id"]);
@@ -47,9 +61,6 @@ if (isset($_POST["id"]) && isset($project_id)) {
         }
     }
 }
-
-// set csrf token
-$module::$AUTH->set_csrf_token();
 
 // Initialize Javascript object
 $module->initializeJavascriptModuleObject();
@@ -191,7 +202,7 @@ $jsname = $module->getJavascriptModuleObjectName();
                 <?php } ?>
 
                 <input type="text" id="id" name="id" class="form-control" readonly hidden>
-                <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+                <input type="hidden" name="token" value="<?= $module::$AUTH->set_csrf_token(); ?>">
                 <div>
                     <hr>
                     <button type="submit" class="btn btn-rcpro">Enroll Participant</button>

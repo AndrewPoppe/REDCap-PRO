@@ -75,19 +75,40 @@ class Auth
         \Session::deletecookie(self::$SESSION_NAME);
     }
 
+    /**
+     * Sets (and returns) new token
+     * 
+     * @return string new token
+     */
     public function set_csrf_token()
     {
-        $_SESSION[self::$APPTITLE . "_token"] = bin2hex(random_bytes(24));
-    }
+        if (!isset($_SESSION[self::$APPTITLE . "_token"]) || !is_array($_SESSION[self::$APPTITLE . "_token"])) {
+            $_SESSION[self::$APPTITLE . "_token"] = array();
+        }
+        $maxTokens = 20;
+        if (count($_SESSION[self::$APPTITLE . "_token"]) >= $maxTokens) {
+            array_shift($_SESSION[self::$APPTITLE . "_token"]);
+        }
 
-    public function get_csrf_token()
-    {
-        return $_SESSION[self::$APPTITLE . "_token"];
+        $newToken = bin2hex(random_bytes(24));
+        $_SESSION[self::$APPTITLE . "_token"][] = $newToken;
+
+        return $newToken;
     }
 
     public function validate_csrf_token(string $token)
     {
-        return hash_equals($this->get_csrf_token(), $token);
+        if (!isset($_SESSION[self::$APPTITLE . "_token"]) || !is_array($_SESSION[self::$APPTITLE . "_token"]) || $token == null) {
+            return false;
+        }
+
+        $key = array_search($token, $_SESSION[self::$APPTITLE . "_token"]);
+        if ($key !== false) {
+            unset($_SESSION[self::$APPTITLE . "_token"][$key]);
+            return true;
+        }
+
+        return false;
     }
 
     // --- THESE DEAL WITH SESSION VALUES --- \\

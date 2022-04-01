@@ -9,6 +9,20 @@ require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module::$UI->ShowHeader("Register");
 echo "<title>" . $module::$APPTITLE . " - Register</title>";
 
+// Check for errors
+if (isset($_GET["error"])) {
+?>
+    <script>
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "There was a problem. Please try again.",
+            showConfirmButton: false
+        });
+    </script>
+    <?php
+}
+
 // Track all errors
 $any_error = FALSE;
 
@@ -17,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate token
     if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        header("location:" . $module->getUrl("src/register.php"));
+        header("location:" . $module->getUrl("src/register.php?error"));
         return;
     }
 
@@ -76,7 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $title = "Error Registering Participant";
             $html = $e->getMessage();
         } finally {
-?>
+    ?>
             <script>
                 let success = "<?= $icon ?>" === "success";
                 Swal.fire({
@@ -95,9 +109,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 }
-
-// set csrf token
-$module::$AUTH->set_csrf_token();
 
 ?>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
@@ -125,7 +136,7 @@ $module::$AUTH->set_csrf_token();
         <div class="form-group">
             <button type="submit" class="btn btn-rcpro" value="Submit">Submit</button>
         </div>
-        <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+        <input type="hidden" name="token" value="<?= $module::$AUTH->set_csrf_token(); ?>">
     </form>
 </div>
 

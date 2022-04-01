@@ -20,11 +20,24 @@ function createProjectsCell(array $projects)
 }
 
 
-?>
-<?php
 if (!SUPER_USER) {
     return;
 }
+
+// Check for errors
+if (isset($_GET["error"])) {
+?>
+    <script>
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "There was a problem. Please try again.",
+            showConfirmButton: false
+        });
+    </script>
+<?php
+}
+
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $module::$UI->ShowControlCenterHeader("Participants");
 
@@ -32,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate token
     if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        header("location:" . $module->getUrl("src/cc_participants.php"));
+        header("location:" . $module->getUrl("src/cc_participants.php?error"));
         return;
     }
 
@@ -126,9 +139,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $module->logError("Error attempting to ${function}", $e);
     }
 }
-
-// set csrf token
-$module::$AUTH->set_csrf_token();
 
 // Get array of participants
 $participants = $module::$PARTICIPANT->getAllParticipants();
@@ -317,7 +327,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
             <input type="hidden" id="toDisenroll" name="toDisenroll">
             <input type="hidden" id="toUpdateActivity" name="toUpdateActivity">
             <input type="hidden" id="statusAction" name="statusAction">
-            <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+            <input type="hidden" name="token" value="<?= $module::$AUTH->set_csrf_token(); ?>">
         <?php } ?>
     </form>
 </div>

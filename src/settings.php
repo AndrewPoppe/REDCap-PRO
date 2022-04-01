@@ -10,6 +10,20 @@ $module::$UI->ShowHeader("Settings");
 echo "<title>" . $module::$APPTITLE . " - Settings</title>
 <link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>";
 
+// Check for errors
+if (isset($_GET["error"])) {
+?>
+    <script>
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "There was a problem. Please try again.",
+            showConfirmButton: false
+        });
+    </script>
+    <?php
+}
+
 // Get possible languages
 $langs = $module::$SETTINGS->getLanguageFiles();
 
@@ -18,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate token
     if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        header("location:" . $module->getUrl("src/settings.php"));
+        header("location:" . $module->getUrl("src/settings.php?error"));
         return;
     }
 
@@ -55,7 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (!$any_err) {
 
             $module->setProjectSettings($new_settings);
-?>
+    ?>
             <script>
                 Swal.fire({
                     icon: "success",
@@ -82,9 +96,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 // Get current project settings
 $settings = $module->getProjectSettings();
 $preventEmailLoginSystem = $module->getSystemSetting("prevent-email-login-system");
-
-// set csrf token
-$module::$AUTH->set_csrf_token();
 
 ?>
 
@@ -185,7 +196,7 @@ $module::$AUTH->set_csrf_token();
                     })()">Cancel</button>
                 <button type="submit" id="rcpro-submit-button" class="btn btn-rcpro" value="Submit" disabled>Save Settings</button>
             </div>
-            <input type="hidden" name="token" value="<?= $module::$AUTH->get_csrf_token(); ?>">
+            <input type="hidden" name="token" value="<?= $module::$AUTH->set_csrf_token(); ?>">
         </form>
     </div>
 </div>
