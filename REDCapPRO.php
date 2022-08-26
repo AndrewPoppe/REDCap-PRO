@@ -97,6 +97,7 @@ class REDCapPRO extends AbstractExternalModule
     ) {
 
         // Initialize Authentication
+        if (isset($record)) \Session::savecookie("record", $record, 0, TRUE);
         self::$AUTH->init();
 
         // Participant is logged in to their account
