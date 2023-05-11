@@ -26,9 +26,15 @@ class DAG
      */
     public function getPossibleDags(string $redcap_username, int $redcap_pid)
     {
+    		$allDags = array();  // FIX: PHP 8 issue array_keys will no longer gracefully work with a null
 
         // Get all dags in project
-        $allDags = array_keys($this->getProjectDags());
+        //$allDags = array_keys($this->getProjectDags());
+        $dagData = $this->getProjectDags();  // calls:  \REDCap::getGroupNames()    // If no groups exist, return FALSE
+      	
+      	if ($dagData !== false) {  
+      		$allDags = array_keys($dagData);
+      	} 
 
         // If there are none, then the user can't have any
         if (count($allDags) === 0) {

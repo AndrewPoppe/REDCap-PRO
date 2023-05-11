@@ -36,7 +36,8 @@ class Auth
         if (isset($redcap_session_id)) {
             \Session::destroy($redcap_session_id);
             \Session::deletecookie("PHPSESSID");
-            session_destroy($redcap_session_id);
+            //session_destroy($redcap_session_id); // FIX: PHP 8 session_destroy does not take param and PHP 8 complains
+            session_destroy();
         }
 
         // If we already have a session, use it.
