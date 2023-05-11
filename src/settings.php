@@ -25,7 +25,8 @@ if (isset($_GET["error"])) {
 }
 
 // Get possible languages
-$langs = $module::$SETTINGS->getLanguageFiles();
+//$langs = $module::$SETTINGS->getLanguageFiles();  // FIX: name conflict with REDCap global lang AND this line: foreach ($langs as $lang => $file) {
+$languageList = $module::$SETTINGS->getLanguageFiles();
 
 // Update settings if requested
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -45,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
         // Validate Language
         $new_settings["reserved-language-project"] = \REDCap::escapeHtml($post_settings["reserved-language-project"]);
-        if (!in_array($new_settings["reserved-language-project"], array_keys($langs), true)) {
+        if (!in_array($new_settings["reserved-language-project"], array_keys($languageList), true)) {
             $lang_err = "Invalid language selected";
             $any_err = true;
         }
@@ -116,11 +117,12 @@ $preventEmailLoginSystem = $module->getSystemSetting("prevent-email-login-system
                     <div class="form-group">
                         <select class="form-select <?php echo (!empty($lang_err)) ? 'is-invalid' : ''; ?>" name="reserved-language-project" aria-label="language select">
                             <?php
-                            foreach ($langs as $lang => $file) {
+                            //foreach ($langs as $lang => $file) {  // FIX: $lang  is global $lang, and this lang in loop will STOMP on the global.
+                            foreach ($languageList as $lang_item => $file) {
                                 $selected_lang = $settings["reserved-language-project"];
-                                $selected = ($lang === $selected_lang) || (!isset($selected_lang) && $lang === "English") ? "selected" : "";
+                                $selected = ($lang_item === $selected_lang) || (!isset($selected_lang) && $lang_item === "English") ? "selected" : "";
                             ?>
-                                <option value="<?= $lang ?>" <?= $selected ?>><?= $lang ?></option>
+                                <option value="<?= $lang_item ?>" <?= $selected ?>><?= $lang_item ?></option>
                             <?php
                             }
                             ?>

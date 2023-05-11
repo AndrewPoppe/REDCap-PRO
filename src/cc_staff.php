@@ -26,6 +26,12 @@ if (!SUPER_USER) {
 
 // Get array of staff (users)
 $users = $module->getAllUsers();
+
+// FIX: fix pathing potential issue
+global $redcap_version;
+
+$baseUrlPath = APP_PATH_WEBROOT_FULL . 'redcap_v' . $redcap_version . '/';
+
 ?>
 <div id="loading-container" class="loader-container">
     <div id="loading" class="loader"></div>
@@ -46,7 +52,12 @@ $users = $module->getAllUsers();
             </thead>
             <tbody>
                 <?php foreach ($users as $user) {
-                    $userLink = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "ControlCenter/view_users.php?username=" . $user["username"];
+                	if($user["username"] == '') { 
+                		continue; // skip blank users
+                	}
+                		// FIX: fix pathing potential issue
+                    //$userLink = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "ControlCenter/view_users.php?username=" . $user["username"];
+                    $userLink = $baseUrlPath . "ControlCenter/view_users.php?username=" . $user["username"];
                 ?>
                     <tr>
                         <td class="rcpro_user_link" onclick="(function(){window.location.href='<?= $userLink ?>';})();"><?= $user["username"] ?></td>
