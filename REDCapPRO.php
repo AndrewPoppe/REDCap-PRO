@@ -326,9 +326,16 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return bool
      */
-    function redcap_module_configure_button_display($project_id)
+    //function redcap_module_configure_button_display($project_id)  // NOTE: FIX: PHP 8 complains this differs from the Abstract class method declaration
+    function redcap_module_configure_button_display()
     {
-        return empty($project_id);
+        //return empty($project_id);
+        
+    		if ($this->getProjectId() !== null) {
+    			return false;  // hides configure button in EM listing from project level
+    		}
+        
+        return true;  // shows configure button in EM listing from control center
     }
 
 
@@ -611,11 +618,12 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function changeUserRole(string $username, ?string $oldRole, string $newRole)
     {
+    	// FIX: PHP 8 fix
         try {
             $roles = array(
-                "3" => $this->getProjectSetting("managers"),
-                "2" => $this->getProjectSetting("users"),
-                "1" => $this->getProjectSetting("monitors")
+                "3" => $this->getProjectSetting("managers") ?? array(''),
+                "2" => $this->getProjectSetting("users") ?? array(''),
+                "1" => $this->getProjectSetting("monitors") ?? array('')
             );
 
             $oldRole = strval($oldRole);
@@ -672,9 +680,10 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function getUserRole(string $username)
     {
-        $managers = $this->getProjectSetting("managers");
-        $users    = $this->getProjectSetting("users");
-        $monitors = $this->getProjectSetting("monitors");
+				// FIX: PHP 8 fix
+        $managers = $this->getProjectSetting("managers") ?? array('');
+        $users    = $this->getProjectSetting("users")    ?? array('');
+        $monitors = $this->getProjectSetting("monitors") ?? array('');
 
         $result = 0;
 
@@ -871,7 +880,8 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return string|null if not null, the error message to show to user
      */
-    function validateSettings(array $settings)
+    //function validateSettings(array $settings)  // NOTE: FIX: PHP 8 complains this differs from the Abstract class method declaration
+    function validateSettings($settings)
     {
 
         $message = NULL;
