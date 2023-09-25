@@ -326,9 +326,9 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return bool
      */
-    function redcap_module_configure_button_display($project_id)
+    function redcap_module_configure_button_display()
     {
-        return empty($project_id);
+        return true;
     }
 
 
@@ -871,7 +871,7 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return string|null if not null, the error message to show to user
      */
-    function validateSettings(array $settings)
+    function validateSettings($settings)
     {
 
         $message = NULL;
