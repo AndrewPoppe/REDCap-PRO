@@ -326,16 +326,11 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return bool
      */
-    //function redcap_module_configure_button_display($project_id)  // NOTE: FIX: PHP 8 complains this differs from the Abstract class method declaration
+
     function redcap_module_configure_button_display()
     {
-        //return empty($project_id);
-        
-    		if ($this->getProjectId() !== null) {
-    			return false;  // hides configure button in EM listing from project level
-    		}
-        
-        return true;  // shows configure button in EM listing from control center
+        // Hide module configuration button in project context.
+        return $this->getProjectId() === null;
     }
 
 
@@ -880,7 +875,6 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return string|null if not null, the error message to show to user
      */
-    //function validateSettings(array $settings)  // NOTE: FIX: PHP 8 complains this differs from the Abstract class method declaration
     function validateSettings($settings)
     {
 
