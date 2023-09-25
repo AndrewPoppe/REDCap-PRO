@@ -1,2 +1,6 @@
 .vscode
 .idea
+node_modules
+creds.json
+playwright-report
+test-results

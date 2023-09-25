@@ -1,0 +1,2 @@
+username,expiration,data_access_group,data_access_group_id,design,user_rights,data_access_groups,reports,stats_and_charts,manage_survey_participants,calendar,data_import_tool,data_comparison_tool,logging,file_repository,data_quality_create,data_quality_execute,api_export,api_import,record_create,record_rename,record_delete,lock_records_all_forms,lock_records,lock_records_customization,mycap_participants,forms,forms_export
+alice,,,,0,0,0,1,1,1,1,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1,form_1:3,form_1:1

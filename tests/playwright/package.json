@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@playwright/test": "^1.37.1",
+    "mouse-helper": "^1.0.7",
+    "playwright": "^1.37.0",
+    "sharp": "^0.32.5",
+    "csv": "^6.3.2"
+  },
+  "scripts": {}
+}
