@@ -133,7 +133,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 $fullname_clean = \REDCap::escapeHtml($module->getUserFullname($username));
                                 $email_clean    = \REDCap::escapeHtml($user->getEmail());
                                 $role           = $module->getUserRole($username);
-                              }
                             ?>
                                 <tr>
                                     <td><?php echo $username_clean; ?></td>
@@ -148,6 +147,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         </select>
                                     </td>
                                 </tr>
+                            <?php } ?>
                         </tbody>
                     </table>
                     <button class="btn btn-rcpro rcpro-form-button role_select_button" id="role_select_submit" type="submit" disabled>Save Changes</button>
