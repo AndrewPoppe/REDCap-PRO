@@ -1,14 +1,18 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
+/** @var REDCapPRO $module */
+
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role < 2) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module::$UI->ShowHeader("Enroll");
+$module->UI->ShowHeader("Enroll");
 
-echo "<title>" . $module::$APPTITLE . " - Enroll</title>";
+echo "<title>" . $module->APPTITLE . " - Enroll</title>";
 
 
 ?>
@@ -31,26 +35,21 @@ if (isset($_GET["error"])) {
 
 if (isset($_POST["id"]) && isset($project_id)) {
 
-    // Validate token
-    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        header("location:" . $module->getUrl("src/enroll.php?error"));
-    }
-
     $rcpro_participant_id = intval($_POST["id"]);
 
     // Log submission
     $module->logForm("Submitted Enroll Form", $_POST);
 
     // If participant is not active, don't enroll them
-    if (!$module::$PARTICIPANT->isParticipantActive($rcpro_participant_id)) {
+    if (!$module->PARTICIPANT->isParticipantActive($rcpro_participant_id)) {
 
         echo "<script defer>Swal.fire({'title':'This participant is not currently active in REDCapPRO', 'html':'Contact your REDCap Administrator with questions.', 'icon':'info', 'showConfirmButton': false});</script>";
     } else {
 
-        $redcap_dag = $module::$DAG->getCurrentDag(USERID, PROJECT_ID);
+        $redcap_dag = $module->DAG->getCurrentDag(USERID, PROJECT_ID);
         $pid = intval($project_id);
-        $rcpro_username = $module::$PARTICIPANT->getUserName($rcpro_participant_id);
-        $result = $module::$PROJECT->enrollParticipant($rcpro_participant_id, $pid, $redcap_dag, $rcpro_username);
+        $rcpro_username = $module->PARTICIPANT->getUserName($rcpro_participant_id);
+        $result = $module->PROJECT->enrollParticipant($rcpro_participant_id, $pid, $redcap_dag, $rcpro_username);
 
         if ($result === -1) {
             echo "<script defer>Swal.fire({'title':'This participant is already enrolled in this project', 'icon':'info', 'showConfirmButton': false});</script>";
@@ -189,8 +188,8 @@ $jsname = $module->getJavascriptModuleObjectName();
                     </div>
                 </div>
 
-                <?php if ($module::$DAG->getProjectDags()) {
-                    $userDag = $module::$DAG->getCurrentDag(USERID, PROJECT_ID);
+                <?php if ($module->DAG->getProjectDags()) {
+                    $userDag = $module->DAG->getCurrentDag(USERID, PROJECT_ID);
                     $dagName = isset($userDag) ? \REDCap::getGroupNames(false, $userDag) : "No Assignment";
                 ?>
                     <div class="mb-3 row">
@@ -202,7 +201,7 @@ $jsname = $module->getJavascriptModuleObjectName();
                 <?php } ?>
 
                 <input type="text" id="id" name="id" class="form-control" readonly hidden>
-                <input type="hidden" name="token" value="<?= $module::$AUTH->set_csrf_token(); ?>">
+                <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
                 <div>
                     <hr>
                     <button type="submit" class="btn btn-rcpro">Enroll Participant</button>

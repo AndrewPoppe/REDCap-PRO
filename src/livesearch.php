@@ -1,5 +1,9 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
+/** @var REDCapPRO $module */
+
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role < 2) {
     exit();
@@ -12,7 +16,7 @@ if (!filter_var($q, FILTER_VALIDATE_EMAIL)) {
     return;
 }
 
-$result = $module::$PARTICIPANT->searchParticipants($q);
+$result = $module->PARTICIPANT->searchParticipants($q);
 
 $hint = "";
 $rcpro_participant_id = null;
@@ -28,7 +32,7 @@ while ($row = $result->fetch_assoc()) {
 
 if ($hint === "") {
     $response = "No Participants Found";
-} else if (isset($rcpro_participant_id) && !$module::$PARTICIPANT->isParticipantActive($rcpro_participant_id)) {
+} else if (isset($rcpro_participant_id) && !$module->PARTICIPANT->isParticipantActive($rcpro_participant_id)) {
     $response = "<div class='searchResult'>The user associated with this email is not currently active in REDCapPRO.<br>Contact your REDCap Administrator with questions.</div>";
 } else {
     $response = $hint;

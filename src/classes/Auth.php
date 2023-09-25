@@ -10,8 +10,8 @@ use Exception;
 class Auth
 {
 
-    public static $APPTITLE;
-    public static $SESSION_NAME = "REDCapPRO_SESSID";
+    public $APPTITLE;
+    public $SESSION_NAME = "REDCapPRO_SESSID";
 
     /**
      * constructor
@@ -21,7 +21,7 @@ class Auth
      */
     function __construct($title = null)
     {
-        self::$APPTITLE = $title;
+        $this->APPTITLE = $title;
     }
 
     /**
@@ -36,13 +36,12 @@ class Auth
         if (isset($redcap_session_id)) {
             \Session::destroy($redcap_session_id);
             \Session::deletecookie("PHPSESSID");
-            //session_destroy($redcap_session_id); // FIX: PHP 8 session_destroy does not take param and PHP 8 complains
             session_destroy();
         }
 
         // If we already have a session, use it.
         // Otherwise, create a new session.
-        $session_id = $_COOKIE[self::$SESSION_NAME];
+        $session_id = $_COOKIE[$this->SESSION_NAME];
         if (!empty($session_id)) {
             if ($session_id !== session_id()) {
                 \Session::destroy(session_id());
@@ -55,7 +54,7 @@ class Auth
             $this->createSession();
         }
 
-        session_name(self::$SESSION_NAME);
+        session_name($this->SESSION_NAME);
         session_start();
 
         $this->set_survey_username($_SESSION["username"]);
@@ -64,53 +63,16 @@ class Auth
 
     public function createSession()
     {
-        \Session::init(self::$SESSION_NAME);
-        $this->set_csrf_token();
+        \Session::init($this->SESSION_NAME);
     }
 
     public function destroySession()
     {
-        $session_id = $_COOKIE[self::$SESSION_NAME];
+        $session_id = $_COOKIE[$this->SESSION_NAME];
         if (isset($session_id)) {
             \Session::destroy($session_id);
         }
-        \Session::deletecookie(self::$SESSION_NAME);
-    }
-
-    /**
-     * Sets (and returns) new token
-     * 
-     * @return string new token
-     */
-    public function set_csrf_token()
-    {
-        if (!isset($_SESSION[self::$APPTITLE . "_token"]) || !is_array($_SESSION[self::$APPTITLE . "_token"])) {
-            $_SESSION[self::$APPTITLE . "_token"] = array();
-        }
-        $maxTokens = 20;
-        if (count($_SESSION[self::$APPTITLE . "_token"]) >= $maxTokens) {
-            array_shift($_SESSION[self::$APPTITLE . "_token"]);
-        }
-
-        $newToken = bin2hex(random_bytes(24));
-        $_SESSION[self::$APPTITLE . "_token"][] = $newToken;
-
-        return $newToken;
-    }
-
-    public function validate_csrf_token(string $token)
-    {
-        if (!isset($_SESSION[self::$APPTITLE . "_token"]) || !is_array($_SESSION[self::$APPTITLE . "_token"]) || $token == null) {
-            return false;
-        }
-
-        $key = array_search($token, $_SESSION[self::$APPTITLE . "_token"]);
-        if ($key !== false) {
-            unset($_SESSION[self::$APPTITLE . "_token"][$key]);
-            return true;
-        }
-
-        return false;
+        \Session::deletecookie($this->SESSION_NAME);
     }
 
     // --- THESE DEAL WITH SESSION VALUES --- \\
@@ -118,41 +80,41 @@ class Auth
     // TESTS
     public function is_logged_in()
     {
-        return isset($_SESSION[self::$APPTITLE . "_loggedin"]) && $_SESSION[self::$APPTITLE . "_loggedin"] === true;
+        return isset($_SESSION[$this->APPTITLE . "_loggedin"]) && $_SESSION[$this->APPTITLE . "_loggedin"] === true;
     }
 
     public function is_survey_url_set()
     {
-        return isset($_SESSION[self::$APPTITLE . "_survey_url"]);
+        return isset($_SESSION[$this->APPTITLE . "_survey_url"]);
     }
 
     public function is_survey_link_active()
     {
-        return $_SESSION[self::$APPTITLE . "_survey_link_active"];
+        return $_SESSION[$this->APPTITLE . "_survey_link_active"];
     }
 
     // GETS
 
     public function get_survey_url()
     {
-        return $_SESSION[self::$APPTITLE . "_survey_url"];
+        return $_SESSION[$this->APPTITLE . "_survey_url"];
     }
 
     public function get_participant_id()
     {
-        return $_SESSION[self::$APPTITLE . "_participant_id"];
+        return $_SESSION[$this->APPTITLE . "_participant_id"];
     }
 
     public function get_username()
     {
-        return $_SESSION[self::$APPTITLE . "_username"];
+        return $_SESSION[$this->APPTITLE . "_username"];
     }
 
     // SETS
 
     public function deactivate_survey_link()
     {
-        unset($_SESSION[self::$APPTITLE . "_survey_link_active"]);
+        unset($_SESSION[$this->APPTITLE . "_survey_link_active"]);
     }
 
     /**
@@ -162,12 +124,12 @@ class Auth
      */
     public function set_survey_url($url)
     {
-        $_SESSION[self::$APPTITLE . "_survey_url"] = $url;
+        $_SESSION[$this->APPTITLE . "_survey_url"] = $url;
     }
 
     public function set_survey_active_state($state)
     {
-        $_SESSION[self::$APPTITLE . "_survey_link_active"] = $state;
+        $_SESSION[$this->APPTITLE . "_survey_link_active"] = $state;
     }
 
     public function set_login_values($participant)
@@ -176,12 +138,12 @@ class Auth
         $this->set_survey_username($participant["rcpro_username"]);
         $this->set_survey_record();
         $_SESSION["username"] = $participant["rcpro_username"];
-        $_SESSION[self::$APPTITLE . "_participant_id"] = $participant["log_id"];
-        $_SESSION[self::$APPTITLE . "_username"] = $participant["rcpro_username"];
-        $_SESSION[self::$APPTITLE . "_email"] = $participant["email"];
-        $_SESSION[self::$APPTITLE . "_fname"] = $participant["fname"];
-        $_SESSION[self::$APPTITLE . "_lname"] = $participant["lname"];
-        $_SESSION[self::$APPTITLE . "_loggedin"] = true;
+        $_SESSION[$this->APPTITLE . "_participant_id"] = $participant["log_id"];
+        $_SESSION[$this->APPTITLE . "_username"] = $participant["rcpro_username"];
+        $_SESSION[$this->APPTITLE . "_email"] = $participant["email"];
+        $_SESSION[$this->APPTITLE . "_fname"] = $participant["fname"];
+        $_SESSION[$this->APPTITLE . "_lname"] = $participant["lname"];
+        $_SESSION[$this->APPTITLE . "_loggedin"] = true;
     }
 
     public function set_survey_username($username)
@@ -195,7 +157,7 @@ class Auth
             session_start();
             $_SESSION['username'] = $username;
             session_write_close();
-            session_name(self::$SESSION_NAME);
+            session_name($this->SESSION_NAME);
             session_id($orig_id);
             session_start();
         }
@@ -216,7 +178,7 @@ class Auth
             session_start();
             $_SESSION['record'] = $record;
             session_write_close();
-            session_name(self::$SESSION_NAME);
+            session_name($this->SESSION_NAME);
             session_id($orig_id);
             session_start();
         }

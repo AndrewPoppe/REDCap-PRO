@@ -1,5 +1,12 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
+/** @var REDCapPRO $module */
+
+if ( !$module->framework->isSuperUser() ) {
+    exit();
+}
 
 function createProjectsCell(array $projects)
 {
@@ -16,13 +23,8 @@ function createProjectsCell(array $projects)
 
 
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
-$module::$UI->ShowControlCenterHeader("Staff");
+$module->UI->ShowControlCenterHeader("Staff");
 echo '<link rel="stylesheet" type="text/css" href="' . $module->getUrl("src/css/rcpro_cc.php") . '">';
-
-if (!SUPER_USER) {
-    return;
-}
-
 
 // Get array of staff (users)
 $users = $module->getAllUsers();
@@ -60,8 +62,8 @@ $baseUrlPath = APP_PATH_WEBROOT_FULL . 'redcap_v' . $redcap_version . '/';
                     $userLink = $baseUrlPath . "ControlCenter/view_users.php?username=" . $user["username"];
                 ?>
                     <tr>
-                        <td class="rcpro_user_link" onclick="(function(){window.location.href='<?= $userLink ?>';})();"><?= $user["username"] ?></td>
-                        <td class="dt-center"><?= $user["name"] ?></td>
+                        <td class="rcpro_user_link" onclick="(function(){window.location.href='<?= $userLink ?>';})();"><?= $module->escape($user["username"]) ?></td>
+                        <td class="dt-center"><?= $module->escape($user["name"]) ?></td>
                         <td><?= $user["email"] ?></td>
                         <?= createProjectsCell($user["projects"]); ?>
                     </tr>

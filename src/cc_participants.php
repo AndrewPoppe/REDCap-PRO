@@ -1,5 +1,12 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
+/** @var REDCapPRO $module */
+
+if ( !$module->framework->isSuperUser() ) {
+    exit();
+}
 
 function createProjectsCell(array $projects)
 {
@@ -19,11 +26,6 @@ function createProjectsCell(array $projects)
     return $result;
 }
 
-
-if (!SUPER_USER) {
-    return;
-}
-
 // Check for errors
 if (isset($_GET["error"])) {
 ?>
@@ -39,15 +41,9 @@ if (isset($_GET["error"])) {
 }
 
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
-$module::$UI->ShowControlCenterHeader("Participants");
+$module->UI->ShowControlCenterHeader("Participants");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-    // Validate token
-    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        header("location:" . $module->getUrl("src/cc_participants.php?error"));
-        return;
-    }
 
     // Log submission
     $module->logForm("Submitted Control Center Participants Form", $_POST);
@@ -80,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Try to change name
             else {
-                $result = $module::$PARTICIPANT->changeName($rcpro_participant_id, $newFirstName, $newLastName);
+                $result = $module->PARTICIPANT->changeName($rcpro_participant_id, $newFirstName, $newLastName);
                 if (!$result) {
                     $title = "Trouble updating participant's name.";
                     $icon = "error";
@@ -94,11 +90,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else if (!empty($_POST["toChangeEmail"])) {
             $function = "change participant's email address";
             $newEmail = $_POST["newEmail"];
-            if ($module::$PARTICIPANT->checkEmailExists($newEmail)) {
+            if ($module->PARTICIPANT->checkEmailExists($newEmail)) {
                 $icon = "error";
                 $title = "The provided email address is already associated with a REDCapPRO account.";
             } else {
-                $result = $module::$PARTICIPANT->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
+                $result = $module->PARTICIPANT->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
                 if (!$result) {
                     $icon = "error";
                     $title = "Trouble changing participant's email address.";
@@ -113,14 +109,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $toUpdate = intval($_POST["toUpdateActivity"]);
             $function = "update participant's active status";
             $reactivate = $_POST["statusAction"] === "reactivate";
-            if (!$module::$PARTICIPANT->checkParticipantExists($toUpdate)) {
+            if (!$module->PARTICIPANT->checkParticipantExists($toUpdate)) {
                 $icon = "error";
                 $title = "The provided participant does not exist in the system.";
             } else {
                 if ($reactivate) {
-                    $result = $module::$PARTICIPANT->reactivateParticipant($toUpdate);
+                    $result = $module->PARTICIPANT->reactivateParticipant($toUpdate);
                 } else {
-                    $result = $module::$PARTICIPANT->deactivateParticipant($toUpdate);
+                    $result = $module->PARTICIPANT->deactivateParticipant($toUpdate);
                 }
                 if (!$result) {
                     $verb = $reactivate ? "reactivating" : "deactivating";
@@ -141,7 +137,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // Get array of participants
-$participants = $module::$PARTICIPANT->getAllParticipants();
+$participants = $module->PARTICIPANT->getAllParticipants();
 
 ?>
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
@@ -193,8 +189,8 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                             $lname_clean          = \REDCap::escapeHtml($participant["lname"]);
                             $email_clean          = \REDCap::escapeHtml($participant["email"]);
                             $rcpro_participant_id = intval($participant["log_id"]);
-                            $projects_array       = $module::$PARTICIPANT->getParticipantProjects($rcpro_participant_id);
-                            $info                 = $module::$PARTICIPANT->getParticipantInfo($rcpro_participant_id);
+                            $projects_array       = $module->PARTICIPANT->getParticipantProjects($rcpro_participant_id);
+                            $info                 = $module->PARTICIPANT->getParticipantInfo($rcpro_participant_id);
                             $allData              = "<div style='display: block; text-align:left;'><ul>";
                             foreach ($info as $title => $value) {
                                 $value_clean = \REDCap::escapeHtml($value);
@@ -214,7 +210,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
                                     })
                                 })();
                                 EOL;
-                            $isActive = $module::$PARTICIPANT->isParticipantActive($rcpro_participant_id);
+                            $isActive = $module->PARTICIPANT->isParticipantActive($rcpro_participant_id);
                         ?>
                             <tr>
                                 <td class="rcpro_participant_link" onclick="<?= $onclick ?>"><?= $participant["log_id"] ?></td>
@@ -327,7 +323,7 @@ $participants = $module::$PARTICIPANT->getAllParticipants();
             <input type="hidden" id="toDisenroll" name="toDisenroll">
             <input type="hidden" id="toUpdateActivity" name="toUpdateActivity">
             <input type="hidden" id="statusAction" name="statusAction">
-            <input type="hidden" name="token" value="<?= $module::$AUTH->set_csrf_token(); ?>">
+            <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
         <?php } ?>
     </form>
 </div>

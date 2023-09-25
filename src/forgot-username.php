@@ -1,21 +1,16 @@
 <?php
 
-# Initialize authentication session on page
-$module::$AUTH->init();
+namespace YaleREDCap\REDCapPRO;
 
-$module::$UI->ShowParticipantHeader($module->tt("forgot_username_title"));
+/** @var REDCapPRO $module */
+
+# Initialize authentication session on page
+$module->AUTH->init();
+
+$module->UI->ShowParticipantHeader($module->tt("forgot_username_title"));
 
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-
-    // Validate token
-    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        $module->logEvent("Invalid CSRF Token", []);
-        echo $module->tt("error_generic1");
-        echo "<br>";
-        echo $module->tt("error_generic2");
-        return;
-    }
 
     $err = null;
 
@@ -26,9 +21,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $email = \REDCap::escapeHtml(trim($_POST["email"]));
         // Check input errors before sending reset email
         if (!$err) {
-            $rcpro_participant_id = $module::$PARTICIPANT->getParticipantIdFromEmail($email);
+            $rcpro_participant_id = $module->PARTICIPANT->getParticipantIdFromEmail($email);
             if (!empty($rcpro_participant_id)) {
-                $username = $module::$PARTICIPANT->getUserName($rcpro_participant_id);
+                $username = $module->PARTICIPANT->getUserName($rcpro_participant_id);
                 $module->logEvent("Username Reminder Email Sent", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $username
@@ -52,7 +47,7 @@ echo '<div style="text-align: center;"><p>' . $module->tt("forgot_username_messa
     <div class="form-group d-grid">
         <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
     </div>
-    <input type="hidden" name="token" value="<?= $module::$AUTH->set_csrf_token(); ?>">
+    <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
 </form>
 <hr>
 <div style="text-align: center;">
@@ -69,4 +64,4 @@ echo '<div style="text-align: center;"><p>' . $module->tt("forgot_username_messa
         text-shadow: 0px 0px 5px #900000;
     }
 </style>
-<?php $module::$UI->EndParticipantPage(); ?>
+<?php $module->UI->EndParticipantPage(); ?>

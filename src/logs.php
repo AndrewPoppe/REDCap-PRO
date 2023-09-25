@@ -1,14 +1,18 @@
 <?php
+namespace YaleREDCap\REDCapPRO;
+
+/** @var REDCapPRO $module */
+
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role < 3) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module::$UI->ShowHeader("Logs");
+$module->UI->ShowHeader("Logs");
 ?>
 
-<title><?= $module::$APPTITLE ?> - Enroll</title>
+<title><?= $module->APPTITLE ?> - Enroll</title>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/cr-1.5.4/date-1.1.0/sb-1.1.0/sp-1.3.0/sl-1.3.3/datatables.min.css" />
 <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/cr-1.5.4/date-1.1.0/sb-1.1.0/sp-1.3.0/sl-1.3.3/datatables.min.js" defer></script>

@@ -1,16 +1,20 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
+/** @var REDCapPRO $module */
+
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role < 3) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module::$UI->ShowHeader("Users");
-echo "<title>" . $module::$APPTITLE . " - Staff</title>
+$module->UI->ShowHeader("Users");
+echo "<title>" . $module->APPTITLE . " - Staff</title>
 <link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>";
 
-$proj_id = $module::$PROJECT->getProjectIdFromPID($project_id);
+$proj_id = $module->PROJECT->getProjectIdFromPID($project_id);
 
 // Get list of users
 $project = $module->getProject();
@@ -32,12 +36,6 @@ if (isset($_GET["error"])) {
 
 // Update roles if requested
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-    // Validate token
-    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        header("location:" . $module->getUrl("src/manage-users.php?error"));
-        return;
-    }
 
     // Log submission
     $module->logForm("Submitted Manage Staff Form", $_POST);
@@ -156,7 +154,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <button class="btn btn-secondary rcpro-form-button role_select_button" id="role_select_reset" disabled>Reset</button>
 						</div>
             <?php } ?>
-            <input type="hidden" name="token" value="<?php echo $module::$AUTH->set_csrf_token(); ?>">
+            <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
         </form>
     </div>
 </div>

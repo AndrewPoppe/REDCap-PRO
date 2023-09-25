@@ -4,22 +4,14 @@ namespace YaleREDCap\REDCapPRO;
 
 require_once("src/classes/ProjectHelper.php");
 
-/**
- * Holds methods related to REDCapPRO Participants
- * 
- * @package YaleREDCap\REDCapPRO
- */
+
 class ParticipantHelper
 {
-    public static $module;
-    /**
-     * Constructor
-     * 
-     * @param REDCapPRO $module
-     */
+    public $module;
+
     function __construct(REDCapPRO $module)
     {
-        self::$module = $module;
+        $this->module = $module;
     }
 
     /**
@@ -37,18 +29,18 @@ class ParticipantHelper
         $current_email = $this->getEmail($rcpro_participant_id);
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'email'";
         try {
-            $result = self::$module->query($SQL, [$new_email, $rcpro_participant_id]);
+            $result = $this->module->query($SQL, [$new_email, $rcpro_participant_id]);
             if ($result) {
 
                 $username = $this->getUserName($rcpro_participant_id);
 
                 // Get current project (or "system" if initiated in the control center)
-                $current_pid = $this::$module->getProjectId() ?? "system";
+                $current_pid = $this->module->getProjectId() ?? "system";
 
                 // Get all projects to which participant is currently enrolled
                 $project_ids = $this->getEnrolledProjects($rcpro_participant_id);
                 foreach ($project_ids as $project_id) {
-                    self::$module->logEvent("Changed Email Address", [
+                    $this->module->logEvent("Changed Email Address", [
                         "rcpro_participant_id" => $rcpro_participant_id,
                         "rcpro_username"       => $username,
                         "old_email"            => $current_email,
@@ -59,12 +51,12 @@ class ParticipantHelper
                     ]);
                 }
 
-                return self::$module->sendEmailUpdateEmail($username, $new_email, $current_email);
+                return $this->module->sendEmailUpdateEmail($username, $new_email, $current_email);
             } else {
                 throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
             }
         } catch (\Exception $e) {
-            self::$module->logError("Error changing email address", $e);
+            $this->module->logError("Error changing email address", $e);
         }
     }
 
@@ -74,23 +66,23 @@ class ParticipantHelper
         $SQL2 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'lname'";
         $participant = $this->getParticipant($this->getUserName($rcpro_participant_id));
         try {
-            $result1 = self::$module->query($SQL1, [$fname, $rcpro_participant_id]);
+            $result1 = $this->module->query($SQL1, [$fname, $rcpro_participant_id]);
             if (!$result1) {
                 throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
             }
 
-            $result2 = self::$module->query($SQL2, [$lname, $rcpro_participant_id]);
+            $result2 = $this->module->query($SQL2, [$lname, $rcpro_participant_id]);
             if (!$result2) {
                 throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
             }
 
             // Get current project (or "system" if initiated in the control center)
-            $current_pid = $this::$module->getProjectId() ?? "system";
+            $current_pid = $this->module->getProjectId() ?? "system";
 
             // Get all projects to which participant is currently enrolled
             $project_ids = $this->getEnrolledProjects($rcpro_participant_id);
             foreach ($project_ids as $project_id) {
-                self::$module->logEvent("Updated Participant Name", [
+                $this->module->logEvent("Updated Participant Name", [
                     "rcpro_participant_id"  => $rcpro_participant_id,
                     "rcpro_username"        => $participant["rcpro_username"],
                     "old_name"              => $participant["fname"] . " " . $participant["lname"],
@@ -102,7 +94,7 @@ class ParticipantHelper
             }
             return $result1 && $result2;
         } catch (\Exception $e) {
-            self::$module->logError("Error updating participant's name", $e);
+            $this->module->logError("Error updating participant's name", $e);
         }
     }
 
@@ -117,10 +109,10 @@ class ParticipantHelper
     {
         $SQL = "message = 'PARTICIPANT' AND email = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->countLogsValidated($SQL, [$email]);
+            $result = $this->module->countLogsValidated($SQL, [$email]);
             return $result > 0;
         } catch (\Exception $e) {
-            self::$module->logError("Error checking if email exists", $e);
+            $this->module->logError("Error checking if email exists", $e);
         }
     }
 
@@ -137,10 +129,10 @@ class ParticipantHelper
     {
         $SQL = "log_id = ? AND message = 'PARTICIPANT' AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $res = self::$module->countLogsValidated($SQL, [$rcpro_participant_id]);
+            $res = $this->module->countLogsValidated($SQL, [$rcpro_participant_id]);
             return $res > 0;
         } catch (\Exception $e) {
-            self::$module->logError("Error checking whether participant exists", $e);
+            $this->module->logError("Error checking whether participant exists", $e);
         }
     }
 
@@ -172,7 +164,7 @@ class ParticipantHelper
             return NULL;
         }
         try {
-            $id = self::$module->logEvent("PARTICIPANT", [
+            $id = $this->module->logEvent("PARTICIPANT", [
                 "rcpro_username"   => $username,
                 "email"            => $email_clean,
                 "fname"            => $fname_clean,
@@ -190,14 +182,14 @@ class ParticipantHelper
             if (!$id) {
                 throw new REDCapProException(["rcpro_username" => $username]);
             }
-            self::$module->logEvent("Participant Created", [
+            $this->module->logEvent("Participant Created", [
                 "rcpro_user_id"  => $id,
                 "rcpro_username" => $username,
                 "redcap_user"    => USERID
             ]);
             return $username;
         } catch (\Exception $e) {
-            self::$module->logError("Participant Creation Failed", $e);
+            $this->module->logError("Participant Creation Failed", $e);
         }
     }
 
@@ -217,15 +209,15 @@ class ParticipantHelper
         $SQL2 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'token_ts'";
         $SQL3 = "UPDATE redcap_external_modules_log_parameters SET value = 1 WHERE log_id = ? AND name = 'token_valid'";
         try {
-            $result1 = self::$module->query($SQL1, [$token, $rcpro_participant_id]);
-            $result2 = self::$module->query($SQL2, [$token_ts, $rcpro_participant_id]);
-            $result3 = self::$module->query($SQL3, [$rcpro_participant_id]);
+            $result1 = $this->module->query($SQL1, [$token, $rcpro_participant_id]);
+            $result2 = $this->module->query($SQL2, [$token_ts, $rcpro_participant_id]);
+            $result3 = $this->module->query($SQL3, [$rcpro_participant_id]);
             if (!$result1 || !$result2 || !$result3) {
                 throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
             }
             return $token;
         } catch (\Exception $e) {
-            self::$module->logError("Error creating reset token", $e);
+            $this->module->logError("Error creating reset token", $e);
         }
     }
 
@@ -279,10 +271,10 @@ class ParticipantHelper
     {
         $SQL = "message = 'LINK' AND rcpro_project_id = ? AND rcpro_participant_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->countLogsValidated($SQL, [$rcpro_project_id, $rcpro_participant_id]);
+            $result = $this->module->countLogsValidated($SQL, [$rcpro_project_id, $rcpro_participant_id]);
             return $result > 0;
         } catch (\Exception $e) {
-            self::$module->logError("Error checking that participant is enrolled", $e);
+            $this->module->logError("Error checking that participant is enrolled", $e);
         }
     }
 
@@ -297,9 +289,9 @@ class ParticipantHelper
     {
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = 0 WHERE log_id = ? AND name = 'token_valid'";
         try {
-            return self::$module->query($SQL, [$rcpro_participant_id]);
+            return $this->module->query($SQL, [$rcpro_participant_id]);
         } catch (\Exception $e) {
-            self::$module->logError("Error expiring password reset token.", $e);
+            $this->module->logError("Error expiring password reset token.", $e);
         }
     }
 
@@ -312,7 +304,7 @@ class ParticipantHelper
     {
         $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, pw, active WHERE message = 'PARTICIPANT' AND rcpro_username IS NOT NULL AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->selectLogs($SQL, []);
+            $result = $this->module->selectLogs($SQL, []);
             $participants  = array();
 
             // grab participant details
@@ -323,7 +315,7 @@ class ParticipantHelper
             }
             return $participants;
         } catch (\Exception $e) {
-            self::$module->logError("Error fetching participants", $e);
+            $this->module->logError("Error fetching participants", $e);
         }
     }
 
@@ -338,10 +330,10 @@ class ParticipantHelper
     {
         $SQL = "SELECT email WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
+            $result = $this->module->selectLogs($SQL, [$rcpro_participant_id]);
             return $result->fetch_assoc()["email"];
         } catch (\Exception $e) {
-            self::$module->logError("Error fetching email address", $e);
+            $this->module->logError("Error fetching email address", $e);
         }
     }
 
@@ -358,7 +350,7 @@ class ParticipantHelper
     {
         $SQL = "SELECT project_id WHERE message = 'LINK' AND rcpro_participant_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
+            $result = $this->module->selectLogs($SQL, [$rcpro_participant_id]);
             $project_ids = array();
             while ($row = $result->fetch_assoc()) {
                 array_push($project_ids, $row["project_id"]);
@@ -368,7 +360,7 @@ class ParticipantHelper
             }
             return $project_ids;
         } catch (\Exception $e) {
-            self::$module->logError("Error fetching enrolled projects", $e);
+            $this->module->logError("Error fetching enrolled projects", $e);
         }
     }
 
@@ -386,10 +378,10 @@ class ParticipantHelper
         }
         $SQL = "SELECT log_id, rcpro_username, email, fname, lname, active WHERE message = 'PARTICIPANT' AND rcpro_username = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->selectLogs($SQL, [$username]);
+            $result = $this->module->selectLogs($SQL, [$username]);
             return $result->fetch_assoc();
         } catch (\Exception $e) {
-            self::$module->logError("Error fetching participant information", $e);
+            $this->module->logError("Error fetching participant information", $e);
         }
     }
 
@@ -407,10 +399,10 @@ class ParticipantHelper
         }
         $SQL = "SELECT log_id, rcpro_username, email, fname, lname, active WHERE message = 'PARTICIPANT' AND email = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->selectLogs($SQL, [$email]);
+            $result = $this->module->selectLogs($SQL, [$email]);
             return $result->fetch_assoc();
         } catch (\Exception $e) {
-            self::$module->logError("Error fetching participant information", $e);
+            $this->module->logError("Error fetching participant information", $e);
         }
     }
 
@@ -425,10 +417,10 @@ class ParticipantHelper
     {
         $SQL = "SELECT log_id WHERE message = 'PARTICIPANT' AND email = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->selectLogs($SQL, [$email]);
+            $result = $this->module->selectLogs($SQL, [$email]);
             return $result->fetch_assoc()["log_id"];
         } catch (\Exception $e) {
-            self::$module->logError("Error fetching id from email", $e);
+            $this->module->logError("Error fetching id from email", $e);
         }
     }
 
@@ -443,10 +435,10 @@ class ParticipantHelper
     {
         $SQL = "SELECT log_id WHERE message = 'PARTICIPANT' AND rcpro_username = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->selectLogs($SQL, [$username]);
+            $result = $this->module->selectLogs($SQL, [$username]);
             return $result->fetch_assoc()["log_id"];
         } catch (\Exception $e) {
-            self::$module->logError("Error fetching id from username", $e);
+            $this->module->logError("Error fetching id from username", $e);
         }
     }
 
@@ -461,10 +453,10 @@ class ParticipantHelper
     {
         $SQL = "SELECT log_id AS 'User_ID', rcpro_username AS Username, timestamp AS 'Registered At', redcap_user AS 'Registered By' WHERE log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result_obj = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
+            $result_obj = $this->module->selectLogs($SQL, [$rcpro_participant_id]);
             return $result_obj->fetch_assoc();
         } catch (\Exception $e) {
-            self::$module->logError("Error getting participant info", $e);
+            $this->module->logError("Error getting participant info", $e);
         }
     }
 
@@ -483,13 +475,13 @@ class ParticipantHelper
         $SQL2 = "SELECT pid WHERE log_id = ? AND message = 'PROJECT' AND (project_id IS NULL OR project_id IS NOT NULL)";
         $projects = array();
         try {
-            $result1 = self::$module->selectLogs($SQL1, [$rcpro_participant_id]);
+            $result1 = $this->module->selectLogs($SQL1, [$rcpro_participant_id]);
             if (!$result1) {
                 throw new REDCapProException(["rcpro_participant_id" => $rcpro_participant_id]);
             }
             while ($row = $result1->fetch_assoc()) {
                 $rcpro_project_id = $row["rcpro_project_id"];
-                $result2 = self::$module->selectLogs($SQL2, [$rcpro_project_id]);
+                $result2 = $this->module->selectLogs($SQL2, [$rcpro_project_id]);
                 $redcap_pid = $result2->fetch_assoc()["pid"];
                 array_push($projects, [
                     "rcpro_project_id" => $rcpro_project_id,
@@ -499,7 +491,7 @@ class ParticipantHelper
             }
             return $projects;
         } catch (\Exception $e) {
-            self::$module->logError("Error fetching participant's projects", $e);
+            $this->module->logError("Error fetching participant's projects", $e);
         }
     }
 
@@ -520,12 +512,12 @@ class ParticipantHelper
             array_push($PARAMS, strval($dag));
         }
         try {
-            $result = self::$module->selectLogs($SQL, $PARAMS);
+            $result = $this->module->selectLogs($SQL, $PARAMS);
             $participants  = array();
 
             while ($row = $result->fetch_assoc()) {
                 $participantSQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, pw WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
-                $participantResult = self::$module->selectLogs($participantSQL, [$row["rcpro_participant_id"]]);
+                $participantResult = $this->module->selectLogs($participantSQL, [$row["rcpro_participant_id"]]);
                 $participant = $participantResult->fetch_assoc();
                 $participant["pw_set"] = (!isset($participant["pw"]) || $participant["pw"] === "") ? "False" : "True";
                 unset($participant["pw"]);
@@ -533,7 +525,7 @@ class ParticipantHelper
             }
             return $participants;
         } catch (\Exception $e) {
-            self::$module->logError("Error fetching project participants", $e);
+            $this->module->logError("Error fetching project participants", $e);
         }
     }
 
@@ -548,10 +540,10 @@ class ParticipantHelper
     {
         $SQL = "SELECT rcpro_username WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
+            $result = $this->module->selectLogs($SQL, [$rcpro_participant_id]);
             return $result->fetch_assoc()["rcpro_username"];
         } catch (\Exception $e) {
-            self::$module->logError("Error fetching username", $e);
+            $this->module->logError("Error fetching username", $e);
         }
     }
 
@@ -566,11 +558,11 @@ class ParticipantHelper
     {
         $SQL = "SELECT active WHERE log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $res = self::$module->selectLogs($SQL, [$rcpro_participant_id]);
+            $res = $this->module->selectLogs($SQL, [$rcpro_participant_id]);
             $status_arr = $res->fetch_assoc();
             return !isset($status_arr["active"]) || $status_arr["active"] == 1;
         } catch (\Exception $e) {
-            self::$module->logError("Error getting active status", $e);
+            $this->module->logError("Error getting active status", $e);
         }
     }
 
@@ -583,7 +575,7 @@ class ParticipantHelper
      */
     public function searchParticipants(string $search_term)
     {
-        self::$module->logEvent("Searched on Enroll Tab", [
+        $this->module->logEvent("Searched on Enroll Tab", [
             "search"      => \REDCap::escapeHtml($search_term),
             "redcap_user" => USERID
         ]);
@@ -592,9 +584,9 @@ class ParticipantHelper
                 AND (project_id IS NULL OR project_id IS NOT NULL) 
                 AND (email = ?)";
         try {
-            return self::$module->selectLogs($SQL, [$search_term]);
+            return $this->module->selectLogs($SQL, [$search_term]);
         } catch (\Exception $e) {
-            self::$module->logError("Error performing livesearch", $e);
+            $this->module->logError("Error performing livesearch", $e);
         }
     }
 
@@ -608,22 +600,22 @@ class ParticipantHelper
      */
     private function setActiveStatus($rcpro_participant_id, int $value)
     {
-        if (self::$module->countLogsValidated("log_id = ? AND active is not null", [$rcpro_participant_id]) > 0) {
+        if ($this->module->countLogsValidated("log_id = ? AND active is not null", [$rcpro_participant_id]) > 0) {
             $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
         } else {
             $SQL = "INSERT INTO redcap_external_modules_log_parameters (value, name, log_id) VALUES (?, 'active', ?)";
         }
         try {
-            $res = self::$module->query($SQL, [$value, $rcpro_participant_id]);
+            $res = $this->module->query($SQL, [$value, $rcpro_participant_id]);
             if ($res) {
-                self::$module->logEvent("Set participant active status", [
+                $this->module->logEvent("Set participant active status", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username" => $this->getUserName($rcpro_participant_id),
                     "active" => $value,
                     "redcap_user" => USERID
                 ]);
             } else {
-                self::$module->logEvent("Failed to set participant active status", [
+                $this->module->logEvent("Failed to set participant active status", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username" => $this->getUserName($rcpro_participant_id),
                     "active" => $value,
@@ -632,7 +624,7 @@ class ParticipantHelper
             }
             return $res;
         } catch (\Exception $e) {
-            self::$module->logError("Error setting participant active status", $e);
+            $this->module->logError("Error setting participant active status", $e);
         }
     }
 
@@ -648,14 +640,14 @@ class ParticipantHelper
     {
         try {
             $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'pw';";
-            $res = self::$module->query($SQL, [$hash, $rcpro_participant_id]);
-            self::$module->logEvent("Password Hash Stored", [
+            $res = $this->module->query($SQL, [$hash, $rcpro_participant_id]);
+            $this->module->logEvent("Password Hash Stored", [
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "rcpro_username"       => $this->getUserName($rcpro_participant_id)
             ]);
             return $res;
         } catch (\Exception $e) {
-            self::$module->logError("Error storing password hash", $e);
+            $this->module->logError("Error storing password hash", $e);
         }
     }
 
@@ -670,10 +662,10 @@ class ParticipantHelper
     {
         $SQL = "message = 'PARTICIPANT' AND rcpro_username = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->countLogsValidated($SQL, [$username]);
+            $result = $this->module->countLogsValidated($SQL, [$username]);
             return $result > 0;
         } catch (\Exception $e) {
-            self::$module->logError("Error checking if username is taken", $e);
+            $this->module->logError("Error checking if username is taken", $e);
         }
     }
 
@@ -688,17 +680,17 @@ class ParticipantHelper
     {
         $SQL = "SELECT log_id, rcpro_username WHERE message = 'PARTICIPANT' AND token = ? AND token_ts > ? AND token_valid = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = self::$module->selectLogs($SQL, [$token, time()]);
+            $result = $this->module->selectLogs($SQL, [$token, time()]);
             if ($result->num_rows > 0) {
                 $result_array = $result->fetch_assoc();
-                self::$module->logEvent("Password Token Verified", [
+                $this->module->logEvent("Password Token Verified", [
                     'rcpro_participant_id' => $result_array['log_id'],
                     'rcpro_username'       => $result_array['rcpro_username']
                 ]);
                 return $result_array;
             }
         } catch (\Exception $e) {
-            self::$module->logError("Error verifying password reset token", $e);
+            $this->module->logError("Error verifying password reset token", $e);
         }
     }
 }

@@ -1,5 +1,9 @@
 <?php
 
+namespace YaleREDCap\REDCapPRO;
+
+/** @var REDCapPRO $module */
+
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role === 0) {
     header("location:" . $module->getUrl("src/home.php"));
@@ -7,8 +11,8 @@ if ($role === 0) {
 
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module::$UI->ShowHeader("Manage");
-echo "<title>" . $module::$APPTITLE . " - Manage</title>";
+$module->UI->ShowHeader("Manage");
+echo "<title>" . $module->APPTITLE . " - Manage</title>";
 
 // Check for errors
 if (isset($_GET["error"])) {
@@ -25,12 +29,12 @@ if (isset($_GET["error"])) {
 }
 
 // RCPRO Project ID 
-$rcpro_project_id = $module::$PROJECT->getProjectIdFromPID($project_id);
+$rcpro_project_id = $module->PROJECT->getProjectIdFromPID($project_id);
 
 // DAGs
-$rcpro_user_dag = $module::$DAG->getCurrentDag(USERID, $project_id);
-$project_dags = $module::$DAG->getProjectDags();
-$user_dags = $module::$DAG->getPossibleDags(USERID, PROJECT_ID);
+$rcpro_user_dag = $module->DAG->getCurrentDag(USERID, $project_id);
+$project_dags = $module->DAG->getProjectDags();
+$user_dags = $module->DAG->getPossibleDags(USERID, PROJECT_ID);
 $project_dags[NULL] = "Unassigned";
 $projectHasDags = count($project_dags) > 1;
 
@@ -48,8 +52,8 @@ function disenroll(int $rcpro_participant_id)
         $title = $no_permission;
         $icon = "error";
     } else {
-        $rcpro_username = $module::$PARTICIPANT->getUserName($rcpro_participant_id);
-        $result = $module::$PROJECT->disenrollParticipant($rcpro_participant_id, $rcpro_project_id, $rcpro_username);
+        $rcpro_username = $module->PARTICIPANT->getUserName($rcpro_participant_id);
+        $result = $module->PROJECT->disenrollParticipant($rcpro_participant_id, $rcpro_project_id, $rcpro_username);
         if (!$result) {
             $title = "Trouble disenrolling participant.";
             $icon = "error";
@@ -99,7 +103,7 @@ function changeName(int $rcpro_participant_id, string $newFirstName, string $new
 
     // Try to change name
     else {
-        $result = $module::$PARTICIPANT->changeName($rcpro_participant_id, $trimmedFirstName, $trimmedLastName);
+        $result = $module->PARTICIPANT->changeName($rcpro_participant_id, $trimmedFirstName, $trimmedLastName);
         if (!$result) {
             $title = "Trouble updating participant's name.";
             $icon = "error";
@@ -123,14 +127,14 @@ function changeEmail(int $rcpro_participant_id, string $newEmail)
     }
 
     // Check that email is not already associated with a participant
-    else if ($module::$PARTICIPANT->checkEmailExists($newEmail)) {
+    else if ($module->PARTICIPANT->checkEmailExists($newEmail)) {
         $title = "The provided email address is already associated with a REDCapPRO account.";
         $icon = "error";
     }
 
     // Try to change email
     else {
-        $result = $module::$PARTICIPANT->changeEmailAddress($rcpro_participant_id, $newEmail);
+        $result = $module->PARTICIPANT->changeEmailAddress($rcpro_participant_id, $newEmail);
         if (!$result) {
             $title = "Trouble changing participant's email address.";
             $icon = "error";
@@ -159,13 +163,13 @@ function switchDAG(int $rcpro_participant_id, ?string $newDAG)
         $icon = "error";
     } else {
         $newDAG = $newDAG === "" ? NULL : $newDAG;
-        $link_id = $module::$PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
-        $result = $module::$DAG->updateDag($link_id, $newDAG);
+        $link_id = $module->PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
+        $result = $module->DAG->updateDag($link_id, $newDAG);
         if (!$result) {
             $title = "Trouble switching participant's Data Access Group.";
             $icon = "error";
         } else {
-            $participant_info = $module::$PARTICIPANT->getParticipantInfo($rcpro_participant_id);
+            $participant_info = $module->PARTICIPANT->getParticipantInfo($rcpro_participant_id);
             $module->logEvent("Participant DAG Switched", [
                 "rcpro_participant_id" => $participant_info["User_ID"],
                 "rcpro_username"       => $participant_info["Username"],
@@ -199,12 +203,6 @@ function coalesce_string()
 // Dealing with an action
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // Validate token
-    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        header("location:" . $module->getUrl("src/manage.php?error"));
-        return;
-    }
-
     // Log submission
     $module->logForm("Submitted Manage Participants Form", $_POST);
 
@@ -232,7 +230,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // Check that the participant is actually enrolled in this project
-        if (!$error && !$module::$PROJECT->participantEnrolled($rcpro_participant_id, $rcpro_project_id)) {
+        if (!$error && !$module->PROJECT->participantEnrolled($rcpro_participant_id, $rcpro_project_id)) {
             $function = $generic_function;
             $icon = "error";
             $title = "Participant is Not Enrolled";
@@ -241,9 +239,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Check that the Data Access Group of the participant matches that of the user
         if (!$error && $projectHasDags) {
-            $rcpro_link_id = $module::$PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
-            $participant_dag = intval($module::$DAG->getParticipantDag($rcpro_link_id));
-            $user_dag = $module::$DAG->getCurrentDag(USERID, PROJECT_ID);
+            $rcpro_link_id = $module->PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
+            $participant_dag = intval($module->DAG->getParticipantDag($rcpro_link_id));
+            $user_dag = $module->DAG->getCurrentDag(USERID, PROJECT_ID);
             if (isset($user_dag) && $participant_dag !== $user_dag) {
                 $function = $generic_function;
                 $icon = "error";
@@ -284,7 +282,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 // Get list of participants
-$participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_id, $rcpro_user_dag);
+$participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_id, $rcpro_user_dag);
 
 
 
@@ -342,8 +340,8 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                                     $lname_clean    = \REDCap::escapeHtml($participant["lname"]);
                                     $email_clean    = \REDCap::escapeHtml($participant["email"]);
                                 }
-                                $link_id        = $module::$PROJECT->getLinkId($participant["log_id"], $rcpro_project_id);
-                                $dag_id         = $module::$DAG->getParticipantDag($link_id);
+                                $link_id        = $module->PROJECT->getLinkId($participant["log_id"], $rcpro_project_id);
+                                $dag_id         = $module->DAG->getParticipantDag($link_id);
                                 $dag_name       = \REDCap::getGroupNames(false, $dag_id);
                                 $dag_name_clean = count((array)$dag_name) === 1 ? \REDCap::escapeHtml($dag_name) : "Unassigned";  // FIX: PHP 8 count needs the typecast here
                             ?>
@@ -509,7 +507,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                 <input type="hidden" id="toDisenroll" name="toDisenroll">
                 <input type="hidden" id="toSwitchDag" name="toSwitchDag">
                 <input type="hidden" id="newDag" name="newDag">
-                <input type="hidden" name="token" value="<?= $module::$AUTH->set_csrf_token(); ?>">
+                <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
             <?php } ?>
         </form>
     </div>

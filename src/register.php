@@ -1,4 +1,7 @@
 <?php
+namespace YaleREDCap\REDCapPRO;
+
+/** @var REDCapPRO $module */
 
 $role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ($role < 2) {
@@ -6,8 +9,8 @@ if ($role < 2) {
 }
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module::$UI->ShowHeader("Register");
-echo "<title>" . $module::$APPTITLE . " - Register</title>";
+$module->UI->ShowHeader("Register");
+echo "<title>" . $module->APPTITLE . " - Register</title>";
 
 // Check for errors
 if (isset($_GET["error"])) {
@@ -28,12 +31,6 @@ $any_error = FALSE;
 
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-    // Validate token
-    if (!$module::$AUTH->validate_csrf_token($_POST['token'])) {
-        header("location:" . $module->getUrl("src/register.php?error"));
-        return;
-    }
 
     // Log submission
     $module->logForm("Submitted Register Form", $_POST);
@@ -58,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $email_err = "Please enter a valid email address.";
         $any_error = TRUE;
     } else {
-        $result = $module::$PARTICIPANT->checkEmailExists($param_email);
+        $result = $module->PARTICIPANT->checkEmailExists($param_email);
         if ($result === NULL) {
             echo "Oops! Something went wrong. Please try again later.";
             return;
@@ -75,7 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!$any_error) {
         $icon = $title = $html = "";
         try {
-            $username = $module::$PARTICIPANT->createParticipant($email, $fname_clean, $lname_clean);
+            $username = $module->PARTICIPANT->createParticipant($email, $fname_clean, $lname_clean);
             $module->sendNewParticipantEmail($username, $email, $fname_clean, $lname_clean);
             $icon = "success";
             $title = "Participant Registered";
@@ -136,7 +133,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="form-group">
             <button type="submit" class="btn btn-rcpro" value="Submit">Submit</button>
         </div>
-        <input type="hidden" name="token" value="<?= $module::$AUTH->set_csrf_token(); ?>">
+        <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
     </form>
 </div>
 

@@ -1,11 +1,15 @@
 <?php
 
-if (!SUPER_USER) {
-    return;
+namespace YaleREDCap\REDCapPRO;
+
+/** @var REDCapPRO $module */
+
+if ( !$module->framework->isSuperUser() ) {
+    exit();
 }
 
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
-$module::$UI->ShowControlCenterHeader("Logs");
+$module->UI->ShowControlCenterHeader("Logs");
 
 ?>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
