@@ -326,9 +326,11 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return bool
      */
+
     function redcap_module_configure_button_display()
     {
-        return true;
+        // Hide module configuration button in project context.
+        return $this->getProjectId() === null;
     }
 
 
@@ -611,11 +613,12 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function changeUserRole(string $username, ?string $oldRole, string $newRole)
     {
+    	// FIX: PHP 8 fix
         try {
             $roles = array(
-                "3" => $this->getProjectSetting("managers"),
-                "2" => $this->getProjectSetting("users"),
-                "1" => $this->getProjectSetting("monitors")
+                "3" => $this->getProjectSetting("managers") ?? array(''),
+                "2" => $this->getProjectSetting("users") ?? array(''),
+                "1" => $this->getProjectSetting("monitors") ?? array('')
             );
 
             $oldRole = strval($oldRole);
@@ -672,9 +675,10 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function getUserRole(string $username)
     {
-        $managers = $this->getProjectSetting("managers");
-        $users    = $this->getProjectSetting("users");
-        $monitors = $this->getProjectSetting("monitors");
+				// FIX: PHP 8 fix
+        $managers = $this->getProjectSetting("managers") ?? array('');
+        $users    = $this->getProjectSetting("users")    ?? array('');
+        $monitors = $this->getProjectSetting("monitors") ?? array('');
 
         $result = 0;
 

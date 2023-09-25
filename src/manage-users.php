@@ -68,13 +68,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             Swal.fire({
                 icon: "error",
                 title: "Error",
-                text: "<?= $e->getMessage(); ?>",
+                text: "<?php echo $e->getMessage(); ?>",
                 showConfirmButton: false
             });
         </script>
 <?php
     }
 }
+
 
 ?>
 
@@ -86,7 +87,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 iconColor: 'black',
                 title: 'Staff Roles',
                 confirmButtonText: 'Got it!',
-                confirmButtonColor: '<?= $module::$COLORS["secondary"] ?>',
+                confirmButtonColor: '<?php echo $module::$COLORS["secondary"]; ?>',
                 html: 'Staff may have one of the following roles:<br><br>'+
                     '<div style=\'text-align:left;\'>'+
                         '<ul>'+
@@ -100,13 +101,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div id="loading" class="loader"></div>
     </div>
     <div id="parent" class="dataTableParentHidden">
-        <form class="rcpro-form" id="manage-users-form" action="<?= $module->getUrl("src/manage-users.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
-            <?php if (count($userList) === 0) { ?>
+        <form class="rcpro-form" id="manage-users-form" action="<?php echo $module->getUrl("src/manage-users.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">	
+            <?php 
+            
+            $userListCount = 0;
+
+            if ($userList != null) {
+            	$userListCount = count($userList);
+            }
+
+            if ($userListCount === 0) { ?>
                 <div>
                     <p>No users have access to this project.</p>
                 </div>
             <?php } else { ?>
-                <div class="form-group">
+						<div class="form-group">
                     <table class="table rcpro-datatable" id="RCPRO_Manage_Staff">
                         <caption></caption>
                         <thead>
@@ -118,32 +127,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($userList as $user) {
+	
+                            <?php 
+                            foreach ($userList as $user) {
                                 $username       = $user->getUsername();
                                 $username_clean = \REDCap::escapeHtml($username);
                                 $fullname_clean = \REDCap::escapeHtml($module->getUserFullname($username));
                                 $email_clean    = \REDCap::escapeHtml($user->getEmail());
                                 $role           = $module->getUserRole($username);
+                              }
                             ?>
                                 <tr>
-                                    <td><?= $username_clean ?></td>
-                                    <td><?= $fullname_clean ?></td>
-                                    <td><?= $email_clean ?></td>
-                                    <td data-order="<?= $role ?>"><select class="role_select" name="role_select_<?= $username_clean ?>" id="role_select_<?= $username_clean ?>" orig_value="<?= $role ?>" form="manage-users-form">
-                                            <option value=0 <?= $role === 0 ? "selected" : ""; ?>>No Access</option>
-                                            <option value=1 <?= $role === 1 ? "selected" : ""; ?>>Monitor</option>
-                                            <option value=2 <?= $role === 2 ? "selected" : ""; ?>>Normal User</option>
-                                            <option value=3 <?= $role === 3 ? "selected" : ""; ?>>Manager</option>
-                                        </select></td>
+                                    <td><?php echo $username_clean; ?></td>
+                                    <td><?php echo $fullname_clean; ?></td>
+                                    <td><?php echo $email_clean; ?></td>
+                                    <td data-order="<?php echo $role; ?>">
+                                    		<select class="role_select" name="role_select_<?php echo $username_clean; ?>" id="role_select_<?php echo $username_clean; ?>" orig_value="<?php echo $role; ?>" form="manage-users-form">
+                                            <option value=0 <?php echo ($role === 0 ? "selected" : ""); ?>>No Access</option>
+                                            <option value=1 <?php echo ($role === 1 ? "selected" : ""); ?>>Monitor</option>
+                                            <option value=2 <?php echo ($role === 2 ? "selected" : ""); ?>>Normal User</option>
+                                            <option value=3 <?php echo ($role === 3 ? "selected" : ""); ?>>Manager</option>
+                                        </select>
+                                    </td>
                                 </tr>
-                            <?php } ?>
                         </tbody>
                     </table>
                     <button class="btn btn-rcpro rcpro-form-button role_select_button" id="role_select_submit" type="submit" disabled>Save Changes</button>
                     <button class="btn btn-secondary rcpro-form-button role_select_button" id="role_select_reset" disabled>Reset</button>
-                </div>
+						</div>
             <?php } ?>
-            <input type="hidden" name="token" value="<?= $module::$AUTH->set_csrf_token(); ?>">
+            <input type="hidden" name="token" value="<?php echo $module::$AUTH->set_csrf_token(); ?>">
         </form>
     </div>
 </div>

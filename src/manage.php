@@ -345,7 +345,7 @@ $participantList = $module::$PARTICIPANT->getProjectParticipants($rcpro_project_
                                 $link_id        = $module::$PROJECT->getLinkId($participant["log_id"], $rcpro_project_id);
                                 $dag_id         = $module::$DAG->getParticipantDag($link_id);
                                 $dag_name       = \REDCap::getGroupNames(false, $dag_id);
-                                $dag_name_clean = count($dag_name) === 1 ? \REDCap::escapeHtml($dag_name) : "Unassigned";
+                                $dag_name_clean = count((array)$dag_name) === 1 ? \REDCap::escapeHtml($dag_name) : "Unassigned";  // FIX: PHP 8 count needs the typecast here
                             ?>
                                 <tr data-id="<?= $participant["log_id"] ?>" data-username="<?= $username_clean ?>" data-fname="<?= $fname_clean ?>" data-lname="<?= $lname_clean ?>" data-email="<?= $email_clean ?>">
                                     <td class="dt-center">
