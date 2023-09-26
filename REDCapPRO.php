@@ -425,7 +425,7 @@ class REDCapPRO extends AbstractExternalModule
 
     public function sendEmailUpdateEmail(string $username, string $new_email, string $old_email)
     {
-        $settings = new ProjectSettings($this);
+        $settings        = new ProjectSettings($this);
         $subject         = $this->tt("email_update_subject");
         $from            = $settings->getEmailFromAddress();
         $old_email_clean = \REDCap::escapeHtml($old_email);
@@ -807,7 +807,15 @@ class REDCapPRO extends AbstractExternalModule
     public function logEvent(string $message, $parameters)
     {
         $parameters["module_token"] = $this->getModuleToken();
-        return $this->log($message, $parameters);
+        $parameterNames             = array_keys($parameters) ?? [];
+        $parameterNames[]           = "message";
+        $throttleSQL                = implode(" = ? AND ", $parameterNames) . " = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $throttleParams             = array_values($parameters) ?? [];
+        $throttleParams[]           = $message;
+        if ( !$this->framework->throttle($throttleSQL, $throttleParams, 2, 1) ) {
+            return $this->log($message, $parameters);
+        }
+        return null;
     }
 
     /**
