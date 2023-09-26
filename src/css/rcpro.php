@@ -16,18 +16,32 @@
     margin-top: 10px !important;
 }
 
-table.rcpro-datatable tbody tr.even,
+table.rcpro-datatable thead tr th,
+table.rcpro-datatable thead tr td,
+table.rcpro-datatable thead tr,
+table.rcpro-datatable thead {
+    border-bottom: none !important;
+}
+
+
+
 table.rcpro-datatable tbody tr.even td {
     background-color: white !important;
     border-top: 1px solid #eeeeee !important;
     border-bottom: none !important;    
 }
 
-table.rcpro-datatable tbody tr.odd,
 table.rcpro-datatable tbody tr.odd td {
     background-color: <?=$module::$COLORS["lightGrey"] ?> !important;    
     border-top: 1px solid #eeeeee !important;
     border-bottom: none !important;
+}
+
+table.rcpro-datatable tbody tr:first-child td {
+    border-top: 1px solid #ccc !important;
+}
+.dataTables_wrapper.no-footer .dataTables_scrollBody{
+    border-bottom: 1px solid #ccc !important;
 }
 
 #RCPRO_TABLE tr {
