@@ -87,7 +87,7 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
     (function($, window, document) {
         $(document).ready(function() {
             let dataTable = $('#RCPRO_TABLE').DataTable({
-                dom: 'lBfrtip',
+                dom: 'lftip',
                 stateSave: true,
                 stateSaveCallback: function(settings, data) {
                     localStorage.setItem('DataTables_ccproj_' + settings.sInstance, JSON.stringify(data))
@@ -95,6 +95,7 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
                 stateLoadCallback: function(settings) {
                     return JSON.parse(localStorage.getItem('DataTables_ccproj_' + settings.sInstance))
                 },
+                scrollX: true,
                 scrollY: '50vh',
                 scrollCollapse: true,
                 pageLength: 100
@@ -104,7 +105,6 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
             $('#loading-container').hide();
             $('.wrapper').show();
             dataTable.columns.adjust().draw();
-
         });
     }(window.jQuery, window, document));
 </script>
