@@ -72,6 +72,9 @@
         "src/forgot-username",
         "src/session_check"
     ],
+    "auth-ajax-actions": [
+        "getLogs"
+    ],
     "framework-version": 12,
     "compatibility": {
         "php-version-min": "7.3.0",

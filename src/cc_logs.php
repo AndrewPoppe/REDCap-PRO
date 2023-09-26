@@ -13,63 +13,15 @@ $module->UI->ShowControlCenterHeader("Logs");
 
 ?>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/cr-1.5.4/date-1.1.0/sb-1.1.0/sp-1.3.0/sl-1.3.3/datatables.min.css" />
-<script type="text/javascript" src="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/cr-1.5.4/date-1.1.0/sb-1.1.0/sp-1.3.0/sl-1.3.3/datatables.min.js" defer></script>
+<link rel="stylesheet" type="text/css"
+    href="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/cr-1.5.4/date-1.1.0/sb-1.1.0/sp-1.3.0/sl-1.3.3/datatables.min.css" />
+<script type="text/javascript"
+    src="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/cr-1.5.4/date-1.1.0/sb-1.1.0/sp-1.3.0/sl-1.3.3/datatables.min.js"
+    defer></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" defer></script>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro_cc.php") ?>">
 <?php
 
-$columns = [
-    "log_id",
-    "timestamp",
-    "message",
-    "rcpro_username",
-    "redcap_user",
-    "redcap_user_acted_upon",
-    "initiating_project_id",
-    "project_id",
-    "ui_id",
-    "ip",
-    "record",
-    "fname",
-    "lname",
-    "email",
-    "pw",
-    "event",
-    "instrument",
-    "repeat_instance",
-    "response_id",
-    "project_dag",
-    "group_id",
-    "survey_hash",
-    "rcpro_ip",
-    "rcpro_participant_id",
-    "rcpro_email",
-    "new_email",
-    "old_email",
-    "new_name",
-    "old_name",
-    "new_role",
-    "old_role",
-    "error_code",
-    "error_file",
-    "error_line",
-    "error_message",
-    "error_string",
-    "active",
-    "active_status",
-    "pid",
-    "rcpro_project_id",
-    "failed_attempts",
-    "last_modified_ts",
-    "lockout_ts",
-    "token",
-    "token_ts",
-    "token_valid",
-    "search"
-];
-
-$tableData = $module->selectLogs("SELECT " . implode(', ', $columns), []);
 $module->initializeJavascriptModuleObject();
 
 ?>
@@ -84,37 +36,22 @@ $module->initializeJavascriptModuleObject();
             <thead>
                 <tr>
                     <?php
-                    foreach ($columns as $column) {
+                    foreach ( REDCapPRO::$logColumnsCC as $column ) {
                         echo "<th id='rcpro_${column}' class='dt-center'>" . ucwords(str_replace("_", " ", $column)) . "</th>";
                     }
                     ?>
                 </tr>
             </thead>
             <tbody>
-                <?php
-                while ($row = $tableData->fetch_assoc()) {
-                    $tds = "";
-                    $allData = "<div style=\\\"display: block; text-align:left;\\\"><ul>";
-                    foreach ($columns as $column) {
-                        $value = str_replace("\n", "\\n", addslashes(\REDCap::escapeHtml($row[$column])));
-                        $tds .= "<td>$value</td>";
-                        if ($value != "") {
-                            $allData .= "<li><strong>${column}</strong>: $value</li>";
-                        }
-                    }
-                    $allData .= "</ul></div>";
-                    echo "<tr class='hover pointer' onclick='(function() {Swal.fire({confirmButtonColor:\"#900000\", allowEnterKey: false, html:\"" . $allData . "\"})})()'>";
-                    echo $tds;
-                    echo "</tr>";
-                }
-                ?>
             </tbody>
         </table>
     </div>
 </div>
 <script>
-    (function($, window, document) {
-
+    (function ($, window, document) {
+        const RCPRO_module = <?= $module->getJavascriptModuleObjectName() ?>;
+        const columns = ["<?= implode('", "', REDCapPRO::$logColumnsCC)?>"];
+        
         function logExport(type) {
             $.ajax({
                 'type': 'POST',
@@ -125,56 +62,90 @@ $module->initializeJavascriptModuleObject();
             });
         }
 
-        $(document).ready(function() {
+        $(document).ready(function () {
             let dataTable = $('#RCPRO_TABLE').DataTable({
-                //pageLength: 1000,
+                deferRender: true,
+                ajax: function (data, callback, settings) {
+                    RCPRO_module.ajax('getLogs', { cc: true })
+                        .then(response => {
+                            callback({ data: response});
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            callback({ data: [] });
+                        });
+                },
+                columns: columns.map(column => {
+                    return {
+                        data: column,
+                        defaultContent: ""
+                    }
+                }),
+                createdRow: function(row, data, dataIndex, cells) {
+                    let allData = "<div style=\"display: block; text-align:left;\"><ul>";
+                    for (column of columns) {
+                        const value = data[column];
+                        if (value && value != "") {
+                            allData += "<li><strong>" + column + "</strong>: " + value + "</li>";
+                        }
+                    }
+                    allData += "</ul></div>";
+                    $(row).addClass('hover pointer');
+                    $(row).on('click', function() {
+                        Swal.fire({
+                            confirmButtonColor: "<?= $module::$COLORS["primary"] ?>",
+                            allowEnterKey: false,
+                            html: allData
+                        });
+                    });
+                },
                 dom: 'lBfrtip',
                 stateSave: true,
-                stateSaveCallback: function(settings, data) {
+                stateSaveCallback: function (settings, data) {
                     localStorage.setItem('DataTables_cclogs_' + settings.sInstance, JSON.stringify(data))
                 },
-                stateLoadCallback: function(settings) {
+                stateLoadCallback: function (settings) {
                     return JSON.parse(localStorage.getItem('DataTables_cclogs_' + settings.sInstance))
                 },
                 colReorder: true,
                 buttons: [{
-                        extend: 'searchPanes',
-                        config: {
-                            cascadePanes: true,
-                        }
+                    extend: 'searchPanes',
+                    config: {
+                        cascadePanes: true,
+                    }
 
-                    },
-                    {
-                        extend: 'searchBuilder',
-                    },
+                },
+                {
+                    extend: 'searchBuilder',
+                },
                     'colvis',
-                    {
-                        text: 'Restore Default',
-                        action: function(e, dt, node, config) {
-                            dt.state.clear();
-                            window.location.reload();
-                        }
+                {
+                    text: 'Restore Default',
+                    action: function (e, dt, node, config) {
+                        dt.state.clear();
+                        window.location.reload();
+                    }
+                },
+                {
+                    extend: 'csv',
+                    exportOptions: {
+                        columns: ':visible'
                     },
-                    {
-                        extend: 'csv',
-                        exportOptions: {
-                            columns: ':visible'
-                        },
-                        customize: function(csv) {
-                            logExport("csv");
-                            return csv;
-                        }
+                    customize: function (csv) {
+                        logExport("csv");
+                        return csv;
+                    }
+                },
+                {
+                    extend: 'excel',
+                    exportOptions: {
+                        columns: ':visible'
                     },
-                    {
-                        extend: 'excel',
-                        exportOptions: {
-                            columns: ':visible'
-                        },
-                        customize: function(excel) {
-                            logExport("excel");
-                            return excel;
-                        }
-                    },
+                    customize: function (excel) {
+                        logExport("excel");
+                        return excel;
+                    }
+                },
                 ],
                 scrollX: true,
                 scrollY: '60vh',
@@ -185,7 +156,7 @@ $module->initializeJavascriptModuleObject();
             $('#loading-container').hide();
             $('.wrapper').show();
 
-            dataTable.on('buttons-action', function(e, buttonApi, dataTable, node, config) {
+            dataTable.on('buttons-action', function (e, buttonApi, dataTable, node, config) {
                 const text = buttonApi.text();
                 if (text.search(/Panes|Builder/)) {
                     $('.dt-button-collection').draggable();

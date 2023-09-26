@@ -20,53 +20,8 @@ $module->UI->ShowHeader("Logs");
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
 
 <?php
-$columns = [
-    "timestamp",
-    "message",
-    "rcpro_username",
-    "redcap_user",
-    "redcap_user_acted_upon",
-    "initiating_project_id",
-    "ui_id",
-    "ip",
-    "record",
-    "fname",
-    "lname",
-    "email",
-    "project_dag",
-    "group_id",
-    "event",
-    "instrument",
-    "repeat_instance",
-    "response_id",
-    "survey_hash",
-    "rcpro_ip",
-    "rcpro_participant_id",
-    "rcpro_email",
-    "new_email",
-    "old_email",
-    "new_name",
-    "old_name",
-    "new_role",
-    "old_role",
-    "error_code",
-    "error_file",
-    "error_line",
-    "error_message",
-    "error_string",
-    "active",
-    "active_status",
-    "pid",
-    "rcpro_project_id",
-    "failed_attempts",
-    "last_modified_ts",
-    "lockout_ts",
-    "token_ts",
-    "token_valid",
-    "search"
-];
 
-$tableData = $module->selectLogs("SELECT " . implode(", ", $columns), []);
+//$tableData = $module->selectLogs("SELECT " . implode(", ", $columns), []);
 $module->initializeJavascriptModuleObject();
 
 ?>
@@ -83,36 +38,22 @@ $module->initializeJavascriptModuleObject();
             <thead>
                 <tr>
                     <?php
-                    foreach ($columns as $column) {
+                    foreach (REDCapPRO::$logColumns as $column) {
                         echo "<th id='rcpro_${column}' class='dt-center'>" . ucwords(str_replace("_", " ", $column)) . "</th>";
                     }
                     ?>
                 </tr>
             </thead>
             <tbody>
-                <?php
-                while ($row = $tableData->fetch_assoc()) {
-                    $tds = "";
-                    $allData = "<div style=\\\"display: block; text-align:left;\\\"><ul>";
-                    foreach ($columns as $column) {
-                        $value = str_replace("\n", "\\n", addslashes(\REDCap::escapeHtml($row[$column])));
-                        $tds .= "<td>$value</td>";
-                        if ($value != "") {
-                            $allData .= "<li><strong>${column}</strong>: $value</li>";
-                        }
-                    }
-                    $allData .= "</ul></div>";
-                    echo "<tr onclick='(function() {Swal.fire({confirmButtonColor:\"" . $module::$COLORS["primary"] . "\", allowEnterKey: false, html:\"" . $allData . "\"})})()'>";
-                    echo $tds;
-                    echo "</tr>";
-                }
-                ?>
             </tbody>
         </table>
     </div>
 </div>
 <script>
     (function($, window, document) {
+
+        const RCPRO_module = <?= $module->getJavascriptModuleObjectName() ?>;
+        const columns = ["<?= implode('", "', REDCapPRO::$logColumns)?>"];
 
         function logExport(type) {
             $.ajax({
@@ -126,6 +67,41 @@ $module->initializeJavascriptModuleObject();
 
         $(document).ready(function() {
             $('#RCPRO_Logs').DataTable({
+                deferRender: true,
+                ajax: function (data, callback, settings) {
+                    RCPRO_module.ajax('getLogs', { cc: false })
+                        .then(response => {
+                            callback({ data: response});
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            callback({ data: [] });
+                        });
+                },
+                columns: columns.map(column => {
+                    return {
+                        data: column,
+                        defaultContent: ""
+                    }
+                }),
+                createdRow: function(row, data, dataIndex, cells) {
+                    let allData = "<div style=\"display: block; text-align:left;\"><ul>";
+                    for (column of columns) {
+                        const value = data[column];
+                        if (value && value != "") {
+                            allData += "<li><strong>" + column + "</strong>: " + value + "</li>";
+                        }
+                    }
+                    allData += "</ul></div>";
+                    $(row).addClass('hover pointer');
+                    $(row).on('click', function() {
+                        Swal.fire({
+                            confirmButtonColor: "<?= $module::$COLORS["primary"] ?>",
+                            allowEnterKey: false,
+                            html: allData
+                        });
+                    });
+                },
                 dom: 'lBfrtip',
                 stateSave: true,
                 stateSaveCallback: function(settings, data) {

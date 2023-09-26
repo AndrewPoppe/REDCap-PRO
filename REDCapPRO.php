@@ -6,6 +6,7 @@ use ExternalModules\AbstractExternalModule;
 use ExternalModules\Framework;
 use IU\AutoNotifyModule\Settings;
 
+require_once("src/classes/AjaxHandler.php");
 require_once("src/classes/Auth.php");
 require_once("src/classes/DAG.php");
 require_once("src/classes/Instrument.php");
@@ -43,6 +44,102 @@ class REDCapPRO extends AbstractExternalModule
         "ban"              => "tomato"
     ];
 
+    static $logColumnsCC = [
+        "log_id",
+        "timestamp",
+        "message",
+        "rcpro_username",
+        "redcap_user",
+        "redcap_user_acted_upon",
+        "initiating_project_id",
+        "project_id",
+        "ui_id",
+        "ip",
+        "record",
+        "fname",
+        "lname",
+        "email",
+        "pw",
+        "event",
+        "instrument",
+        "repeat_instance",
+        "response_id",
+        "project_dag",
+        "group_id",
+        "survey_hash",
+        "rcpro_ip",
+        "rcpro_participant_id",
+        "rcpro_email",
+        "new_email",
+        "old_email",
+        "new_name",
+        "old_name",
+        "new_role",
+        "old_role",
+        "error_code",
+        "error_file",
+        "error_line",
+        "error_message",
+        "error_string",
+        "active",
+        "active_status",
+        "pid",
+        "rcpro_project_id",
+        "failed_attempts",
+        "last_modified_ts",
+        "lockout_ts",
+        "token",
+        "token_ts",
+        "token_valid",
+        "search"
+    ];
+
+    static $logColumns = [
+        "timestamp",
+        "message",
+        "rcpro_username",
+        "redcap_user",
+        "redcap_user_acted_upon",
+        "initiating_project_id",
+        "ui_id",
+        "ip",
+        "record",
+        "fname",
+        "lname",
+        "email",
+        "project_dag",
+        "group_id",
+        "event",
+        "instrument",
+        "repeat_instance",
+        "response_id",
+        "survey_hash",
+        "rcpro_ip",
+        "rcpro_participant_id",
+        "rcpro_email",
+        "new_email",
+        "old_email",
+        "new_name",
+        "old_name",
+        "new_role",
+        "old_role",
+        "error_code",
+        "error_file",
+        "error_line",
+        "error_message",
+        "error_string",
+        "active",
+        "active_status",
+        "pid",
+        "rcpro_project_id",
+        "failed_attempts",
+        "last_modified_ts",
+        "lockout_ts",
+        "token_ts",
+        "token_valid",
+        "search"
+    ];
+
     static $LOGO_URL = "https://i.imgur.com/5Xq2Vqt.png";
     static $LOGO_ALTERNATE_URL = "https://i.imgur.com/fu0t8V1.png";
 
@@ -61,7 +158,13 @@ class REDCapPRO extends AbstractExternalModule
     /////   REDCAP HOOKS   \\\\\ 
     //////////////\\\\\\\\\\\\\\
 
-    function redcap_every_page_top($project_id)
+    public function redcap_module_ajax($action, $payload, $project_id, $record, $instrument, $event_id, $repeat_instance, $survey_hash, $response_id, $survey_queue_hash, $page, $page_full, $user_id, $group_id)
+    {
+        $ajaxHandler = new AjaxHandler($this, $action, $payload, $project_id);
+        return $ajaxHandler->handleAjax();
+    }
+
+    public function redcap_every_page_top($project_id)
     {
         if ( strpos($_SERVER["PHP_SELF"], "surveys") !== false ) {
             return;
@@ -86,7 +189,7 @@ class REDCapPRO extends AbstractExternalModule
         }
     }
 
-    function redcap_survey_page_top(
+    public function redcap_survey_page_top(
         $project_id,
         $record,
         $instrument,
@@ -240,7 +343,7 @@ class REDCapPRO extends AbstractExternalModule
         }
     }
 
-    function redcap_data_entry_form($project_id, $record, $instrument, $event_id, $group_id, $repeat_instance = 1)
+    public function redcap_data_entry_form($project_id, $record, $instrument, $event_id, $group_id, $repeat_instance = 1)
     {
         $role = SUPER_USER ? 3 : $this->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
         if ( $role < 2 ) {
@@ -265,7 +368,7 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return void
      */
-    function redcap_module_project_enable($version, $pid)
+    public function redcap_module_project_enable($version, $pid)
     {
         if ( !$this->PARTICIPANT->checkProject($pid) ) {
             $this->PARTICIPANT->addProject($pid);
@@ -287,7 +390,7 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return void
      */
-    function redcap_module_project_disable($version, $project_id)
+    public function redcap_module_project_disable($version, $project_id)
     {
         $this->PARTICIPANT->setProjectActive($project_id, 0);
         $this->logEvent("Module Disabled", [
@@ -303,7 +406,7 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return void
      */
-    function redcap_module_system_enable($version)
+    public function redcap_module_system_enable($version)
     {
         $this->logEvent("Module Enabled - System", [
             "redcap_user" => USERID,
@@ -318,7 +421,7 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return void
      */
-    function redcap_module_system_disable($version)
+    public function redcap_module_system_disable($version)
     {
         $this->logEvent("Module Disabled - System", [
             "redcap_user" => USERID,
@@ -336,14 +439,14 @@ class REDCapPRO extends AbstractExternalModule
      * @return bool
      */
 
-    function redcap_module_configure_button_display()
+     public function redcap_module_configure_button_display()
     {
         // Hide module configuration button in project context.
         return $this->getProjectId() === null;
     }
 
 
-    function redcap_module_system_change_version($version, $old_version)
+    public function redcap_module_system_change_version($version, $old_version)
     {
         $this->logEvent("Module Version Changed", [
             "version"     => $version,
@@ -753,11 +856,11 @@ class REDCapPRO extends AbstractExternalModule
      * Logs errors thrown during operation
      * 
      * @param string $message
-     * @param \Exception $e
+     * @param \Throwable $e
      * 
      * @return void
      */
-    public function logError(string $message, \Exception $e)
+    public function logError(string $message, \Throwable $e)
     {
         $params = [
             "error_code"    => $e->getCode(),
