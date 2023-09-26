@@ -52,12 +52,20 @@
         }
     ],
     "links": {
-        "project": [],
+        "project": [
+            {
+                "name": "<strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em>",
+                "key": "redcappro",
+                "icon": "images/fingerprint_2.png",
+                "url": "src/home.php",
+                "show-header-and-footer": true
+            }
+        ],
         "control-center": [
             {
                 "name": "<strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em>",
                 "key": "redcappro",
-                "icon": "fas fa-fingerprint",
+                "icon": "images/fingerprint_2.png",
                 "url": "src/cc_projects.php",
                 "show-header-and-footer": true
             }

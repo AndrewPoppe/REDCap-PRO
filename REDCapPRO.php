@@ -170,23 +170,6 @@ class REDCapPRO extends AbstractExternalModule
             return;
         }
         $this->AUTH->destroySession();
-        $role = SUPER_USER ? 3 : $this->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
-        if ( $role > 0 ) {
-            ?>
-            <script>
-                (function ($, window, document) {
-                    $(document).ready(function () {
-                        let link = $("<div>" +
-                            "<img src='<?= $this->getUrl('images/fingerprint_2.png'); ?>' style='width:16px; height:16px; position:relative; top:-2px'></img>" +
-                            "&nbsp;" +
-                            "<a href='<?= $this->getUrl('src/home.php'); ?>'><span id='RCPro-Link'><strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em></strong></span></a>" +
-                            "</div>");
-                        $('#app_panel').find('div.hang').last().after(link);
-                    });
-                }(window.jQuery, window, document));
-            </script>
-            <?php
-        }
     }
 
     public function redcap_survey_page_top(
@@ -445,6 +428,14 @@ class REDCapPRO extends AbstractExternalModule
         return $this->getProjectId() === null;
     }
 
+
+    public function redcap_module_link_check_display($project_id, $link) {
+        $role = SUPER_USER ? 3 : $this->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+        if ( $role > 0 ) {
+            return $link;
+        }
+        return null;
+    }
 
     public function redcap_module_system_change_version($version, $old_version)
     {
