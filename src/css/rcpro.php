@@ -18,12 +18,14 @@
 
 table.rcpro-datatable tbody tr.even,
 table.rcpro-datatable tbody tr.even td {
-    background-color: white !important;    
+    background-color: white !important;
+    border-top: 1px solid #eeeeee !important;    
 }
 
 table.rcpro-datatable tbody tr.odd,
 table.rcpro-datatable tbody tr.odd td {
     background-color: <?=$module::$COLORS["lightGrey"] ?> !important;    
+    border-top: 1px solid #eeeeee !important;
 }
 
 #RCPRO_TABLE tr {
