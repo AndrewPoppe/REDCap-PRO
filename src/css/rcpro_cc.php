@@ -15,11 +15,13 @@
     box-shadow: 0px 0px 5px #eeeeee;
 }
 
-#RCPRO_TABLE tr.even {
+#RCPRO_TABLE tr.even,
+#RCPRO_TABLE tr.even td {
     background-color: white !important;
 }
 
-#RCPRO_TABLE tr.odd {
+#RCPRO_TABLE tr.odd,
+#RCPRO_TABLE tr.odd td {
     background-color: <?=$module::$COLORS["lightGrey"] ?> !important;
 }
 

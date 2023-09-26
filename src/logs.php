@@ -10,6 +10,7 @@ if ($role < 3) {
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module->UI->ShowHeader("Logs");
+$module->initializeJavascriptModuleObject();
 ?>
 
 <title><?= $module->APPTITLE ?> - Enroll</title>
@@ -18,13 +19,6 @@ $module->UI->ShowHeader("Logs");
 <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/cr-1.5.4/date-1.1.0/sb-1.1.0/sp-1.3.0/sl-1.3.3/datatables.min.js" defer></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" defer></script>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
-
-<?php
-
-//$tableData = $module->selectLogs("SELECT " . implode(", ", $columns), []);
-$module->initializeJavascriptModuleObject();
-
-?>
 
 <div class="manageContainer wrapper log-wrapper" style="display: none;">
     <h2>Project Logs</h2>
