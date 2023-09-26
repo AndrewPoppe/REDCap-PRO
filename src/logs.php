@@ -27,7 +27,7 @@ $module->initializeJavascriptModuleObject();
         <div id="loading" class="loader"></div>
     </div>
     <div id="logs" class="dataTableParentHidden rcpro-form">
-        <table class="table rcpro-datatable compact hover" id="RCPRO_Logs" style="width:100%;">
+        <table class="rcpro-datatable compact hover" id="RCPRO_Logs" style="width:100%;">
             <caption>REDCapPRO Study Logs</caption>
             <thead>
                 <tr>
