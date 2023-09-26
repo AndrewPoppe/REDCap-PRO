@@ -19,13 +19,15 @@
 table.rcpro-datatable tbody tr.even,
 table.rcpro-datatable tbody tr.even td {
     background-color: white !important;
-    border-top: 1px solid #eeeeee !important;    
+    border-top: 1px solid #eeeeee !important;
+    border-bottom: none !important;    
 }
 
 table.rcpro-datatable tbody tr.odd,
 table.rcpro-datatable tbody tr.odd td {
     background-color: <?=$module::$COLORS["lightGrey"] ?> !important;    
     border-top: 1px solid #eeeeee !important;
+    border-bottom: none !important;
 }
 
 #RCPRO_TABLE tr {
@@ -53,11 +55,11 @@ table.dataTable tbody td {
     vertical-align: middle !important;
 }
 
-table.table th {
+table.table thead th {
     border-top: none;
 }
 
-table.table td {
+table.table tbody td {
     border-top: 1px solid #eeeeee !important;
 }
 
