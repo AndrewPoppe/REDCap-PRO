@@ -16,13 +16,13 @@
     margin-top: 10px !important;
 }
 
-.rcpro-datatable tr.even,
-.rcpro-datatable tr.even td {
+table.rcpro-datatable tbody tr.even,
+table.rcpro-datatable tbody tr.even td {
     background-color: white !important;    
 }
 
-.rcpro-datatable tr.odd,
-.rcpro-datatable tr.odd td {
+table.rcpro-datatable tbody tr.odd,
+table.rcpro-datatable tbody tr.odd td {
     background-color: <?=$module::$COLORS["lightGrey"] ?> !important;    
 }
 
