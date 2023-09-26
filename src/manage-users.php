@@ -114,7 +114,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
             <?php } else { ?>
 						<div class="form-group">
-                    <table class="table rcpro-datatable" id="RCPRO_Manage_Staff">
+                    <table class="rcpro-datatable" id="RCPRO_Manage_Staff">
                         <caption></caption>
                         <thead>
                             <tr>

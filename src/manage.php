@@ -316,7 +316,7 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
                 </div>
             <?php } else { ?>
                 <div class="form-group">
-                    <table class="table rcpro-datatable" id="RCPRO_TABLE" style="width:100%;">
+                    <table class="rcpro-datatable" id="RCPRO_TABLE" style="width:100%;">
                         <caption>Study Participants</caption>
                         <thead>
                             <tr>
