@@ -173,6 +173,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 return changed;
             }
 
+            function handleButtons() {
+                let changed = checkRoleChanges();
+                if (changed) {
+                    $('#role_select_submit').removeAttr("disabled");
+                    $('#role_select_reset').removeAttr("disabled");
+                } else {
+                    $('#role_select_submit').attr("disabled", true);
+                    $('#role_select_reset').attr("disabled", true);
+                }
+            }
+
             $('#role_select_reset').on('click', function(evt) {
                 evt.preventDefault();
                 $('.role_select').each(function(i, el) {
@@ -182,25 +193,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 });
             });
 
-            $('#RCPRO_Manage_Staff').DataTable({
+            const dt = $('#RCPRO_Manage_Staff').DataTable({
                 stateSave: true,
                 stateSaveCallback: function(settings, data) {
                     localStorage.setItem('DataTables_staff_' + settings.sInstance, JSON.stringify(data))
                 },
                 stateLoadCallback: function(settings) {
                     return JSON.parse(localStorage.getItem('DataTables_staff_' + settings.sInstance))
+                },
+                drawCallback: function(settings) {
+                    $('.role_select').one("change", handleButtons);
                 }
             });
-            $('.role_select').on("change", function(evt) {
-                let changed = checkRoleChanges();
-                if (changed) {
-                    $('#role_select_submit').removeAttr("disabled");
-                    $('#role_select_reset').removeAttr("disabled");
-                } else {
-                    $('#role_select_submit').attr("disabled", true);
-                    $('#role_select_reset').attr("disabled", true);
-                }
-            });
+            $('.role_select').one("change", handleButtons);
             $('#parent').removeClass('dataTableParentHidden');
             $('.wrapper').show();
             $('#loading-container').hide();
