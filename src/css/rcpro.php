@@ -139,6 +139,10 @@ width: 500px !important;
 min-width: 640px !important;
 }
 
+div#logs {
+    padding-bottom: 10px !important;
+}
+
 .home-form {
 width: 50vw !important;
 font-size: large;

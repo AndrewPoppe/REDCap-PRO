@@ -347,7 +347,7 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
                             ?>
                                 <tr class="pointer" data-id="<?= $participant["log_id"] ?>" data-username="<?= $username_clean ?>" data-fname="<?= $fname_clean ?>" data-lname="<?= $lname_clean ?>" data-email="<?= $email_clean ?>">
                                     <td class="dt-center">
-                                        <?= "<i title='Password Set' class='fas " . ($password_set ? "fa-check-circle" : "fa-fw") . "' style='margin-left:2px;margin-right:2px;color:" . $module::$COLORS["green"] . ";'></i>&nbsp; $username_clean" ?>
+                                        <?= "<span style='white-space:nowrap'><i " . ($password_set ? "title='Password Set' class='fas fa-solid fa-check-circle'" : "title='Password NOT Set' class='far fa-regular fa-circle-xmark") . "' style='margin-left:2px;margin-right:2px;color:" . ($password_set ? $module::$COLORS["green"] : $module::$COLORS["ban"]) . ";'></i>&nbsp;$username_clean</span>" ?>
                                     </td>
                                     <?php if ($role > 1) { ?>
                                         <td class="dt-center"><?= $fname_clean ?></td>
