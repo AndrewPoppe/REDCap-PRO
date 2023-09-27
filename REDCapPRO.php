@@ -730,13 +730,11 @@ class REDCapPRO extends AbstractExternalModule
         $from    = $settings->getEmailFromAddress();
         $body    = "<html><body><div>
         <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
-        <p>" . 'greeting' ?? $this->tt("email_mfa_token_greeting") . "</p>
-        <p>" . 'here is your token: ' ?? $this->tt("email_mfa_token_message1") . "<strong> ${token}</strong><br>
-        " . 'message 2' ?? $this->tt("email_mfa_token_message2") . "</p>
+        <p>greeting</p>
+        <p>here is your token: <strong> ${token}</strong><br></p>
+        <p>message 3<br><br>";
 
-        <p>" . 'message 3' ?? $this->tt("email_mfa_token_message3")  . "<br><br>";
-
-        $body .= 'message 4' ?? $this->tt("email_mfa_token_message4");
+        $body .= 'message 4';
         if ( $this->framework->getProjectId() ) {
             $study_contact = $this->getContactPerson($subject);
             if ( isset($study_contact["info"]) ) {
