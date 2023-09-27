@@ -4,22 +4,22 @@ table.dataTable:not(#RCPRO_TABLE) thead > tr > th {
 border-bottom: 1px solid #ccc !important;
 }
 table.dataTable#RCPRO thead > tr > th {
-border-bottom: none !important;
+border-bottom-width: 0 !important;
 }
 
 table#RCPRO_TABLE tbody tr:first-child td {
-border-top: none !important;
+border-top-width: 0 !important;
 }
 table.dataTable.no-footer {
-border-bottom: none !important;
+border-bottom-width: 0 !important;
 }
 
 table#RCPRO_TABLE tr {
-border-bottom: none !important;
+border-bottom-width: 0 !important;
 }
 
 table.dataTable th {
-border-top: none;
+border-top-width: 0 !important;
 }
 
 table.dataTable td {
