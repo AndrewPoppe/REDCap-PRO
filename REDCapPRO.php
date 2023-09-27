@@ -138,8 +138,8 @@ class REDCapPRO extends AbstractExternalModule
         "search"
     ];
 
-    static $LOGO_URL = "https://i.imgur.com/5Xq2Vqt.png";
-    static $LOGO_ALTERNATE_URL = "https://i.imgur.com/fu0t8V1.png";
+    public $LOGO_URL = "https://i.imgur.com/5Xq2Vqt.png";
+    public $LOGO_ALTERNATE_URL = "https://i.imgur.com/fu0t8V1.png";
 
     public function __construct()
     {
