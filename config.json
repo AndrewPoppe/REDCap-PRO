@@ -74,6 +74,7 @@
     "no-auth-pages": [
         "src/login",
         "src/logout",
+        "src/mfa",
         "src/reset-password",
         "src/create-password",
         "src/forgot-password",

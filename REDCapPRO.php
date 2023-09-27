@@ -138,8 +138,8 @@ class REDCapPRO extends AbstractExternalModule
         "search"
     ];
 
-    static $LOGO_URL = "https://i.imgur.com/5Xq2Vqt.png";
-    static $LOGO_ALTERNATE_URL = "https://i.imgur.com/fu0t8V1.png";
+    public $LOGO_URL = "https://i.imgur.com/5Xq2Vqt.png";
+    public $LOGO_ALTERNATE_URL = "https://i.imgur.com/fu0t8V1.png";
 
     public function __construct()
     {
@@ -723,17 +723,17 @@ class REDCapPRO extends AbstractExternalModule
     {
         $settings = new ProjectSettings($this);
 
-        $subject = $this->tt("email_mfa_token_subject") ?? 'REDCapPRO Survey Token';
+        $subject = 'REDCapPRO Survey Token' ?? $this->tt("email_mfa_token_subject") ;
         $from    = $settings->getEmailFromAddress();
         $body    = "<html><body><div>
         <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
-        <p>" . $this->tt("email_mfa_token_greeting") ?? 'greeting' . "</p>
-        <p>" . $this->tt("email_mfa_token_message1") ?? 'here is your token: ' . "<strong> ${token}</strong><br>
-        " . $this->tt("email_mfa_token_message2")?? 'message 2' . "</p>
+        <p>" . 'greeting' ?? $this->tt("email_mfa_token_greeting") . "</p>
+        <p>" . 'here is your token: ' ?? $this->tt("email_mfa_token_message1") . "<strong> ${token}</strong><br>
+        " . 'message 2' ?? $this->tt("email_mfa_token_message2") . "</p>
 
-        <p>" . $this->tt("email_mfa_token_message3") ?? 'message 3' . "<br><br>";
+        <p>" . 'message 3' ?? $this->tt("email_mfa_token_message3")  . "<br><br>";
 
-        $body .= $this->tt("email_mfa_token_message4") ?? 'message 4';
+        $body .= 'message 4' ?? $this->tt("email_mfa_token_message4");
         if ( $this->framework->getProjectId() ) {
             $study_contact = $this->getContactPerson($subject);
             if ( isset($study_contact["info"]) ) {
