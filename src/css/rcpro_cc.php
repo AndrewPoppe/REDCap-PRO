@@ -14,6 +14,9 @@ table.dataTable.no-footer {
 border-bottom: none !important;
 }
 
+table#RCPRO_TABLE tr {
+border-bottom: none !important;
+}
 
 table.dataTable th {
 border-top: none;
