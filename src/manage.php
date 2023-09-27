@@ -345,7 +345,7 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
                                 $dag_name       = \REDCap::getGroupNames(false, $dag_id);
                                 $dag_name_clean = count((array)$dag_name) === 1 ? \REDCap::escapeHtml($dag_name) : "Unassigned";  // FIX: PHP 8 count needs the typecast here
                             ?>
-                                <tr data-id="<?= $participant["log_id"] ?>" data-username="<?= $username_clean ?>" data-fname="<?= $fname_clean ?>" data-lname="<?= $lname_clean ?>" data-email="<?= $email_clean ?>">
+                                <tr class="pointer" data-id="<?= $participant["log_id"] ?>" data-username="<?= $username_clean ?>" data-fname="<?= $fname_clean ?>" data-lname="<?= $lname_clean ?>" data-email="<?= $email_clean ?>">
                                     <td class="dt-center">
                                         <?= "<i title='Password Set' class='fas " . ($password_set ? "fa-check-circle" : "fa-fw") . "' style='margin-left:2px;margin-right:2px;color:" . $module::$COLORS["green"] . ";'></i>&nbsp; $username_clean" ?>
                                     </td>
@@ -539,7 +539,9 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
                 },
                 stateLoadCallback: function(settings) {
                     return JSON.parse(localStorage.getItem('DataTables_manage_' + settings.sInstance))
-                }
+                },
+                scrollY: '50vh',
+                scrollCollapse: true
             });
 
             // Activate/Deactivate buttons based on selections
@@ -559,6 +561,7 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
             });
             $('#parent').removeClass('dataTableParentHidden').show();
             $('#loading-container').hide();
+            datatable.columns.adjust().draw();
         });
     })(window.jQuery, window, document);
 </script>
