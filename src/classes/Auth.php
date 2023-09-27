@@ -34,7 +34,7 @@ class Auth
     {
         // To ensure any REDCap user is logged out 
         $redcap_session_id = $_COOKIE["PHPSESSID"];
-        if (isset($redcap_session_id)) {
+        if ( isset($redcap_session_id) ) {
             \Session::destroy($redcap_session_id);
             \Session::deletecookie("PHPSESSID");
             session_destroy();
@@ -43,8 +43,8 @@ class Auth
         // If we already have a session, use it.
         // Otherwise, create a new session.
         $session_id = $_COOKIE[$this->SESSION_NAME];
-        if (!empty($session_id)) {
-            if ($session_id !== session_id()) {
+        if ( !empty($session_id) ) {
+            if ( $session_id !== session_id() ) {
                 \Session::destroy(session_id());
                 session_destroy();
             }
@@ -70,7 +70,7 @@ class Auth
     public function destroySession()
     {
         $session_id = $_COOKIE[$this->SESSION_NAME];
-        if (isset($session_id)) {
+        if ( isset($session_id) ) {
             \Session::destroy($session_id);
         }
         \Session::deletecookie($this->SESSION_NAME);
@@ -138,20 +138,20 @@ class Auth
 
         $this->set_survey_username($participant["rcpro_username"]);
         $this->set_survey_record();
-        $_SESSION["username"] = $participant["rcpro_username"];
+        $_SESSION["username"]                          = $participant["rcpro_username"];
         $_SESSION[$this->APPTITLE . "_participant_id"] = $participant["log_id"];
-        $_SESSION[$this->APPTITLE . "_username"] = $participant["rcpro_username"];
-        $_SESSION[$this->APPTITLE . "_email"] = $participant["email"];
-        $_SESSION[$this->APPTITLE . "_fname"] = $participant["fname"];
-        $_SESSION[$this->APPTITLE . "_lname"] = $participant["lname"];
-        $_SESSION[$this->APPTITLE . "_loggedin"] = true;
+        $_SESSION[$this->APPTITLE . "_username"]       = $participant["rcpro_username"];
+        $_SESSION[$this->APPTITLE . "_email"]          = $participant["email"];
+        $_SESSION[$this->APPTITLE . "_fname"]          = $participant["fname"];
+        $_SESSION[$this->APPTITLE . "_lname"]          = $participant["lname"];
+        $_SESSION[$this->APPTITLE . "_loggedin"]       = true;
     }
 
     public function set_survey_username($username)
     {
-        $orig_id = session_id();
+        $orig_id           = session_id();
         $survey_session_id = $_COOKIE["survey"];
-        if (isset($survey_session_id)) {
+        if ( isset($survey_session_id) ) {
             session_write_close();
             session_name('survey');
             session_id($survey_session_id);
@@ -167,12 +167,12 @@ class Auth
     public function set_survey_record()
     {
         $record = $_COOKIE["record"];
-        if (!isset($record)) return;
+        if ( !isset($record) ) return;
 
 
-        $orig_id = session_id();
+        $orig_id           = session_id();
         $survey_session_id = $_COOKIE["survey"];
-        if (isset($survey_session_id)) {
+        if ( isset($survey_session_id) ) {
             session_write_close();
             session_name('survey');
             session_id($survey_session_id);
@@ -188,15 +188,15 @@ class Auth
     // MFA
     public function generate_mfa_code()
     {
-        $code = random_int(100000, 999999);
-        $_SESSION[$this->APPTITLE . "_mfa_code"] = $code;
+        $code                                         = random_int(100000, 999999);
+        $_SESSION[$this->APPTITLE . "_mfa_code"]      = $code;
         $_SESSION[$this->APPTITLE . "_mfa_code_time"] = time();
         return $code;
     }
 
     public function get_mfa_code()
     {
-        return $_SESSION[$this->APPTITLE . "_mfa_code"];
+        return $_SESSION[$this->APPTITLE . "_mfa_code"] ?? $this->generate_mfa_code();
     }
 
     public function get_mfa_code_time()
@@ -210,12 +210,21 @@ class Auth
         unset($_SESSION[$this->APPTITLE . "_mfa_code_time"]);
     }
 
-    public function check_mfa_code(int $code) {
+    public function is_mfa_verified() {
+        return $_SESSION[$this->APPTITLE . "_mfa_code_verified"];
+    }
+
+    public function check_mfa_code(int $code)
+    {
         $codeMatches = $code === $this->get_mfa_code();
         $codeExpired = time() - $this->get_mfa_code_time() > $this->mfa_duration;
-        if ($codeExpired) {
+        if ( $codeExpired ) {
             $this->clear_mfa_code();
         }
-        return $codeMatches && !$codeExpired;
+        $success = $codeMatches && !$codeExpired;
+        if ( $success ) {
+            $_SESSION[$this->APPTITLE . "_mfa_code_verified"] = true;
+        }
+        return $success;
     }
 }
