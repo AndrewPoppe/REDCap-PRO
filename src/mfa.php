@@ -26,7 +26,7 @@ $module->UI->ShowParticipantHeader($module->tt("login_title"));
         </span>
     </div>
     <div class="form-group d-grid">
-        <input type="submit" class="btn btn-primary" value="<?= $module->tt("mfa_button_text") ?? 'Submit' ?>">
+        <input type="submit" class="btn btn-primary" value="<?= 'Submit' ?? $module->tt("mfa_button_text") ?>">
     </div>
     <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
 </form>
