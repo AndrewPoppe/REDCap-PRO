@@ -4,7 +4,7 @@ namespace YaleREDCap\REDCapPRO;
 
 /** @var REDCapPRO $module */
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$role = $module->getUserRole($module->framework->getUser()->getUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ( $role < 3 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
@@ -228,4 +228,4 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 </script>
 
 <?php
-include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+include_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';

@@ -2,12 +2,11 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-require_once("src/classes/ParticipantHelper.php");
-
+require_once "src/classes/ParticipantHelper.php";
 
 class ProjectHelper
 {
-    public $module;
+    public REDCapPRO $module;
 
     function __construct(REDCapPRO $module)
     {
@@ -27,9 +26,9 @@ class ProjectHelper
             return $this->module->logEvent("PROJECT", [
                 "pid"         => $pid,
                 "active"      => 1,
-                "redcap_user" => USERID
+                "redcap_user" => $this->module->framework->getUser()->getUsername()
             ]);
-        } catch (\Exception $e) {
+        } catch ( \Exception $e ) {
             $this->module->logError("Error creating project entry", $e);
         }
     }
@@ -48,13 +47,13 @@ class ProjectHelper
     {
         $SQL = "SELECT active WHERE pid = ? and message = 'PROJECT' and (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = $this->module->selectLogs($SQL, [$pid]);
-            if ($result->num_rows == 0) {
+            $result = $this->module->selectLogs($SQL, [ $pid ]);
+            if ( $result->num_rows == 0 ) {
                 return FALSE;
             }
             $row = $result->fetch_assoc();
             return $check_active ? $row["active"] == "1" : TRUE;
-        } catch (\Exception $e) {
+        } catch ( \Exception $e ) {
             $this->module->logError("Error checking project", $e);
         }
     }
@@ -76,18 +75,18 @@ class ProjectHelper
                 "rcpro_project_id"     => $rcpro_project_id,
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "active"               => 1,
-                "redcap_user"          => USERID,
-                "project_dag"           => $dag
+                "redcap_user"          => $this->module->framework->getUser()->getUsername(),
+                "project_dag"          => $dag
             ]);
             $this->module->logEvent("Enrolled Participant", [
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "rcpro_username"       => $rcpro_username,
                 "rcpro_project_id"     => $rcpro_project_id,
-                "redcap_user"          => USERID,
-                "project_dag"           => $dag
+                "redcap_user"          => $this->module->framework->getUser()->getUsername(),
+                "project_dag"          => $dag
             ]);
             return TRUE;
-        } catch (\Exception $e) {
+        } catch ( \Exception $e ) {
             $this->module->logError("Error enrolling participant", $e);
             return FALSE;
         }
@@ -105,16 +104,16 @@ class ProjectHelper
     {
         try {
             $result = $this->setLinkActiveStatus($rcpro_participant_id, $rcpro_project_id, 0);
-            if ($result) {
+            if ( $result ) {
                 $this->module->logEvent("Disenrolled Participant", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $rcpro_username,
                     "rcpro_project_id"     => $rcpro_project_id,
-                    "redcap_user"          => USERID
+                    "redcap_user"          => $this->module->framework->getUser()->getUsername()
                 ]);
             }
             return $result;
-        } catch (\Exception $e) {
+        } catch ( \Exception $e ) {
             $this->module->logError("Error Disenrolling Participant", $e);
         }
     }
@@ -131,26 +130,26 @@ class ProjectHelper
     public function enrollParticipant(int $rcpro_participant_id, int $pid, ?int $dag, ?string $rcpro_username)
     {
         // If project does not exist, create it.
-        if (!$this->checkProject($pid)) {
+        if ( !$this->checkProject($pid) ) {
             $this->addProject($pid);
         }
         $rcpro_project_id = $this->getProjectIdFromPID($pid);
 
         // Check that user is not already enrolled in this project
-        if ($this->participantEnrolled($rcpro_participant_id, $rcpro_project_id)) {
+        if ( $this->participantEnrolled($rcpro_participant_id, $rcpro_project_id) ) {
             return -1;
         }
 
         // If there is already a link between this participant and project,
         // then activate it, otherwise create the link
-        if ($this->linkAlreadyExists($rcpro_participant_id, $rcpro_project_id)) {
+        if ( $this->linkAlreadyExists($rcpro_participant_id, $rcpro_project_id) ) {
             $result = $this->setLinkActiveStatus($rcpro_participant_id, $rcpro_project_id, 1, $dag);
-            if ($result) {
+            if ( $result ) {
                 $this->module->logEvent("Enrolled Participant", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $rcpro_username,
                     "rcpro_project_id"     => $rcpro_project_id,
-                    "redcap_user"          => USERID,
+                    "redcap_user"          => $this->module->framework->getUser()->getUsername(),
                     "project_dag"          => $dag
                 ]);
             }
@@ -172,9 +171,9 @@ class ProjectHelper
     {
         $SQL = "SELECT log_id WHERE message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = $this->module->selectLogs($SQL, [$rcpro_participant_id, $rcpro_project_id]);
+            $result = $this->module->selectLogs($SQL, [ $rcpro_participant_id, $rcpro_project_id ]);
             return $result->fetch_assoc()["log_id"];
-        } catch (\Exception $e) {
+        } catch ( \Exception $e ) {
             $this->module->logError("Error fetching link id", $e);
         }
     }
@@ -190,9 +189,9 @@ class ProjectHelper
     {
         $SQL = "SELECT pid WHERE message = 'PROJECT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = $this->module->selectLogs($SQL, [$rcpro_project_id]);
+            $result = $this->module->selectLogs($SQL, [ $rcpro_project_id ]);
             return $result->fetch_assoc()["pid"];
-        } catch (\Exception $e) {
+        } catch ( \Exception $e ) {
             $this->module->logError("Error fetching pid from project id", $e);
         }
     }
@@ -209,9 +208,9 @@ class ProjectHelper
     {
         $SQL = "SELECT log_id WHERE message = 'PROJECT' AND pid = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = $this->module->selectLogs($SQL, [$pid]);
+            $result = $this->module->selectLogs($SQL, [ $pid ]);
             return $result->fetch_assoc()["log_id"];
-        } catch (\Exception $e) {
+        } catch ( \Exception $e ) {
             $this->module->logError("Error fetching project id from pid", $e);
         }
     }
@@ -229,9 +228,9 @@ class ProjectHelper
     {
         $SQL = "message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = $this->module->countLogsValidated($SQL, [$rcpro_participant_id, $rcpro_project_id]);
+            $result = $this->module->countLogsValidated($SQL, [ $rcpro_participant_id, $rcpro_project_id ]);
             return $result > 0;
-        } catch (\Exception $e) {
+        } catch ( \Exception $e ) {
             $this->module->logError("Error checking if link exists", $e);
         }
     }
@@ -248,9 +247,9 @@ class ProjectHelper
     {
         $SQL = "message = 'LINK' AND rcpro_participant_id = ? AND rcpro_project_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = $this->module->countLogsValidated($SQL, [$rcpro_participant_id, $rcpro_project_id]);
+            $result = $this->module->countLogsValidated($SQL, [ $rcpro_participant_id, $rcpro_project_id ]);
             return $result > 0;
-        } catch (\Exception $e) {
+        } catch ( \Exception $e ) {
             $this->module->logError("Error checking participant enrollment", $e);
         }
     }
@@ -268,15 +267,15 @@ class ProjectHelper
     private function setLinkActiveStatus(int $rcpro_participant_id, int $rcpro_project_id, int $active, int $dag = NULL)
     {
         $link_id = $this->getLinkId($rcpro_participant_id, $rcpro_project_id);
-        $SQL1 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
-        $SQL2 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'project_dag'";
+        $SQL1    = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
+        $SQL2    = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'project_dag'";
         try {
-            $result1 = $this->module->query($SQL1, [$active, $link_id]);
-            if ($result1 && isset($dag)) {
-                $result2 = $this->module->query($SQL2, [$dag, $link_id]);
+            $result1 = $this->module->query($SQL1, [ $active, $link_id ]);
+            if ( $result1 && isset($dag) ) {
+                $result2 = $this->module->query($SQL2, [ $dag, $link_id ]);
             }
             return $result1;
-        } catch (\Exception $e) {
+        } catch ( \Exception $e ) {
             $this->module->logError("Error setting link activity", $e);
         }
     }
@@ -292,17 +291,17 @@ class ProjectHelper
     public function setProjectActive(int $pid, int $active)
     {
         $rcpro_project_id = $this->getProjectIdFromPID($pid);
-        $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
+        $SQL              = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
         try {
-            $result = $this->module->query($SQL, [$active, $rcpro_project_id]);
-            if ($result) {
+            $result = $this->module->query($SQL, [ $active, $rcpro_project_id ]);
+            if ( $result ) {
                 $this->module->logEvent("Project Status Set", [
                     "rcpro_project_id" => $rcpro_project_id,
                     "active_status"    => $active,
-                    "redcap_user"      => USERID
+                    "redcap_user"      => $this->module->framework->getUser()->getUsername()
                 ]);
             }
-        } catch (\Exception $e) {
+        } catch ( \Exception $e ) {
             $this->module->logError("Error setting project active status", $e);
         }
     }

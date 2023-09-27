@@ -4,7 +4,7 @@ namespace YaleREDCap\REDCapPRO;
 
 class Instrument
 {
-    public $module;
+    public REDCapPRO $module;
     public $instrument_name;
     public $rcpro_dag;
     public $dd;
@@ -15,12 +15,12 @@ class Instrument
 
     function __construct($module, $instrument_name, $rcpro_dag)
     {
-        $this->module = $module;
+        $this->module          = $module;
         $this->instrument_name = $instrument_name;
-        $this->rcpro_dag = $rcpro_dag;
-        $this->dd = $this->getDD();
-        $this->username = $this->getUsernameField();
-        if (isset($this->username)) {
+        $this->rcpro_dag       = $rcpro_dag;
+        $this->dd              = $this->getDD();
+        $this->username        = $this->getUsernameField();
+        if ( isset($this->username) ) {
             $this->email = $this->getEmailField();
             $this->fname = $this->getFirstNameField();
             $this->lname = $this->getLastNameField();
@@ -29,13 +29,13 @@ class Instrument
 
     function getDD()
     {
-        $json = \REDCap::getDataDictionary("json", false, null, [$this->instrument_name], false);
+        $json = \REDCap::getDataDictionary("json", false, null, [ $this->instrument_name ], false);
         return json_decode($json, true);
     }
 
     function getUsernameField()
     {
-        foreach ($this->dd as $field) {
+        foreach ( $this->dd as $field ) {
             if (
                 strpos($field["field_annotation"], "@RCPRO-USERNAME") !== FALSE
                 && $field["field_type"] === "text"
@@ -47,7 +47,7 @@ class Instrument
 
     function getEmailField()
     {
-        foreach ($this->dd as $field) {
+        foreach ( $this->dd as $field ) {
             if (
                 strpos($field["field_annotation"], "@RCPRO-EMAIL") !== FALSE
                 && $field["field_type"] === "text"
@@ -60,7 +60,7 @@ class Instrument
 
     function getFirstNameField()
     {
-        foreach ($this->dd as $field) {
+        foreach ( $this->dd as $field ) {
             if (
                 strpos($field["field_annotation"], "@RCPRO-FNAME") !== FALSE
                 && $field["field_type"] === "text"
@@ -72,7 +72,7 @@ class Instrument
 
     function getLastNameField()
     {
-        foreach ($this->dd as $field) {
+        foreach ( $this->dd as $field ) {
             if (
                 strpos($field["field_annotation"], "@RCPRO-LNAME") !== FALSE
                 && $field["field_type"] === "text"
@@ -84,23 +84,23 @@ class Instrument
 
     function update_form()
     {
-        if (isset($this->username)) {
-            $rcpro_project_id = $this->module->PARTICIPANT->getProjectIdFromPID(PROJECT_ID);
-            $participants = $this->module->PARTICIPANT->getProjectParticipants($rcpro_project_id, $this->rcpro_dag);
-            $options = "<option value=''>''</option>";
+        if ( isset($this->username) ) {
+            $rcpro_project_id  = $this->module->PARTICIPANT->getProjectIdFromPID($this->framework->getProjectId());
+            $participants      = $this->module->PARTICIPANT->getProjectParticipants($rcpro_project_id, $this->rcpro_dag);
+            $options           = "<option value=''>''</option>";
             $participants_json = json_encode($participants);
-            foreach ($participants as $participant) {
+            foreach ( $participants as $participant ) {
                 $inst_username = \REDCap::escapeHtml($participant["rcpro_username"]);
                 $inst_email    = \REDCap::escapeHtml($participant["email"]);
                 $inst_fname    = \REDCap::escapeHtml($participant["fname"]);
                 $inst_lname    = \REDCap::escapeHtml($participant["lname"]);
-                $options      .= "<option value='$inst_username' >$inst_username - $inst_fname $inst_lname - $inst_email</option>";
+                $options .= "<option value='$inst_username' >$inst_username - $inst_fname $inst_lname - $inst_email</option>";
             }
-            $replacement =  "<select id='username_selector'>$options</select>";
+            $replacement = "<select id='username_selector'>$options</select>";
             $this->module->initializeJavascriptModuleObject();
-?>
+            ?>
             <script>
-                (function($, window, document) {
+                (function ($, window, document) {
                     let participants_json = '<?= $participants_json ?>';
                     let participants_obj = JSON.parse(participants_json);
                     let participants = Object.values(participants_obj);
@@ -115,9 +115,9 @@ class Instrument
                     let username_select = $("<?= $replacement ?>")[0];
                     username_input.after(username_select);
                     $('#username_selector').select2({
-                            placeholder: 'Select a participant',
-                            allowClear: true
-                        }).val(username_input.val()).trigger('change')
+                        placeholder: 'Select a participant',
+                        allowClear: true
+                    }).val(username_input.val()).trigger('change')
                         .on("change", (evt) => {
                             let val = evt.target.value;
                             let participant = empty_participant;
@@ -127,11 +127,11 @@ class Instrument
                             username_input.val(participant.rcpro_username);
                             let logParameters = {
                                 rcpro_username: participant.rcpro_username,
-                                redcap_user: "<?= USERID ?>"
+                                redcap_user: "<?= $this->module->framework->getUser()->getUsername() ?>"
                             };
 
                             // If there is an email field, update it
-                            <?php if (isset($this->email)) { ?>
+                            <?php if ( isset($this->email) ) { ?>
                                 let email_input = $('input[name="<?= $this->email ?>"]');
                                 if (email_input) {
                                     email_input.val(participant.email);
@@ -139,7 +139,7 @@ class Instrument
                             <?php } ?>
 
                             // If there is a fname field, update it
-                            <?php if (isset($this->fname)) { ?>
+                            <?php if ( isset($this->fname) ) { ?>
                                 let fname_input = $('input[name="<?= $this->fname ?>"]');
                                 if (fname_input) {
                                     fname_input.val(participant.fname);
@@ -147,7 +147,7 @@ class Instrument
                             <?php } ?>
 
                             // If there is a lname field, update it
-                            <?php if (isset($this->lname)) { ?>
+                            <?php if ( isset($this->lname) ) { ?>
                                 let lname_input = $('input[name="<?= $this->lname ?>"]');
                                 if (lname_input) {
                                     lname_input.val(participant.lname);
@@ -157,7 +157,7 @@ class Instrument
 
                 })(window.jQuery, window, document);
             </script>
-<?php
+            <?php
         }
     }
 }

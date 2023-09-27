@@ -5,7 +5,7 @@ namespace YaleREDCap\REDCapPRO;
 class UI
 {
 
-    public $module;
+    public REDCapPRO $module;
     function __construct($module)
     {
         $this->module = $module;
@@ -46,7 +46,7 @@ class UI
 
     public function ShowHeader(string $page)
     {
-        $role = SUPER_USER ? 3 : $this->module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+        $role   = $this->module->getUserRole($this->module->framework->getUser()->getUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
         $header = "
         <style>
             .rcpro-nav a {
@@ -83,14 +83,14 @@ class UI
                     <i class='fas fa-home'></i>
                     Home</a>
                 </li>";
-        if ($role >= 1) {
+        if ( $role >= 1 ) {
             $header .= "<li class='nav-item'>
                             <a class='nav-link " . ($page === "Manage" ? "active" : "") . "' href='" . $this->module->getUrl("src/manage.php") . "'>
                             <i class='fas fa-users-cog'></i>
                             Manage Participants</a>
                         </li>";
         }
-        if ($role >= 2) {
+        if ( $role >= 2 ) {
             $header .= "<li class='nav-item'>
                             <a class='nav-link " . ($page === "Enroll" ? "active" : "") . "' href='" . $this->module->getUrl("src/enroll.php") . "'>
                             <i class='fas fa-user-check'></i>
@@ -102,7 +102,7 @@ class UI
                             Register</a>
                         </li>";
         }
-        if ($role > 2) {
+        if ( $role > 2 ) {
             $header .= "<li class='nav-item'>
                             <a class='nav-link " . ($page === "Users" ? "active" : "") . "' href='" . $this->module->getUrl("src/manage-users.php") . "'>
                             <i class='fas fa-users'></i>

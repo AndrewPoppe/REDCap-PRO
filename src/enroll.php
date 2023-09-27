@@ -4,8 +4,8 @@ namespace YaleREDCap\REDCapPRO;
 
 /** @var REDCapPRO $module */
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
-if ($role < 2) {
+$role = $module->getUserRole($module->framework->getUser()->getUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+if ( $role < 2 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
@@ -20,8 +20,8 @@ echo "<title>" . $module->APPTITLE . " - Enroll</title>";
 
 <?php
 // Check for errors
-if (isset($_GET["error"])) {
-?>
+if ( isset($_GET["error"]) ) {
+    ?>
     <script>
         Swal.fire({
             icon: "error",
@@ -30,10 +30,10 @@ if (isset($_GET["error"])) {
             showConfirmButton: false
         });
     </script>
-<?php
+    <?php
 }
 
-if (isset($_POST["id"]) && isset($project_id)) {
+if ( isset($_POST["id"]) && isset($project_id) ) {
 
     $rcpro_participant_id = intval($_POST["id"]);
 
@@ -41,21 +41,21 @@ if (isset($_POST["id"]) && isset($project_id)) {
     $module->logForm("Submitted Enroll Form", $_POST);
 
     // If participant is not active, don't enroll them
-    if (!$module->PARTICIPANT->isParticipantActive($rcpro_participant_id)) {
+    if ( !$module->PARTICIPANT->isParticipantActive($rcpro_participant_id) ) {
 
         echo "<script defer>Swal.fire({'title':'This participant is not currently active in REDCapPRO', 'html':'Contact your REDCap Administrator with questions.', 'icon':'info', 'showConfirmButton': false});</script>";
     } else {
 
-        $redcap_dag = $module->DAG->getCurrentDag(USERID, PROJECT_ID);
-        $pid = intval($project_id);
+        $redcap_dag     = $module->DAG->getCurrentDag($module->framework->getUser()->getUsername(), $this->framework->getProjectId());
+        $pid            = intval($project_id);
         $rcpro_username = $module->PARTICIPANT->getUserName($rcpro_participant_id);
-        $result = $module->PROJECT->enrollParticipant($rcpro_participant_id, $pid, $redcap_dag, $rcpro_username);
+        $result         = $module->PROJECT->enrollParticipant($rcpro_participant_id, $pid, $redcap_dag, $rcpro_username);
 
-        if ($result === -1) {
+        if ( $result === -1 ) {
             echo "<script defer>Swal.fire({'title':'This participant is already enrolled in this project', 'icon':'info', 'showConfirmButton': false});</script>";
-        } else if ($result === TRUE) {
+        } else if ( $result === TRUE ) {
             echo "<script defer>Swal.fire({'title':'The participant was successfully enrolled in this project', 'icon':'success', 'showConfirmButton': false});</script>";
-        } else if (!$result) {
+        } else if ( !$result ) {
             echo "<script defer>Swal.fire({'title':'There was a problem enrolling this participant in this project', 'icon':'error', 'showConfirmButton': false});</script>";
         }
     }
@@ -69,7 +69,8 @@ $jsname = $module->getJavascriptModuleObjectName();
 <div class="wrapper enroll-wrapper" hidden>
     <h2>Enroll a Participant</h2>
     <p>Search for a participant by their email address and enroll the selected participant in this project.</p>
-    <p><em>If the participant does not have an account, you can register them </em><strong><a href="<?= $module->getUrl("src/register.php"); ?>">here</a></strong>.</p>
+    <p><em>If the participant does not have an account, you can register them </em><strong><a
+                href="<?= $module->getUrl("src/register.php"); ?>">here</a></strong>.</p>
     <script>
         let module = <?= $jsname ?>;
 
@@ -79,7 +80,7 @@ $jsname = $module->getJavascriptModuleObjectName();
                 return;
             }
             var xmlhttp = new XMLHttpRequest();
-            xmlhttp.onreadystatechange = function() {
+            xmlhttp.onreadystatechange = function () {
                 if (this.readyState == 4 && this.status == 200) {
                     document.getElementById("searchResults").innerHTML = this.responseText;
                 }
@@ -146,9 +147,11 @@ $jsname = $module->getJavascriptModuleObjectName();
     <form class="rcpro-form enroll-form" id="enroll-form" onkeydown="return event.key != 'Enter';">
         <div class="form-group">
             <div id="searchContainer">
-                <input type="email" placeholder="Enter the participant's email address..." name="REDCapPRO_Search" id="REDCapPRO_Search" class="form-control">
+                <input type="email" placeholder="Enter the participant's email address..." name="REDCapPRO_Search"
+                    id="REDCapPRO_Search" class="form-control">
                 <div class="searchResults" id="searchResults"></div>
-                <button type="button" id="emailSearchButton" class="btn btn-rcpro enroll-button" style="margin-top: 10px;" onclick='searchEmail()' disabled>Search</button>
+                <button type="button" id="emailSearchButton" class="btn btn-rcpro enroll-button"
+                    style="margin-top: 10px;" onclick='searchEmail()' disabled>Search</button>
             </div>
         </div>
     </form>
@@ -160,13 +163,16 @@ $jsname = $module->getJavascriptModuleObjectName();
         input.addEventListener('keyup', checkForClear, false);
         input.addEventListener('change', checkForClear, false);
     </script>
-    <form class="rcpro-form confirm-form" name="confirm-form" id="confirm-form" action="<?= $module->getUrl("src/enroll.php"); ?>" method="POST" enctype="multipart/form-data" target="_self" style="display:none;">
+    <form class="rcpro-form confirm-form" name="confirm-form" id="confirm-form"
+        action="<?= $module->getUrl("src/enroll.php"); ?>" method="POST" enctype="multipart/form-data" target="_self"
+        style="display:none;">
         <div class="form-group">
             <div class="selection" id="selectionContainer">
                 <div class="mb-3 row">
                     <label for="username" class="col-sm-3 col-form-label">Username:</label>
                     <div class="col-sm-9">
-                        <input type="text" id="username" name="username" class="form-control-plaintext" disabled readonly>
+                        <input type="text" id="username" name="username" class="form-control-plaintext" disabled
+                            readonly>
                     </div>
                 </div>
                 <div class="mb-3 row">
@@ -188,14 +194,15 @@ $jsname = $module->getJavascriptModuleObjectName();
                     </div>
                 </div>
 
-                <?php if ($module->DAG->getProjectDags()) {
-                    $userDag = $module->DAG->getCurrentDag(USERID, PROJECT_ID);
+                <?php if ( $module->DAG->getProjectDags() ) {
+                    $userDag = $module->DAG->getCurrentDag($this->framework->getUser()->getUsername(), $this->framework->getProjectId());
                     $dagName = isset($userDag) ? \REDCap::getGroupNames(false, $userDag) : "No Assignment";
-                ?>
+                    ?>
                     <div class="mb-3 row">
                         <label for="dag" class="col-sm-3 col-form-label">Data Access Group:</label>
                         <div class="col-sm-9">
-                            <input type="text" id="dag" name="dag" class="form-control-plaintext" disabled readonly value="<?= $dagName ?>">
+                            <input type="text" id="dag" name="dag" class="form-control-plaintext" disabled readonly
+                                value="<?= $dagName ?>">
                         </div>
                     </div>
                 <?php } ?>
@@ -205,7 +212,8 @@ $jsname = $module->getJavascriptModuleObjectName();
                 <div>
                     <hr>
                     <button type="submit" class="btn btn-rcpro">Enroll Participant</button>
-                    <button type="button" onclick="(function() { resetForm(); return false;})()" class="btn btn-secondary">Cancel</button>
+                    <button type="button" onclick="(function() { resetForm(); return false;})()"
+                        class="btn btn-secondary">Cancel</button>
                 </div>
             </div>
         </div>

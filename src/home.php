@@ -3,7 +3,7 @@ namespace YaleREDCap\REDCapPRO;
 
 /** @var REDCapPRO $module */
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$role = $module->getUserRole($module->framework->getUser()->getUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 echo "<title>" . $module->APPTITLE . " - Home</title>";
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module->UI->ShowHeader("Home");
@@ -30,7 +30,8 @@ $module->UI->ShowHeader("Home");
         </ul>
 
         <div style="text-align: center; margin:20px;">
-            Click <a style="font-size:inherit;" href="https://github.com/AndrewPoppe/REDCap-PRO#readme" target="_blank" rel="noreferrer noopener">here</a> for more information
+            Click <a style="font-size:inherit;" href="https://github.com/AndrewPoppe/REDCap-PRO#readme" target="_blank"
+                rel="noreferrer noopener">here</a> for more information
         </div>
     </div>
 </div>

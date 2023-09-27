@@ -4,8 +4,8 @@ namespace YaleREDCap\REDCapPRO;
 
 /** @var REDCapPRO $module */
 
-$role = SUPER_USER ? 3 : $module->getUserRole(USERID); // 3=admin/manager, 2=user, 1=monitor, 0=not found
-if ($role === 0) {
+$role = $module->getUserRole($module->framework->getUser()->getUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+if ( $role === 0 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 
@@ -15,8 +15,8 @@ $module->UI->ShowHeader("Manage");
 echo "<title>" . $module->APPTITLE . " - Manage</title>";
 
 // Check for errors
-if (isset($_GET["error"])) {
-?>
+if ( isset($_GET["error"]) ) {
+    ?>
     <script>
         Swal.fire({
             icon: "error",
@@ -25,18 +25,19 @@ if (isset($_GET["error"])) {
             showConfirmButton: false
         });
     </script>
-<?php
+    <?php
 }
 
 // RCPRO Project ID 
+$project_id       = (int) $module->framework->getProjectId();
 $rcpro_project_id = $module->PROJECT->getProjectIdFromPID($project_id);
 
 // DAGs
-$rcpro_user_dag = $module->DAG->getCurrentDag(USERID, $project_id);
-$project_dags = $module->DAG->getProjectDags();
-$user_dags = $module->DAG->getPossibleDags(USERID, PROJECT_ID);
+$rcpro_user_dag     = $module->DAG->getCurrentDag($module->framework->getUser()->getUsername(), $project_id);
+$project_dags       = $module->DAG->getProjectDags();
+$user_dags          = $module->DAG->getPossibleDags($module->framework->getUser()->getUsername(), $project_id);
 $project_dags[NULL] = "Unassigned";
-$projectHasDags = count($project_dags) > 1;
+$projectHasDags     = count($project_dags) > 1;
 
 // constants
 $no_permission = "You do not have the required role to do that.";
@@ -48,21 +49,21 @@ function disenroll(int $rcpro_participant_id)
     $function = "disenroll participant";
 
     // Check role
-    if ($role <= 1) {
+    if ( $role <= 1 ) {
         $title = $no_permission;
-        $icon = "error";
+        $icon  = "error";
     } else {
         $rcpro_username = $module->PARTICIPANT->getUserName($rcpro_participant_id);
-        $result = $module->PROJECT->disenrollParticipant($rcpro_participant_id, $rcpro_project_id, $rcpro_username);
-        if (!$result) {
+        $result         = $module->PROJECT->disenrollParticipant($rcpro_participant_id, $rcpro_project_id, $rcpro_username);
+        if ( !$result ) {
             $title = "Trouble disenrolling participant.";
-            $icon = "error";
+            $icon  = "error";
         } else {
             $title = "Successfully disenrolled participant from project.";
-            $icon = "success";
+            $icon  = "success";
         }
     }
-    return [$function, false, $icon, $title];
+    return [ $function, false, $icon, $title ];
 }
 
 function resetPassword(int $rcpro_participant_id)
@@ -71,14 +72,14 @@ function resetPassword(int $rcpro_participant_id)
     $function = "send password reset email";
 
     $result = $module->sendPasswordResetEmail($rcpro_participant_id);
-    if (!$result) {
-        $icon = "error";
+    if ( !$result ) {
+        $icon  = "error";
         $title = "Trouble sending password reset email.";
     } else {
-        $icon = "success";
+        $icon  = "success";
         $title = "Successfully reset password for participant.";
     }
-    return [$function, false, $icon, $title];
+    return [ $function, false, $icon, $title ];
 }
 
 function changeName(int $rcpro_participant_id, string $newFirstName, string $newLastName)
@@ -87,32 +88,32 @@ function changeName(int $rcpro_participant_id, string $newFirstName, string $new
     $function = "change participant's name";
 
     $trimmedFirstName = trim($newFirstName);
-    $trimmedLastName = trim($newLastName);
+    $trimmedLastName  = trim($newLastName);
 
     // Check role
-    if ($role <= 2) {
+    if ( $role <= 2 ) {
         $title = $no_permission;
-        $icon = "error";
+        $icon  = "error";
     }
 
     // Check that names are valid
-    else if ($trimmedFirstName === "" || $trimmedLastName === "") {
+    else if ( $trimmedFirstName === "" || $trimmedLastName === "" ) {
         $title = "You need to provide valid first and last names.";
-        $icon = "error";
+        $icon  = "error";
     }
 
     // Try to change name
     else {
         $result = $module->PARTICIPANT->changeName($rcpro_participant_id, $trimmedFirstName, $trimmedLastName);
-        if (!$result) {
+        if ( !$result ) {
             $title = "Trouble updating participant's name.";
-            $icon = "error";
+            $icon  = "error";
         } else {
             $title = "Successfully updated participant's name.";
-            $icon = "success";
+            $icon  = "success";
         }
     }
-    return [$function, false, $icon, $title];
+    return [ $function, false, $icon, $title ];
 }
 
 function changeEmail(int $rcpro_participant_id, string $newEmail)
@@ -121,29 +122,29 @@ function changeEmail(int $rcpro_participant_id, string $newEmail)
     $function = "change participant's email address";
 
     // Check role
-    if ($role <= 2) {
+    if ( $role <= 2 ) {
         $title = $no_permission;
-        $icon = "error";
+        $icon  = "error";
     }
 
     // Check that email is not already associated with a participant
-    else if ($module->PARTICIPANT->checkEmailExists($newEmail)) {
+    else if ( $module->PARTICIPANT->checkEmailExists($newEmail) ) {
         $title = "The provided email address is already associated with a REDCapPRO account.";
-        $icon = "error";
+        $icon  = "error";
     }
 
     // Try to change email
     else {
         $result = $module->PARTICIPANT->changeEmailAddress($rcpro_participant_id, $newEmail);
-        if (!$result) {
+        if ( !$result ) {
             $title = "Trouble changing participant's email address.";
-            $icon = "error";
+            $icon  = "error";
         } else {
             $title = "Successfully changed participant's email address.";
-            $icon = "success";
+            $icon  = "success";
         }
     }
-    return [$function, false, $icon, $title];
+    return [ $function, false, $icon, $title ];
 }
 
 function switchDAG(int $rcpro_participant_id, ?string $newDAG)
@@ -152,22 +153,22 @@ function switchDAG(int $rcpro_participant_id, ?string $newDAG)
     $function = "switch participant's Data Access Group";
 
     // Check role
-    if ($role < 2) {
+    if ( $role < 2 ) {
         $title = $no_permission;
-        $icon = "error";
+        $icon  = "error";
     }
 
     // Check new DAG
-    else if (!isset($newDAG) || !in_array($newDAG, array_keys($project_dags))) {
+    else if ( !isset($newDAG) || !in_array($newDAG, array_keys($project_dags)) ) {
         $title = "The provided DAG is invalid.";
-        $icon = "error";
+        $icon  = "error";
     } else {
-        $newDAG = $newDAG === "" ? NULL : $newDAG;
+        $newDAG  = $newDAG === "" ? NULL : $newDAG;
         $link_id = $module->PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
-        $result = $module->DAG->updateDag($link_id, $newDAG);
-        if (!$result) {
+        $result  = $module->DAG->updateDag($link_id, $newDAG);
+        if ( !$result ) {
             $title = "Trouble switching participant's Data Access Group.";
-            $icon = "error";
+            $icon  = "error";
         } else {
             $participant_info = $module->PARTICIPANT->getParticipantInfo($rcpro_participant_id);
             $module->logEvent("Participant DAG Switched", [
@@ -178,10 +179,10 @@ function switchDAG(int $rcpro_participant_id, ?string $newDAG)
                 "project_dag"          => $newDAG
             ]);
             $title = "Successfully switched participant's Data Access Group.";
-            $icon = "success";
+            $icon  = "success";
         }
     }
-    return [$function, false, $icon, $title];
+    return [ $function, false, $icon, $title ];
 }
 
 /**
@@ -195,21 +196,21 @@ function coalesce_string()
 {
     $args = func_get_args();
 
-    while (count($args) && !($arg = array_shift($args)));
+    while ( count($args) && !($arg = array_shift($args)) );
 
     return intval($arg) !== 0 ? $arg : null;
 }
 
 // Dealing with an action
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
     // Log submission
     $module->logForm("Submitted Manage Participants Form", $_POST);
 
     try {
-        $function = NULL;
+        $function    = NULL;
         $showConfirm = false;
-        $error = false;
+        $error       = false;
 
         $rcpro_participant_id = intval(
             coalesce_string(
@@ -222,60 +223,60 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         );
 
         $generic_function = "make a change to this participant's account";
-        if (!$error && $rcpro_participant_id === 0) {
+        if ( !$error && $rcpro_participant_id === 0 ) {
             $function = $generic_function;
-            $icon = "error";
-            $title = "No participant was chosen";
-            $error = true;
+            $icon     = "error";
+            $title    = "No participant was chosen";
+            $error    = true;
         }
 
         // Check that the participant is actually enrolled in this project
-        if (!$error && !$module->PROJECT->participantEnrolled($rcpro_participant_id, $rcpro_project_id)) {
+        if ( !$error && !$module->PROJECT->participantEnrolled($rcpro_participant_id, $rcpro_project_id) ) {
             $function = $generic_function;
-            $icon = "error";
-            $title = "Participant is Not Enrolled";
-            $error = true;
+            $icon     = "error";
+            $title    = "Participant is Not Enrolled";
+            $error    = true;
         }
 
         // Check that the Data Access Group of the participant matches that of the user
-        if (!$error && $projectHasDags) {
-            $rcpro_link_id = $module->PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
+        if ( !$error && $projectHasDags ) {
+            $rcpro_link_id   = $module->PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
             $participant_dag = intval($module->DAG->getParticipantDag($rcpro_link_id));
-            $user_dag = $module->DAG->getCurrentDag(USERID, PROJECT_ID);
-            if (isset($user_dag) && $participant_dag !== $user_dag) {
+            $user_dag        = $module->DAG->getCurrentDag($module->framework->getUser()->getUsername(), $this->framework->getProjectId());
+            if ( isset($user_dag) && $participant_dag !== $user_dag ) {
                 $function = $generic_function;
-                $icon = "error";
-                $title = "Wrong Data Access Group";
-                $error = true;
+                $icon     = "error";
+                $title    = "Wrong Data Access Group";
+                $error    = true;
             }
         }
 
         // DISENROLL THE PARTICIPANT FROM THE STUDY
-        if (!$error && !empty($_POST["toDisenroll"])) {
-            list($function, $showConfirm, $icon, $title) = disenroll(intval($_POST["toDisenroll"]));
+        if ( !$error && !empty($_POST["toDisenroll"]) ) {
+            list( $function, $showConfirm, $icon, $title ) = disenroll(intval($_POST["toDisenroll"]));
         }
 
         // SEND A PASSWORD RESET EMAIL
-        else if (!$error && !empty($_POST["toReset"])) {
-            list($function, $showConfirm, $icon, $title) = resetPassword(intval($_POST["toReset"]));
+        else if ( !$error && !empty($_POST["toReset"]) ) {
+            list( $function, $showConfirm, $icon, $title ) = resetPassword(intval($_POST["toReset"]));
         }
 
         // CHANGE THE PARTICIPANT'S NAME
-        else if (!$error && !empty($_POST["toChangeName"])) {
-            list($function, $showConfirm, $icon, $title) = changeName(intval($_POST["toChangeName"]), $_POST["newFirstName"], $_POST["newLastName"]);
+        else if ( !$error && !empty($_POST["toChangeName"]) ) {
+            list( $function, $showConfirm, $icon, $title ) = changeName(intval($_POST["toChangeName"]), $_POST["newFirstName"], $_POST["newLastName"]);
         }
 
         // CHANGE THE PARTICIPANT'S EMAIL ADDRESS
-        else if (!$error && !empty($_POST["toChangeEmail"])) {
-            list($function, $showConfirm, $icon, $title) = changeEmail(intval($_POST["toChangeEmail"]), $_POST["newEmail"]);
+        else if ( !$error && !empty($_POST["toChangeEmail"]) ) {
+            list( $function, $showConfirm, $icon, $title ) = changeEmail(intval($_POST["toChangeEmail"]), $_POST["newEmail"]);
         }
 
         // CHANGE THE PARTICIPANT'S DATA ACCESS GROUP
-        else if (!$error && !empty($_POST["toSwitchDag"])) {
-            list($function, $showConfirm, $icon, $title) = switchDAG(intval($_POST["toSwitchDag"]), $_POST["newDag"]);
+        else if ( !$error && !empty($_POST["toSwitchDag"]) ) {
+            list( $function, $showConfirm, $icon, $title ) = switchDAG(intval($_POST["toSwitchDag"]), $_POST["newDag"]);
         }
-    } catch (\Exception $e) {
-        $icon = "error";
+    } catch ( \Exception $e ) {
+        $icon  = "error";
         $title = "Failed to ${function}.";
         $module->logError("Error attempting to ${function}", $e);
     }
@@ -292,7 +293,7 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
 <link rel='stylesheet' type='text/css' href='https://cdn.datatables.net/select/1.3.3/css/select.dataTables.min.css' />
 <script type='text/javascript' src='https://cdn.datatables.net/select/1.3.3/js/dataTables.select.min.js' defer></script>
 
-<?php if ($_SERVER["REQUEST_METHOD"] == "POST") { ?>
+<?php if ( $_SERVER["REQUEST_METHOD"] == "POST" ) { ?>
     <script>
         Swal.fire({
             icon: "<?= $icon ?>",
@@ -309,8 +310,9 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
         <div id="loading" class="loader"></div>
     </div>
     <div id="parent" class="dataTableParentHidden" style="display:hidden;">
-        <form class="rcpro-form manage-form" id="manage-form" action="<?= $module->getUrl("src/manage.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
-            <?php if (count($participantList) === 0) { ?>
+        <form class="rcpro-form manage-form" id="manage-form" action="<?= $module->getUrl("src/manage.php"); ?>"
+            method="POST" enctype="multipart/form-data" target="_self">
+            <?php if ( count($participantList) === 0 ) { ?>
                 <div>
                     <p>No participants have been enrolled in this study</p>
                 </div>
@@ -321,42 +323,52 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
                         <thead>
                             <tr>
                                 <th id="rcpro_username" class="dt-center">Username</th>
-                                <?php if ($role > 1) { ?>
+                                <?php if ( $role > 1 ) { ?>
                                     <th id="rcpro_fname" class="dt-center">First Name</th>
                                     <th id="rcpro_lname" class="dt-center">Last Name</th>
                                     <th id="rcpro_email">Email</th>
                                 <?php } ?>
-                                <?php if ($projectHasDags) { ?>
+                                <?php if ( $projectHasDags ) { ?>
                                     <th id="rcpro_dag" class="dt-center">Data Access Group</th>
                                 <?php } ?>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($participantList as $participant) {
+                            <?php foreach ( $participantList as $participant ) {
                                 $username_clean = \REDCap::escapeHtml($participant["rcpro_username"]);
                                 $password_set   = $participant["pw_set"] === 'True';
-                                if ($role > 1) {
-                                    $fname_clean    = \REDCap::escapeHtml($participant["fname"]);
-                                    $lname_clean    = \REDCap::escapeHtml($participant["lname"]);
-                                    $email_clean    = \REDCap::escapeHtml($participant["email"]);
+                                if ( $role > 1 ) {
+                                    $fname_clean = \REDCap::escapeHtml($participant["fname"]);
+                                    $lname_clean = \REDCap::escapeHtml($participant["lname"]);
+                                    $email_clean = \REDCap::escapeHtml($participant["email"]);
                                 }
                                 $link_id        = $module->PROJECT->getLinkId($participant["log_id"], $rcpro_project_id);
                                 $dag_id         = $module->DAG->getParticipantDag($link_id);
                                 $dag_name       = \REDCap::getGroupNames(false, $dag_id);
-                                $dag_name_clean = count((array)$dag_name) === 1 ? \REDCap::escapeHtml($dag_name) : "Unassigned";  // FIX: PHP 8 count needs the typecast here
-                            ?>
-                                <tr class="pointer" data-id="<?= $participant["log_id"] ?>" data-username="<?= $username_clean ?>" data-fname="<?= $fname_clean ?>" data-lname="<?= $lname_clean ?>" data-email="<?= $email_clean ?>">
+                                $dag_name_clean = count((array) $dag_name) === 1 ? \REDCap::escapeHtml($dag_name) : "Unassigned"; // FIX: PHP 8 count needs the typecast here
+                                ?>
+                                <tr class="pointer" data-id="<?= $participant["log_id"] ?>"
+                                    data-username="<?= $username_clean ?>" data-fname="<?= $fname_clean ?>"
+                                    data-lname="<?= $lname_clean ?>" data-email="<?= $email_clean ?>">
                                     <td class="dt-center">
                                         <?= "<span style='white-space:nowrap'><i " . ($password_set ? "title='Password Set' class='fas fa-solid fa-check-circle'" : "title='Password NOT Set' class='far fa-regular fa-circle-xmark") . "' style='margin-left:2px;margin-right:2px;color:" . ($password_set ? $module::$COLORS["green"] : $module::$COLORS["ban"]) . ";'></i>&nbsp;$username_clean</span>" ?>
                                     </td>
-                                    <?php if ($role > 1) { ?>
-                                        <td class="dt-center"><?= $fname_clean ?></td>
-                                        <td class="dt-center"><?= $lname_clean ?></td>
-                                        <td><?= $email_clean ?></td>
-                                    <?php } ?>
-                                    <?php if ($role > 1 && $projectHasDags && $rcpro_user_dag === null) { ?>
+                                    <?php if ( $role > 1 ) { ?>
                                         <td class="dt-center">
-                                            <select class="dag_select form-select form-select-sm" name="dag_select_<?= $username_clean ?>" id="dag_select_<?= $username_clean ?>" orig_value="<?= $dag_id ?>" form="manage-form" onchange='(function(){
+                                            <?= $fname_clean ?>
+                                        </td>
+                                        <td class="dt-center">
+                                            <?= $lname_clean ?>
+                                        </td>
+                                        <td>
+                                            <?= $email_clean ?>
+                                        </td>
+                                    <?php } ?>
+                                    <?php if ( $role > 1 && $projectHasDags && $rcpro_user_dag === null ) { ?>
+                                        <td class="dt-center">
+                                            <select class="dag_select form-select form-select-sm"
+                                                name="dag_select_<?= $username_clean ?>" id="dag_select_<?= $username_clean ?>"
+                                                orig_value="<?= $dag_id ?>" form="manage-form" onchange='(function(){
                                                 let el = $("#dag_select_<?= $username_clean ?>");
                                                 let newDAG = el.val();
                                                 let origDAG = el.attr("orig_value");
@@ -385,15 +397,17 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
                                                 }
                                                 })();'>
                                                 <?php
-                                                foreach ($project_dags as $project_dag_id => $project_dag_name) {
+                                                foreach ( $project_dags as $project_dag_id => $project_dag_name ) {
                                                     $selected = $project_dag_id == $dag_id ? "selected" : "";
                                                     echo "<option value='${project_dag_id}' ${selected}>${project_dag_name}</option>";
                                                 }
                                                 ?>
                                             </select>
                                         </td>
-                                    <?php } else if ($projectHasDags) { ?>
-                                        <td class="dt-center"><?= $dag_name_clean ?></td>
+                                    <?php } else if ( $projectHasDags ) { ?>
+                                            <td class="dt-center">
+                                            <?= $dag_name_clean ?>
+                                            </td>
                                     <?php } ?>
                                 </tr>
                             <?php } ?>
@@ -409,7 +423,7 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
                             $("#manage-form").submit();
                         }
                     })();'>Reset Password</button>
-                    <?php if ($role > 2) { ?>
+                    <?php if ( $role > 2 ) { ?>
                         <button type="button" class="btn btn-secondary rcpro-form-button" onclick='(function(){
                             let table = $("#RCPRO_TABLE").DataTable();
                             let row = table.rows( { selected: true } );
@@ -473,7 +487,7 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
                             }
                         })();'>Change Email</button>
                     <?php } ?>
-                    <?php if ($role > 1) { ?>
+                    <?php if ( $role > 1 ) { ?>
                         <button type="button" class="btn btn-rcpro rcpro-form-button" onclick='(function(){
                             let table = $("#RCPRO_TABLE").DataTable();
                             let row = table.rows( { selected: true } );
@@ -513,10 +527,10 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
     </div>
 </div>
 <script>
-    (function($, window, document) {
-        $(document).ready(function() {
+    (function ($, window, document) {
+        $(document).ready(function () {
             // Function for resetting manage-form values
-            window.clearForm = function() {
+            window.clearForm = function () {
                 $("#toReset").val("");
                 $("#toChangeEmail").val("");
                 $("#newEmail").val("");
@@ -534,10 +548,10 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
                     style: 'single'
                 },
                 stateSave: true,
-                stateSaveCallback: function(settings, data) {
+                stateSaveCallback: function (settings, data) {
                     localStorage.setItem('DataTables_manage_' + settings.sInstance, JSON.stringify(data))
                 },
-                stateLoadCallback: function(settings) {
+                stateLoadCallback: function (settings) {
                     return JSON.parse(localStorage.getItem('DataTables_manage_' + settings.sInstance))
                 },
                 scrollY: '50vh',
@@ -545,10 +559,10 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
             });
 
             // Activate/Deactivate buttons based on selections
-            datatable.on('select', function(e, dt, type, indexes) {
+            datatable.on('select', function (e, dt, type, indexes) {
                 $('.rcpro-form-button').attr("disabled", false);
             });
-            datatable.on('deselect', function(e, dt, type, indexes) {
+            datatable.on('deselect', function (e, dt, type, indexes) {
                 $('.rcpro-form-button').attr("disabled", true);
             });
 
@@ -556,7 +570,7 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
             $('.rcpro-form-button').attr("disabled", true);
 
             // Clicking on dag selector shouldn't select the row
-            $('.dag_select').click(function(evt) {
+            $('.dag_select').click(function (evt) {
                 evt.stopPropagation();
             });
             $('#parent').removeClass('dataTableParentHidden').show();
