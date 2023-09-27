@@ -15,8 +15,10 @@ table.dataTable.no-footer {
 border: none !important;
 }
 
-table#RCPRO_TABLE tr {
-border: none !important;
+table#RCPRO_TABLE tr,
+table#RCPRO_TABLE tbody {
+border-top: none !important;
+border-bottom: none !important;
 }
 
 table.dataTable th {
