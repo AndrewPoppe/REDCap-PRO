@@ -20,12 +20,14 @@ table#RCPRO_TABLE tbody {
 border: none !important;
 }
 
+
 table.dataTable th {
 border-top: none !important;
 }
 
 table.dataTable td {
 border-top: 1px solid #eeeeee !important;
+border-bottom: none !important;
 }
 
 div.dataTables_wrapper.no-footer div.dataTables_scrollBody {
@@ -127,8 +129,8 @@ color:
 font-weight: bold !important;
 }
 
-.rcpro_participant_link:hover,
-.rcpro_user_link:hover {
+#RCPRO_TABLE td.rcpro_participant_link:hover,
+#RCPRO_TABLE td.rcpro_user_link:hover {
 color:
 <?= $module::$COLORS["primary"] ?> !important;
 font-weight: bold !important;
