@@ -26,7 +26,7 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
     <h2>Projects</h2>
     <p>All projects currently utilizing REDCapPRO</p>
     <div id="projects" class="dataTableParentHidden outer_container">
-        <table class="table" id="RCPRO_TABLE" style="width:100%;">
+        <table id="RCPRO_TABLE" style="width:100%;">
             <caption>REDCapPRO Projects</caption>
             <thead>
                 <th scope="col" class='dt-center'>Project ID</th>

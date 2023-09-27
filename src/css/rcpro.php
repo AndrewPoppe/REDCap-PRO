@@ -1,5 +1,22 @@
 <?php header("Content-type: text/css; charset: UTF-8");?>
 
+table.rcpro-datatable,
+table.rcpro-datatable tbody,
+table.rcpro-datatable tbody tr.odd:first-child,
+table.rcpro-datatable tbody tr.odd:first-child td {
+    border-top: none !important;
+}
+table.rcpro-datatable thead tr th {
+    border-bottom: 1px solid #ccc !important;
+}
+.dataTables_wrapper.no-footer .dataTables_scrollBody{
+    border-bottom: 1px solid #ccc !important;
+}
+table.dataTable#RCPRO_Logs thead th,
+table.dataTable#RCPRO_TABLE thead th {
+    border-bottom: none !important;
+}
+
 .wrapper {
     display: inline-block !important;
     padding: 20px !important;
@@ -16,13 +33,6 @@
     margin-top: 10px !important;
 }
 
-table.rcpro-datatable thead tr th,
-table.rcpro-datatable thead tr td,
-table.rcpro-datatable thead tr,
-table.rcpro-datatable thead {
-    border-bottom: none !important;
-}
-
 
 
 table.rcpro-datatable tbody tr.even td {
@@ -37,12 +47,7 @@ table.rcpro-datatable tbody tr.odd td {
     border-bottom: none !important;
 }
 
-table.rcpro-datatable tbody tr:first-child td {
-    border-top: 1px solid #ccc !important;
-}
-.dataTables_wrapper.no-footer .dataTables_scrollBody{
-    border-bottom: 1px solid #ccc !important;
-}
+
 
 #RCPRO_TABLE tr {
     cursor: pointer !important;
@@ -269,3 +274,4 @@ div.dtsb-searchBuilder select {
         transform: rotate(360deg);
     }
 }
+

@@ -31,7 +31,7 @@ $module->initializeJavascriptModuleObject();
 <div class="logsContainer wrapper" style="display: none;">
 
     <div id="logs" class="dataTableParentHidden outer_container">
-        <table class="table compact hover" id="RCPRO_TABLE" style="width:100%;">
+        <table class="compact hover" id="RCPRO_TABLE" style="width:100%;">
             <caption>REDCapPRO Logs</caption>
             <thead>
                 <tr>
