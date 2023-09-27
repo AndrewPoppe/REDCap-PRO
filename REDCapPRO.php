@@ -188,13 +188,23 @@ class REDCapPRO extends AbstractExternalModule
         $this->AUTH->init();
 
         // Participant is logged in to their account
-        if ( $this->AUTH->is_logged_in() ) {
+        if ( $this->AUTH->is_logged_in()) {
+            // Settings
+            $settings = new ProjectSettings($this);
+            
+            // Check MFA Token
+            if ($settings->mfaEnabled((int) $project_id) && !$this->AUTH->is_mfa_verified()) {
+                $code             = $this->AUTH->get_mfa_code();
+                $participantEmail = $this->PARTICIPANT->getEmail($this->AUTH->get_participant_id());
+                $this->sendMfaTokenEmail($participantEmail, $code);
+                header("location: " . $this->framework->getUrl("src/mfa.php", true));
+                return;
+            }
 
             // Get RCPRO project ID
             $rcpro_project_id = $this->PROJECT->getProjectIdFromPID($project_id);
 
-            // Settings
-            $settings = new ProjectSettings($this);
+            
 
             // Determine whether participant is enrolled in the study.
             $rcpro_participant_id = $this->AUTH->get_participant_id();
@@ -723,7 +733,7 @@ class REDCapPRO extends AbstractExternalModule
     {
         $settings = new ProjectSettings($this);
 
-        $subject = 'REDCapPRO Survey Token' ?? $this->tt("email_mfa_token_subject") ;
+        $subject = 'REDCapPRO Survey Token' ?? $this->tt("email_mfa_token_subject");
         $from    = $settings->getEmailFromAddress();
         $body    = "<html><body><div>
         <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>

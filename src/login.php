@@ -148,15 +148,6 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                     $module->AUTH->set_login_values($participant);
 
                     // Redirect user to appropriate page
-                    try {
-                        $code = $module->AUTH->generate_mfa_code();
-                        $module->sendMfaTokenEmail($participant["email"], $code);
-                        header("location: " . $module->framework->getUrl("src/mfa.php", true));
-                        return;
-                    } catch ( \Throwable $e ) {
-                        $module->logError("Error sending MFA token email", $e);
-                    }
-
                     if ( $module->AUTH->is_survey_url_set() ) {
                         header("location: " . $module->AUTH->get_survey_url());
                     } elseif ( isset($qstring["s"]) ) {
