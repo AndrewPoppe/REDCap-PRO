@@ -711,6 +711,44 @@ class REDCapPRO extends AbstractExternalModule
         }
     }
 
+    /**
+     * Sends an email that contains the MFA token.
+     * 
+     * @param string $email
+     * @param int $token
+     * 
+     * @return bool|NULL success or failure
+     */
+    public function sendMfaTokenEmail(string $email, int $token)
+    {
+        $settings = new ProjectSettings($this);
+
+        $subject = $this->tt("email_mfa_token_subject") ?? 'REDCapPRO Survey Token';
+        $from    = $settings->getEmailFromAddress();
+        $body    = "<html><body><div>
+        <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
+        <p>" . $this->tt("email_mfa_token_greeting") ?? 'greeting' . "</p>
+        <p>" . $this->tt("email_mfa_token_message1") ?? 'here is your token: ' . "<strong> ${token}</strong><br>
+        " . $this->tt("email_mfa_token_message2")?? 'message 2' . "</p>
+
+        <p>" . $this->tt("email_mfa_token_message3") ?? 'message 3' . "<br><br>";
+
+        $body .= $this->tt("email_mfa_token_message4") ?? 'message 4';
+        if ( $this->framework->getProjectId() ) {
+            $study_contact = $this->getContactPerson($subject);
+            if ( isset($study_contact["info"]) ) {
+                $body .= "<br>" . $study_contact["info"];
+            }
+        }
+        $body .= "</p></div></body></html>";
+
+        try {
+            return \REDCap::email($email, $from, $subject, $body);
+        } catch ( \Exception $e ) {
+            $this->logError("Error sending MFA token email", $e);
+        }
+    }
+
 
     /////////////////////\\\\\\\\\\\\\\\\\\\\\\       
     /////   REDCAP USER-RELATED METHODS   \\\\\ 
