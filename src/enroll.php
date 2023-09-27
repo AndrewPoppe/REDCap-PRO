@@ -46,7 +46,7 @@ if ( isset($_POST["id"]) && isset($project_id) ) {
         echo "<script defer>Swal.fire({'title':'This participant is not currently active in REDCapPRO', 'html':'Contact your REDCap Administrator with questions.', 'icon':'info', 'showConfirmButton': false});</script>";
     } else {
 
-        $redcap_dag     = $module->DAG->getCurrentDag($module->framework->getUser()->getUsername(), $this->framework->getProjectId());
+        $redcap_dag     = $module->DAG->getCurrentDag($module->framework->getUser()->getUsername(), $module->framework->getProjectId());
         $pid            = intval($project_id);
         $rcpro_username = $module->PARTICIPANT->getUserName($rcpro_participant_id);
         $result         = $module->PROJECT->enrollParticipant($rcpro_participant_id, $pid, $redcap_dag, $rcpro_username);
@@ -195,7 +195,7 @@ $jsname = $module->getJavascriptModuleObjectName();
                 </div>
 
                 <?php if ( $module->DAG->getProjectDags() ) {
-                    $userDag = $module->DAG->getCurrentDag($this->framework->getUser()->getUsername(), $this->framework->getProjectId());
+                    $userDag = $module->DAG->getCurrentDag($module->framework->getUser()->getUsername(), $module->framework->getProjectId());
                     $dagName = isset($userDag) ? \REDCap::getGroupNames(false, $userDag) : "No Assignment";
                     ?>
                     <div class="mb-3 row">

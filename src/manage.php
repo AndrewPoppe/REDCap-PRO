@@ -242,7 +242,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         if ( !$error && $projectHasDags ) {
             $rcpro_link_id   = $module->PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
             $participant_dag = intval($module->DAG->getParticipantDag($rcpro_link_id));
-            $user_dag        = $module->DAG->getCurrentDag($module->framework->getUser()->getUsername(), $this->framework->getProjectId());
+            $user_dag        = $module->DAG->getCurrentDag($module->framework->getUser()->getUsername(), $module->framework->getProjectId());
             if ( isset($user_dag) && $participant_dag !== $user_dag ) {
                 $function = $generic_function;
                 $icon     = "error";
