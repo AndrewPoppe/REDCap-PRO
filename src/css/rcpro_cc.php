@@ -11,11 +11,11 @@ table#RCPRO_TABLE tbody tr:first-child td {
 border-top-width: 0 !important;
 }
 table.dataTable.no-footer {
-border-bottom-width: 0 !important;
+border-width: 0 !important;
 }
 
 table#RCPRO_TABLE tr {
-border-bottom-width: 0 !important;
+border-width: 0 !important;
 }
 
 table.dataTable th {
