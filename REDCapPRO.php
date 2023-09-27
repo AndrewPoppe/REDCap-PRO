@@ -431,6 +431,9 @@ class REDCapPRO extends AbstractExternalModule
 
     public function redcap_module_link_check_display($project_id, $link)
     {
+        if ($project_id === null) {
+            return $link;
+        }
         $role = $this->getUserRole($this->framework->getUser()->getUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
         if ( $role > 0 ) {
             return $link;
@@ -794,17 +797,17 @@ class REDCapPRO extends AbstractExternalModule
             return 3;
         }
         // FIX: PHP 8 fix
-        $managers = $this->getProjectSetting("managers") ?? array( '' );
-        $users    = $this->getProjectSetting("users") ?? array( '' );
-        $monitors = $this->getProjectSetting("monitors") ?? array( '' );
+        $managers = $this->framework->getProjectSetting("managers") ?? array( '' );
+        $users    = $this->framework->getProjectSetting("users") ?? array( '' );
+        $monitors = $this->framework->getProjectSetting("monitors") ?? array( '' );
 
         $result = 0;
 
-        if ( in_array($username, $managers) ) {
+        if ( in_array($username, $managers, true) ) {
             $result = 3;
-        } elseif ( in_array($username, $users) ) {
+        } elseif ( in_array($username, $users, true) ) {
             $result = 2;
-        } elseif ( in_array($username, $monitors) ) {
+        } elseif ( in_array($username, $monitors, true) ) {
             $result = 1;
         }
 
