@@ -17,8 +17,7 @@ border: none !important;
 
 table#RCPRO_TABLE tr,
 table#RCPRO_TABLE tbody {
-border-top: none !important;
-border-bottom: none !important;
+border: none !important;
 }
 
 table.dataTable th {
