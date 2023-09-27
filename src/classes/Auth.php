@@ -12,6 +12,7 @@ class Auth
 
     public $APPTITLE;
     public $SESSION_NAME = "REDCapPRO_SESSID";
+    private $mfa_duration = 300; // seconds
 
     /**
      * constructor
@@ -182,5 +183,39 @@ class Auth
             session_id($orig_id);
             session_start();
         }
+    }
+
+    // MFA
+    public function generate_mfa_code()
+    {
+        $code = random_int(100000, 999999);
+        $_SESSION[$this->APPTITLE . "_mfa_code"] = $code;
+        $_SESSION[$this->APPTITLE . "_mfa_code_time"] = time();
+        return $code;
+    }
+
+    public function get_mfa_code()
+    {
+        return $_SESSION[$this->APPTITLE . "_mfa_code"];
+    }
+
+    public function get_mfa_code_time()
+    {
+        return $_SESSION[$this->APPTITLE . "_mfa_code_time"];
+    }
+
+    public function clear_mfa_code()
+    {
+        unset($_SESSION[$this->APPTITLE . "_mfa_code"]);
+        unset($_SESSION[$this->APPTITLE . "_mfa_code_time"]);
+    }
+
+    public function check_mfa_code(int $code) {
+        $codeMatches = $code === $this->get_mfa_code();
+        $codeExpired = time() - $this->get_mfa_code_time() > $this->mfa_duration;
+        if ($codeExpired) {
+            $this->clear_mfa_code();
+        }
+        return $codeMatches && !$codeExpired;
     }
 }

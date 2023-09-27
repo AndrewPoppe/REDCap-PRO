@@ -60,7 +60,6 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     try {
         // Validate credentials
         if ( empty($username_err) && empty($password_err) ) {
-
             // Check that IP is not locked out
             $ip            = $Login->getIPAddress();
             $lockout_ts_ip = $Login->checkIpLockedOut($ip);
@@ -75,7 +74,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
                 // Check if username/email exists, if yes then verify password
                 // --> USERNAME DOES NOT EXIST
-            } else if ( !$usernameExists && !($emailExists && $emailLoginsAllowed) ) {
+            } elseif ( !$usernameExists && !($emailExists && $emailLoginsAllowed) ) {
 
                 // Username/email doesn't exist, display a generic error message
                 $Login->incrementFailedIp($ip);
@@ -149,9 +148,14 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                     $module->AUTH->set_login_values($participant);
 
                     // Redirect user to appropriate page
+                    $code = $AUTH->generate_mfa_code();
+                    $module->sendMfaTokenEmail($participant["email"], $code);
+                    header("location: " . $module->framework->getUrl("src/mfa.php", true));
+                    return;
+
                     if ( $module->AUTH->is_survey_url_set() ) {
                         header("location: " . $module->AUTH->get_survey_url());
-                    } else if ( isset($qstring["s"]) ) {
+                    } elseif ( isset($qstring["s"]) ) {
                         header("location: " . APP_PATH_SURVEY_FULL . $_SERVER['QUERY_STRING']);
                     } else {
                         $study_contact = $module->getContactPerson();
