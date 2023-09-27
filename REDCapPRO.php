@@ -740,11 +740,11 @@ class REDCapPRO extends AbstractExternalModule
         $from    = $settings->getEmailFromAddress();
         $body    = "<html><body><div>
         <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
-        <p>greeting</p>
-        <p>here is your token: <strong> ${token}</strong><br></p>
-        <p>message 3<br><br>";
+        <p>Please supply this token in your survey login page.</p>
+        <p>Token: <strong> ${token}</strong><br></p>
+        <p><em>Note: This token will expire after 5 minutes, but you can request a new token on the survey login page</em></p><br><br>";
 
-        $body .= 'message 4';
+        $body .= '<p>If you did not request this token, please contact the study team.</p>';
         if ( $this->framework->getProjectId() ) {
             $study_contact = $this->getContactPerson($subject);
             if ( isset($study_contact["info"]) ) {
