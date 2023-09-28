@@ -610,10 +610,11 @@ class REDCapPRO extends AbstractExternalModule
      * Send an email with a link for the participant to reset their email
      * 
      * @param mixed $rcpro_participant_id
+     * @param bool $selfInitiated whether the participant initiated the password reset vs a staff member
      * 
      * @return mixed
      */
-    public function sendPasswordResetEmail($rcpro_participant_id)
+    public function sendPasswordResetEmail($rcpro_participant_id, $selfInitiated = false)
     {
         try {
 
@@ -653,6 +654,9 @@ class REDCapPRO extends AbstractExternalModule
             // Get current project (or "system" if initiated in the control center)
             $current_pid = $this->getProjectId() ?? "system";
 
+            // Get REDCap User's username if not initiated by participant
+            $redcap_user = $selfInitiated ? null : $this->framework->getUser()->getUsername();
+
             // Get all projects to which participant is currently enrolled
             $project_ids = $this->PARTICIPANT->getEnrolledProjects($rcpro_participant_id);
             foreach ( $project_ids as $project_id ) {
@@ -660,7 +664,7 @@ class REDCapPRO extends AbstractExternalModule
                     "rcpro_participant_id"  => $rcpro_participant_id,
                     "rcpro_username"        => $username_clean,
                     "rcpro_email"           => $to,
-                    "redcap_user"           => $this->framework->getUser()->getUsername(),
+                    "redcap_user"           => $redcap_user,
                     "project_id"            => $project_id,
                     "initiating_project_id" => $current_pid
                 ]);
@@ -669,7 +673,7 @@ class REDCapPRO extends AbstractExternalModule
         } catch ( \Exception $e ) {
             $this->logEvent("Password Reset Failed", [
                 "rcpro_participant_id" => $rcpro_participant_id,
-                "redcap_user"          => $this->framework->getUser()->getUsername()
+                "redcap_user"          => $redcap_user
             ]);
             $this->logError("Error sending password reset email", $e);
         }
