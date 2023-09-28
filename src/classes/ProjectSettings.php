@@ -110,4 +110,18 @@ class ProjectSettings
 
         return !($emailLoginPreventedSystem === true || $emailLoginPreventedProject === true);
     }
+
+    /**
+     * Checks whether a Registration Form is enabled in this project
+     * 
+     * @param int $pid The redcap project ID
+     * 
+     * @return bool Whether a Registration Form is enabled in this project
+     */
+    public function registrationFormEnabled(int $pid) {
+        $registrationFormAllowedSystem  = $this->module->getSystemSetting("allow-registration-form");
+        $registrationFormEnabledProject = $this->module->getProjectSetting("registration-form-enabled", $pid);
+
+        return $registrationFormAllowedSystem === true && $registrationFormEnabledProject === true;
+    }
 }

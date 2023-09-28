@@ -49,6 +49,41 @@
             "name": "<strong>Lockout Duration</strong>:<br>Length of a lockout due to failed login attempts, in seconds (default is 300 seconds)",
             "type": "text",
             "validation": "integer"
+        },
+        {
+            "key": "allow-registration-form",
+            "name": "<strong>Allow Registration Form</strong>:<br>Should the system allow projects to designate a form/survey that acts as a registration form? If so, the form can be used to create new participants in the system and optionally automatically enroll them in the project. If not, participants must be created manually by the project staff.",
+            "type": "checkbox"
+        }
+    ],
+    "project-settings": [
+        {
+            "key": "registration-form",
+            "name": "Registration form",
+            "type": "form-list",
+            "super-users-only": true
+        },
+        {
+            "key": "registration-fname-field",
+            "name": "Registration form: First name field",
+            "type": "field-list",
+            "field-type": "text",
+            "super-users-only": true
+        },
+        {
+            "key": "registration-lname-field",
+            "name": "Registration form: Last name field",
+            "type": "field-list",
+            "field-type": "text",
+            "super-users-only": true
+        },
+        {
+            "key": "registration-email-field",
+            "name": "Registration form: Email field",
+            "type": "field-list",
+            "field-type": "text",
+            "validation": "email",
+            "super-users-only": true
         }
     ],
     "links": {

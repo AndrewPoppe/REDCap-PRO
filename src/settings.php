@@ -29,8 +29,8 @@ if ( isset($_GET["error"]) ) {
 }
 
 // Get possible languages
-$settings     = new ProjectSettings($module);
-$languageList = $settings->getLanguageFiles();
+$projectSettings     = new ProjectSettings($module);
+$languageList = $projectSettings->getLanguageFiles();
 
 // Update settings if requested
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
@@ -95,6 +95,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 // Get current project settings
 $settings                = $module->getProjectSettings();
 $preventEmailLoginSystem = $module->getSystemSetting("prevent-email-login-system");
+$registrationFormAllowedSystem = $module->getSystemSetting("allow-registration-form");
+$registrationFormEnabledProject = $projectSettings->registrationFormEnabled((int) $module->framework->getProjectId());
 
 ?>
 
@@ -173,6 +175,45 @@ $preventEmailLoginSystem = $module->getSystemSetting("prevent-email-login-system
                 </div>
                 <br>
             <?php } ?>
+            <br>
+            <?php
+            if ( $registrationFormAllowedSystem ) {
+                $registrationChecked = $registrationFormEnabledProject ? "checked" : "";
+                ?>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="fa-stack">
+                            <i class="fas fa-pen-to-square fa-stack-2x"></i>
+                        </span>
+                        <nbsp></nbsp>
+                        <strong>Designate a Registration Form</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">
+                            Describe the registration form here<br>
+
+                        </div>
+                        <div class="form-check">
+                            <input
+                                class="form-check-input <?php echo (!empty($registration_form_err)) ? 'is-invalid' : ''; ?>"
+                                aria-expanded="<?=$registrationChecked?>" aria-controls="registration-form-settings"
+                                type="checkbox" id="registration-form-check" <?= $registrationChecked ?> onclick="(function(){
+                                    const isChecked = $('#registration-form-check')[0].checked;
+                                    $('#registration-form-settings').collapse(isChecked ? 'show' : 'hide');
+                            })()">
+                            <label class="form-check-label" style="vertical-align:middle;"
+                                for="registration-form-check">Select a registration form</label>
+                            <span class="invalid-feedback">
+                                <?php echo $registration_form_err; ?>
+                            </span>
+                        </div>
+                        <div class="form-group collapse" id="registration-form-settings">
+                            
+                        </div>
+                    </div>
+                </div>
+                <br>
+            <?php } ?>
             <div class="card">
                 <div class="card-header">
                     <span class="fa-stack">
@@ -222,7 +263,6 @@ $preventEmailLoginSystem = $module->getSystemSetting("prevent-email-login-system
                 <button type="submit" id="rcpro-submit-button" class="btn btn-rcpro" value="Submit" disabled>Save
                     Settings</button>
             </div>
-            <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
         </form>
     </div>
 </div>
@@ -232,6 +272,11 @@ $preventEmailLoginSystem = $module->getSystemSetting("prevent-email-login-system
             let form = document.querySelector('#settings-form');
             form.addEventListener('change', function () {
                 $('#rcpro-submit-button').attr("disabled", null);
+            });
+
+            $('#registration-form-settings').on('hidden.bs.collapse shown.bs.collapse', function () {
+                const isChecked = $('#registration-form-check')[0].checked;
+                $('#registration-form-settings').collapse(isChecked ? 'show' : 'hide');
             });
         });
     })(window.jQuery, window, document);

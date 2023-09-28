@@ -424,8 +424,8 @@ class REDCapPRO extends AbstractExternalModule
 
     public function redcap_module_configure_button_display()
     {
-        // Hide module configuration button in project context.
-        return $this->getProjectId() === null;
+        // Only show module configuration for admins
+        return $this->framework->getUser()->isSuperUser();
     }
 
 
@@ -1011,11 +1011,12 @@ class REDCapPRO extends AbstractExternalModule
     function validateSettings($settings)
     {
 
-        $message = NULL;
+        $message = null;
+        $projectId = $this->framework->getProjectId();
 
         // System settings
         // Enforce limits on setting values
-        if ( !$this->getProjectId() ) {
+        if ( !$projectId ) {
             if ( isset($settings["warning-time"]) && $settings["warning-time"] <= 0 ) {
                 $message = "The warning time must be a positive number.";
             }
@@ -1030,6 +1031,36 @@ class REDCapPRO extends AbstractExternalModule
             }
             if ( isset($settings["lockout-seconds"]) && $settings["lockout-seconds"] < 0 ) {
                 $message = "The minimum lockout duration is 0 seconds.";
+            }
+        } else {
+            // Project settings
+            $registrationForm = $settings["registration-form"];
+            $fnameField       = $settings["registration-fname-field"];
+            $lnameField       = $settings["registration-lname-field"];
+            $emailField       = $settings["registration-email-field"];
+
+            if (!isset($registrationForm) && ( isset($fnameField)  || isset($lnameField)  || isset($emailField) )) {
+                $message = "You must select a registration form if you want to use the registration fields.";
+            }
+
+            // This is redundant as the checks below will catch this
+            if (isset($registrationForm) && (!isset($fnameField)  || !isset($lnameField)  || !isset($emailField) )) {
+                $message = "You must select all registration fields if you want to use the registration form.";
+            }
+
+            $project = $this->framework->getProject($projectId);
+            $fnameForm = $project->getFormForField($fnameField ?? "");
+            $lnameForm = $project->getFormForField($lnameField ?? "");
+            $emailForm = $project->getFormForField($emailField ?? "");
+
+            if ($registrationForm !== $fnameForm) {
+                $message = "The registration form must contain the first name field.";
+            }
+            if ($registrationForm !== $lnameForm) {
+                $message = "The registration form must contain the last name field.";
+            }
+            if ($registrationForm !== $emailForm) {
+                $message = "The registration form must contain the email field.";
             }
         }
 
