@@ -736,15 +736,15 @@ class REDCapPRO extends AbstractExternalModule
     {
         $settings = new ProjectSettings($this);
 
-        $subject = 'REDCapPRO Survey Token' ?? $this->tt("email_mfa_token_subject");
+        $subject = $this->tt("mfa_email1");
         $from    = $settings->getEmailFromAddress();
         $body    = "<html><body><div>
         <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
-        <p>Please supply this token in your survey login page.</p>
-        <p>Token: <strong> ${token}</strong><br></p>
-        <p><em>Note: This token will expire after 5 minutes, but you can request a new token on the survey login page</em></p><br><br>";
+        <p>".$this->tt('mfa_email2')."</p>
+        <p>".$this->tt('mfa_email3')." <strong> ${token}</strong><br></p>
+        <p><em>".$this->tt('mfa_email4')."</em></p><br><br>";
 
-        $body .= '<p>If you did not request this token, please contact the study team.</p>';
+        $body .= '<p>'.$this->tt('mfa_email5').'</p>';
         if ( $this->framework->getProjectId() ) {
             $study_contact = $this->getContactPerson($subject);
             if ( isset($study_contact["info"]) ) {

@@ -39,7 +39,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 }
             }
         } else {
-            $mfa_err = "The code you entered is incorrect.";
+            $mfa_err = $module->tt("mfa_err1");
         }
     } catch (\Throwable $e) {
         $module->log($e->getMessage());
@@ -60,18 +60,17 @@ $module->UI->ShowParticipantHeader('');
 
 <div style="text-align: center;">
     <span style="font-size: large;">
-        <?= $resend ? "A new code has been sent to the email address:" : 
-        "A 6-digit code has been sent to the email address:" ?>
+        <?= $resend ? $module->tt("mfa_resend1") : $module->tt("mfa_text1") ?>
         <strong><?= $module->PARTICIPANT->getEmail($module->AUTH->get_participant_id())?></strong>
         <br>
-        Please enter it below.
+        <?=$module->tt("mfa_text2")?>
     </span>
 </div>
 
 <form action="<?= $module->getUrl("src/mfa.php", true); ?>" method="post">
     <div class="form-group">
         <label>
-            Enter 6-digit code:
+            <?= $module->tt("mfa_text3") ?>
         </label>
         <input type="text" name="mfa_token" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>">
         <span class="invalid-feedback">
@@ -85,7 +84,7 @@ $module->UI->ShowParticipantHeader('');
 </form>
 <hr>
 <div style="text-align: center;">
-    Need a new code? <a href="<?= $module->getUrl("src/mfa.php?resend=true", true); ?>">Resend</a>
+    <?=$module->tt('mfa_resend2')?> <a href="<?= $module->getUrl("src/mfa.php?resend=true", true); ?>"><?=$module->tt('mfa_resend3')?></a>
 </div>
 <style>
     a {
