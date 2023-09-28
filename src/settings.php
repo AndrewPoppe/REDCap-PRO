@@ -175,7 +175,7 @@ $registrationFormEnabledProject = $projectSettings->registrationFormEnabled((int
                 </div>
                 <br>
             <?php } ?>
-            <br>
+            <!-- <br>
             <?php
             if ( $registrationFormAllowedSystem ) {
                 $registrationChecked = $registrationFormEnabledProject ? "checked" : "";
@@ -213,7 +213,7 @@ $registrationFormEnabledProject = $projectSettings->registrationFormEnabled((int
                     </div>
                 </div>
                 <br>
-            <?php } ?>
+            <?php } ?> -->
             <div class="card">
                 <div class="card-header">
                     <span class="fa-stack">
