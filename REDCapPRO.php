@@ -999,6 +999,24 @@ class REDCapPRO extends AbstractExternalModule
     }
 
     /**
+     * Returns whether the provided field is required
+     *
+     *  @param string $fieldname
+     *  @param int $project_id
+     *
+     *  @return bool whether the field is required
+     */
+    public function isFieldRequired(string $fieldname, int $project_id) {
+        $sql = "SELECT field_req FROM redcap_metadata
+        WHERE project_id = ?
+        AND field_name = ?";
+        $params = [$project_id, $fieldname];
+        $result = $this->framework->query($sql, $params);
+        $row = $result->fetch_assoc();
+        return $row["field_req"] == 1;
+    }
+
+    /**
      * Make sure settings meet certain conditions.
      * 
      * This is called when a user clicks "Save" in either system or project
@@ -1053,6 +1071,7 @@ class REDCapPRO extends AbstractExternalModule
             $lnameForm = $project->getFormForField($lnameField ?? "");
             $emailForm = $project->getFormForField($emailField ?? "");
 
+            // Check that the fields actually exist on the selected form
             if ($registrationForm !== $fnameForm) {
                 $message = "The registration form must contain the first name field.";
             }
@@ -1062,6 +1081,12 @@ class REDCapPRO extends AbstractExternalModule
             if ($registrationForm !== $emailForm) {
                 $message = "The registration form must contain the email field.";
             }
+
+            // Check that the fields are required
+            if (!$this->isFieldRequired($fnameField, $projectId)) {
+                $message = "The first name field must be required.";
+            }
+
         }
 
         // Log configuration save attempt
