@@ -54,6 +54,20 @@
             "key": "mfa",
             "name": "<strong>Multi-Factor Authentication</strong>:<br>Should participants be required to use multi-factor authentication (MFA) when logging in? If so, they will be required to enter a code sent to their email address after entering their username and password. This is an additional security measure to prevent unauthorized access.<br><em>Note: this setting enables the MFA option globally, but it still must be enabled in the project settings to take effect</em>",
             "type": "checkbox"
+        },
+        {
+            "key": "allow-self-registration-system",
+            "name": "<strong>Allow Self-Registration</strong>:<br>Should participants be allowed to create their own accounts? (default is No)<br><em>Note: this must also be enabled in a project's settings to take effect</em>",
+            "type": "checkbox"
+        },
+        {
+            "key": "allow-auto-enroll-upon-self-registration-system",
+            "name": "<strong>Allow Auto-Enroll Upon Self-Registration</strong>:<br>Should participants be automatically enrolled in the project upon self-registration? (default is No)<br><em>Note: this must also be enabled in a project's settings to take effect</em>",
+            "type": "checkbox",
+            "branchingLogic": {
+                "field": "allow-self-registration-system",
+                "value": "1"
+            }
         }
     ],
     "links": {
@@ -84,7 +98,8 @@
         "src/create-password",
         "src/forgot-password",
         "src/forgot-username",
-        "src/session_check"
+        "src/session_check",
+        "src/create-account"
     ],
     "auth-ajax-actions": [
         "getLogs"

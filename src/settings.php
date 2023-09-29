@@ -67,6 +67,11 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             $any_err   = true;
         }
 
+        // Validate Allow Self-Registration
+        $new_settings["allow-self-registration"] = $post_settings["allow-self-registration"] === "true";
+
+        // Validate Auto-Enroll Upon Self-Registration
+        $new_settings["auto-enroll-upon-self-registration"] = $new_settings["allow-self-registration"] && $post_settings["auto-enroll-upon-self-registration"] === "true";
 
         if ( !$any_err ) {
 

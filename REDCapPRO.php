@@ -9,6 +9,7 @@ require_once "src/classes/AjaxHandler.php";
 require_once "src/classes/Auth.php";
 require_once "src/classes/DAG.php";
 require_once "src/classes/Instrument.php";
+require_once "src/classes/LoginHelper.php";
 require_once "src/classes/ParticipantHelper.php";
 require_once "src/classes/Project.php";
 require_once "src/classes/ProjectHelper.php";
@@ -329,6 +330,8 @@ class REDCapPRO extends AbstractExternalModule
             // Store cookie to return to survey
         } else {
             $this->AUTH->set_survey_url(APP_PATH_SURVEY_FULL . "?s=${survey_hash}");
+            $this->AUTH->set_redcap_project_id($project_id);
+            $this->AUTH->set_data_access_group_id($group_id);
             \Session::savecookie($this->APPTITLE . "_survey_url", APP_PATH_SURVEY_FULL . "?s=${survey_hash}", 0, TRUE);
             $this->AUTH->set_survey_active_state(TRUE);
             header("location: " . $this->getUrl("src/login.php", true) . "&s=${survey_hash}");
