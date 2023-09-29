@@ -187,8 +187,22 @@ class REDCapPRO extends AbstractExternalModule
         }
         $this->AUTH->init();
 
-        // Is this survey the registration survey?
-        $isRegistrationSurvey = $this->PROJECT->isRegistrationSurvey($project_id, $instrument);
+        // Is this survey the registration survey? If so, don't do anything.
+        $instrumentHelper     = new Instrument($this, $instrument, $group_id);
+        $isRegistrationSurvey = $instrumentHelper->isRegistrationSurvey();
+
+        if ( $isRegistrationSurvey ) {
+            $this->logEvent('Accessed Registration Survey', [
+                "record"          => $record,
+                "event"           => $event_id,
+                "instrument"      => $instrument,
+                "survey_hash"     => $survey_hash,
+                "response_id"     => $response_id,
+                "repeat_instance" => $repeat_instance
+            ]);
+            return;
+        }
+
 
         // Participant is logged in to their account
         if ( $this->AUTH->is_logged_in() ) {
@@ -317,10 +331,10 @@ class REDCapPRO extends AbstractExternalModule
                 window.rcpro.initTimeout();
                 window.rcpro.initSessionCheck();
             </script>";
-
+        } else {
             // Participant is not logged into their account
             // Store cookie to return to survey
-        } else {
+
             $this->AUTH->set_survey_url(APP_PATH_SURVEY_FULL . "?s=${survey_hash}");
             \Session::savecookie($this->APPTITLE . "_survey_url", APP_PATH_SURVEY_FULL . "?s=${survey_hash}", 0, TRUE);
             $this->AUTH->set_survey_active_state(TRUE);
@@ -341,6 +355,77 @@ class REDCapPRO extends AbstractExternalModule
         $rcpro_dag  = $this->DAG->getCurrentDag($this->framework->getUser()->getUsername(), $project_id);
         $instrument = new Instrument($this, $instrument, $rcpro_dag);
         $instrument->update_form();
+    }
+
+    public function redcap_save_record($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance)
+    {
+        // Is this survey the registration survey? If not, don't do anything.
+        $instrumentHelper     = new Instrument($this, $instrument, $group_id);
+        $isRegistrationSurvey = $instrumentHelper->isRegistrationSurvey();
+
+        if ( !$isRegistrationSurvey ) {
+            return;
+        }
+
+        try {
+            // Get registration form information
+            $settings          = new ProjectSettings($this);
+            $registration_form = $settings->getRegistrationForm($project_id);
+
+            // Get saved values
+            $data       = \REDCap::getData([
+                "project_id"    => $project_id,
+                "return_format" => 'array',
+                "records"       => $record,
+                "fields"        => [
+                    $registration_form["fname_field"],
+                    $registration_form["lname_field"],
+                    $registration_form["email_field"]
+                ],
+                "events"        => $event_id,
+                "groups"        => $group_id
+            ]);
+            $data_clean = $this->framework->escape($data);
+
+            $this->logEvent('data', [
+                "data" => json_encode($data_clean)
+            ]);
+
+            $fname_clean = $data_clean[$record][$event_id][$registration_form["fname_field"]];
+            $lname_clean = $data_clean[$record][$event_id][$registration_form["lname_field"]];
+            $email_clean = $data_clean[$record][$event_id][$registration_form["email_field"]];
+
+            $result = $this->PARTICIPANT->checkEmailExists($email_clean);
+
+            if ( $result === NULL ) {
+                $this->logError("Oops! Something went wrong. Please try again later.", []);
+                return;
+            } elseif ( $result === TRUE ) {
+                $this->logEvent('Participant already exists', []);
+                return;
+            } else {
+                // Everything looks good
+            }
+
+            $username = $this->PARTICIPANT->createParticipant($email_clean, $fname_clean, $lname_clean);
+            $this->sendNewParticipantEmail($username, $email_clean, $fname_clean, $lname_clean);
+
+            $this->logEvent("Participant Registered", [
+                "rcpro_username" => $username,
+                "redcap_user"    => $this->framework->getUser()->getUsername()
+            ]);
+        } catch ( \Exception $e ) {
+            $this->logError("Error creating participant", $e);
+        }
+
+        $this->logEvent('Saved Registration Form', [
+            "record"          => $record,
+            "event"           => $event_id,
+            "instrument"      => $instrument,
+            "survey_hash"     => $survey_hash,
+            "response_id"     => $response_id,
+            "repeat_instance" => $repeat_instance
+        ]);
     }
 
     /**

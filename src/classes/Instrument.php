@@ -169,7 +169,11 @@ class Instrument
     public function isRegistrationSurvey()
     {
         $settings          = new ProjectSettings($this->module);
-        $registration_form = $settings->getRegistrationForm($this->module->framework->getProjectId());
+        $registration_form = $settings->getRegistrationForm($this->projectId);
+        if ( empty($registration_form) ) {
+            return false;
+        }
 
+        return $registration_form["instrument"] === $this->instrument_name;
     }
 }
