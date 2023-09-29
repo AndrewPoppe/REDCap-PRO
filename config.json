@@ -63,6 +63,16 @@
                 "field": "allow-self-registration-system",
                 "value": "1"
             }
+        },
+        {
+            "key": "recaptcha-site-key",
+            "name": "<strong>reCAPTCHA Site Key</strong>:<br>Site key for reCAPTCHA v2 (default is empty)<br><em>It is fine to use the same value as the REDCap site key (found on Modules/Services Configuration page)</em>",
+            "type": "text"
+        },
+        {
+            "key": "recaptcha-secret-key",
+            "name": "<strong>reCAPTCHA Secret Key</strong>:<br>Secret key for reCAPTCHA v2 (default is empty)<br><em>It is fine to use the same value as the REDCap secret key (found on Modules/Services Configuration page)</em>",
+            "type": "password"
         }
     ],
     "links": {

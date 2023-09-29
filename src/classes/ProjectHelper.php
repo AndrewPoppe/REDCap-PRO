@@ -73,14 +73,14 @@ class ProjectHelper
                 "rcpro_project_id"     => $rcpro_project_id,
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "active"               => 1,
-                "redcap_user"          => $this->module->framework->getUser()->getUsername(),
+                "redcap_user"          => $this->module->safeGetUsername(),
                 "project_dag"          => $dag
             ]);
             $this->module->logEvent("Enrolled Participant", [
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "rcpro_username"       => $rcpro_username,
                 "rcpro_project_id"     => $rcpro_project_id,
-                "redcap_user"          => $this->module->framework->getUser()->getUsername(),
+                "redcap_user"          => $this->module->safeGetUsername(),
                 "project_dag"          => $dag
             ]);
             return TRUE;
@@ -147,7 +147,7 @@ class ProjectHelper
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $rcpro_username,
                     "rcpro_project_id"     => $rcpro_project_id,
-                    "redcap_user"          => $this->module->framework->getUser()->getUsername(),
+                    "redcap_user"          => $this->module->safeGetUsername(),
                     "project_dag"          => $dag
                 ]);
             }

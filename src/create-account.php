@@ -4,9 +4,14 @@ namespace YaleREDCap\REDCapPRO;
 
 /** @var REDCapPRO $module */
 
+$recaptcha_site_key = $module->framework->getSystemSetting('recaptcha-site-key');
+if ( isset($recaptcha_site_key) ) {
+    echo '<script src="https://www.google.com/recaptcha/api.js" async defer></script>';
+}
+
 // Initialize Authentication
 $module->AUTH->init();
-
+var_dump($_SESSION);
 // Check if the user is already logged in, if yes then redirect then to the survey
 if ( $module->AUTH->is_logged_in() ) {
     $survey_url        = $module->AUTH->get_survey_url();
@@ -35,13 +40,35 @@ $settings = new ProjectSettings($module);
 // Processing form data when form is submitted
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
+    $any_errors = false;
+
+    // Check reCAPTCHA if enabled
+    if ( isset($recaptcha_site_key) ) {
+        $recpatch_secret_key = $module->framework->getSystemSetting('recaptcha-secret-key');
+        $recaptcha_response  = trim(filter_input(INPUT_POST, 'g-recaptcha-response'));
+
+        if ( empty($recaptcha_response) ) {
+            $any_errors    = true;
+            $recaptcha_err = "Please check the reCAPTCHA box";
+        } else {
+
+            // Verify the reCAPTCHA response (returns JSON data)
+            $verify_response = file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret=' . $recpatch_secret_key . '&response=' . $recaptcha_response);
+
+            // Decode JSON data of API response
+            $response_data = json_decode($verify_response);
+            if ( !$response_data->success ) {
+                $any_errors    = true;
+                $recaptcha_err = "reCAPTCHA failed";
+            }
+        }
+    }
+
     // Check if any fields are empty or invalid
     // Show error message if so
     $fname = trim(filter_input(INPUT_POST, 'fname', FILTER_SANITIZE_STRING));
     $lname = trim(filter_input(INPUT_POST, 'lname', FILTER_SANITIZE_STRING));
     $email = trim(filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL));
-
-    $any_errors = false;
 
     if ( empty($fname) ) {
         $any_errors = true;
@@ -67,7 +94,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 $module->sendPasswordResetEmail($rcpro_participant_id, true);
             } else {
                 // Create the account
-                $rcpro_username = $module->PARTICIPANT->createParticipant($email, $fname, $lname);
+                $rcpro_username       = $module->PARTICIPANT->createParticipant($email, $fname, $lname);
+                $rcpro_participant_id = $module->PARTICIPANT->getParticipantIdFromUsername($rcpro_username);
                 $module->sendNewParticipantEmail($rcpro_username, $email, $fname, $lname);
             }
 
@@ -75,6 +103,10 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             if ( $settings->shouldEnrollUponRegistration((int) $project_id) ) {
                 $data_access_group = $module->AUTH->get_data_access_group_id();
                 $module->PROJECT->enrollParticipant($rcpro_participant_id, $project_id, $data_access_group, $rcpro_username);
+                $emailToNotify = $settings->getAutoEnrollNotificationEmail((int) $project_id);
+                if ( !empty($emailToNotify) ) {
+                    $module->sendAutoEnrollNotificationEmail($emailToNotify, $project_id);
+                }
             }
 
             // Give confirmation message
@@ -137,6 +169,14 @@ $module->UI->ShowParticipantHeader('Create Account');
             <?= $email_err; ?>
         </span>
     </div>
+    <?php if ( isset($recaptcha_site_key) ) { ?>
+        <!-- Google reCAPTCHA box -->
+        <div class="form-group g-recaptcha <?= !empty($recaptcha_err) ? 'is-invalid' : '' ?>"
+            style="display:flex; justify-content: center;" data-sitekey="<?= $recaptcha_site_key ?>"></div>
+        <span class="invalid-feedback">
+            <?= $recaptcha_err; ?>
+        </span>
+    <?php } ?>
     <div class="form-group d-grid">
         <input type="submit" class="btn btn-primary" value="Create Account">
     </div>
@@ -158,6 +198,10 @@ $module->UI->ShowParticipantHeader('Create Account');
 
     a:hover {
         text-shadow: 0px 0px 5px #900000;
+    }
+
+    div.is-invalid {
+        /* border: 1px solid #dc3545; */
     }
 </style>
 <?php $module->UI->EndParticipantPage(); ?>
