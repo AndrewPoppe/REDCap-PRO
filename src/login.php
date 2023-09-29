@@ -6,7 +6,7 @@ namespace YaleREDCap\REDCapPRO;
 
 // Initialize Authentication
 $module->AUTH->init();
-
+var_dump($_SESSION);
 // Login Helper
 $Login = new LoginHelper($module);
 
