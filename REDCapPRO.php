@@ -9,6 +9,7 @@ require_once "src/classes/AjaxHandler.php";
 require_once "src/classes/Auth.php";
 require_once "src/classes/DAG.php";
 require_once "src/classes/Instrument.php";
+require_once "src/classes/LoginHelper.php";
 require_once "src/classes/ParticipantHelper.php";
 require_once "src/classes/Project.php";
 require_once "src/classes/ProjectHelper.php";
@@ -319,6 +320,8 @@ class REDCapPRO extends AbstractExternalModule
             // Store cookie to return to survey
         } else {
             $this->AUTH->set_survey_url(APP_PATH_SURVEY_FULL . "?s=${survey_hash}");
+            $this->AUTH->set_redcap_project_id($project_id);
+            $this->AUTH->set_data_access_group_id($group_id);
             \Session::savecookie($this->APPTITLE . "_survey_url", APP_PATH_SURVEY_FULL . "?s=${survey_hash}", 0, TRUE);
             $this->AUTH->set_survey_active_state(TRUE);
             header("location: " . $this->getUrl("src/login.php", true) . "&s=${survey_hash}");
@@ -431,7 +434,7 @@ class REDCapPRO extends AbstractExternalModule
 
     public function redcap_module_link_check_display($project_id, $link)
     {
-        if ($project_id === null) {
+        if ( $project_id === null ) {
             return $link;
         }
         $role = $this->getUserRole($this->framework->getUser()->getUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
@@ -855,6 +858,15 @@ class REDCapPRO extends AbstractExternalModule
         return $users;
     }
 
+    public function safeGetUsername() : string
+    {
+        try {
+            return $this->framework->getUser()->getUsername() ?? "";
+        } catch ( \Throwable $e ) {
+            return "";
+        }
+    }
+
     /**
      * Logs errors thrown during operation
      * 
@@ -871,7 +883,7 @@ class REDCapPRO extends AbstractExternalModule
             "error_file"    => $e->getFile(),
             "error_line"    => $e->getLine(),
             "error_string"  => $e->__toString(),
-            "redcap_user"   => $this->framework->getUser()->getUsername(),
+            "redcap_user"   => $this->safeGetUsername(),
             "module_token"  => $this->getModuleToken()
         ];
         if ( isset($e->rcpro) ) {

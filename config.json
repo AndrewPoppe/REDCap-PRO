@@ -49,6 +49,20 @@
             "name": "<strong>Lockout Duration</strong>:<br>Length of a lockout due to failed login attempts, in seconds (default is 300 seconds)",
             "type": "text",
             "validation": "integer"
+        },
+        {
+            "key": "allow-self-registration-system",
+            "name": "<strong>Allow Self-Registration</strong>:<br>Should participants be allowed to create their own accounts? (default is No)<br><em>Note: this must also be enabled in a project's settings to take effect</em>",
+            "type": "checkbox"
+        },
+        {
+            "key": "allow-auto-enroll-upon-self-registration-system",
+            "name": "<strong>Allow Auto-Enroll Upon Self-Registration</strong>:<br>Should participants be automatically enrolled in the project upon self-registration? (default is No)<br><em>Note: this must also be enabled in a project's settings to take effect</em>",
+            "type": "checkbox",
+            "branchingLogic": {
+                "field": "allow-self-registration-system",
+                "value": "1"
+            }
         }
     ],
     "links": {
@@ -78,7 +92,8 @@
         "src/create-password",
         "src/forgot-password",
         "src/forgot-username",
-        "src/session_check"
+        "src/session_check",
+        "src/create-account"
     ],
     "auth-ajax-actions": [
         "getLogs"

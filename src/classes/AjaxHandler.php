@@ -12,9 +12,9 @@ class AjaxHandler
     ];
     public function __construct(REDCapPRO $module, string $method, array $params, $project_id)
     {
-        $this->method = $method;
-        $this->params = $params ?? [];
-        $this->module = $module;
+        $this->method     = $method;
+        $this->params     = $params ?? [];
+        $this->module     = $module;
         $this->project_id = $project_id;
     }
 
@@ -23,7 +23,6 @@ class AjaxHandler
         if ( !in_array($this->method, $this->methods, true) ) {
             throw new REDCapProException("Invalid ajax method");
         }
-        $this->module->log('ok', []);
         return $this->{$this->method}();
     }
 
@@ -31,7 +30,7 @@ class AjaxHandler
     {
         $logs = [];
         try {
-            if ( $this->params["cc"]) {
+            if ( $this->params["cc"] ) {
                 if ( !$this->module->framework->isSuperUser() ) {
                     throw new REDCapProException("You must be an admin to view Control Center logs");
                 }
@@ -41,7 +40,7 @@ class AjaxHandler
                     $logs[] = $row;
                 }
             } else {
-                $result = $this->module->selectLogs("SELECT " . implode(', ', REDCapPRO::$logColumns) . " WHERE project_id = ?", [$this->project_id]);
+                $result = $this->module->selectLogs("SELECT " . implode(', ', REDCapPRO::$logColumns) . " WHERE project_id = ?", [ $this->project_id ]);
 
                 while ( $row = $result->fetch_assoc() ) {
                     $logs[] = $row;

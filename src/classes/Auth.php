@@ -33,7 +33,7 @@ class Auth
     {
         // To ensure any REDCap user is logged out 
         $redcap_session_id = $_COOKIE["PHPSESSID"];
-        if (isset($redcap_session_id)) {
+        if ( isset($redcap_session_id) ) {
             \Session::destroy($redcap_session_id);
             \Session::deletecookie("PHPSESSID");
             session_destroy();
@@ -42,8 +42,8 @@ class Auth
         // If we already have a session, use it.
         // Otherwise, create a new session.
         $session_id = $_COOKIE[$this->SESSION_NAME];
-        if (!empty($session_id)) {
-            if ($session_id !== session_id()) {
+        if ( !empty($session_id) ) {
+            if ( $session_id !== session_id() ) {
                 \Session::destroy(session_id());
                 session_destroy();
             }
@@ -69,7 +69,7 @@ class Auth
     public function destroySession()
     {
         $session_id = $_COOKIE[$this->SESSION_NAME];
-        if (isset($session_id)) {
+        if ( isset($session_id) ) {
             \Session::destroy($session_id);
         }
         \Session::deletecookie($this->SESSION_NAME);
@@ -110,11 +110,31 @@ class Auth
         return $_SESSION[$this->APPTITLE . "_username"];
     }
 
+    public function get_redcap_project_id()
+    {
+        return $_SESSION[$this->APPTITLE . "_redcap_project_id"];
+    }
+
+    public function get_data_access_group_id()
+    {
+        return $_SESSION[$this->APPTITLE . "_data_access_group_id"];
+    }
+
     // SETS
 
     public function deactivate_survey_link()
     {
         unset($_SESSION[$this->APPTITLE . "_survey_link_active"]);
+    }
+
+    public function set_redcap_project_id($project_id)
+    {
+        $_SESSION[$this->APPTITLE . "_redcap_project_id"] = $project_id;
+    }
+
+    public function set_data_access_group_id($dag_id)
+    {
+        $_SESSION[$this->APPTITLE . "_data_access_group_id"] = $dag_id;
     }
 
     /**
@@ -137,20 +157,20 @@ class Auth
 
         $this->set_survey_username($participant["rcpro_username"]);
         $this->set_survey_record();
-        $_SESSION["username"] = $participant["rcpro_username"];
+        $_SESSION["username"]                          = $participant["rcpro_username"];
         $_SESSION[$this->APPTITLE . "_participant_id"] = $participant["log_id"];
-        $_SESSION[$this->APPTITLE . "_username"] = $participant["rcpro_username"];
-        $_SESSION[$this->APPTITLE . "_email"] = $participant["email"];
-        $_SESSION[$this->APPTITLE . "_fname"] = $participant["fname"];
-        $_SESSION[$this->APPTITLE . "_lname"] = $participant["lname"];
-        $_SESSION[$this->APPTITLE . "_loggedin"] = true;
+        $_SESSION[$this->APPTITLE . "_username"]       = $participant["rcpro_username"];
+        $_SESSION[$this->APPTITLE . "_email"]          = $participant["email"];
+        $_SESSION[$this->APPTITLE . "_fname"]          = $participant["fname"];
+        $_SESSION[$this->APPTITLE . "_lname"]          = $participant["lname"];
+        $_SESSION[$this->APPTITLE . "_loggedin"]       = true;
     }
 
     public function set_survey_username($username)
     {
-        $orig_id = session_id();
+        $orig_id           = session_id();
         $survey_session_id = $_COOKIE["survey"];
-        if (isset($survey_session_id)) {
+        if ( isset($survey_session_id) ) {
             session_write_close();
             session_name('survey');
             session_id($survey_session_id);
@@ -166,12 +186,12 @@ class Auth
     public function set_survey_record()
     {
         $record = $_COOKIE["record"];
-        if (!isset($record)) return;
+        if ( !isset($record) ) return;
 
 
-        $orig_id = session_id();
+        $orig_id           = session_id();
         $survey_session_id = $_COOKIE["survey"];
-        if (isset($survey_session_id)) {
+        if ( isset($survey_session_id) ) {
             session_write_close();
             session_name('survey');
             session_id($survey_session_id);

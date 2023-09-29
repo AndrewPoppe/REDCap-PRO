@@ -4,13 +4,10 @@ namespace YaleREDCap\REDCapPRO;
 
 /** @var REDCapPRO $module */
 
-use YaleREDCap\REDCapPRO\LoginHelper;
-
 // Initialize Authentication
 $module->AUTH->init();
 
 // Login Helper
-require_once("classes/LoginHelper.php");
 $Login = new LoginHelper($module);
 
 // Check if the user is already logged in, if yes then redirect then to the survey
@@ -248,6 +245,14 @@ if ( !empty($login_err) ) {
         <?= $module->tt("login_password") ?>
     </a>?
 </div>
+<?php if ( $settings->shouldAllowSelfRegistration((int) $module->getProjectId()) ) { ?>
+    <div style="text-align: center;">
+        Don't have an account?
+        <a href="<?= $module->getUrl("src/create-account.php", true); ?>">
+            Create one
+        </a>
+    </div>
+<?php } ?>
 <style>
     a {
         text-decoration: none !important;

@@ -2,9 +2,6 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-require_once "src/classes/ProjectHelper.php";
-
-
 class ParticipantHelper
 {
     public REDCapPRO $module;
@@ -176,7 +173,7 @@ class ParticipantHelper
                 "token"            => "",
                 "token_ts"         => time(),
                 "token_valid"      => 0,
-                "redcap_user"      => $this->module->framework->getUser()->getUsername(),
+                "redcap_user"      => $this->module->safeGetUsername(),
                 "active"           => 1
             ]);
             if ( !$id ) {
@@ -185,7 +182,7 @@ class ParticipantHelper
             $this->module->logEvent("Participant Created", [
                 "rcpro_user_id"  => $id,
                 "rcpro_username" => $username,
-                "redcap_user"    => $this->module->framework->getUser()->getUsername()
+                "redcap_user"    => $this->module->safeGetUsername()
             ]);
             return $username;
         } catch ( \Exception $e ) {
