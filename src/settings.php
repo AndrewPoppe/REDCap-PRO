@@ -29,8 +29,8 @@ if ( isset($_GET["error"]) ) {
 }
 
 // Get possible languages
-$projectSettings     = new ProjectSettings($module);
-$languageList = $projectSettings->getLanguageFiles();
+$projectSettings = new ProjectSettings($module);
+$languageList    = $projectSettings->getLanguageFiles();
 
 // Update settings if requested
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
@@ -95,8 +95,6 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 // Get current project settings
 $settings                = $module->getProjectSettings();
 $preventEmailLoginSystem = $module->getSystemSetting("prevent-email-login-system");
-$registrationFormAllowedSystem = $module->getSystemSetting("allow-registration-form");
-$registrationFormEnabledProject = $projectSettings->registrationFormEnabled((int) $module->framework->getProjectId());
 
 ?>
 
@@ -196,7 +194,7 @@ $registrationFormEnabledProject = $projectSettings->registrationFormEnabled((int
                         <div class="form-check">
                             <input
                                 class="form-check-input <?php echo (!empty($registration_form_err)) ? 'is-invalid' : ''; ?>"
-                                aria-expanded="<?=$registrationChecked?>" aria-controls="registration-form-settings"
+                                aria-expanded="<?= $registrationChecked ?>" aria-controls="registration-form-settings"
                                 type="checkbox" id="registration-form-check" <?= $registrationChecked ?> onclick="(function(){
                                     const isChecked = $('#registration-form-check')[0].checked;
                                     $('#registration-form-settings').collapse(isChecked ? 'show' : 'hide');

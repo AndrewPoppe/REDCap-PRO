@@ -14,7 +14,7 @@ class ProjectSettings
     public function getTimeoutWarningMinutes()
     {
         $result = $this->module->getSystemSetting("warning-time");
-        if (!floatval($result)) {
+        if ( !floatval($result) ) {
             // DEFAULT TO 1 MINUTE IF NOT SET
             $result = 1;
         }
@@ -24,7 +24,7 @@ class ProjectSettings
     public function getTimeoutMinutes()
     {
         $result = $this->module->getSystemSetting("timeout-time");
-        if (!floatval($result)) {
+        if ( !floatval($result) ) {
             // DEFAULT TO 5 MINUTES IF NOT SET
             $result = 5;
         }
@@ -34,7 +34,7 @@ class ProjectSettings
     public function getPasswordLength()
     {
         $result = $this->module->getSystemSetting("password-length");
-        if (!intval($result)) {
+        if ( !intval($result) ) {
             // DEFAULT TO 8 CHARACTERS IF NOT SET
             $result = 8;
         }
@@ -44,7 +44,7 @@ class ProjectSettings
     public function getLoginAttempts()
     {
         $result = $this->module->getSystemSetting("login-attempts");
-        if (!intval($result)) {
+        if ( !intval($result) ) {
             // DEFAULT TO 3 ATTEMPTS IF NOT SET
             $result = 3;
         }
@@ -54,7 +54,7 @@ class ProjectSettings
     public function getLockoutDurationSeconds()
     {
         $result = $this->module->getSystemSetting("lockout-seconds");
-        if (!intval($result)) {
+        if ( !intval($result) ) {
             // DEFAULT TO 300 SECONDS IF NOT SET
             $result = 300;
         }
@@ -64,7 +64,7 @@ class ProjectSettings
     public function getEmailFromAddress()
     {
         $result = \REDCap::escapeHtml($this->module->getSystemSetting("email-from-address"));
-        if (!isset($result) || $result === "") {
+        if ( !isset($result) || $result === "" ) {
             $result = "noreply@REDCapPRO.com";
         }
         return $result;
@@ -83,12 +83,12 @@ class ProjectSettings
     public function getLanguageFiles()
     {
         $langs = array();
-        $path = $this->module->getModulePath() . DS . "lang" . DS;
-        if (is_dir($path)) {
+        $path  = $this->module->getModulePath() . DS . "lang" . DS;
+        if ( is_dir($path) ) {
             $files = glob($path . "*.{i,I}{n,N}{i,I}", GLOB_BRACE);
-            foreach ($files as $filename) {
-                if (is_file($filename)) {
-                    $lang = pathinfo($filename, PATHINFO_FILENAME);
+            foreach ( $files as $filename ) {
+                if ( is_file($filename) ) {
+                    $lang         = pathinfo($filename, PATHINFO_FILENAME);
                     $langs[$lang] = $filename;
                 }
             }
@@ -118,10 +118,24 @@ class ProjectSettings
      * 
      * @return bool Whether a Registration Form is enabled in this project
      */
-    public function registrationFormEnabled(int $pid) {
-        $registrationFormAllowedSystem  = $this->module->getSystemSetting("allow-registration-form");
-        $registrationFormEnabledProject = $this->module->getProjectSetting("registration-form-enabled", $pid);
+    public function registrationFormEnabled(int $pid)
+    {
+        $registrationFormAllowedSystem = $this->module->getSystemSetting("allow-registration-form");
+        $registrationForm              = $this->module->getProjectSetting("registration-form", $pid);
 
-        return $registrationFormAllowedSystem === true && $registrationFormEnabledProject === true;
+        return $registrationFormAllowedSystem === true && $registrationForm !== null;
+    }
+
+    public function getRegistrationForm(int $pid)
+    {
+        if ( !$this->registrationFormEnabled($pid) ) {
+            return [];
+        }
+        return [
+            "instrument"  => $this->module->getProjectSetting("registration-form", $pid),
+            "fname_field" => $this->module->getProjectSetting("registration-fname-field", $pid),
+            "lname_field" => $this->module->getProjectSetting("registration-lname-field", $pid),
+            "email_field" => $this->module->getProjectSetting("registration-email-field", $pid)
+        ];
     }
 }

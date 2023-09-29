@@ -187,6 +187,9 @@ class REDCapPRO extends AbstractExternalModule
         }
         $this->AUTH->init();
 
+        // Is this survey the registration survey?
+        $isRegistrationSurvey = $this->PROJECT->isRegistrationSurvey($project_id, $instrument);
+
         // Participant is logged in to their account
         if ( $this->AUTH->is_logged_in() ) {
 
@@ -431,7 +434,7 @@ class REDCapPRO extends AbstractExternalModule
 
     public function redcap_module_link_check_display($project_id, $link)
     {
-        if ($project_id === null) {
+        if ( $project_id === null ) {
             return $link;
         }
         $role = $this->getUserRole($this->framework->getUser()->getUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
@@ -1006,13 +1009,14 @@ class REDCapPRO extends AbstractExternalModule
      *
      *  @return bool whether the field is required
      */
-    public function isFieldRequired(string $fieldname, int $project_id) {
-        $sql = "SELECT field_req FROM redcap_metadata
+    public function isFieldRequired(string $fieldname, int $project_id)
+    {
+        $sql    = "SELECT field_req FROM redcap_metadata
         WHERE project_id = ?
         AND field_name = ?";
-        $params = [$project_id, $fieldname];
+        $params = [ $project_id, $fieldname ];
         $result = $this->framework->query($sql, $params);
-        $row = $result->fetch_assoc();
+        $row    = $result->fetch_assoc();
         return $row["field_req"] == 1;
     }
 
@@ -1029,7 +1033,7 @@ class REDCapPRO extends AbstractExternalModule
     function validateSettings($settings)
     {
 
-        $message = null;
+        $message   = null;
         $projectId = $this->framework->getProjectId();
 
         // System settings
@@ -1057,33 +1061,33 @@ class REDCapPRO extends AbstractExternalModule
             $lnameField       = $settings["registration-lname-field"];
             $emailField       = $settings["registration-email-field"];
 
-            if (!isset($registrationForm) && ( isset($fnameField)  || isset($lnameField)  || isset($emailField) )) {
+            if ( !isset($registrationForm) && (isset($fnameField) || isset($lnameField) || isset($emailField)) ) {
                 $message = "You must select a registration form if you want to use the registration fields.";
             }
 
             // This is redundant as the checks below will catch this
-            if (isset($registrationForm) && (!isset($fnameField)  || !isset($lnameField)  || !isset($emailField) )) {
+            if ( isset($registrationForm) && (!isset($fnameField) || !isset($lnameField) || !isset($emailField)) ) {
                 $message = "You must select all registration fields if you want to use the registration form.";
             }
 
-            $project = $this->framework->getProject($projectId);
+            $project   = $this->framework->getProject($projectId);
             $fnameForm = $project->getFormForField($fnameField ?? "");
             $lnameForm = $project->getFormForField($lnameField ?? "");
             $emailForm = $project->getFormForField($emailField ?? "");
 
             // Check that the fields actually exist on the selected form
-            if ($registrationForm !== $fnameForm) {
+            if ( $registrationForm !== $fnameForm ) {
                 $message = "The registration form must contain the first name field.";
             }
-            if ($registrationForm !== $lnameForm) {
+            if ( $registrationForm !== $lnameForm ) {
                 $message = "The registration form must contain the last name field.";
             }
-            if ($registrationForm !== $emailForm) {
+            if ( $registrationForm !== $emailForm ) {
                 $message = "The registration form must contain the email field.";
             }
 
             // Check that the fields are required
-            if (!$this->isFieldRequired($fnameField, $projectId)) {
+            if ( !$this->isFieldRequired($fnameField, $projectId) ) {
                 $message = "The first name field must be required.";
             }
 

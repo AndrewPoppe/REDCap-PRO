@@ -2,6 +2,8 @@
 
 namespace YaleREDCap\REDCapPRO;
 
+use YaleREDCap\REDCapPRO\ProjectSettings;
+
 class Instrument
 {
     public REDCapPRO $module;
@@ -12,10 +14,12 @@ class Instrument
     public $email;
     public $fname;
     public $lname;
+    public $projectId;
 
     function __construct($module, $instrument_name, $rcpro_dag)
     {
         $this->module          = $module;
+        $this->projectId       = $this->module->framework->getProjectId();
         $this->instrument_name = $instrument_name;
         $this->rcpro_dag       = $rcpro_dag;
         $this->dd              = $this->getDD();
@@ -85,7 +89,7 @@ class Instrument
     function update_form()
     {
         if ( isset($this->username) ) {
-            $rcpro_project_id  = $this->module->PARTICIPANT->getProjectIdFromPID($this->framework->getProjectId());
+            $rcpro_project_id  = $this->module->PROJECT->getProjectIdFromPID($this->projectId);
             $participants      = $this->module->PARTICIPANT->getProjectParticipants($rcpro_project_id, $this->rcpro_dag);
             $options           = "<option value=''>''</option>";
             $participants_json = json_encode($participants);
@@ -159,5 +163,13 @@ class Instrument
             </script>
             <?php
         }
+    }
+
+    // Registration Form Related Methods
+    public function isRegistrationSurvey()
+    {
+        $settings          = new ProjectSettings($this->module);
+        $registration_form = $settings->getRegistrationForm($this->module->framework->getProjectId());
+
     }
 }
