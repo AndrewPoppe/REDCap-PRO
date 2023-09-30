@@ -181,7 +181,9 @@ class REDCapPRO extends AbstractExternalModule
         $response_id,
         $repeat_instance
     ) {
-        $this->log('what', [ 'dag' => $group_id ]);
+
+        // workaround for $group_id bug - Might cause other issues? Is $response_id ever not set in a condition when $group_id is set?
+        $group_id = (isset($response_id) && $response_id !== "") ? $group_id : null;
 
         // Initialize Authentication
         if ( isset($record) ) {
