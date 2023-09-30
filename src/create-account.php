@@ -11,7 +11,7 @@ if ( isset($recaptcha_site_key) ) {
 
 // Initialize Authentication
 $module->AUTH->init();
-var_dump($_SESSION);
+
 // Check if the user is already logged in, if yes then redirect then to the survey
 if ( $module->AUTH->is_logged_in() ) {
     $survey_url        = $module->AUTH->get_survey_url();
