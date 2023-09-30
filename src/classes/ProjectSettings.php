@@ -129,6 +129,6 @@ class ProjectSettings
 
     public function getAutoEnrollNotificationEmail(int $pid) : string
     {
-        return $this->module->getProjectSetting("auto-enroll-notification-email", $pid);
+        return $this->module->getProjectSetting("auto-enroll-notification-email", $pid) ?? "";
     }
 }
