@@ -55,13 +55,7 @@ $module->initializeJavascriptModuleObject();
         const columns = ["<?= implode('", "', REDCapPRO::$logColumns) ?>"];
 
         function logExport(type) {
-            $.ajax({
-                'type': 'POST',
-                'url': "<?= $module->getUrl("src/logger.php") ?>",
-                'data': JSON.stringify({
-                    export_type: type
-                })
-            });
+            RCPRO_module.ajax('exportLogs', { cc: false, export_type: type });
         }
 
         $(document).ready(function () {

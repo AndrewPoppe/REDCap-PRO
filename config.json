@@ -87,7 +87,8 @@
         "src/session_check"
     ],
     "auth-ajax-actions": [
-        "getLogs"
+        "getLogs",
+        "exportLogs"
     ],
     "framework-version": 12,
     "compatibility": {

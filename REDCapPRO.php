@@ -158,7 +158,20 @@ class REDCapPRO extends AbstractExternalModule
 
     public function redcap_module_ajax($action, $payload, $project_id, $record, $instrument, $event_id, $repeat_instance, $survey_hash, $response_id, $survey_queue_hash, $page, $page_full, $user_id, $group_id)
     {
-        $ajaxHandler = new AjaxHandler($this, $action, $payload, $project_id);
+        $other       = [
+            "record"            => $record,
+            "instrument"        => $instrument,
+            "event_id"          => $event_id,
+            "repeat_instance"   => $repeat_instance,
+            "survey_hash"       => $survey_hash,
+            "response_id"       => $response_id,
+            "survey_queue_hash" => $survey_queue_hash,
+            "page"              => $page,
+            "page_full"         => $page_full,
+            "user_id"           => $user_id,
+            "group_id"          => $group_id
+        ];
+        $ajaxHandler = new AjaxHandler($this, $action, $payload, $project_id, $other);
         return $ajaxHandler->handleAjax();
     }
 
@@ -188,12 +201,12 @@ class REDCapPRO extends AbstractExternalModule
         $this->AUTH->init();
 
         // Participant is logged in to their account
-        if ( $this->AUTH->is_logged_in()) {
+        if ( $this->AUTH->is_logged_in() ) {
             // Settings
             $settings = new ProjectSettings($this);
-            
+
             // Check MFA Token
-            if ($settings->mfaEnabled((int) $project_id) && !$this->AUTH->is_mfa_verified()) {
+            if ( $settings->mfaEnabled((int) $project_id) && !$this->AUTH->is_mfa_verified() ) {
                 $code             = $this->AUTH->get_mfa_code();
                 $participantEmail = $this->PARTICIPANT->getEmail($this->AUTH->get_participant_id());
                 $this->sendMfaTokenEmail($participantEmail, $code);
@@ -204,7 +217,7 @@ class REDCapPRO extends AbstractExternalModule
             // Get RCPRO project ID
             $rcpro_project_id = $this->PROJECT->getProjectIdFromPID($project_id);
 
-            
+
 
             // Determine whether participant is enrolled in the study.
             $rcpro_participant_id = $this->AUTH->get_participant_id();
@@ -744,11 +757,11 @@ class REDCapPRO extends AbstractExternalModule
         $from    = $settings->getEmailFromAddress();
         $body    = "<html><body><div>
         <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
-        <p>".$this->tt('mfa_email2')."</p>
-        <p>".$this->tt('mfa_email3')." <strong> ${token}</strong><br></p>
-        <p><em>".$this->tt('mfa_email4')."</em></p><br><br>";
+        <p>" . $this->tt('mfa_email2') . "</p>
+        <p>" . $this->tt('mfa_email3') . " <strong> ${token}</strong><br></p>
+        <p><em>" . $this->tt('mfa_email4') . "</em></p><br><br>";
 
-        $body .= '<p>'.$this->tt('mfa_email5').'</p>';
+        $body .= '<p>' . $this->tt('mfa_email5') . '</p>';
         if ( $this->framework->getProjectId() ) {
             $study_contact = $this->getContactPerson($subject);
             if ( isset($study_contact["info"]) ) {

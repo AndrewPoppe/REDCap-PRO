@@ -7,15 +7,18 @@ class AjaxHandler
     public string $method;
     public array $params;
     private $project_id;
+    public $args;
     private $methods = [
         "getLogs",
+        "exportLogs"
     ];
-    public function __construct(REDCapPRO $module, string $method, array $params, $project_id)
+    public function __construct(REDCapPRO $module, string $method, array $params, $project_id, $args = null)
     {
-        $this->method = $method;
-        $this->params = $params ?? [];
-        $this->module = $module;
+        $this->method     = $method;
+        $this->params     = $params ?? [];
+        $this->module     = $module;
         $this->project_id = $project_id;
+        $this->args       = $args;
     }
 
     public function handleAjax()
@@ -31,7 +34,7 @@ class AjaxHandler
     {
         $logs = [];
         try {
-            if ( $this->params["cc"]) {
+            if ( $this->params["cc"] ) {
                 if ( !$this->module->framework->isSuperUser() ) {
                     throw new REDCapProException("You must be an admin to view Control Center logs");
                 }
@@ -41,7 +44,7 @@ class AjaxHandler
                     $logs[] = $row;
                 }
             } else {
-                $result = $this->module->selectLogs("SELECT " . implode(', ', REDCapPRO::$logColumns) . " WHERE project_id = ?", [$this->project_id]);
+                $result = $this->module->selectLogs("SELECT " . implode(', ', REDCapPRO::$logColumns) . " WHERE project_id = ?", [ $this->project_id ]);
 
                 while ( $row = $result->fetch_assoc() ) {
                     $logs[] = $row;
@@ -51,6 +54,26 @@ class AjaxHandler
             $this->module->logError($e->getMessage(), $e);
         } finally {
             return $this->module->escape($logs);
+        }
+    }
+
+    private function exportLogs()
+    {
+        try {
+            if ( $this->params["cc"] && !$this->module->framework->isSuperUser() ) {
+                throw new REDCapProException("You must be an admin to view Control Center logs");
+            }
+            $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+            if ( $role < 3 ) {
+                return;
+            }
+            $this->module->logEvent("Exported logs", [
+                "export_type" => $this->params["export_type"],
+                "redcap_user" => $this->module->safeGetUsername(),
+                "export_page" => $this->params["cc"] ? "src/cc_logs" : "src/logs"
+            ]);
+        } catch ( \Throwable $e ) {
+            $this->module->logError($e->getMessage(), $e);
         }
     }
 }
