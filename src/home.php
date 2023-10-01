@@ -3,7 +3,7 @@ namespace YaleREDCap\REDCapPRO;
 
 /** @var REDCapPRO $module */
 
-$role = $module->getUserRole($module->framework->getUser()->getUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$role = $module->getUserRole($module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 echo "<title>" . $module->APPTITLE . " - Home</title>";
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module->UI->ShowHeader("Home");

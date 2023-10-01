@@ -45,7 +45,7 @@ class ParticipantHelper
                         "rcpro_username"        => $username,
                         "old_email"             => $current_email,
                         "new_email"             => $new_email,
-                        "redcap_user"           => $this->module->framework->getUser()->getUsername(),
+                        "redcap_user"           => $this->module->safeGetUsername(),
                         "project_id"            => $project_id,
                         "initiating_project_id" => $current_pid
                     ]);
@@ -87,7 +87,7 @@ class ParticipantHelper
                     "rcpro_username"        => $participant["rcpro_username"],
                     "old_name"              => $participant["fname"] . " " . $participant["lname"],
                     "new_name"              => $fname . " " . $lname,
-                    "redcap_user"           => $this->module->framework->getUser()->getUsername(),
+                    "redcap_user"           => $this->module->safeGetUsername(),
                     "project_id"            => $project_id,
                     "initiating_project_id" => $current_pid
                 ]);
@@ -176,7 +176,7 @@ class ParticipantHelper
                 "token"            => "",
                 "token_ts"         => time(),
                 "token_valid"      => 0,
-                "redcap_user"      => $this->module->framework->getUser()->getUsername(),
+                "redcap_user"      => $this->module->safeGetUsername(),
                 "active"           => 1
             ]);
             if ( !$id ) {
@@ -185,7 +185,7 @@ class ParticipantHelper
             $this->module->logEvent("Participant Created", [
                 "rcpro_user_id"  => $id,
                 "rcpro_username" => $username,
-                "redcap_user"    => $this->module->framework->getUser()->getUsername()
+                "redcap_user"    => $this->module->safeGetUsername()
             ]);
             return $username;
         } catch ( \Exception $e ) {
@@ -577,7 +577,7 @@ class ParticipantHelper
     {
         $this->module->logEvent("Searched on Enroll Tab", [
             "search"      => \REDCap::escapeHtml($search_term),
-            "redcap_user" => $this->module->framework->getUser()->getUsername()
+            "redcap_user" => $this->module->safeGetUsername()
         ]);
         $SQL = "SELECT fname, lname, email, log_id, rcpro_username, active 
                 WHERE message = 'PARTICIPANT' 
@@ -612,14 +612,14 @@ class ParticipantHelper
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $this->getUserName($rcpro_participant_id),
                     "active"               => $value,
-                    "redcap_user"          => $this->module->framework->getUser()->getUsername()
+                    "redcap_user"          => $this->module->safeGetUsername()
                 ]);
             } else {
                 $this->module->logEvent("Failed to set participant active status", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $this->getUserName($rcpro_participant_id),
                     "active"               => $value,
-                    "redcap_user"          => $this->module->framework->getUser()->getUsername()
+                    "redcap_user"          => $this->module->safeGetUsername()
                 ]);
             }
             return $res;

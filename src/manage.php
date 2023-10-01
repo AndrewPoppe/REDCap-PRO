@@ -4,7 +4,7 @@ namespace YaleREDCap\REDCapPRO;
 
 /** @var REDCapPRO $module */
 
-$role = $module->getUserRole($module->framework->getUser()->getUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$role = $module->getUserRole($module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ( $role === 0 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
@@ -33,9 +33,9 @@ $project_id       = (int) $module->framework->getProjectId();
 $rcpro_project_id = $module->PROJECT->getProjectIdFromPID($project_id);
 
 // DAGs
-$rcpro_user_dag     = $module->DAG->getCurrentDag($module->framework->getUser()->getUsername(), $project_id);
+$rcpro_user_dag     = $module->DAG->getCurrentDag($module->safeGetUsername(), $project_id);
 $project_dags       = $module->DAG->getProjectDags();
-$user_dags          = $module->DAG->getPossibleDags($module->framework->getUser()->getUsername(), $project_id);
+$user_dags          = $module->DAG->getPossibleDags($module->safeGetUsername(), $project_id);
 $project_dags[NULL] = "Unassigned";
 $projectHasDags     = count($project_dags) > 1;
 
@@ -242,7 +242,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         if ( !$error && $projectHasDags ) {
             $rcpro_link_id   = $module->PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
             $participant_dag = intval($module->DAG->getParticipantDag($rcpro_link_id));
-            $user_dag        = $module->DAG->getCurrentDag($module->framework->getUser()->getUsername(), $module->framework->getProjectId());
+            $user_dag        = $module->DAG->getCurrentDag($module->safeGetUsername(), $module->framework->getProjectId());
             if ( isset($user_dag) && $participant_dag !== $user_dag ) {
                 $function = $generic_function;
                 $icon     = "error";

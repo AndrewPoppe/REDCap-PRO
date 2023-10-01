@@ -46,7 +46,7 @@ class UI
 
     public function ShowHeader(string $page)
     {
-        $role   = $this->module->getUserRole($this->module->framework->getUser()->getUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+        $role   = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
         $header = "
         <style>
             .rcpro-nav a {

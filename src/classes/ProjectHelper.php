@@ -26,7 +26,7 @@ class ProjectHelper
             return $this->module->logEvent("PROJECT", [
                 "pid"         => $pid,
                 "active"      => 1,
-                "redcap_user" => $this->module->framework->getUser()->getUsername()
+                "redcap_user" => $this->module->safeGetUsername()
             ]);
         } catch ( \Exception $e ) {
             $this->module->logError("Error creating project entry", $e);
@@ -75,14 +75,14 @@ class ProjectHelper
                 "rcpro_project_id"     => $rcpro_project_id,
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "active"               => 1,
-                "redcap_user"          => $this->module->framework->getUser()->getUsername(),
+                "redcap_user"          => $this->module->safeGetUsername(),
                 "project_dag"          => $dag
             ]);
             $this->module->logEvent("Enrolled Participant", [
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "rcpro_username"       => $rcpro_username,
                 "rcpro_project_id"     => $rcpro_project_id,
-                "redcap_user"          => $this->module->framework->getUser()->getUsername(),
+                "redcap_user"          => $this->module->safeGetUsername(),
                 "project_dag"          => $dag
             ]);
             return TRUE;
@@ -109,7 +109,7 @@ class ProjectHelper
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $rcpro_username,
                     "rcpro_project_id"     => $rcpro_project_id,
-                    "redcap_user"          => $this->module->framework->getUser()->getUsername()
+                    "redcap_user"          => $this->module->safeGetUsername()
                 ]);
             }
             return $result;
@@ -149,7 +149,7 @@ class ProjectHelper
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $rcpro_username,
                     "rcpro_project_id"     => $rcpro_project_id,
-                    "redcap_user"          => $this->module->framework->getUser()->getUsername(),
+                    "redcap_user"          => $this->module->safeGetUsername(),
                     "project_dag"          => $dag
                 ]);
             }
@@ -298,7 +298,7 @@ class ProjectHelper
                 $this->module->logEvent("Project Status Set", [
                     "rcpro_project_id" => $rcpro_project_id,
                     "active_status"    => $active,
-                    "redcap_user"      => $this->module->framework->getUser()->getUsername()
+                    "redcap_user"      => $this->module->safeGetUsername()
                 ]);
             }
         } catch ( \Exception $e ) {

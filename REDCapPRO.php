@@ -328,14 +328,14 @@ class REDCapPRO extends AbstractExternalModule
 
     public function redcap_data_entry_form($project_id, $record, $instrument, $event_id, $group_id, $repeat_instance = 1)
     {
-        $role = $this->getUserRole($this->framework->getUser()->getUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+        $role = $this->getUserRole($this->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
         if ( $role < 2 ) {
             return;
         }
         echo '<link href="' . $this->getUrl("lib/select2/select2.min.css") . '" rel="stylesheet" />
         <script src="' . $this->getUrl("lib/select2/select2.min.js") . '"></script>';
 
-        $rcpro_dag  = $this->DAG->getCurrentDag($this->framework->getUser()->getUsername(), $project_id);
+        $rcpro_dag  = $this->DAG->getCurrentDag($this->safeGetUsername(), $project_id);
         $instrument = new Instrument($this, $instrument, $rcpro_dag);
         $instrument->update_form();
     }
@@ -358,9 +358,9 @@ class REDCapPRO extends AbstractExternalModule
         } else {
             $this->PROJECT->setProjectActive($pid, 1);
         }
-        $this->changeUserRole($this->framework->getUser()->getUsername(), NULL, 3);
+        $this->changeUserRole($this->safeGetUsername(), NULL, 3);
         $this->logEvent("Module Enabled", [
-            "redcap_user" => $this->framework->getUser()->getUsername(),
+            "redcap_user" => $this->safeGetUsername(),
             "version"     => $version
         ]);
     }
@@ -377,7 +377,7 @@ class REDCapPRO extends AbstractExternalModule
     {
         $this->PROJECT->setProjectActive($project_id, 0);
         $this->logEvent("Module Disabled", [
-            "redcap_user" => $this->framework->getUser()->getUsername(),
+            "redcap_user" => $this->safeGetUsername(),
             "version"     => $version
         ]);
     }
@@ -392,7 +392,7 @@ class REDCapPRO extends AbstractExternalModule
     public function redcap_module_system_enable($version)
     {
         $this->logEvent("Module Enabled - System", [
-            "redcap_user" => $this->framework->getUser()->getUsername(),
+            "redcap_user" => $this->safeGetUsername(),
             "version"     => $version
         ]);
     }
@@ -407,7 +407,7 @@ class REDCapPRO extends AbstractExternalModule
     public function redcap_module_system_disable($version)
     {
         $this->logEvent("Module Disabled - System", [
-            "redcap_user" => $this->framework->getUser()->getUsername(),
+            "redcap_user" => $this->safeGetUsername(),
             "version"     => $version
         ]);
     }
@@ -431,10 +431,10 @@ class REDCapPRO extends AbstractExternalModule
 
     public function redcap_module_link_check_display($project_id, $link)
     {
-        if ($project_id === null) {
+        if ( $project_id === null ) {
             return $link;
         }
-        $role = $this->getUserRole($this->framework->getUser()->getUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+        $role = $this->getUserRole($this->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
         if ( $role > 0 ) {
             return $link;
         }
@@ -446,7 +446,7 @@ class REDCapPRO extends AbstractExternalModule
         $this->logEvent("Module Version Changed", [
             "version"     => $version,
             "old_version" => $old_version,
-            "redcap_user" => $this->framework->getUser()->getUsername()
+            "redcap_user" => $this->safeGetUsername()
         ]);
 
         $new_version_number = explode('v', $version)[1];
@@ -655,7 +655,7 @@ class REDCapPRO extends AbstractExternalModule
             $current_pid = $this->getProjectId() ?? "system";
 
             // Get REDCap User's username if not initiated by participant
-            $redcap_user = $selfInitiated ? null : $this->framework->getUser()->getUsername();
+            $redcap_user = $selfInitiated ? null : $this->safeGetUsername();
 
             // Get all projects to which participant is currently enrolled
             $project_ids = $this->PARTICIPANT->getEnrolledProjects($rcpro_participant_id);
@@ -760,7 +760,7 @@ class REDCapPRO extends AbstractExternalModule
             $this->setProjectSetting("monitors", $roles["1"]);
 
             $this->logEvent("Changed user role", [
-                "redcap_user"            => $this->framework->getUser()->getUsername(),
+                "redcap_user"            => $this->safeGetUsername(),
                 "redcap_user_acted_upon" => $username,
                 "old_role"               => $oldRole,
                 "new_role"               => $newRole
@@ -855,6 +855,15 @@ class REDCapPRO extends AbstractExternalModule
         return $users;
     }
 
+    public function safeGetUsername() : string
+    {
+        try {
+            return $this->framework->getUser()->getUsername() ?? "";
+        } catch ( \Throwable $e ) {
+            return "";
+        }
+    }
+
     /**
      * Logs errors thrown during operation
      * 
@@ -871,7 +880,7 @@ class REDCapPRO extends AbstractExternalModule
             "error_file"    => $e->getFile(),
             "error_line"    => $e->getLine(),
             "error_string"  => $e->__toString(),
-            "redcap_user"   => $this->framework->getUser()->getUsername(),
+            "redcap_user"   => $this->safeGetUsername(),
             "module_token"  => $this->getModuleToken()
         ];
         if ( isset($e->rcpro) ) {
@@ -897,7 +906,7 @@ class REDCapPRO extends AbstractExternalModule
         $logParametersString = json_encode($logParameters);
         $this->logEvent($message, [
             "parameters"   => $logParametersString,
-            "redcap_user"  => $this->framework->getUser()->getUsername(),
+            "redcap_user"  => $this->safeGetUsername(),
             "module_token" => $this->getModuleToken()
         ]);
     }
@@ -1037,7 +1046,7 @@ class REDCapPRO extends AbstractExternalModule
         $logParameters = json_encode($settings);
         $this->logEvent("Configuration Saved", [
             "parameters"  => $logParameters,
-            "redcap_user" => $this->framework->getUser()->getUsername(),
+            "redcap_user" => $this->safeGetUsername(),
             "message"     => $message,
             "success"     => is_null($message)
         ]);
