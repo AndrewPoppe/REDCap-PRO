@@ -10,7 +10,8 @@ class AjaxHandler
     public $args;
     private $methods = [
         "getLogs",
-        "exportLogs"
+        "exportLogs",
+        "importCsvRegister"
     ];
     public function __construct(REDCapPRO $module, string $method, array $params, $project_id, $args = null)
     {
@@ -74,6 +75,34 @@ class AjaxHandler
             ]);
         } catch ( \Throwable $e ) {
             $this->module->logError($e->getMessage(), $e);
+        }
+    }
+
+    private function importCsvRegister()
+    {
+        $this->module->log("Importing CSV register", [ 'contents' => json_encode($this->params, JSON_PRETTY_PRINT) ]);
+        $csvString = $this->params['data'];
+        $sagImport = new CsvRegisterImport($this->module, $csvString);
+        $sagImport->parseCsvString();
+
+        $contentsValid = $sagImport->contentsValid();
+        if ( $contentsValid !== true ) {
+            return json_encode([
+                'status'  => 'error',
+                'message' => $sagImport->errorMessages
+            ]);
+        }
+
+        if ( filter_var($this->params['confirm'], FILTER_VALIDATE_BOOLEAN) ) {
+            return json_encode([
+                'status' => 'ok',
+                'result' => $sagImport->import()
+            ]);
+        } else {
+            return json_encode([
+                'status' => 'ok',
+                'table'  => $sagImport->getUpdateTable()
+            ]);
         }
     }
 }

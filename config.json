@@ -88,7 +88,8 @@
     ],
     "auth-ajax-actions": [
         "getLogs",
-        "exportLogs"
+        "exportLogs",
+        "importCsvRegister"
     ],
     "framework-version": 12,
     "compatibility": {

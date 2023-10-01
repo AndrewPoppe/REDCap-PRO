@@ -12,6 +12,7 @@ if ( $role < 2 ) {
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module->UI->ShowHeader("Register");
 echo "<title>" . $module->APPTITLE . " - Register</title>";
+$module->initializeJavascriptModuleObject();
 
 // Check for errors
 if ( isset($_GET["error"]) ) {
@@ -169,6 +170,10 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     <p>Submit this form to create a new account for this participant.</p>
     <p><em>If the participant already has an account, you can enroll them in this project </em><strong><a
                 href="<?= $module->getUrl("src/enroll.php"); ?>">here</a></strong>.</p>
+
+    <button id="importCsv" class="btn btn-xs btn-success mb-2" onclick="$('#csvFile').click();">Import CSV</button>
+    <input type="file" id="csvFile" accept=".csv" style="display: none;" />
+
     <form class="rcpro-form register-form" action="<?= $module->getUrl("src/register.php"); ?>" method="POST"
         enctype="multipart/form-data" target="_self">
         <div class="form-group">
@@ -211,6 +216,47 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     </form>
 </div>
 <script>
+    const RCPRO = <?= $module->getJavascriptModuleObjectName() ?>;
+    $(document).ready(function () {
+        RCPRO.handleFiles = function () {
+            console.log(this.files);
+            if (this.files.length !== 1) {
+                return;
+            }
+            const file = this.files[0];
+            this.value = null;
+
+            if (file.type !== "text/csv" && file.name.toLowerCase().indexOf('.csv') === -1) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                window.csv_file_contents = e.target.result;
+                RCPRO.ajax('importCsvRegister', { data: e.target.result })
+                    .then((response) => {
+                        const result = JSON.parse(response);
+                        if (result.status != 'error') {
+                            alert('ok');
+                            console.log(result);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                html: result.message,
+                                showConfirmButton: false
+                            });
+                        }
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                    });
+            };
+            reader.readAsText(file);
+        }
+        const importFileElement = document.getElementById("csvFile");
+        importFileElement.addEventListener("change", RCPRO.handleFiles);
+    });
     <?php if ( $dag_err ) { ?>
         Swal.fire({
             icon: "error",
