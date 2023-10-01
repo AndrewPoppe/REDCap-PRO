@@ -132,12 +132,14 @@ itself is available to Monitors and above.
 | Disenroll         | Action | Removes the participant from this study project                                                                                                                                                            |    <u>Normal User</u>    |
 
 ### Enroll
-This tab allows a user to search for a registered participant in order to enroll
-them into this study project. This tab is available to Normal Users and above.
+This tab allows a user to search for a registered participant in order to enroll them into this study project. Users can
+set the participant's Data Access Group at this time as well, if applicable. This tab is available to Normal Users and 
+above.
 
 ### Register
-This tab allows a user to register a participant with **REDCapPRO**. It is available
-to Normal Users and above.
+This tab allows a user to register a participant with **REDCapPRO**. Users also have the option to enroll at the same 
+time as registering. They can set the participant's Data Access Group at this time as well, if applicable.  This tab is 
+available to Normal Users and above.
 
 ### Study Staff
 This tab allows Managers to set the `role` of users in the study project. All
