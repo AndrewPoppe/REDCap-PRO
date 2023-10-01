@@ -29,10 +29,10 @@ if ( isset($_GET["error"]) ) {
 
 // DAGs (for automatic enrollment)
 $project_id         = (int) $module->framework->getProjectId();
-$project_dags       = $module->DAG->getProjectDags();
+$project_dags       = $module->framework->escape($module->DAG->getProjectDags());
 $project_dags[null] = "Unassigned";
 $projectHasDags     = count($project_dags) > 1;
-$redcap_dag         = $module->DAG->getCurrentDag($redcap_username, $project_id);
+$redcap_dag         = $module->framework->escape($module->DAG->getCurrentDag($redcap_username, $project_id));
 if ( $projectHasDags ) {
     ?>
     <script>
@@ -86,7 +86,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     }
 
     // Validate DAG
-    $dag = $projectHasDags ? \REDCap::escapeHtml(trim($_POST["dag"])) : '';
+    $dag_raw = filter_input(INPUT_POST, "dag", FILTER_SANITIZE_STRING);
+    $dag     = $projectHasDags ? \REDCap::escapeHtml(trim($dag_raw)) : '';
     if ( !in_array($dag, array_keys($project_dags)) ) {
         $dag_err   = "That is not a valid Data Access Group.";
         $any_error = true;
@@ -106,7 +107,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             ]);
 
             // If we are also enrolling the participant, do that now
-            if ( $_POST["action"] !== "register" ) {
+            $action = filter_input(INPUT_POST, "action", FILTER_SANITIZE_STRING);
+            if ( $action !== "register" ) {
                 $rcpro_participant_id = $module->PARTICIPANT->getParticipantIdFromUsername($username);
 
                 $result = $module->PROJECT->enrollParticipant($rcpro_participant_id, $project_id, $dag, $username);
