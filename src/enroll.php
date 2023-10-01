@@ -213,7 +213,7 @@ $jsname = $module->getJavascriptModuleObjectName();
                                 <select class="form-control" id="dag" name="dag">
                                     <option value="">No Assignment</option>
                                     <?php
-                                    $projectDags = $module->DAG->getProjectDags();
+                                    $projectDags = $module->framework->escape($module->DAG->getProjectDags());
                                     foreach ( $projectDags as $dag => $name ) {
                                         echo "<option value='" . $dag . "' " . ($dag == "" ? "selected" : "") . ">$name</option>";
                                     }
