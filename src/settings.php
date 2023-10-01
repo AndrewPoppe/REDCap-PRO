@@ -176,7 +176,7 @@ $allowMfa                = $module->getSystemSetting("mfa");
                     </div>
                 </div>
                 <br>
-            <?php } 
+            <?php }
             if ( $allowMfa ) {
                 $mfaChecked = $settings["mfa"] ? "checked" : "";
                 ?>
@@ -191,18 +191,17 @@ $allowMfa                = $module->getSystemSetting("mfa");
                     <div class="card-body">
                         <div class="card-title">
                             Should participants be required to use multi-factor authentication (MFA) when logging in?<br>
-                            If so, they will be required to enter a code sent to their email address after entering their 
+                            If so, they will be required to enter a code sent to their email address after entering their
                             username and password.<br>This is an additional security measure to prevent unauthorized access.
                             <br>
                         </div>
                         <div class="form-check">
-                            <input
-                                class="form-check-input <?php echo (!empty($mfa_err)) ? 'is-invalid' : ''; ?>"
+                            <input class="form-check-input <?php echo (!empty($mfa_err)) ? 'is-invalid' : ''; ?>"
                                 type="checkbox" id="mfa-check" <?= $mfaChecked ?> onclick="(function(){
                                 $('#mfa').val($('#mfa-check')[0].checked);
                             })()">
-                            <label class="form-check-label" style="vertical-align:middle;"
-                                for="mfa-check">Checking this will require MFA.</label>
+                            <label class="form-check-label" style="vertical-align:middle;" for="mfa-check">Checking this
+                                will require MFA.</label>
                             <input type="text" name="mfa" id="mfa"
                                 value="<?= $mfaChecked === "checked" ? "true" : "false" ?>" hidden>
                             <span class="invalid-feedback">
