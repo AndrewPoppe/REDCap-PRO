@@ -4,6 +4,7 @@ namespace YaleREDCap\REDCapPRO;
 
 /** @var REDCapPRO $module */
 
+echo "OK";
 $module->framework->log('ok', [
     "GET"  => json_encode($_GET, JSON_PRETTY_PRINT),
     "POST" => json_encode($_POST, JSON_PRETTY_PRINT),
