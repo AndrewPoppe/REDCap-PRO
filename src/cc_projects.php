@@ -7,8 +7,6 @@ namespace YaleREDCap\REDCapPRO;
 if ( !$module->framework->isSuperUser() ) {
     exit();
 }
-
-require_once("classes/Project.php");
 ?>
 
 <title>REDCapPRO Projects</title>
@@ -39,7 +37,7 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
             </thead>
             <tbody>
                 <?php
-                foreach ($redcap_project_ids as $id) {
+                foreach ( $redcap_project_ids as $id ) {
                     $thisProject                = new Project($module, $id);
                     $rcpro_project_id           = $module->PROJECT->getProjectIdFromPID($thisProject->redcap_pid);
                     $project_rcpro_home         = $module->getUrl("src/home.php?pid=${id}");
@@ -47,10 +45,11 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
                     $project_rcpro_manage       = $module->getUrl("src/manage.php?pid=${id}");
                     $project_rcpro_manage_users = $module->getUrl("src/manage-users.php?pid=${id}");
                     $project_records            = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "DataEntry/record_status_dashboard.php?pid=${id}"
-                ?>
+                        ?>
                     <tr>
                         <!-- Project ID -->
-                        <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_rcpro_home ?>', '_blank').focus();})()">
+                        <td class='dt-center rcpro_participant_link'
+                            onclick="(function(){window.open('<?= $project_rcpro_home ?>', '_blank').focus();})()">
                             <?= $rcpro_project_id ?>
                         </td>
                         <!-- REDCap PID -->
@@ -66,15 +65,18 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
                             <?= $thisProject->getStatus() ?>
                         </td>
                         <!-- # Participants -->
-                        <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_rcpro_manage ?>', '_blank').focus();})()">
+                        <td class='dt-center rcpro_participant_link'
+                            onclick="(function(){window.open('<?= $project_rcpro_manage ?>', '_blank').focus();})()">
                             <?= $thisProject->getParticipantCount($rcpro_project_id) ?>
                         </td>
                         <!-- # Staff Members -->
-                        <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_rcpro_manage_users ?>', '_blank').focus();})()">
+                        <td class='dt-center rcpro_participant_link'
+                            onclick="(function(){window.open('<?= $project_rcpro_manage_users ?>', '_blank').focus();})()">
                             <?= count($thisProject->staff["allStaff"]) ?>
                         </td>
                         <!-- # Records -->
-                        <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_records ?>', '_blank').focus();})()">
+                        <td class='dt-center rcpro_participant_link'
+                            onclick="(function(){window.open('<?= $project_records ?>', '_blank').focus();})()">
                             <?= $thisProject->getRecordCount() ?>
                         </td>
                     </tr>
@@ -84,15 +86,15 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
     </div>
 </div>
 <script>
-    (function($, window, document) {
-        $(document).ready(function() {
+    (function ($, window, document) {
+        $(document).ready(function () {
             let dataTable = $('#RCPRO_TABLE').DataTable({
                 dom: 'lftip',
                 stateSave: true,
-                stateSaveCallback: function(settings, data) {
+                stateSaveCallback: function (settings, data) {
                     localStorage.setItem('DataTables_ccproj_' + settings.sInstance, JSON.stringify(data))
                 },
-                stateLoadCallback: function(settings) {
+                stateLoadCallback: function (settings) {
                     return JSON.parse(localStorage.getItem('DataTables_ccproj_' + settings.sInstance))
                 },
                 scrollX: true,

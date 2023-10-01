@@ -9,6 +9,7 @@ require_once "src/classes/AjaxHandler.php";
 require_once "src/classes/Auth.php";
 require_once "src/classes/DAG.php";
 require_once "src/classes/Instrument.php";
+require_once "src/classes/LoginHelper.php";
 require_once "src/classes/ParticipantHelper.php";
 require_once "src/classes/Project.php";
 require_once "src/classes/ProjectHelper.php";

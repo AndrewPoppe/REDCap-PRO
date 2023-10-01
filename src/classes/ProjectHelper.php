@@ -2,8 +2,6 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-require_once "src/classes/ParticipantHelper.php";
-
 class ProjectHelper
 {
     public REDCapPRO $module;
