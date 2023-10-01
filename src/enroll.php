@@ -53,9 +53,9 @@ if ( isset($_POST["id"]) && isset($project_id) ) {
 
         if ( $result === -1 ) {
             echo "<script defer>Swal.fire({'title':'This participant is already enrolled in this project', 'icon':'info', 'showConfirmButton': false});</script>";
-        } else if ( $result === TRUE ) {
+        } elseif ( $result === true ) {
             echo "<script defer>Swal.fire({'title':'The participant was successfully enrolled in this project', 'icon':'success', 'showConfirmButton': false});</script>";
-        } else if ( !$result ) {
+        } elseif ( !$result ) {
             echo "<script defer>Swal.fire({'title':'There was a problem enrolling this participant in this project', 'icon':'error', 'showConfirmButton': false});</script>";
         }
     }
@@ -196,27 +196,43 @@ $jsname = $module->getJavascriptModuleObjectName();
 
                 <?php if ( $module->DAG->getProjectDags() ) {
                     $userDag = $module->DAG->getCurrentDag($module->safeGetUsername(), $module->framework->getProjectId());
-                    $dagName = isset($userDag) ? \REDCap::getGroupNames(false, $userDag) : "No Assignment";
-                    ?>
-                    <div class="mb-3 row">
-                        <label for="dag" class="col-sm-3 col-form-label">Data Access Group:</label>
-                        <div class="col-sm-9">
-                            <input type="text" id="dag" name="dag" class="form-control-plaintext" disabled readonly
-                                value="<?= $dagName ?>">
+                    if ( isset($userDag) && $userDag != "" ) {
+                        $dagName = isset($userDag) ? \REDCap::getGroupNames(false, $userDag) : "No Assignment";
+                        ?>
+                        <div class="mb-3 row">
+                            <label for="dag" class="col-sm-3 col-form-label">Data Access Group:</label>
+                            <div class="col-sm-9">
+                                <input type="text" id="dag" name="dag" class="form-control-plaintext" disabled readonly
+                                    value="<?= $dagName ?>">
+                            </div>
                         </div>
-                    </div>
-                <?php } ?>
+                    <?php } else { ?>
+                        <div class="mb-3 row">
+                            <label for="dag" class="col-sm-3 col-form-label">Data Access Group:</label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="dag" name="dag">
+                                    <option value="">No Assignment</option>
+                                    <?php
+                                    $projectDags = $module->DAG->getProjectDags();
+                                    foreach ( $projectDags as $dag => $name ) {
+                                        echo "<option value='" . $dag . "' " . ($dag == "" ? "selected" : "") . ">$name</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        <?php } ?>
+                    <?php } ?>
 
-                <input type="text" id="id" name="id" class="form-control" readonly hidden>
-                <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
-                <div>
-                    <hr>
-                    <button type="submit" class="btn btn-rcpro">Enroll Participant</button>
-                    <button type="button" onclick="(function() { resetForm(); return false;})()"
-                        class="btn btn-secondary">Cancel</button>
+                    <input type="text" id="id" name="id" class="form-control" readonly hidden>
+                    <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
+                    <div>
+                        <hr>
+                        <button type="submit" class="btn btn-rcpro">Enroll Participant</button>
+                        <button type="button" onclick="(function() { resetForm(); return false;})()"
+                            class="btn btn-secondary">Cancel</button>
+                    </div>
                 </div>
             </div>
-        </div>
     </form>
 </div>
 
