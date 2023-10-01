@@ -3,7 +3,8 @@ namespace YaleREDCap\REDCapPRO;
 
 /** @var REDCapPRO $module */
 
-$role = $module->getUserRole($module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$redcap_username = $module->safeGetUsername();
+$role            = $module->getUserRole($redcap_username); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ( $role < 2 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
@@ -26,8 +27,24 @@ if ( isset($_GET["error"]) ) {
     <?php
 }
 
+// DAGs (for automatic enrollment)
+$project_id         = (int) $module->framework->getProjectId();
+$project_dags       = $module->framework->escape($module->DAG->getProjectDags());
+$project_dags[null] = "Unassigned";
+$projectHasDags     = count($project_dags) > 1;
+$redcap_dag         = $module->framework->escape($module->DAG->getCurrentDag($redcap_username, $project_id));
+if ( $projectHasDags ) {
+    ?>
+    <script>
+        const projectHasDags = true;
+        const userDag = '<?= $redcap_dag ?>';
+        const projectDags = JSON.parse(<?= "'" . json_encode($project_dags) . "'" ?>);
+    </script>
+    <?php
+}
+
 // Track all errors
-$any_error = FALSE;
+$any_error = false;
 
 // Processing form data when form is submitted
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
@@ -40,32 +57,40 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     $fname_clean = \REDCap::escapeHtml($fname);
     if ( empty($fname_clean) ) {
         $fname_err = "Please enter a first name for this participant.";
-        $any_error = TRUE;
+        $any_error = true;
     }
     $lname       = trim($_POST["REDCapPRO_LName"]);
     $lname_clean = \REDCap::escapeHtml($lname);
     if ( empty($lname_clean) ) {
         $lname_err = "Please enter a last name for this participant.";
-        $any_error = TRUE;
+        $any_error = true;
     }
 
     // Validate email
     $param_email = \REDCap::escapeHtml(trim($_POST["REDCapPRO_Email"]));
     if ( empty($param_email) || !filter_var($param_email, FILTER_VALIDATE_EMAIL) ) {
         $email_err = "Please enter a valid email address.";
-        $any_error = TRUE;
+        $any_error = true;
     } else {
         $result = $module->PARTICIPANT->checkEmailExists($param_email);
-        if ( $result === NULL ) {
+        if ( $result === null ) {
             echo "Oops! Something went wrong. Please try again later.";
             return;
-        } else if ( $result === TRUE ) {
+        } elseif ( $result === true ) {
             $email_err = "This email is already associated with an account.";
-            $any_error = TRUE;
+            $any_error = true;
         } else {
             // Everything looks good
             $email = $param_email;
         }
+    }
+
+    // Validate DAG
+    $dag_raw = filter_input(INPUT_POST, "dag", FILTER_SANITIZE_STRING);
+    $dag     = $projectHasDags ? \REDCap::escapeHtml(trim($dag_raw)) : '';
+    if ( !in_array($dag, array_keys($project_dags)) ) {
+        $dag_err   = "That is not a valid Data Access Group.";
+        $any_error = true;
     }
 
     // Check for input errors before inserting in database
@@ -76,11 +101,33 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             $module->sendNewParticipantEmail($username, $email, $fname_clean, $lname_clean);
             $icon  = "success";
             $title = "Participant Registered";
-
             $module->logEvent("Participant Registered", [
                 "rcpro_username" => $username,
-                "redcap_user"    => $module->safeGetUsername()
+                "redcap_user"    => $redcap_username
             ]);
+
+            // If we are also enrolling the participant, do that now
+            $action = filter_input(INPUT_POST, "action", FILTER_SANITIZE_STRING);
+            if ( $action !== "register" ) {
+                $rcpro_participant_id = $module->PARTICIPANT->getParticipantIdFromUsername($username);
+
+                $result = $module->PROJECT->enrollParticipant($rcpro_participant_id, $project_id, $dag, $username);
+                if ( $result === -1 ) {
+                    $icon  = "error";
+                    $title = 'This participant is already enrolled in this project';
+                } elseif ( !$result ) {
+                    $icon  = "error";
+                    $title = 'The participant was successfully registered, but there was a problem automatically enrolling them in this project.';
+                    $body  = 'Please try enrolling them manually on the Enroll tab.';
+                } else {
+                    $title = 'The participant was successfully registered and enrolled in this project';
+                    $body  = "<strong>First name</strong>: " . $fname_clean . "<br>" .
+                        "<strong>Last name</strong>: " . $lname_clean . "<br>" .
+                        "<strong>Email address</strong>: " . $email . "<br>";
+                    $body .= $projectHasDags ? '<strong>Data Access Group</strong>: ' . $project_dags[$dag] . '<br>' : '';
+                }
+            }
+
         } catch ( \Exception $e ) {
             $module->logError("Error creating participant", $e);
             $icon  = "error";
@@ -145,11 +192,43 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             </span>
         </div>
         <div class="form-group">
-            <button type="submit" class="btn btn-rcpro" value="Submit">Submit</button>
+            <button type="submit" class="btn btn-rcpro" name="action" value="register"
+                title="Register the participant but do not enroll">Register</button>
+            <button type="button" class="btn btn-primary"
+                title="Automatically enroll this participant in the study once they are registered"
+                onclick="getDagAndSubmit();">Register and
+                Enroll</button>
         </div>
+        <input type="hidden" name="dag">
         <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
     </form>
 </div>
+<script>
+    <?php if ( $dag_err ) { ?>
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "<?= $dag_err ?>",
+            showConfirmButton: false
+        });
+    <?php } ?>
+    async function getDagAndSubmit() {
+        let selectedDag = userDag;
+        if (projectHasDags && userDag === '') {
 
+            const result = await Swal.fire({
+                title: "Select a Data Access Group",
+                input: 'select',
+                inputOptions: projectDags,
+                inputValue: '',
+                showCancelButton: true
+            });
+            selectedDag = result.value;
+
+        }
+        $('input[name="dag"]').val(selectedDag);
+        $('form.register-form').submit();
+    }
+</script>
 <?php
-include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+include_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';

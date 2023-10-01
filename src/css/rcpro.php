@@ -140,7 +140,7 @@ min-width: 640px !important;
 }
 
 div#logs {
-    padding-bottom: 10px !important;
+padding-bottom: 10px !important;
 }
 
 .home-form {
