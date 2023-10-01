@@ -60,7 +60,6 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     try {
         // Validate credentials
         if ( empty($username_err) && empty($password_err) ) {
-
             // Check that IP is not locked out
             $ip            = $Login->getIPAddress();
             $lockout_ts_ip = $Login->checkIpLockedOut($ip);
@@ -75,7 +74,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
                 // Check if username/email exists, if yes then verify password
                 // --> USERNAME DOES NOT EXIST
-            } else if ( !$usernameExists && !($emailExists && $emailLoginsAllowed) ) {
+            } elseif ( !$usernameExists && !($emailExists && $emailLoginsAllowed) ) {
 
                 // Username/email doesn't exist, display a generic error message
                 $Login->incrementFailedIp($ip);
@@ -151,7 +150,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                     // Redirect user to appropriate page
                     if ( $module->AUTH->is_survey_url_set() ) {
                         header("location: " . $module->AUTH->get_survey_url());
-                    } else if ( isset($qstring["s"]) ) {
+                    } elseif ( isset($qstring["s"]) ) {
                         header("location: " . APP_PATH_SURVEY_FULL . $_SERVER['QUERY_STRING']);
                     } else {
                         $study_contact = $module->getContactPerson();

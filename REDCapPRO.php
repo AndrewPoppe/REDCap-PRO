@@ -188,13 +188,23 @@ class REDCapPRO extends AbstractExternalModule
         $this->AUTH->init();
 
         // Participant is logged in to their account
-        if ( $this->AUTH->is_logged_in() ) {
+        if ( $this->AUTH->is_logged_in()) {
+            // Settings
+            $settings = new ProjectSettings($this);
+            
+            // Check MFA Token
+            if ($settings->mfaEnabled((int) $project_id) && !$this->AUTH->is_mfa_verified()) {
+                $code             = $this->AUTH->get_mfa_code();
+                $participantEmail = $this->PARTICIPANT->getEmail($this->AUTH->get_participant_id());
+                $this->sendMfaTokenEmail($participantEmail, $code);
+                header("location: " . $this->framework->getUrl("src/mfa.php", true));
+                return;
+            }
 
             // Get RCPRO project ID
             $rcpro_project_id = $this->PROJECT->getProjectIdFromPID($project_id);
 
-            // Settings
-            $settings = new ProjectSettings($this);
+            
 
             // Determine whether participant is enrolled in the study.
             $rcpro_participant_id = $this->AUTH->get_participant_id();
@@ -715,6 +725,42 @@ class REDCapPRO extends AbstractExternalModule
             return \REDCap::email($email, $from, $subject, $body);
         } catch ( \Exception $e ) {
             $this->logError("Error sending username email", $e);
+        }
+    }
+
+    /**
+     * Sends an email that contains the MFA token.
+     * 
+     * @param string $email
+     * @param int $token
+     * 
+     * @return bool|NULL success or failure
+     */
+    public function sendMfaTokenEmail(string $email, int $token)
+    {
+        $settings = new ProjectSettings($this);
+
+        $subject = $this->tt("mfa_email1");
+        $from    = $settings->getEmailFromAddress();
+        $body    = "<html><body><div>
+        <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
+        <p>".$this->tt('mfa_email2')."</p>
+        <p>".$this->tt('mfa_email3')." <strong> ${token}</strong><br></p>
+        <p><em>".$this->tt('mfa_email4')."</em></p><br><br>";
+
+        $body .= '<p>'.$this->tt('mfa_email5').'</p>';
+        if ( $this->framework->getProjectId() ) {
+            $study_contact = $this->getContactPerson($subject);
+            if ( isset($study_contact["info"]) ) {
+                $body .= "<br>" . $study_contact["info"];
+            }
+        }
+        $body .= "</p></div></body></html>";
+
+        try {
+            return \REDCap::email($email, $from, $subject, $body);
+        } catch ( \Exception $e ) {
+            $this->logError("Error sending MFA token email", $e);
         }
     }
 
