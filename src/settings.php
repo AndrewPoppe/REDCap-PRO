@@ -112,6 +112,7 @@ $preventEmailLoginSystem        = $module->getSystemSetting("prevent-email-login
 $allowMfa                       = $module->getSystemSetting("mfa");
 $project_id                     = (int) $module->framework->getProjectId();
 $allowSelfRegistrationSystem    = $module->framework->getSystemSetting("allow-self-registration-system");
+$allowAutoEnrollSystem          = (bool) $module->framework->getSystemSetting("allow-auto-enroll-upon-self-registration-system");
 $allowSelfRegistration          = $projectSettings->shouldAllowSelfRegistration($project_id);
 $autoEnrollUponSelfRegistration = $projectSettings->shouldEnrollUponRegistration($project_id);
 $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEmail($project_id);
@@ -252,12 +253,14 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
                                 aria-expanded="<?= $allowSelfRegistrationChecked ?>" type="checkbox"
                                 id="allow-self-registration-form-check" <?= $allowSelfRegistrationChecked ?>
                                 name="allow-self-registration" onchange="(function(){
-                                    const isChecked = $('#allow-self-registration-form-check')[0].checked;
-                                    if (!isChecked) {
-                                        $('#auto-enroll-upon-self-registration')[0].checked = false;
-                                        $('#auto-enroll-notification-email').attr('disabled', true);
-                                    }
-                                    $('#auto-enroll-upon-self-registration').attr('disabled', !isChecked);
+                                    <?php if ( $allowAutoEnrollSystem ) { ?>
+                                        const isChecked = $('#allow-self-registration-form-check')[0].checked;
+                                        if (!isChecked) {
+                                            $('#auto-enroll-upon-self-registration')[0].checked = false;
+                                            $('#auto-enroll-notification-email').attr('disabled', true);
+                                        }
+                                        $('#auto-enroll-upon-self-registration').attr('disabled', !isChecked);
+                                    <?php } ?>
                             })()">
                             <label class="form-check-label" style="vertical-align:middle;"
                                 for="allow-self-registration-form-check">Allow Participant Self-Registration</label>
@@ -265,36 +268,38 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
                                 <?php echo $self_registration_err; ?>
                             </span>
                         </div>
-                        <br><br>
-                        <div class="card-title">
-                            <strong>Should participants be automatically enrolled when they self-register?</strong><br>
-                            <em>Checking this option will automatically enroll a participant in your study when they
-                                self-register.</em>
-                        </div>
-                        <div class="form-check" id="auto-enroll-settings">
-                            <input class="form-check-input <?php echo (!empty($auto_enroll_err)) ? 'is-invalid' : ''; ?>"
-                                name="auto-enroll-upon-self-registration" type="checkbox"
-                                id="auto-enroll-upon-self-registration" <?= $autoEnrollUponSelfRegistrationChecked ?>
-                                onchange="(function(){
+                        <?php if ( $allowAutoEnrollSystem ) { ?>
+                            <br><br>
+                            <div class="card-title">
+                                <strong>Should participants be automatically enrolled when they self-register?</strong><br>
+                                <em>Checking this option will automatically enroll a participant in your study when they
+                                    self-register.</em>
+                            </div>
+                            <div class="form-check" id="auto-enroll-settings">
+                                <input class="form-check-input <?php echo (!empty($auto_enroll_err)) ? 'is-invalid' : ''; ?>"
+                                    name="auto-enroll-upon-self-registration" type="checkbox"
+                                    id="auto-enroll-upon-self-registration" <?= $autoEnrollUponSelfRegistrationChecked ?>
+                                    onchange="(function(){
                                     const isChecked = $('#auto-enroll-upon-self-registration')[0].checked;
                                     $('#auto-enroll-notification-email').attr('disabled', !isChecked);
                             })()">
-                            <label class="form-check-label" style="vertical-align:middle;"
-                                for="auto-enroll-upon-self-registration">Auto-Enroll Upon Self-Registration</label>
-                            <span class="invalid-feedback">
-                                <?php echo $auto_enroll_err; ?>
-                            </span>
-                        </div>
-                        <br>
-                        <div class="form-group">
-                            <label>Email address to notify when new participants are auto-enrolled</label>
-                            <input type="email" name="auto-enroll-notification-email" id="auto-enroll-notification-email"
-                                class="form-control <?= (!empty($auto_enroll_notification_err) ? 'is-invalid' : '') ?>"
-                                value="<?= $autoEnrollNotificationEmail ?>">
-                            <span class="invalid-feedback">
-                                <?php echo $auto_enroll_notification_err; ?>
-                            </span>
-                        </div>
+                                <label class="form-check-label" style="vertical-align:middle;"
+                                    for="auto-enroll-upon-self-registration">Auto-Enroll Upon Self-Registration</label>
+                                <span class="invalid-feedback">
+                                    <?php echo $auto_enroll_err; ?>
+                                </span>
+                            </div>
+                            <br>
+                            <div class="form-group">
+                                <label>Email address to notify when new participants are auto-enrolled</label>
+                                <input type="email" name="auto-enroll-notification-email" id="auto-enroll-notification-email"
+                                    class="form-control <?= (!empty($auto_enroll_notification_err) ? 'is-invalid' : '') ?>"
+                                    value="<?= $autoEnrollNotificationEmail ?>">
+                                <span class="invalid-feedback">
+                                    <?php echo $auto_enroll_notification_err; ?>
+                                </span>
+                            </div>
+                        <?php } ?>
                     </div>
                 </div>
                 <br>
@@ -359,18 +364,18 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
             form.addEventListener('change', function () {
                 $('#rcpro-submit-button').attr("disabled", null);
             });
+            <?php if ( $allowAutoEnrollSystem ) { ?>
+                const isChecked = $('#allow-self-registration-form-check')[0].checked;
+                if (!isChecked) {
+                    $('#auto-enroll-upon-self-registration')[0].checked = false;
+                }
 
-            const isChecked = $('#allow-self-registration-form-check')[0].checked;
-            if (!isChecked) {
-                $('#auto-enroll-upon-self-registration')[0].checked = false;
-            }
-
-            $('#auto-enroll-upon-self-registration').attr('disabled', !isChecked);
-            $('#auto-enroll-notification-email').attr('disabled', !$('#auto-enroll-upon-self-registration')[0].checked);
-
+                $('#auto-enroll-upon-self-registration').attr('disabled', !isChecked);
+                $('#auto-enroll-notification-email').attr('disabled', !$('#auto-enroll-upon-self-registration')[0].checked);
+            <?php } ?>
         });
     })(window.jQuery, window, document);
 </script>
 
 <?php
-include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+include_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
