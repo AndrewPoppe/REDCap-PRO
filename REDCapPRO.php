@@ -734,6 +734,7 @@ class REDCapPRO extends AbstractExternalModule
         }
     }
 
+
     /**
      * Sends an email that contains the MFA token.
      * 
@@ -770,6 +771,7 @@ class REDCapPRO extends AbstractExternalModule
         }
     }
 
+
     public function sendAutoEnrollNotificationEmail(string $email, $project_id)
     {
         $settings = new ProjectSettings($this);
@@ -787,7 +789,6 @@ class REDCapPRO extends AbstractExternalModule
         try {
             return \REDCap::email($email, $from, $subject, $body);
         } catch ( \Exception $e ) {
-
             $this->logError("Error sending auto-enroll notificaiton email", $e);
         }
     }
