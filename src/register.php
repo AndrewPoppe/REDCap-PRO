@@ -41,6 +41,13 @@ if ( $projectHasDags ) {
         const projectDags = JSON.parse(<?= "'" . json_encode($project_dags) . "'" ?>);
     </script>
     <?php
+} else {
+    ?>
+    <script>
+        const projectHasDags = false;
+        const userDag = '';
+    </script>
+    <?php
 }
 
 // Track all errors
@@ -87,7 +94,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
     // Validate DAG
     $dag_raw = filter_input(INPUT_POST, "dag", FILTER_SANITIZE_STRING);
-    $dag     = $projectHasDags ? \REDCap::escapeHtml(trim($dag_raw)) : '';
+    $dag     = $projectHasDags ? \REDCap::escapeHtml(trim($dag_raw)) : null;
     if ( !in_array($dag, array_keys($project_dags)) ) {
         $dag_err   = "That is not a valid Data Access Group.";
         $any_error = true;
@@ -213,9 +220,9 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         });
     <?php } ?>
     async function getDagAndSubmit() {
-        let selectedDag = userDag;
-        if (projectHasDags && userDag === '') {
 
+        if (projectHasDags && userDag === '') {
+            let selectedDag = userDag;
             const result = await Swal.fire({
                 title: "Select a Data Access Group",
                 input: 'select',
@@ -224,9 +231,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 showCancelButton: true
             });
             selectedDag = result.value;
-
+            $('input[name="dag"]').val(selectedDag);
         }
-        $('input[name="dag"]').val(selectedDag);
         $('form.register-form').submit();
     }
 </script>
