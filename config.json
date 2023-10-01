@@ -84,7 +84,8 @@
         "src/create-password",
         "src/forgot-password",
         "src/forgot-username",
-        "src/session_check"
+        "src/session_check",
+        "src/api/register"
     ],
     "auth-ajax-actions": [
         "exportLogs",
