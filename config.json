@@ -85,7 +85,7 @@
         "src/forgot-password",
         "src/forgot-username",
         "src/session_check",
-        "src/api/register"
+        "src/api/register-api"
     ],
     "auth-ajax-actions": [
         "getLogs"
