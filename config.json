@@ -87,6 +87,9 @@
         "src/session_check",
         "src/api/register-api"
     ],
+    "no-csrf-pages": [
+        "src/api/register-api"
+    ],
     "auth-ajax-actions": [
         "exportLogs",
         "getLogs",
