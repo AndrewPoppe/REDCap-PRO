@@ -123,8 +123,6 @@ class CsvRegisterImport
             $this->errorMessages[] = "You cannot enroll a participant in a DAG you are not in: " . $dagLabel;
             $this->rowValid        = false;
         }
-
-
     }
 
     public function import()
