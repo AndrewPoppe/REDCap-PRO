@@ -215,11 +215,59 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
     </form>
 </div>
+<style>
+    .btn-close {
+        box-sizing: content-box;
+        width: 1em;
+        height: 1em;
+        padding: .25em .25em;
+        color: #000;
+        background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+        border: 0;
+        border-radius: .375rem;
+        opacity: .5;
+    }
+</style>
 <script>
     const RCPRO = <?= $module->getJavascriptModuleObjectName() ?>;
     $(document).ready(function () {
+
+        RCPRO.confirmImport = function () {
+            $('.modal').modal('hide');
+            if (!window.csv_file_contents || window.csv_file_contents === "") {
+                return;
+            }
+            Swal.fire({ title: 'Please wait...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
+            RCPRO.ajax('importCsvRegister', { data: window.csv_file_contents, confirm: true })
+                .then((response) => {
+                    Swal.close();
+                    const result = JSON.parse(response);
+                    if (result.status != 'error') {
+                        Swal.fire({
+                            icon: 'success',
+                            html: 'Successfully registered participants',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-primary',
+                            },
+                            buttonsStyling: false
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            html: result.message,
+                            showConfirmButton: false
+                        });
+                    }
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+        }
+
         RCPRO.handleFiles = function () {
-            console.log(this.files);
+            Swal.fire({ title: 'Please wait...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
             if (this.files.length !== 1) {
                 return;
             }
@@ -235,10 +283,10 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 window.csv_file_contents = e.target.result;
                 RCPRO.ajax('importCsvRegister', { data: e.target.result })
                     .then((response) => {
+                        Swal.close();
                         const result = JSON.parse(response);
                         if (result.status != 'error') {
-                            alert('ok');
-                            console.log(result);
+                            $(result.table).modal('show');
                         } else {
                             Swal.fire({
                                 icon: 'error',

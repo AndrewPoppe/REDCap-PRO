@@ -80,34 +80,32 @@ class AjaxHandler
 
     private function importCsvRegister()
     {
-        $this->module->log("Importing CSV register", [ 'contents' => json_encode($this->params, JSON_PRETTY_PRINT) ]);
-        $csvString         = $this->params['data'];
-        $participantImport = new CsvRegisterImport($this->module, $csvString);
-        $participantImport->parseCsvString();
+        try {
+            $this->module->log("Importing CSV register", [ 'contents' => json_encode($this->params, JSON_PRETTY_PRINT) ]);
+            $csvString         = $this->params['data'];
+            $participantImport = new CsvRegisterImport($this->module, $csvString);
+            $participantImport->parseCsvString();
 
-        $contentsValid = $participantImport->contentsValid();
-        if ( !$contentsValid ) {
-            return json_encode([
-                'status'  => 'error',
-                'message' => $participantImport->errorMessages
-            ]);
-        }
-
-        return json_encode([
-            'status'   => 'ok',
-            'contents' => $participantImport->csvContents
-        ]);
-
-        if ( filter_var($this->params['confirm'], FILTER_VALIDATE_BOOLEAN) ) {
-            return json_encode([
-                'status' => 'ok',
-                'result' => $participantImport->import()
-            ]);
-        } else {
-            return json_encode([
-                'status' => 'ok',
-                'table'  => $participantImport->getUpdateTable()
-            ]);
+            $contentsValid = $participantImport->contentsValid();
+            if ( !$contentsValid ) {
+                $message = json_encode([
+                    'status'  => 'error',
+                    'message' => implode('<br>', $participantImport->errorMessages)
+                ]);
+            } elseif ( filter_var($this->params['confirm'], FILTER_VALIDATE_BOOLEAN) ) {
+                $message = json_encode([
+                    'status' => 'ok',
+                    'result' => $participantImport->import()
+                ]);
+            } else {
+                $message = json_encode([
+                    'status' => 'ok',
+                    'table'  => $participantImport->getUpdateTable()
+                ]);
+            }
+            return $message;
+        } catch ( \Throwable $e ) {
+            $this->module->logError($e->getMessage(), $e);
         }
     }
 }
