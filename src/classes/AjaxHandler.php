@@ -81,6 +81,13 @@ class AjaxHandler
     private function importCsvRegister()
     {
         try {
+
+            // Check that user has permission to register participants
+            $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+            if ( !$role || $role < 2 ) {
+                return;
+            }
+
             $this->module->log("Importing CSV register", [ 'contents' => json_encode($this->params, JSON_PRETTY_PRINT) ]);
             $csvString         = $this->params['data'];
             $participantImport = new CsvRegisterImport($this->module, $csvString);
