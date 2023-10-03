@@ -220,7 +220,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
     </form>
     <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fs-5" id="infoModalTitle">Import Participants via CSV</h5>
@@ -228,7 +228,74 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    ...
+                    <p>You can register (and optionally enroll) many participants at once by importing a CSV file. The
+                        file must be formatted with the following columns.</p>
+                    <p><a id="importTemplate">Click here</a> to
+                        download an import template.</p>
+                    <table class="table table-bordered table-sm">
+                        <caption>Registration Import File Format</caption>
+                        <thead class="thead-dark">
+                            <tr>
+                                <th class="align-middle">Column name</th>
+                                <th class="align-middle">Description</th>
+                                <th class="align-middle">Possible values</th>
+                                <th class="align-middle">Required</th>
+                                <th class="align-middle">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="align-middle text-center"><strong>fname</strong></td>
+                                <td class="align-middle">First name of the participant</td>
+                                <td class="align-middle text-center">Any text</td>
+                                <td class="align-middle text-center"><span class="required">Required</span></td>
+                                <td class="align-middle"></td>
+                            </tr>
+                            <tr>
+                                <td class="align-middle text-center"><strong>lname</strong></td>
+                                <td class="align-middle">Last name of the participant</td>
+                                <td class="align-middle text-center">Any text</td>
+                                <td class="align-middle text-center"><span class="required">Required</span></td>
+                                <td class="align-middle"></td>
+                            </tr>
+                            <tr>
+                                <td class="align-middle text-center"><strong>email</strong></td>
+                                <td class="align-middle">Email address of the participant</td>
+                                <td class="align-middle text-center">Valid email</td>
+                                <td class="align-middle text-center"><span class="required">Required</span></td>
+                                <td class="align-middle"><span class="notes">The email address must not match the email
+                                        address of a registered participant. If so, you will receive an error message
+                                        and the import will be cancelled. </span></td>
+                            </tr>
+                            <tr>
+                                <td class="align-middle text-center"><strong>enroll</strong></td>
+                                <td class="align-middle">Whether or not to enroll the participant into this study once
+                                    they are registered
+                                </td>
+                                <td class="align-middle text-center"><code>Y</code> to
+                                    enroll<br><code>&lt;Blank&gt;</code>
+                                    not to enroll
+                                </td>
+                                <td class="align-middle text-center"><span class="optional">Optional</span></td>
+                                <td class="align-middle"><span class="notes">You can omit the column entirely if you do
+                                        not want to
+                                        enroll any of the newly registered participants.</span></td>
+                            </tr>
+                            <tr>
+                                <td class="align-middle text-center"><strong>dag</strong></td>
+                                <td class="align-middle">Data Access Group to enroll the participant into</td>
+                                <td class="align-middle text-center">Integer value representing the Data Access Group ID
+                                    number</td>
+                                <td class="align-middle text-center"><span class="optional">Optional</span></td>
+                                <td class="align-middle"><span class="notes">This value can be found on the DAGs page in
+                                        the project. If enroll is not "Y" for a row, then the DAG value is ignored for
+                                        that row.<br>The usual DAG rules apply, so you can only assign a participant to
+                                        a DAG if that DAG exists in the project. If you are assigned to a DAG yourself,
+                                        you can only assign participants to that DAG. If you are not assigned to a DAG,
+                                        you can assign the participant to any DAG.</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -247,10 +314,30 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         border-radius: .375rem;
         opacity: .5;
     }
+
+    span.required {
+        color: red;
+        font-size: smaller;
+    }
+
+    span.optional {
+        color: gray;
+        font-size: smaller;
+    }
+
+    span.notes {
+        font-size: smaller;
+    }
 </style>
 <script>
     const RCPRO = <?= $module->getJavascriptModuleObjectName() ?>;
     $(document).ready(function () {
+
+        const templateLink = document.querySelector('#importTemplate');
+        const blob = new Blob(['fname,lname,email,enroll,dag\n'], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        templateLink.setAttribute('href', url);
+        templateLink.setAttribute('download', 'register_template.csv');
 
         RCPRO.confirmImport = function () {
             $('.modal').modal('hide');
