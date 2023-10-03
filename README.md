@@ -155,6 +155,7 @@ You can also register (and optionally enroll) many participants at once by impor
 | **dag**     | Data Access Group to enroll the participant into                                  | Integer value representing the Data Access Group ID number | Optional | This value can be found on the DAGs page in the project. If enroll is not "Y" for a row, then the DAG value is ignored for that row.  <br>The usual DAG rules apply, so you can only assign a participant to a DAG if that DAG exists in the project. If you are assigned to a DAG yourself, you can only assign participants to that DAG. If you are not assigned to a DAG, you can assign the participant to any DAG. |
 
 *Note: The column names are case-sensitive. The order of the columns does not matter.*
+
 *Note: If you are using Excel to create the CSV file, you will need to save the file as a CSV file in order for REDCap to recognize it as such.*
 
 
