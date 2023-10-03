@@ -136,10 +136,27 @@ This tab allows a user to search for a registered participant in order to enroll
 set the participant's Data Access Group at this time as well, if applicable. This tab is available to Normal Users and 
 above.
 
+You can also register (and optionally enroll) many participants at once by importing a CSV file on the [Register](#Register) tab.
+
 ### Register
 This tab allows a user to register a participant with **REDCapPRO**. Users also have the option to enroll at the same 
 time as registering. They can set the participant's Data Access Group at this time as well, if applicable.  This tab is 
 available to Normal Users and above.
+
+You can also register (and optionally enroll) many participants at once by importing a CSV file. The file must be formatted with the following columns.
+
+
+| Column name | Description                                                                       | Possible values                                            | Required | Notes                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **fname**   | First name of the participant                                                     | Any text                                                   | Required |                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **lname**   | Last name of the participant                                                      | Any text                                                   | Required |                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **email**   | Email address of the participant                                                  | Valid email                                                | Required | The email address must not match the email address of a registered participant. If so, you will receive an error message and the import will be cancelled.                                                                                                                                                                                                                                                              |
+| **enroll**  | Whether or not to enroll the participant into this study once they are registered | `Y` to enroll  <br>`<Blank>` not to enroll                 | Optional | You can omit the column entirely if you do not want to enroll any of the newly registered participants.                                                                                                                                                                                                                                                                                                                 |
+| **dag**     | Data Access Group to enroll the participant into                                  | Integer value representing the Data Access Group ID number | Optional | This value can be found on the DAGs page in the project. If enroll is not "Y" for a row, then the DAG value is ignored for that row.  <br>The usual DAG rules apply, so you can only assign a participant to a DAG if that DAG exists in the project. If you are assigned to a DAG yourself, you can only assign participants to that DAG. If you are not assigned to a DAG, you can assign the participant to any DAG. |
+
+*Note: The column names are case-sensitive. The order of the columns does not matter.*
+*Note: If you are using Excel to create the CSV file, you will need to save the file as a CSV file in order for REDCap to recognize it as such.*
+
 
 ### Study Staff
 This tab allows Managers to set the `role` of users in the study project. All
