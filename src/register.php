@@ -172,6 +172,11 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 href="<?= $module->getUrl("src/enroll.php"); ?>">here</a></strong>.</p>
 
     <button id="importCsv" class="btn btn-xs btn-success mb-2" onclick="$('#csvFile').click();">Import CSV</button>
+    <span class="fa-stack fa-1x text-info mb-2 fa-2xs" style="cursor: pointer;"
+        onclick="$('#infoModal').modal('show');">
+        <i class="fa fa-circle fa-stack-2x icon-background"></i>
+        <i class=" fas fa-question fa-stack-1x fa-xl text-white"></i>
+    </span>
     <input type="file" id="csvFile" accept=".csv" style="display: none;" />
 
     <form class="rcpro-form register-form" action="<?= $module->getUrl("src/register.php"); ?>" method="POST"
@@ -214,6 +219,21 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         <input type="hidden" name="dag">
         <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
     </form>
+    <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fs-5" id="infoModalTitle">Import Participants via CSV</h5>
+                    <button type="button" class="btn-close" data-dismiss="modal" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    ...
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 <style>
     .btn-close {
