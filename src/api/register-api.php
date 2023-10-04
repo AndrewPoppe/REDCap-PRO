@@ -4,18 +4,14 @@ namespace YaleREDCap\REDCapPRO;
 
 /** @var REDCapPRO $module */
 
-// echo "OK";
-// $module->framework->log('ok', [
-//     "GET"  => json_encode($_GET, JSON_PRETTY_PRINT),
-//     "POST" => json_encode($_POST, JSON_PRETTY_PRINT),
-// ]);
-// $token = filter_input(INPUT_POST, "token", FILTER_SANITIZE_STRING);
-// $module->framework->log('ok2');
-// $token_clean = $module->framework->sanitizeAPIToken($token);
-// echo $token;
-echo json_encode($_POST, JSON_PRETTY_PRINT);
+// This is an API endpoint that can be used to register users
+// It is NOAUTH and No CSRF, so API token is required
 try {
-    $apiHandler = new APIHandler($module, $_POST);
+    $apiHandler = new APIParticipantRegister($module, $_POST);
+    if ( !$apiHandler->valid ) {
+        echo json_encode($apiHandler->errorMessages, JSON_PRETTY_PRINT);
+        throw new \Error("Invalid API payload");
+    }
 } catch ( \Throwable $e ) {
     $module->logError("Error using API", $e);
     echo json_encode([
@@ -23,4 +19,24 @@ try {
     ], JSON_PRETTY_PRINT);
     return;
 }
-echo json_encode($apiHandler->getApiData(), JSON_PRETTY_PRINT);
+
+// Only allow Normal Users and above to register users
+if ( (int) $apiHandler->getRole() < 2 ) {
+    echo json_encode([
+        "error" => "You do not have permission to use this API",
+    ], JSON_PRETTY_PRINT);
+    return;
+}
+
+// Try to register the users
+try {
+    $result = $apiHandler->registerUsers();
+} catch ( \Throwable $e ) {
+    $module->logError("Error registering users via API", $e);
+    echo json_encode([
+        "error" => $e->getMessage(),
+    ], JSON_PRETTY_PRINT);
+    return;
+}
+
+echo json_encode($result, JSON_PRETTY_PRINT);
