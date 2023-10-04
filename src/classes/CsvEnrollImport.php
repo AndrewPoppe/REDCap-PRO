@@ -2,7 +2,7 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-class CsvRegisterImport
+class CsvEnrollImport
 {
     private string $csvString;
     private REDCapPRO $module;
@@ -18,6 +18,7 @@ class CsvRegisterImport
     private array $indices;
 
     private array $emails = [];
+    private array $usernames = [];
     private array $dags;
     public function __construct(REDCapPRO $module, string $csvString)
     {
@@ -40,14 +41,17 @@ class CsvRegisterImport
     {
         $this->header = $this->csvContents[0];
 
-        $this->indices['fnameIndex']  = array_search('fname', $this->header, true);
-        $this->indices['lnameIndex']  = array_search('lname', $this->header, true);
-        $this->indices['emailIndex']  = array_search('email', $this->header, true);
-        $this->indices['enrollIndex'] = array_search('enroll', $this->header, true);
-        $this->indices['dagIndex']    = array_search('dag', $this->header, true);
+        $this->indices['usernameIndex'] = array_search('username', $this->header, true);
+        $this->indices['emailIndex']    = array_search('email', $this->header, true);
+        $this->indices['dagIndex']      = array_search('dag', $this->header, true);
 
-        if ( $this->indices['fnameIndex'] === false || $this->indices['lnameIndex'] === false || $this->indices['emailIndex'] === false ) {
-            $this->errorMessages[] = 'You must include each of these columns in the import file: fname, lname, email';
+        if ( $this->indices['usernameIndex'] === false && $this->indices['emailIndex'] === false ) {
+            $this->errorMessages[] = 'You must include either of these columns in the import file: username, email';
+            return false;
+        }
+
+        if ( $this->indices['usernameIndex'] !== false && $this->indices['emailIndex'] !== false ) {
+            $this->errorMessages[] = 'You must only include one of these columns in the import file: username, email';
             return false;
         }
 
@@ -58,16 +62,22 @@ class CsvRegisterImport
                 continue;
             }
 
-            $fname = trim($this->module->framework->escape($row[$this->indices['fnameIndex']]));
-            $lname = trim($this->module->framework->escape($row[$this->indices['lnameIndex']]));
-            $email = trim($this->module->framework->escape($row[$this->indices['emailIndex']]));
-            $this->checkEmail($email);
-
-            if ( $this->indices['enrollIndex'] !== false ) {
-                $enroll = trim($this->module->framework->escape($row[$this->indices['enrollIndex']])) === 'Y';
+            if ( $this->indices['usernameIndex'] !== false ) {
+                $username = trim($this->module->framework->escape($row[$this->indices['usernameIndex']]));
+                $this->checkUsername($username);
+                $email = $this->module->PARTICIPANT->getParticipant($username)['email'];
+            } else {
+                $email = trim($this->module->framework->escape($row[$this->indices['emailIndex']]));
+                $this->checkEmail($email);
+                $username = $this->module->PARTICIPANT->getParticipantFromEmail($email)['rcpro_username'];
             }
 
-            if ( $enroll && $this->indices['dagIndex'] !== false ) {
+            if ( empty($username) && empty($email) ) {
+                $this->rowValid = true;
+                continue;
+            }
+
+            if ( $this->indices['dagIndex'] !== false ) {
                 $this->hasDags = true;
                 $dag           = (int) trim($this->module->framework->escape($row[$this->indices['dagIndex']]));
                 $this->checkDag($dag);
@@ -77,11 +87,9 @@ class CsvRegisterImport
                 $this->valid = false;
             } else {
                 $this->cleanContents[] = [
-                    'fname'  => $fname,
-                    'lname'  => $lname,
-                    'email'  => $email,
-                    'enroll' => $enroll ?? false,
-                    'dag'    => $dag === 0 ? '[No Assignment]' : $dag
+                    'username' => $username,
+                    'email'    => $email,
+                    'dag'      => $dag === 0 ? '[No Assignment]' : $dag
                 ];
             }
         }
@@ -99,14 +107,33 @@ class CsvRegisterImport
         if ( !filter_var($email, FILTER_VALIDATE_EMAIL) ) {
             $this->errorMessages[] = "Invalid email address: $email";
             $this->rowValid        = false;
-        } elseif ( $this->module->PARTICIPANT->checkEmailExists($email) ) {
-            $this->errorMessages[] = "Email address already exists: $email";
+        } elseif ( !$this->module->PARTICIPANT->checkEmailExists($email) ) {
+            $this->errorMessages[] = "Email address is not associated with a REDCapPRO participant: $email";
+            $this->rowValid        = false;
+        } elseif ( !$this->module->PARTICIPANT->isParticipantActive($this->module->PARTICIPANT->getParticipantIdFromEmail($email)) ) {
+            $this->errorMessages[] = "Participant is not currently active in REDCapPRO: $email";
             $this->rowValid        = false;
         } elseif ( in_array($email, $this->emails, true) ) {
             $this->errorMessages[] = "Duplicate email address: $email";
             $this->rowValid        = false;
         }
         $this->emails[] = $email;
+    }
+
+    private function checkUsername(string $username) : void
+    {
+        $participant = $this->module->PARTICIPANT->getParticipant($username);
+        if ( $participant === null ) {
+            $this->errorMessages[] = "Username is not associated with a REDCapPRO participant: $username";
+            $this->rowValid        = false;
+        } elseif ( !$this->module->PARTICIPANT->isParticipantActive($participant['log_id']) ) {
+            $this->errorMessages[] = "Participant is not currently active in REDCapPRO: $username";
+            $this->rowValid        = false;
+        } elseif ( in_array($username, $this->usernames, true) ) {
+            $this->errorMessages[] = "Duplicate username: $username";
+            $this->rowValid        = false;
+        }
+        $this->usernames[] = $username;
     }
 
     private function checkDag(int $dag) : void
@@ -130,22 +157,22 @@ class CsvRegisterImport
         $success = true;
         try {
             foreach ( $this->cleanContents as $row ) {
-                $rcpro_username = $this->module->PARTICIPANT->createParticipant($row['email'], $row['fname'], $row['lname']);
-                $this->module->sendNewParticipantEmail($rcpro_username, $row['email'], $row['fname'], $row['lname']);
-                if ( $row['enroll'] ) {
-                    $rcpro_participant_id = $this->module->PARTICIPANT->getParticipantIdFromUsername($rcpro_username);
-                    $dagId                = $row['dag'] === '[No Assignment]' ? null : (int) $row['dag'];
-                    $result               = $this->module->PROJECT->enrollParticipant($rcpro_participant_id, $this->project_id, $dagId, $rcpro_username);
-                    if ( !$result || $result === -1 ) {
-                        $this->module->log('Error enrolling participant via CSV', [
-                            'rcpro_username'       => $rcpro_username,
-                            'rcpro_participant_id' => $rcpro_participant_id,
-                            'project_id'           => $this->project_id,
-                            'dag_id'               => $dagId
-                        ]);
-                        $success = false;
-                    }
+                $rcpro_participant    = $this->module->PARTICIPANT->getParticipantFromEmail($row['email']);
+                $rcpro_participant_id = $rcpro_participant['log_id'];
+                $rcpro_username       = $rcpro_participant['rcpro_username'];
+
+                $dagId  = $row['dag'] === '[No Assignment]' ? null : (int) $row['dag'];
+                $result = $this->module->PROJECT->enrollParticipant($rcpro_participant_id, $this->project_id, $dagId, $rcpro_username);
+                if ( !$result || $result === -1 ) {
+                    $this->module->log('Error enrolling participant via CSV', [
+                        'rcpro_username'       => $rcpro_username,
+                        'rcpro_participant_id' => $rcpro_participant_id,
+                        'project_id'           => $this->project_id,
+                        'dag_id'               => $dagId
+                    ]);
+                    $success = false;
                 }
+
             }
             $this->module->logEvent('Imported Participants from CSV', [ 'data' => json_encode($this->cleanContents) ]);
         } catch ( \Throwable $e ) {
@@ -163,7 +190,7 @@ class CsvRegisterImport
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        Confirm Participants to Import
+                        Confirm Participants to Enroll
                     </h5>
                     <button type="button" class="btn-close align-self-center" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -172,21 +199,22 @@ class CsvRegisterImport
                 <table class="table table-bordered">
                     <thead class="thead-dark">
                         <tr>
+                            <th class="text-center">Username</th></th>
                             <th class="text-center">First Name</th>
                             <th class="text-center">Last Name</th>
-                            <th class="text-center">Email</th>
-                            <th class="text-center">Enroll</th>';
+                            <th class="text-center">Email</th>';
         $html .= $this->hasDags ? '<th class="text-center">DAG ID</th>' : '';
         $html .= '</tr></thead><tbody>';
         foreach ( $this->cleanContents as $row ) {
+            $participant = $this->module->PARTICIPANT->getParticipantFromEmail($row['email']);
             $html .= '<tr class="bg-light">';
-            $html .= '<td class="text-center">' . $row['fname'] . '</td>';
-            $html .= '<td class="text-center">' . $row['lname'] . '</td>';
-            $html .= '<td class="text-center">' . $row['email'] . '</td>';
-            $html .= '<td class="text-center">' . ($row['enroll'] ? 'Yes' : 'No') . '</td>';
-            $dagValue = $row['enroll'] ? $row['dag'] : '-';
+            $html .= '<td class="text-center">' . $participant['rcpro_username'] . '</td>';
+            $html .= '<td class="text-center">' . $participant['fname'] . '</td>';
+            $html .= '<td class="text-center">' . $participant['lname'] . '</td>';
+            $html .= '<td class="text-center">' . $participant['email'] . '</td>';
+            $dagValue    = $row['dag'];
             if ( (int) $dagValue !== 0 ) {
-                $dagValue = $dagValue . ' (' . $this->dags[$row['dag']] . ')';
+                $dagValue = $dagValue . ' (' . $this->dags[$dagValue] . ')';
             }
             $html .= $this->hasDags ? '<td class="text-center">' . $dagValue . '</td>' : '';
             $html .= '</tr>';

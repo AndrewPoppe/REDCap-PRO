@@ -89,7 +89,9 @@
     "auth-ajax-actions": [
         "getLogs",
         "exportLogs",
-        "importCsvRegister"
+        "importCsvEnroll",
+        "importCsvRegister",
+        "searchParticipantByEmail"
     ],
     "framework-version": 12,
     "compatibility": {
