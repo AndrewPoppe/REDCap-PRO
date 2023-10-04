@@ -85,12 +85,12 @@
         "src/forgot-password",
         "src/forgot-username",
         "src/session_check",
-        "src/api/enroll-api",
-        "src/api/register-api"
+        "src/api/enroll",
+        "src/api/register"
     ],
     "no-csrf-pages": [
-        "src/api/enroll-api",
-        "src/api/register-api"
+        "src/api/enroll",
+        "src/api/register"
     ],
     "auth-ajax-actions": [
         "getLogs"
