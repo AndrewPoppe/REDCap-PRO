@@ -15,7 +15,6 @@ $module->UI->ShowHeader("Enroll");
 
 echo "<title>" . $module->APPTITLE . " - Enroll</title>";
 
-
 ?>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
 
