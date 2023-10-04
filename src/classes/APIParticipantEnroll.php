@@ -8,6 +8,7 @@ class APIParticipantEnroll extends APIHandler
     public bool $valid = true;
     public array $errorMessages = [];
     private array $emails = [];
+    private array $usernames = [];
     private array $dags = [];
     public function __construct(REDCapPRO $module, array $payload)
     {
@@ -21,34 +22,53 @@ class APIParticipantEnroll extends APIHandler
         foreach ( $this->actionData as $key => $user ) {
             $this->userValid = true;
 
-            $fname  = trim($user['fname']);
-            $lname  = trim($user['lname']);
-            $email  = trim($user['email']);
-            $enroll = trim($user['enroll']) === 'Y';
-            $this->checkEmail($email, $enroll);
+            $username = trim($user['username']);
+            $this->checkUsername($username);
+            $email = trim($user['email']);
+            $this->checkEmail($email);
 
-            if ( empty($fname) || empty($lname) || empty($email) ) {
-                $this->errorMessages[] = "All users must have first name, last name, and email address";
+            if ( empty($username) && empty($email) ) {
+                $this->errorMessages[] = "All users must have either a username or email address";
                 $this->userValid       = false;
             }
 
-            $dag = (int) trim($user['dag']);
-
-            if ( $enroll ) {
-                $this->checkDag($dag);
-                $this->checkEnrollment($email);
-                $this->checkActiveStatus($email);
+            if ( !empty($username) && !empty($email) ) {
+                $this->errorMessages[] = "Users must not have both a username or email address defined";
+                $this->userValid       = false;
             }
+
+            if ( !empty($username) ) {
+                $rcpro_participant_id = $this->module->PARTICIPANT->getParticipantIdFromUsername($username);
+                if ( $rcpro_participant_id === null ) {
+                    $this->errorMessages[] = "Username is not associated with a REDCapPRO participant: $username";
+                    $this->userValid       = false;
+                    continue;
+                }
+                $email = $this->module->PARTICIPANT->getEmail($rcpro_participant_id);
+            } else {
+                $rcpro_participant_id = $this->module->PARTICIPANT->getParticipantIdFromEmail($email);
+                if ( $rcpro_participant_id === null ) {
+                    $this->errorMessages[] = "Email is not associated with a REDCapPRO participant: $email";
+                    $this->userValid       = false;
+                    continue;
+                }
+                $username = $this->module->PARTICIPANT->getUsername($rcpro_participant_id);
+            }
+
+            $dag = (int) trim($user['dag']);
+            $this->checkDag($dag);
+            $this->checkEnrollment($email);
+            $this->checkActiveStatus($email);
+
 
             if ( !$this->userValid ) {
                 $this->valid = false;
             } else {
                 $this->users[] = [
-                    'fname'  => $fname,
-                    'lname'  => $lname,
-                    'email'  => $email,
-                    'enroll' => $enroll ?? false,
-                    'dag'    => $dag === 0 ? '[No Assignment]' : $dag
+                    'username'             => $username,
+                    'email'                => $email,
+                    'rcpro_participant_id' => $rcpro_participant_id,
+                    'dag'                  => $dag === 0 ? '[No Assignment]' : $dag
                 ];
             }
         }
@@ -61,13 +81,32 @@ class APIParticipantEnroll extends APIHandler
         return $this->valid;
     }
 
-    private function checkEmail(string $email, bool $enroll) : void
+    private function checkUsername(string $username) : void
     {
+        if ( empty($username) ) {
+            return;
+        }
+        $participant = $this->module->PARTICIPANT->getParticipant($username);
+        if ( $participant === null ) {
+            $this->errorMessages[] = "Username is not associated with a REDCapPRO participant: $username";
+            $this->userValid       = false;
+        } elseif ( !$this->module->PARTICIPANT->isParticipantActive($participant['log_id']) ) {
+            $this->errorMessages[] = "Participant is not currently active in REDCapPRO: $username";
+            $this->userValid       = false;
+        } elseif ( in_array($username, $this->usernames, true) ) {
+            $this->errorMessages[] = "Duplicate username: $username";
+            $this->userValid       = false;
+        }
+        $this->usernames[] = $username;
+    }
+
+    private function checkEmail(string $email) : void
+    {
+        if ( empty($email) ) {
+            return;
+        }
         if ( !filter_var($email, FILTER_VALIDATE_EMAIL) ) {
             $this->errorMessages[] = "Invalid email address: $email";
-            $this->userValid       = false;
-        } elseif ( !$enroll && $this->module->PARTICIPANT->checkEmailExists($email) ) {
-            $this->errorMessages[] = "Email address already exists: $email";
             $this->userValid       = false;
         } elseif ( in_array($email, $this->emails, true) ) {
             $this->errorMessages[] = "Duplicate email address: $email";
@@ -78,7 +117,8 @@ class APIParticipantEnroll extends APIHandler
 
     private function checkDag(int $dag) : void
     {
-        $this->dags = $this->module->DAG->getProjectDags();
+        $dags       = $this->module->DAG->getProjectDags();
+        $this->dags = $dags === false ? [] : $dags;
         $dagIds     = array_keys($this->dags);
         $userDag    = $this->module->DAG->getCurrentDag($this->user->getUsername(), $this->project->getProjectId());
 
@@ -94,10 +134,6 @@ class APIParticipantEnroll extends APIHandler
 
     private function checkActiveStatus(string $email)
     {
-        $participant_exists = $this->module->PARTICIPANT->checkEmailExists($email);
-        if ( !$participant_exists ) {
-            return;
-        }
         $rcpro_participant_id = $this->module->PARTICIPANT->getParticipantIdFromEmail($email);
         $active               = $this->module->PARTICIPANT->isParticipantActive($rcpro_participant_id);
         if ( !$active ) {
@@ -108,10 +144,6 @@ class APIParticipantEnroll extends APIHandler
 
     private function checkEnrollment(string $email)
     {
-        $participant_exists = $this->module->PARTICIPANT->checkEmailExists($email);
-        if ( !$participant_exists ) {
-            return;
-        }
         $rcpro_participant_id = $this->module->PARTICIPANT->getParticipantIdFromEmail($email);
         $rcpro_project_id     = $this->module->PROJECT->getProjectIdFromPID($this->project->getProjectId());
         $enrolled             = $this->module->PARTICIPANT->enrolledInProject($rcpro_participant_id, $rcpro_project_id);
@@ -121,31 +153,27 @@ class APIParticipantEnroll extends APIHandler
         }
     }
 
-    public function registerUsers() : bool
+    public function enrollUsers() : bool
     {
         $success = true;
         try {
             foreach ( $this->users as $user ) {
-                if ( !$this->module->PARTICIPANT->checkEmailExists($user['email']) ) {
-                    $rcpro_username = $this->module->PARTICIPANT->createParticipant($user['email'], $user['fname'], $user['lname']);
-                    $this->module->sendNewParticipantEmail($rcpro_username, $user['email'], $user['fname'], $user['lname']);
+                $rcpro_participant_id = $user['rcpro_participant_id'];
+                ;
+                $rcpro_username = $rcpro_username ?? $this->module->PARTICIPANT->getUsername($rcpro_participant_id);
+                $dagId          = $user['dag'] === '[No Assignment]' ? null : (int) $user['dag'];
+                $result         = $this->module->PROJECT->enrollParticipant($rcpro_participant_id, $this->project->getProjectId(), $dagId, $rcpro_username);
+                if ( !$result || $result === -1 ) {
+                    $this->module->logEvent("Error enrolling participant", [
+                        'rcpro_username'       => $rcpro_username,
+                        'rcpro_participant_id' => $rcpro_participant_id,
+                        'project_id'           => $this->project->getProjectId(),
+                        'dag_id'               => $dagId,
+                        'redcap_user'          => $this->rights['username'],
+                    ]);
+                    $success = false;
                 }
-                if ( $user['enroll'] ) {
-                    $rcpro_participant_id = $this->module->PARTICIPANT->getParticipantIdFromEmail($user['email']);
-                    $rcpro_username       = $rcpro_username ?? $this->module->PARTICIPANT->getUsername($rcpro_participant_id);
-                    $dagId                = $user['dag'] === '[No Assignment]' ? null : (int) $user['dag'];
-                    $result               = $this->module->PROJECT->enrollParticipant($rcpro_participant_id, $this->project->getProjectId(), $dagId, $rcpro_username);
-                    if ( !$result || $result === -1 ) {
-                        $this->module->logEvent("Error enrolling participant", [
-                            'rcpro_username'       => $rcpro_username,
-                            'rcpro_participant_id' => $rcpro_participant_id,
-                            'project_id'           => $this->project->getProjectId(),
-                            'dag_id'               => $dagId,
-                            'redcap_user'          => $this->rights['username'],
-                        ]);
-                        $success = false;
-                    }
-                }
+
                 $this->module->logEvent("Registered participant via API", [ 'redcap_user' => $this->module->safeGetUsername(), 'data' => json_encode($this->users, JSON_PRETTY_PRINT) ]);
             }
         } catch ( \Throwable $e ) {
