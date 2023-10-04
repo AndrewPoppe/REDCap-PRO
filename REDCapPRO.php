@@ -6,6 +6,7 @@ use ExternalModules\AbstractExternalModule;
 use ExternalModules\Framework;
 
 require_once "src/classes/APIHandler.php";
+require_once "src/classes/APIParticipantEnroll.php";
 require_once "src/classes/APIParticipantRegister.php";
 require_once "src/classes/AjaxHandler.php";
 require_once "src/classes/Auth.php";

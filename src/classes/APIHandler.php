@@ -16,16 +16,21 @@ class APIHandler
 
     public function __construct(REDCapPRO $module, array $payload)
     {
-        $this->module  = $module;
-        $this->payload = $payload;
-        $this->data    = $this->parsePayload();
-        $this->token   = $this->data['token'] ?? 'X';
-        $this->rights  = $this->extractRights();
-        $this->user    = $this->extractUser();
-        define('USERID', $this->user->getUsername());
+        define("API", true);
+
+        $this->module     = $module;
+        $this->payload    = $payload;
+        $this->data       = $this->parsePayload();
+        $this->token      = $this->module->framework->sanitizeAPIToken($this->data['token']) ?? 'X';
+        $this->rights     = $this->extractRights();
+        $this->user       = $this->extractUser();
         $this->project    = $this->extractProject();
-        $_GET['pid']      = $this->project->getProjectId();
         $this->actionData = $this->extractActionData();
+
+        define('USERID', $this->user->getUsername());
+        define('PROJECT_ID', $this->rights['project_id']);
+        $_GET['pid']     = $this->rights['project_id'];
+        $GLOBALS['Proj'] = new \Project($this->rights['project_id']);
     }
 
     public function extractUser()

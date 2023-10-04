@@ -1,7 +1,7 @@
 <?php
 namespace YaleREDCap\REDCapPRO;
 
-class APIParticipantRegister extends APIHandler
+class APIParticipantEnroll extends APIHandler
 {
     public array $users = [];
     private bool $userValid = true;
@@ -21,10 +21,11 @@ class APIParticipantRegister extends APIHandler
         foreach ( $this->actionData as $key => $user ) {
             $this->userValid = true;
 
-            $fname = trim($user['fname']);
-            $lname = trim($user['lname']);
-            $email = trim($user['email']);
-            $this->checkEmail($email);
+            $fname  = trim($user['fname']);
+            $lname  = trim($user['lname']);
+            $email  = trim($user['email']);
+            $enroll = trim($user['enroll']) === 'Y';
+            $this->checkEmail($email, $enroll);
 
             if ( empty($fname) || empty($lname) || empty($email) ) {
                 $this->errorMessages[] = "All users must have first name, last name, and email address";
@@ -33,7 +34,6 @@ class APIParticipantRegister extends APIHandler
 
             $dag = (int) trim($user['dag']);
 
-            $enroll = trim(strtoupper($user['enroll'])) === 'Y';
             if ( $enroll ) {
                 $this->checkDag($dag);
                 $this->checkEnrollment($email);
@@ -61,12 +61,12 @@ class APIParticipantRegister extends APIHandler
         return $this->valid;
     }
 
-    private function checkEmail(string $email) : void
+    private function checkEmail(string $email, bool $enroll) : void
     {
         if ( !filter_var($email, FILTER_VALIDATE_EMAIL) ) {
             $this->errorMessages[] = "Invalid email address: $email";
             $this->userValid       = false;
-        } elseif ( $this->module->PARTICIPANT->checkEmailExists($email) ) {
+        } elseif ( !$enroll && $this->module->PARTICIPANT->checkEmailExists($email) ) {
             $this->errorMessages[] = "Email address already exists: $email";
             $this->userValid       = false;
         } elseif ( in_array($email, $this->emails, true) ) {
@@ -78,8 +78,7 @@ class APIParticipantRegister extends APIHandler
 
     private function checkDag(int $dag) : void
     {
-        $dags       = $this->module->DAG->getProjectDags();
-        $this->dags = $dags === false ? [] : $dags;
+        $this->dags = $this->module->DAG->getProjectDags();
         $dagIds     = array_keys($this->dags);
         $userDag    = $this->module->DAG->getCurrentDag($this->user->getUsername(), $this->project->getProjectId());
 
