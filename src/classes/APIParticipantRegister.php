@@ -37,6 +37,7 @@ class APIParticipantRegister extends APIHandler
             if ( $enroll ) {
                 $this->checkDag($dag);
                 $this->checkEnrollment($email);
+                $this->checkActiveStatus($email);
             }
 
             if ( !$this->userValid ) {
@@ -87,6 +88,20 @@ class APIParticipantRegister extends APIHandler
         } elseif ( $userDag !== null && $userDag != $dag ) {
             $dagLabel              = empty($dag) ? "[No Assignment]" : ($dag . " (" . $this->dags[$dag] . ")");
             $this->errorMessages[] = "You cannot enroll a participant in a DAG you are not in: " . $dagLabel;
+            $this->userValid       = false;
+        }
+    }
+
+    private function checkActiveStatus(string $email)
+    {
+        $participant_exists = $this->module->PARTICIPANT->checkEmailExists($email);
+        if ( !$participant_exists ) {
+            return;
+        }
+        $rcpro_participant_id = $this->module->PARTICIPANT->getParticipantIdFromEmail($email);
+        $active               = $this->module->PARTICIPANT->isParticipantActive($rcpro_participant_id);
+        if ( !$active ) {
+            $this->errorMessages[] = "Participant is not active: " . $email;
             $this->userValid       = false;
         }
     }
