@@ -6,29 +6,25 @@ use \ExternalModules\User;
 class APIHandler
 {
     public $token;
-    private REDCapPRO $module;
+    public REDCapPRO $module;
     private array $payload;
     public User $user;
     public array $rights = [];
     public \ExternalModules\Project $project;
-    public array $data = [];
-    public string $action;
+    private array $data = [];
     public array $actionData = [];
-    private array $allowedActions = [
-        "enroll",
-        "register"
-    ];
 
     public function __construct(REDCapPRO $module, array $payload)
     {
-        $this->module     = $module;
-        $this->payload    = $payload;
-        $this->data       = $this->parsePayload();
-        $this->token      = $this->data['token'] ?? 'X';
-        $this->rights     = $this->extractRights();
-        $this->user       = $this->extractUser();
+        $this->module  = $module;
+        $this->payload = $payload;
+        $this->data    = $this->parsePayload();
+        $this->token   = $this->data['token'] ?? 'X';
+        $this->rights  = $this->extractRights();
+        $this->user    = $this->extractUser();
+        define('USERID', $this->user->getUsername());
         $this->project    = $this->extractProject();
-        $this->action     = $this->extractAction();
+        $_GET['pid']      = $this->project->getProjectId();
         $this->actionData = $this->extractActionData();
     }
 
@@ -59,18 +55,6 @@ class APIHandler
         return $rights;
     }
 
-    public function extractAction()
-    {
-        $action = $this->data['action'];
-        if ( empty($action) ) {
-            throw new \Error('No action provided');
-        }
-        if ( !in_array($action, $this->allowedActions, true) ) {
-            throw new \Error('Invalid action provided');
-        }
-        return $action;
-    }
-
     public function extractActionData()
     {
         $actionDataString = $this->data['data'];
@@ -82,7 +66,7 @@ class APIHandler
         if ( empty($actionData) ) {
             throw new \Error('No import data provided');
         }
-        return $actionData;
+        return $this->module->framework->escape($actionData);
     }
 
     private function getUserRightsFromToken() : array
@@ -101,14 +85,20 @@ class APIHandler
 
     private function parsePayload()
     {
-        //$data_clean = [];
         try {
-            $this->data = $this->module->framework->escape($this->payload);
+            $actionDataString   = $this->payload['data'] ?? '{}'; // This will be sanitized later
+            $this->data         = $this->module->framework->escape($this->payload);
+            $this->data['data'] = $actionDataString;
         } catch ( \Throwable $e ) {
             $this->module->logError('Error parsing payload', $e);
         } finally {
             return $this->data;
         }
+    }
+
+    public function getRole()
+    {
+        return $this->module->getUserRole($this->user->getUsername());
     }
 
     public function getApiData()
@@ -118,9 +108,7 @@ class APIHandler
             'rights'     => $this->rights,
             'user'       => $this->user->getUsername(),
             'project'    => $this->project->getProjectId(),
-            'data'       => $this->data,
             'role'       => $this->module->getUserRole($this->user->getUsername()),
-            'action'     => $this->action,
             'actionData' => $this->actionData
         ];
     }
