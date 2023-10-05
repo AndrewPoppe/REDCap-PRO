@@ -13,6 +13,7 @@ if ( !$module->framework->isSuperUser() ) {
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro_cc.php") ?>">
 
 <?php
+$module->includeFont();
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $module->UI->ShowControlCenterHeader("Projects");
 $redcap_project_ids = $module->getProjectsWithModuleEnabled();

@@ -8,6 +8,7 @@ $role = $module->getUserRole($module->safeGetUsername()); // 3=admin/manager, 2=
 if ( $role < 2 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
+$module->includeFont();
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module->UI->ShowHeader("Enroll");

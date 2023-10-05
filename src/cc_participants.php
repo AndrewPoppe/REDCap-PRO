@@ -7,18 +7,19 @@ namespace YaleREDCap\REDCapPRO;
 if ( !$module->framework->isSuperUser() ) {
     exit();
 }
+$module->includeFont();
 
 function createProjectsCell(array $projects)
 {
     global $module;
     $result = "<td  class='dt-center'>";
-    foreach ($projects as $project) {
-        if ($project["active"] == 1) {
+    foreach ( $projects as $project ) {
+        if ( $project["active"] == 1 ) {
             $link_class = 'rcpro_project_link';
-            $title = "Active";
+            $title      = "Active";
 
-            $pid = trim($project["redcap_pid"]);
-            $url = $module->getUrl("src/manage.php?pid=${pid}");
+            $pid    = trim($project["redcap_pid"]);
+            $url    = $module->getUrl("src/manage.php?pid=${pid}");
             $result .= "<div><a class='${link_class}' title='${title}' href='${url}'>PID ${pid}</a></div>";
         }
     }
@@ -27,8 +28,8 @@ function createProjectsCell(array $projects)
 }
 
 // Check for errors
-if (isset($_GET["error"])) {
-?>
+if ( isset($_GET["error"]) ) {
+    ?>
     <script>
         Swal.fire({
             icon: "error",
@@ -37,13 +38,13 @@ if (isset($_GET["error"])) {
             showConfirmButton: false
         });
     </script>
-<?php
+    <?php
 }
 
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $module->UI->ShowControlCenterHeader("Participants");
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
     // Log submission
     $module->logForm("Submitted Control Center Participants Form", $_POST);
@@ -51,86 +52,86 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
         $function = NULL;
         // SEND A PASSWORD RESET EMAIL
-        if (!empty($_POST["toReset"])) {
+        if ( !empty($_POST["toReset"]) ) {
             $function = "send password reset email";
-            $result = $module->sendPasswordResetEmail($_POST["toReset"]);
-            if (!$result) {
-                $icon = "error";
+            $result   = $module->sendPasswordResetEmail($_POST["toReset"]);
+            if ( !$result ) {
+                $icon  = "error";
                 $title = "Trouble sending password reset email.";
             } else {
-                $icon = "success";
+                $icon  = "success";
                 $title = "Successfully reset password for participant.";
             }
 
             // UPDATE THE PARTICIPANT'S NAME
-        } else if (!empty($_POST["toChangeName"])) {
-            $function = "update participant's name";
+        } else if ( !empty($_POST["toChangeName"]) ) {
+            $function             = "update participant's name";
             $rcpro_participant_id = intval($_POST["toChangeName"]);
-            $newFirstName = trim($_POST["newFirstName"]);
-            $newLastName = trim($_POST["newLastName"]);
+            $newFirstName         = trim($_POST["newFirstName"]);
+            $newLastName          = trim($_POST["newLastName"]);
             // Check that names are valid
-            if ($newFirstName === "" || $newLastName === "") {
+            if ( $newFirstName === "" || $newLastName === "" ) {
                 $title = "You need to provide valid first and last names.";
-                $icon = "error";
+                $icon  = "error";
             }
 
             // Try to change name
             else {
                 $result = $module->PARTICIPANT->changeName($rcpro_participant_id, $newFirstName, $newLastName);
-                if (!$result) {
+                if ( !$result ) {
                     $title = "Trouble updating participant's name.";
-                    $icon = "error";
+                    $icon  = "error";
                 } else {
                     $title = "Successfully updated participant's name.";
-                    $icon = "success";
+                    $icon  = "success";
                 }
             }
 
             // CHANGE THE PARTICIPANT'S EMAIL ADDRESS
-        } else if (!empty($_POST["toChangeEmail"])) {
+        } else if ( !empty($_POST["toChangeEmail"]) ) {
             $function = "change participant's email address";
             $newEmail = $_POST["newEmail"];
-            if ($module->PARTICIPANT->checkEmailExists($newEmail)) {
-                $icon = "error";
+            if ( $module->PARTICIPANT->checkEmailExists($newEmail) ) {
+                $icon  = "error";
                 $title = "The provided email address is already associated with a REDCapPRO account.";
             } else {
                 $result = $module->PARTICIPANT->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
-                if (!$result) {
-                    $icon = "error";
+                if ( !$result ) {
+                    $icon  = "error";
                     $title = "Trouble changing participant's email address.";
                 } else {
-                    $icon = "success";
+                    $icon  = "success";
                     $title = "Successfully changed participant's email address.";
                 }
             }
 
             // DEACTIVATE OR REACTIVATE A PARTICIPANT
-        } else if (!empty($_POST["toUpdateActivity"])) {
-            $toUpdate = intval($_POST["toUpdateActivity"]);
-            $function = "update participant's active status";
+        } else if ( !empty($_POST["toUpdateActivity"]) ) {
+            $toUpdate   = intval($_POST["toUpdateActivity"]);
+            $function   = "update participant's active status";
             $reactivate = $_POST["statusAction"] === "reactivate";
-            if (!$module->PARTICIPANT->checkParticipantExists($toUpdate)) {
-                $icon = "error";
+            if ( !$module->PARTICIPANT->checkParticipantExists($toUpdate) ) {
+                $icon  = "error";
                 $title = "The provided participant does not exist in the system.";
             } else {
-                if ($reactivate) {
+                if ( $reactivate ) {
                     $result = $module->PARTICIPANT->reactivateParticipant($toUpdate);
                 } else {
                     $result = $module->PARTICIPANT->deactivateParticipant($toUpdate);
                 }
-                if (!$result) {
-                    $verb = $reactivate ? "reactivating" : "deactivating";
-                    $icon = "error";
+                if ( !$result ) {
+                    $verb  = $reactivate ? "reactivating" : "deactivating";
+                    $icon  = "error";
                     $title = "Trouble $verb this participant.";
                 } else {
-                    $verb = $reactivate ? "reactivated" : "deactivated";
-                    $icon = "success";
+                    $verb  = $reactivate ? "reactivated" : "deactivated";
+                    $icon  = "success";
                     $title = "Successfully $verb this participant.";
                 }
             }
         }
-    } catch (\Exception $e) {
-        $icon = "error";
+    } catch ( \Exception $e ) {
+        $icon  = "error";
         $title = "Failed to ${function}.";
         $module->logError("Error attempting to ${function}", $e);
     }
@@ -143,7 +144,7 @@ $participants = $module->PARTICIPANT->getAllParticipants();
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro_cc.php") ?>">
 
-<?php if ($_SERVER["REQUEST_METHOD"] == "POST") { ?>
+<?php if ( $_SERVER["REQUEST_METHOD"] == "POST" ) { ?>
     <script>
         Swal.fire({
             icon: "<?= $icon ?>",
@@ -159,8 +160,10 @@ $participants = $module->PARTICIPANT->getAllParticipants();
 <div class="participantsContainer wrapper" style="display: none;">
     <h2>Manage Participants</h2>
     <p>All participants across studies</p>
-    <form class="dataTableParentHidden participants-form outer_container" id="participants-form" style="min-width:50vw !important;" action="<?= $module->getUrl("src/cc_participants.php"); ?>" method="POST" enctype="multipart/form-data" target="_self">
-        <?php if (count($participants) === 0 || empty($participants)) { ?>
+    <form class="dataTableParentHidden participants-form outer_container" id="participants-form"
+        style="min-width:50vw !important;" action="<?= $module->getUrl("src/cc_participants.php"); ?>" method="POST"
+        enctype="multipart/form-data" target="_self">
+        <?php if ( count($participants) === 0 || empty($participants) ) { ?>
             <div>
                 <p>No participants have been registered in this system</p>
             </div>
@@ -182,7 +185,7 @@ $participants = $module->PARTICIPANT->getAllParticipants();
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($participants as $participant) {
+                        <?php foreach ( $participants as $participant ) {
                             $username_clean       = \REDCap::escapeHtml($participant["rcpro_username"]);
                             $password_set         = $participant["pw_set"] === 'True';
                             $fname_clean          = \REDCap::escapeHtml($participant["fname"]);
@@ -192,16 +195,16 @@ $participants = $module->PARTICIPANT->getAllParticipants();
                             $projects_array       = $module->PARTICIPANT->getParticipantProjects($rcpro_participant_id);
                             $info                 = $module->PARTICIPANT->getParticipantInfo($rcpro_participant_id);
                             $allData              = "<div style='display: block; text-align:left;'><ul>";
-                            foreach ($info as $title => $value) {
+                            foreach ( $info as $title => $value ) {
                                 $value_clean = \REDCap::escapeHtml($value);
                                 $title_clean = \REDCap::escapeHtml($title);
-                                if ($value_clean != "") {
+                                if ( $value_clean != "" ) {
                                     $allData .= "<li><strong>${title_clean}</strong>: ${value_clean}</li>";
                                 }
                             }
                             $allData .= "</ul></div>";
-                            $allData = str_replace("\n", "\\n", addslashes($allData));
-                            $onclick = <<<EOL
+                            $allData  = str_replace("\n", "\\n", addslashes($allData));
+                            $onclick  = <<<EOL
                                 (function() {
                                     Swal.fire({
                                         confirmButtonColor:'#900000', 
@@ -211,15 +214,32 @@ $participants = $module->PARTICIPANT->getAllParticipants();
                                 })();
                                 EOL;
                             $isActive = $module->PARTICIPANT->isParticipantActive($rcpro_participant_id);
-                        ?>
+                            ?>
                             <tr>
-                                <td class="rcpro_participant_link" onclick="<?= $onclick ?>"><?= $participant["log_id"] ?></td>
-                                <td class="dt-center"><?= $username_clean ?></td>
-                                <td class="dt-center"><i data-filterValue="<?= $isActive ?>" title='<?= $isActive ? "Active" : "Inactive" ?>' class='fas <?= $isActive ? "fa-check" : "fa-ban" ?>' style='color:<?= $isActive ? $module::$COLORS["green"] : $module::$COLORS["ban"] ?>'></td>
-                                <td class="dt-center"><i data-filterValue="<?= $password_set ?>" title='Password Set' class='fas <?= ($password_set ? "fa-check-circle" : "fa-fw") ?>' style='margin-left:2px;margin-right:2px;color:<?= $module::$COLORS["green"] ?>;'></i></td>
-                                <td class="dt-center"><?= $fname_clean ?></td>
-                                <td class="dt-center"><?= $lname_clean ?></td>
-                                <td><?= $email_clean ?></td>
+                                <td class="rcpro_participant_link" onclick="<?= $onclick ?>">
+                                    <?= $participant["log_id"] ?>
+                                </td>
+                                <td class="dt-center">
+                                    <?= $username_clean ?>
+                                </td>
+                                <td class="dt-center"><i data-filterValue="<?= $isActive ?>"
+                                        title='<?= $isActive ? "Active" : "Inactive" ?>'
+                                        class='fas <?= $isActive ? "fa-check" : "fa-ban" ?>'
+                                        style='color:<?= $isActive ? $module::$COLORS["green"] : $module::$COLORS["ban"] ?>'>
+                                </td>
+                                <td class="dt-center"><i data-filterValue="<?= $password_set ?>" title='Password Set'
+                                        class='fas <?= ($password_set ? "fa-check-circle" : "fa-fw") ?>'
+                                        style='margin-left:2px;margin-right:2px;color:<?= $module::$COLORS["green"] ?>;'></i>
+                                </td>
+                                <td class="dt-center">
+                                    <?= $fname_clean ?>
+                                </td>
+                                <td class="dt-center">
+                                    <?= $lname_clean ?>
+                                </td>
+                                <td>
+                                    <?= $email_clean ?>
+                                </td>
                                 <?= createProjectsCell($projects_array); ?>
                                 <td class="dt-center">
                                     <div style="display:flex; justify-content:center; align-items:center;">
@@ -264,7 +284,8 @@ $participants = $module->PARTICIPANT->getAllParticipants();
                                                         }
                                                     }
                                                 });
-                                            })();' title="Update Participant Name" style="cursor:pointer; padding:0 5px;">
+                                            })();' title="Update Participant Name"
+                                            style="cursor:pointer; padding:0 5px;">
                                             <i class="fas fa-user"></i>
                                         </a>
                                         <a onclick='(function(){
@@ -304,7 +325,8 @@ $participants = $module->PARTICIPANT->getAllParticipants();
                                                         $("#participants-form").submit();
                                                     }
                                                 });
-                                            })();' title="<?= $isActive ? "Deactivate" : "Reactivate" ?> Participant" style="cursor:pointer; padding:0 5px; color:<?= $isActive ? $module::$COLORS["ban"] : $module::$COLORS["green"] ?>">
+                                            })();' title="<?= $isActive ? "Deactivate" : "Reactivate" ?> Participant"
+                                            style="cursor:pointer; padding:0 5px; color:<?= $isActive ? $module::$COLORS["ban"] : $module::$COLORS["green"] ?>">
                                             <i class="fas <?= $isActive ? "fa-user-slash" : "fa-user-plus" ?>"></i>
                                         </a>
                                     </div>
@@ -328,11 +350,11 @@ $participants = $module->PARTICIPANT->getAllParticipants();
     </form>
 </div>
 <script>
-    (function($, window, document) {
-        $(document).ready(function() {
+    (function ($, window, document) {
+        $(document).ready(function () {
 
             // Function for resetting manage-form values
-            window.clearForm = function() {
+            window.clearForm = function () {
                 $("#toReset").val("");
                 $("#toChangeEmail").val("");
                 $("#newEmail").val("");
@@ -347,10 +369,10 @@ $participants = $module->PARTICIPANT->getAllParticipants();
             let dataTable = $('#RCPRO_TABLE').DataTable({
                 dom: 'lBfrtip',
                 stateSave: true,
-                stateSaveCallback: function(settings, data) {
+                stateSaveCallback: function (settings, data) {
                     localStorage.setItem('DataTables_ccpart_' + settings.sInstance, JSON.stringify(data))
                 },
-                stateLoadCallback: function(settings) {
+                stateLoadCallback: function (settings) {
                     return JSON.parse(localStorage.getItem('DataTables_ccpart_' + settings.sInstance))
                 },
                 scrollY: '50vh',
@@ -358,33 +380,33 @@ $participants = $module->PARTICIPANT->getAllParticipants();
                 scrollCollapse: true,
                 pageLength: 100,
                 columnDefs: [{
-                        "targets": 2,
-                        "data": function(row, type, val, meta) {
-                            if (type === "set") {
-                                row.active = val;
-                                row.active_display = val;
-                                row.active_filter = val;
-                                return;
-                            } else if (type === "filter" || type === "sort") {
-                                return $(row.active_filter).data().filtervalue;
-                            }
-                            return row.active;
+                    "targets": 2,
+                    "data": function (row, type, val, meta) {
+                        if (type === "set") {
+                            row.active = val;
+                            row.active_display = val;
+                            row.active_filter = val;
+                            return;
+                        } else if (type === "filter" || type === "sort") {
+                            return $(row.active_filter).data().filtervalue;
                         }
-                    },
-                    {
-                        "targets": 3,
-                        "data": function(row, type, val, meta) {
-                            if (type === "set") {
-                                row.pw_set = val;
-                                row.pw_set_display = val;
-                                row.pw_set_filter = val;
-                                return;
-                            } else if (type === "filter" || type === "sort") {
-                                return $(row.pw_set_filter).data().filtervalue;
-                            }
-                            return row.pw_set;
-                        }
+                        return row.active;
                     }
+                },
+                {
+                    "targets": 3,
+                    "data": function (row, type, val, meta) {
+                        if (type === "set") {
+                            row.pw_set = val;
+                            row.pw_set_display = val;
+                            row.pw_set_filter = val;
+                            return;
+                        } else if (type === "filter" || type === "sort") {
+                            return $(row.pw_set_filter).data().filtervalue;
+                        }
+                        return row.pw_set;
+                    }
+                }
                 ]
             });
             $('#participants-form').removeClass('dataTableParentHidden');

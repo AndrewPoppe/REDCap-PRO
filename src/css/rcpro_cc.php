@@ -78,6 +78,7 @@ vertical-align: middle;
 
 table {
 border-collapse: collapse;
+font-size: small;
 }
 
 table.dataTable tbody tr.even {

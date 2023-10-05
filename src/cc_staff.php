@@ -7,14 +7,15 @@ namespace YaleREDCap\REDCapPRO;
 if ( !$module->framework->isSuperUser() ) {
     exit();
 }
+$module->includeFont();
 
 function createProjectsCell(array $projects)
 {
     global $module;
     $result = "<td  class='dt-center'>";
-    foreach ($projects as $project) {
+    foreach ( $projects as $project ) {
         $link_class = 'rcpro_project_link';
-        $url = $module->getUrl("src/manage-users.php?pid=${project}");
+        $url        = $module->getUrl("src/manage-users.php?pid=${project}");
         $result .= "<div><a class='${link_class}' href='${url}'>PID ${project}</a></div>";
     }
     $result .= "</td>";
@@ -53,18 +54,24 @@ $baseUrlPath = APP_PATH_WEBROOT_FULL . 'redcap_v' . $redcap_version . '/';
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($users as $user) {
-                	if($user["username"] == '') { 
-                		continue; // skip blank users
-                	}
-                		// FIX: fix pathing potential issue
+                <?php foreach ( $users as $user ) {
+                    if ( $user["username"] == '' ) {
+                        continue; // skip blank users
+                    }
+                    // FIX: fix pathing potential issue
                     //$userLink = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "ControlCenter/view_users.php?username=" . $user["username"];
                     $userLink = $baseUrlPath . "ControlCenter/view_users.php?username=" . $user["username"];
-                ?>
+                    ?>
                     <tr>
-                        <td class="rcpro_user_link" onclick="(function(){window.location.href='<?= $userLink ?>';})();"><?= $module->escape($user["username"]) ?></td>
-                        <td class="dt-center"><?= $module->escape($user["name"]) ?></td>
-                        <td><?= $user["email"] ?></td>
+                        <td class="rcpro_user_link" onclick="(function(){window.location.href='<?= $userLink ?>';})();">
+                            <?= $module->escape($user["username"]) ?>
+                        </td>
+                        <td class="dt-center">
+                            <?= $module->escape($user["name"]) ?>
+                        </td>
+                        <td>
+                            <?= $user["email"] ?>
+                        </td>
                         <?= createProjectsCell($user["projects"]); ?>
                     </tr>
                 <?php } ?>
@@ -73,15 +80,15 @@ $baseUrlPath = APP_PATH_WEBROOT_FULL . 'redcap_v' . $redcap_version . '/';
     </div>
 </div>
 <script>
-    (function($, window, document) {
-        $(document).ready(function() {
+    (function ($, window, document) {
+        $(document).ready(function () {
             let dataTable = $('#RCPRO_TABLE').DataTable({
                 dom: 'lBfrtip',
                 stateSave: true,
-                stateSaveCallback: function(settings, data) {
+                stateSaveCallback: function (settings, data) {
                     localStorage.setItem('DataTables_ccstaff_' + settings.sInstance, JSON.stringify(data))
                 },
-                stateLoadCallback: function(settings) {
+                stateLoadCallback: function (settings) {
                     return JSON.parse(localStorage.getItem('DataTables_ccstaff_' + settings.sInstance))
                 },
                 scrollY: '50vh',
