@@ -7,6 +7,7 @@ namespace YaleREDCap\REDCapPRO;
 if ( !$module->framework->isSuperUser() ) {
     exit();
 }
+echo '<!DOCTYPE html><html lang="en">';
 $module->includeFont();
 
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';

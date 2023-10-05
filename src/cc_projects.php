@@ -8,7 +8,8 @@ if ( !$module->framework->isSuperUser() ) {
     exit();
 }
 ?>
-
+<!DOCTYPE html>
+<html lang="en">
 <title>REDCapPRO Projects</title>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro_cc.php") ?>">
 

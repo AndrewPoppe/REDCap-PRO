@@ -29,7 +29,7 @@ if ( isset($_GET["error"]) ) {
     <?php
 }
 
-// RCPRO Project ID 
+// RCPRO Project ID
 $project_id       = (int) $module->framework->getProjectId();
 $rcpro_project_id = $module->PROJECT->getProjectIdFromPID($project_id);
 
