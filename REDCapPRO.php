@@ -890,8 +890,7 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function getAllUsers()
     {
-        global $module;
-        $projects = $module->getProjectsWithModuleEnabled();
+        $projects = $this->framework->getProjectsWithModuleEnabled();
         $users    = array();
         foreach ( $projects as $pid ) {
             $project   = new Project($this, $pid);
@@ -901,11 +900,11 @@ class REDCapPRO extends AbstractExternalModule
                 if ( isset($users[$user]) ) {
                     array_push($users[$user]['projects'], $pid);
                 } else {
-                    $newUser      = $module->getUser($user);
+                    $newUser      = $this->framework->getUser($user);
                     $newUserArr   = [
                         "username" => $user,
                         "email"    => $newUser->getEmail(),
-                        "name"     => $module->getUserFullname($user),
+                        "name"     => $this->getUserFullname($user),
                         "projects" => [ $pid ]
                     ];
                     $users[$user] = $newUserArr;

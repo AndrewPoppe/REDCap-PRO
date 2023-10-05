@@ -88,6 +88,9 @@
     ],
     "auth-ajax-actions": [
         "getLogs",
+        "getParticipantsCC",
+        "getProjectsCC",
+        "getStaffCC",
         "exportLogs"
     ],
     "framework-version": 12,

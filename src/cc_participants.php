@@ -7,25 +7,8 @@ namespace YaleREDCap\REDCapPRO;
 if ( !$module->framework->isSuperUser() ) {
     exit();
 }
+echo '<!DOCTYPE html><html lang="en">';
 $module->includeFont();
-
-function createProjectsCell(array $projects)
-{
-    global $module;
-    $result = "<td  class='dt-center'>";
-    foreach ( $projects as $project ) {
-        if ( $project["active"] == 1 ) {
-            $link_class = 'rcpro_project_link';
-            $title      = "Active";
-
-            $pid    = trim($project["redcap_pid"]);
-            $url    = $module->getUrl("src/manage.php?pid=${pid}");
-            $result .= "<div><a class='${link_class}' title='${title}' href='${url}'>PID ${pid}</a></div>";
-        }
-    }
-    $result .= "</td>";
-    return $result;
-}
 
 // Check for errors
 if ( isset($_GET["error"]) ) {
@@ -136,7 +119,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         $module->logError("Error attempting to ${function}", $e);
     }
 }
-
+$module->initializeJavascriptModuleObject();
 // Get array of participants
 $participants = $module->PARTICIPANT->getAllParticipants();
 
@@ -185,154 +168,6 @@ $participants = $module->PARTICIPANT->getAllParticipants();
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ( $participants as $participant ) {
-                            $username_clean       = \REDCap::escapeHtml($participant["rcpro_username"]);
-                            $password_set         = $participant["pw_set"] === 'True';
-                            $fname_clean          = \REDCap::escapeHtml($participant["fname"]);
-                            $lname_clean          = \REDCap::escapeHtml($participant["lname"]);
-                            $email_clean          = \REDCap::escapeHtml($participant["email"]);
-                            $rcpro_participant_id = intval($participant["log_id"]);
-                            $projects_array       = $module->PARTICIPANT->getParticipantProjects($rcpro_participant_id);
-                            $info                 = $module->PARTICIPANT->getParticipantInfo($rcpro_participant_id);
-                            $allData              = "<div style='display: block; text-align:left;'><ul>";
-                            foreach ( $info as $title => $value ) {
-                                $value_clean = \REDCap::escapeHtml($value);
-                                $title_clean = \REDCap::escapeHtml($title);
-                                if ( $value_clean != "" ) {
-                                    $allData .= "<li><strong>${title_clean}</strong>: ${value_clean}</li>";
-                                }
-                            }
-                            $allData .= "</ul></div>";
-                            $allData  = str_replace("\n", "\\n", addslashes($allData));
-                            $onclick  = <<<EOL
-                                (function() {
-                                    Swal.fire({
-                                        confirmButtonColor:'#900000', 
-                                        allowEnterKey: false, 
-                                        html:'$allData'
-                                    })
-                                })();
-                                EOL;
-                            $isActive = $module->PARTICIPANT->isParticipantActive($rcpro_participant_id);
-                            ?>
-                            <tr>
-                                <td class="rcpro_participant_link" onclick="<?= $onclick ?>">
-                                    <?= $participant["log_id"] ?>
-                                </td>
-                                <td class="dt-center">
-                                    <?= $username_clean ?>
-                                </td>
-                                <td class="dt-center"><i data-filterValue="<?= $isActive ?>"
-                                        title='<?= $isActive ? "Active" : "Inactive" ?>'
-                                        class='fas <?= $isActive ? "fa-check" : "fa-ban" ?>'
-                                        style='color:<?= $isActive ? $module::$COLORS["green"] : $module::$COLORS["ban"] ?>'>
-                                </td>
-                                <td class="dt-center"><i data-filterValue="<?= $password_set ?>" title='Password Set'
-                                        class='fas <?= ($password_set ? "fa-check-circle" : "fa-fw") ?>'
-                                        style='margin-left:2px;margin-right:2px;color:<?= $module::$COLORS["green"] ?>;'></i>
-                                </td>
-                                <td class="dt-center">
-                                    <?= $fname_clean ?>
-                                </td>
-                                <td class="dt-center">
-                                    <?= $lname_clean ?>
-                                </td>
-                                <td>
-                                    <?= $email_clean ?>
-                                </td>
-                                <?= createProjectsCell($projects_array); ?>
-                                <td class="dt-center">
-                                    <div style="display:flex; justify-content:center; align-items:center;">
-                                        <a onclick='(function(){
-                                            clearForm();
-                                            $("#toReset").val("<?= $participant["log_id"] ?>");
-                                            $("#participants-form").submit();
-                                            })();' title="Reset Password" style="cursor:pointer; padding:0 5px;">
-                                            <i class="fas fa-key"></i>
-                                        </a>
-                                        <a onclick='(function(){
-                                            Swal.fire({
-                                                    title: "Enter the new name for this participant", 
-                                                    html: `<input id="swal-fname" class="swal2-input" value="<?= $fname_clean ?>"><input id="swal-lname" class="swal2-input" value="<?= $lname_clean ?>">`,
-                                                    confirmButtonText: "Change Participant Name",
-                                                    showCancelButton: true,
-                                                    allowEnterKey: false,
-                                                    confirmButtonColor: "<?= $module::$COLORS["primary"] ?>",
-                                                    preConfirm: () => {
-                                                        return {
-                                                            fname: document.getElementById("swal-fname").value,
-                                                            lname: document.getElementById("swal-lname").value
-                                                        }
-                                                    }
-                                                }).then(function(result) {
-                                                    if (result.isConfirmed) {
-                                                        fname = trim(result.value.fname);
-                                                        lname = trim(result.value.lname);
-                                                        if (!fname || !lname) {
-                                                            Swal.fire({
-                                                                title: "You must provide a first and last name",
-                                                                icon: "error",
-                                                                showConfirmButton: false,
-                                                                showCancelButton: false
-                                                            });
-                                                        } else {
-                                                            clearForm();
-                                                            $("#toChangeName").val("<?= $participant["log_id"] ?>");
-                                                            $("#newFirstName").val(result.value.fname); 
-                                                            $("#newLastName").val(result.value.lname); 
-                                                            $("#participants-form").submit();
-                                                        }
-                                                    }
-                                                });
-                                            })();' title="Update Participant Name"
-                                            style="cursor:pointer; padding:0 5px;">
-                                            <i class="fas fa-user"></i>
-                                        </a>
-                                        <a onclick='(function(){
-                                            Swal.fire({
-                                                    title: "Enter the new email address for <?= "${fname_clean} ${lname_clean}" ?>",
-                                                    input: "email",
-                                                    inputPlaceholder: "<?= $email_clean ?>",
-                                                    confirmButtonText: "Change Email",
-                                                    showCancelButton: true,
-                                                    confirmButtonColor: "<?= $module::$COLORS["primary"] ?>",
-                                                    allowEnterKey: false
-                                                }).then((result) => {
-                                                    if (result.isConfirmed) {
-                                                        clearForm();
-                                                        $("#toChangeEmail").val("<?= $participant["log_id"] ?>");
-                                                        $("#newEmail").val(result.value); 
-                                                        $("#participants-form").submit();
-                                                    }
-                                                });
-                                            })();' title="Change Email Address" style="cursor:pointer; padding:0 5px;">
-                                            <i class="fas fa-envelope"></i>
-                                        </a>
-                                        <a onclick='(function(){
-                                            Swal.fire({
-                                                    title: "Are you sure you want to <?= ($isActive ? "deactivate" : "reactivate") . " ${fname_clean} ${lname_clean}?" ?> ",
-                                                    confirmButtonText: "<?= $isActive ? "Deactivate" : "Reactivate" ?> ",
-                                                    icon: "warning",
-                                                    iconColor: "<?= $module::$COLORS["primary"] ?>",
-                                                    showCancelButton: true,
-                                                    confirmButtonColor: "<?= $module::$COLORS["primary"] ?>",
-                                                    allowEnterKey: false
-                                                }).then((result) => {
-                                                    if (result.isConfirmed) {
-                                                        clearForm();
-                                                        $("#toUpdateActivity").val("<?= $participant["log_id"] ?>");
-                                                        $("#statusAction").val("<?= $isActive ? "deactivate" : "reactivate" ?>");
-                                                        $("#participants-form").submit();
-                                                    }
-                                                });
-                                            })();' title="<?= $isActive ? "Deactivate" : "Reactivate" ?> Participant"
-                                            style="cursor:pointer; padding:0 5px; color:<?= $isActive ? $module::$COLORS["ban"] : $module::$COLORS["green"] ?>">
-                                            <i class="fas <?= $isActive ? "fa-user-slash" : "fa-user-plus" ?>"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php } ?>
                     </tbody>
                 </table>
             </div>
@@ -350,7 +185,83 @@ $participants = $module->PARTICIPANT->getAllParticipants();
     </form>
 </div>
 <script>
+    const RCPRO_module = <?= $module->getJavascriptModuleObjectName() ?>;
     (function ($, window, document) {
+
+        RCPRO_module.changeParticipantName = function (rcpro_participant_id, fname, lname) {
+            Swal.fire({
+                title: 'Enter the new name for this participant',
+                html: `<input id="swal-fname" class="swal2-input" value="${fname}"><input id="swal-lname" class="swal2-input" value="${lname}">`,
+                confirmButtonText: "Change Participant Name",
+                showCancelButton: true,
+                allowEnterKey: false,
+                confirmButtonColor: "<?= $module::$COLORS["primary"] ?>",
+                preConfirm: () => {
+                    return {
+                        fname: document.getElementById("swal-fname").value,
+                        lname: document.getElementById("swal-lname").value
+                    }
+                }
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    fname = trim(result.value.fname);
+                    lname = trim(result.value.lname);
+                    if (!fname || !lname) {
+                        Swal.fire({
+                            title: "You must provide a first and last name",
+                            icon: "error",
+                            showConfirmButton: false,
+                            showCancelButton: false
+                        });
+                    } else {
+                        clearForm();
+                        $("#toChangeName").val(rcpro_participant_id);
+                        $("#newFirstName").val(result.value.fname);
+                        $("#newLastName").val(result.value.lname);
+                        $("#participants-form").submit();
+                    }
+                }
+            });
+        }
+
+        RCPRO_module.changeEmailAddress = function (rcpro_participant_id, fname, lname, email) {
+            Swal.fire({
+                title: `Enter the new email address for ${fname} ${lname}`,
+                input: "email",
+                inputPlaceholder: email,
+                confirmButtonText: "Change Email",
+                showCancelButton: true,
+                confirmButtonColor: "<?= $module::$COLORS["primary"] ?>",
+                allowEnterKey: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    clearForm();
+                    $("#toChangeEmail").val(rcpro_participant_id);
+                    $("#newEmail").val(result.value);
+                    $("#participants-form").submit();
+                }
+            });
+        }
+
+        RCPRO_module.toggleActiveStatus = function (rcpro_participant_id, activeStatus, fname, lname) {
+            Swal.fire({
+                title: `Are you sure you want to ${activeStatus ? "deactivate" : "reactivate"} ${fname} ${lname}?`,
+                confirmButtonText: activeStatus ? "Deactivate" : "Reactivate",
+                icon: "warning",
+                iconColor: "<?= $module::$COLORS["primary"] ?>",
+                showCancelButton: true,
+                confirmButtonColor: "<?= $module::$COLORS["primary"] ?>",
+                allowEnterKey: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    clearForm();
+                    $("#toUpdateActivity").val(rcpro_participant_id);
+                    $("#statusAction").val(activeStatus ? "deactivate" : "reactivate");
+                    $("#participants-form").submit();
+                }
+            });
+        }
+
         $(document).ready(function () {
 
             // Function for resetting manage-form values
@@ -369,6 +280,130 @@ $participants = $module->PARTICIPANT->getAllParticipants();
             let dataTable = $('#RCPRO_TABLE').DataTable({
                 dom: 'lBfrtip',
                 stateSave: true,
+                deferRender: true,
+                ajax: function (data, callback, settings) {
+                    RCPRO_module.ajax('getParticipantsCC', {})
+                        .then(response => {
+                            callback({ data: response });
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            callback({ data: [] });
+                        });
+                },
+                columns: [
+                    {
+                        title: 'User_ID',
+                        className: "dt-center rcpro_participant_link",
+                        data: function (row, type, set, meta) {
+                            if (type === 'display') {
+                                const info = row.info;
+                                let allData = '<div style=\\\'display: block; text-align:left;\\\'><ul>';
+                                for (const title in info) {
+                                    const value = info[title];
+                                    if (value != "") {
+                                        allData += `<li><strong>${title}</strong>: ${value}</li>`;
+                                    }
+                                }
+                                allData += "</ul></div>";
+                                console.log(allData);
+                                return `<div onclick="(function(){Swal.fire({
+                                    confirmButtonColor: '<?= $module::$COLORS['primary'] ?>',
+                                        allowEnterKey: false,
+                                        html: '${allData}' })}())">${row.rcpro_participant_id}</div>`;
+                            } else {
+                                return row.rcpro_participant_id;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Username',
+                        className: "dt-center",
+                        data: 'username'
+                    },
+                    {
+                        title: 'Active',
+                        className: "dt-center",
+                        data: function (row, type, set, meta) {
+                            if (type === 'display') {
+                                const isActive = row.isActive;
+                                const title = isActive ? "Active" : "Inactive";
+                                const color = isActive ? '<?= $module::$COLORS['green'] ?>' : '<?= $module::$COLORS['ban'] ?>';
+                                return `<i data-filterValue="${isActive}" title="${title}" class="fas ${isActive ? 'fa-check' : 'fa-ban'}" style="color:${color}"></i>`;
+                            } else {
+                                return row.isActive;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Password Set',
+                        className: "dt-center",
+                        data: function (row, type, set, meta) {
+                            if (type === 'display') {
+                                const pw_set = row.password_set;
+                                const title = pw_set ? "Password Set" : "Password Not Set";
+                                const color = pw_set ? '<?= $module::$COLORS['green'] ?>' : '<?= $module::$COLORS['ban'] ?>';
+                                return `<i data-filterValue="${pw_set}" title="${title}" class="fas ${pw_set ? 'fa-check-circle' : 'fa-fw'}" style="margin-left:2px;margin-right:2px;color:${color};"></i>`;
+                            } else {
+                                return row.password_set;
+                            }
+                        }
+                    },
+                    {
+                        title: 'First Name',
+                        className: "dt-center",
+                        data: 'fname'
+                    },
+                    {
+                        title: 'Last Name',
+                        className: "dt-center",
+                        data: 'lname'
+                    },
+                    {
+                        title: 'Email',
+                        data: 'email'
+                    },
+                    {
+                        title: 'Enrolled Projects',
+                        className: "dt-center",
+                        data: function (row, type, set, meta) {
+                            if (type === 'display') {
+                                const projects = row.projects_array;
+                                let result = "";
+                                for (const project of projects) {
+                                    if (project.active == 1) {
+                                        const pid = project.redcap_pid.trim();
+                                        const url = `<?= $module->getUrl("src/manage.php?pid=") ?>${pid}`;
+                                        result += `<div><a class="rcpro_project_link" title="Active" href="${url}">PID ${pid}</a></div>`;
+                                    }
+                                }
+                                return result;
+                            } else {
+                                return row.projects_array;
+                            }
+                        }
+                    },
+                    {
+                        title: 'Actions',
+                        className: "dt-center",
+                        data: function (row, type, set, meta) {
+                            if (type === 'display') {
+                                let result = '<div style="display:flex; justify-content:center; align-items:center;">';
+                                result += `<a onclick="(function(){clearForm();$('#toReset').val('${row.rcpro_participant_id}');$('#participants-form').submit();})();" title="Reset Password" style="cursor: pointer; padding: 0 5px;"><i class="fas fa-key"></i></a>`;
+                                result += `<a onclick="(function(){RCPRO_module.changeParticipantName(\'${row.rcpro_participant_id}\', \'${row.fname}\', \'${row.lname}\')})();"
+                                    title="Update Participant Name" style="cursor: pointer; padding: 0 5px;"><i class="fas fa-user"></i></a>`;
+                                result += `<a onclick="(function(){RCPRO_module.changeEmailAddress(\'${row.rcpro_participant_id}\', \'${row.fname}\', \'${row.lname}\', \'${row.email}\')})();"
+                                    title="Change Email Address" style="cursor: pointer; padding: 0 5px;"><i class="fas fa-envelope"></i></a>`;
+                                result += `<a onclick="(function(){RCPRO_module.toggleActiveStatus(\'${row.rcpro_participant_id}\', ${row.isActive}, \'${row.fname}\', \'${row.lname}\')})();"
+                                    title="${row.isActive ? "Deactivate" : "Reactivate"} Participant" style="cursor: pointer; padding: 0 5px; color:${row.isActive ? "<?= $module::$COLORS["ban"] ?>" : "<?= $module::$COLORS["green"] ?>"}"><i class="fas ${row.isActive ? "fa-user-slash" : "fa-user-plus"} "></i></a>`;
+                                result += '</div>';
+                                return result;
+                            } else {
+                                return "";
+                            }
+                        }
+                    }
+                ],
                 stateSaveCallback: function (settings, data) {
                     localStorage.setItem('DataTables_ccpart_' + settings.sInstance, JSON.stringify(data))
                 },
@@ -379,35 +414,6 @@ $participants = $module->PARTICIPANT->getAllParticipants();
                 sScrollX: '100%',
                 scrollCollapse: true,
                 pageLength: 100,
-                columnDefs: [{
-                    "targets": 2,
-                    "data": function (row, type, val, meta) {
-                        if (type === "set") {
-                            row.active = val;
-                            row.active_display = val;
-                            row.active_filter = val;
-                            return;
-                        } else if (type === "filter" || type === "sort") {
-                            return $(row.active_filter).data().filtervalue;
-                        }
-                        return row.active;
-                    }
-                },
-                {
-                    "targets": 3,
-                    "data": function (row, type, val, meta) {
-                        if (type === "set") {
-                            row.pw_set = val;
-                            row.pw_set_display = val;
-                            row.pw_set_filter = val;
-                            return;
-                        } else if (type === "filter" || type === "sort") {
-                            return $(row.pw_set_filter).data().filtervalue;
-                        }
-                        return row.pw_set;
-                    }
-                }
-                ]
             });
             $('#participants-form').removeClass('dataTableParentHidden');
             $('#loading-container').hide();
