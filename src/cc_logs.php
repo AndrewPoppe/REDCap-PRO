@@ -73,7 +73,8 @@ $module->initializeJavascriptModuleObject();
                 columns: columns.map(column => {
                     return {
                         data: column,
-                        defaultContent: ""
+                        defaultContent: "",
+                        className: "dt-center"
                     }
                 }),
                 createdRow: function (row, data, dataIndex, cells) {

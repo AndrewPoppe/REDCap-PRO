@@ -57,12 +57,11 @@ $module->initializeJavascriptModuleObject();
                     {
                         title: 'Username',
                         className: "rcpro_user_link",
-                        data: function (row, type, set, meta) {
-                            if (type === 'display') {
-                                return `<div onclick="(function(){window.location.href='${row.userLink}';})()">${row.username}</div>`;
-                            } else {
-                                return row.username || 'ok';
-                            }
+                        data: 'username',
+                        createdCell: function (td, cellData, rowData, row, col) {
+                            $(td).on('click', function () {
+                                window.location.href = rowData.userLink;
+                            });
                         }
                     },
                     {

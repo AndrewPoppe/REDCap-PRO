@@ -295,25 +295,24 @@ $participants = $module->PARTICIPANT->getAllParticipants();
                     {
                         title: 'User_ID',
                         className: "dt-center rcpro_participant_link",
-                        data: function (row, type, set, meta) {
-                            if (type === 'display') {
-                                const info = row.info;
-                                let allData = '<div style=\\\'display: block; text-align:left;\\\'><ul>';
-                                for (const title in info) {
-                                    const value = info[title];
-                                    if (value != "") {
-                                        allData += `<li><strong>${title}</strong>: ${value}</li>`;
-                                    }
+                        data: 'rcpro_participant_id',
+                        createdCell: function (td, cellData, rowData, row, col) {
+                            const info = rowData.info;
+                            let allData = '<div style=\'display: block; text-align:left;\'><ul>';
+                            for (const title in info) {
+                                const value = info[title];
+                                if (value != "") {
+                                    allData += `<li><strong>${title}</strong>: ${value}</li>`;
                                 }
-                                allData += "</ul></div>";
-                                console.log(allData);
-                                return `<div onclick="(function(){Swal.fire({
-                                    confirmButtonColor: '<?= $module::$COLORS['primary'] ?>',
-                                        allowEnterKey: false,
-                                        html: '${allData}' })}())">${row.rcpro_participant_id}</div>`;
-                            } else {
-                                return row.rcpro_participant_id;
                             }
+                            allData += "</ul></div>";
+                            $(td).on('click', function () {
+                                Swal.fire({
+                                    confirmButtonColor: '<?= $module::$COLORS['primary'] ?>',
+                                    allowEnterKey: false,
+                                    html: allData
+                                });
+                            });
                         }
                     },
                     {
