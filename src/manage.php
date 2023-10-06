@@ -286,7 +286,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 // Get list of participants
 $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_id, $rcpro_user_dag);
 
-
+$module->initializeJavascriptModuleObject();
 
 ?>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
@@ -335,83 +335,7 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ( $participantList as $participant ) {
-                                $username_clean = \REDCap::escapeHtml($participant["rcpro_username"]);
-                                $password_set   = $participant["pw_set"] === 'True';
-                                if ( $role > 1 ) {
-                                    $fname_clean = \REDCap::escapeHtml($participant["fname"]);
-                                    $lname_clean = \REDCap::escapeHtml($participant["lname"]);
-                                    $email_clean = \REDCap::escapeHtml($participant["email"]);
-                                }
-                                $link_id        = $module->PROJECT->getLinkId($participant["log_id"], $rcpro_project_id);
-                                $dag_id         = $module->DAG->getParticipantDag($link_id);
-                                $dag_name       = \REDCap::getGroupNames(false, $dag_id);
-                                $dag_name_clean = count((array) $dag_name) === 1 ? \REDCap::escapeHtml($dag_name) : "Unassigned"; // FIX: PHP 8 count needs the typecast here
-                                ?>
-                                <tr class="pointer" data-id="<?= $participant["log_id"] ?>"
-                                    data-username="<?= $username_clean ?>" data-fname="<?= $fname_clean ?>"
-                                    data-lname="<?= $lname_clean ?>" data-email="<?= $email_clean ?>">
-                                    <td class="dt-center">
-                                        <?= "<span style='white-space:nowrap'><i " . ($password_set ? "title='Password Set' class='fas fa-solid fa-check-circle'" : "title='Password NOT Set' class='far fa-regular fa-circle-xmark") . "' style='margin-left:2px;margin-right:2px;color:" . ($password_set ? $module::$COLORS["green"] : $module::$COLORS["ban"]) . ";'></i>&nbsp;$username_clean</span>" ?>
-                                    </td>
-                                    <?php if ( $role > 1 ) { ?>
-                                        <td class="dt-center">
-                                            <?= $fname_clean ?>
-                                        </td>
-                                        <td class="dt-center">
-                                            <?= $lname_clean ?>
-                                        </td>
-                                        <td>
-                                            <?= $email_clean ?>
-                                        </td>
-                                    <?php } ?>
-                                    <?php if ( $role > 1 && $projectHasDags && $rcpro_user_dag === null ) { ?>
-                                        <td class="dt-center">
-                                            <select class="dag_select form-select form-select-sm"
-                                                name="dag_select_<?= $username_clean ?>" id="dag_select_<?= $username_clean ?>"
-                                                orig_value="<?= $dag_id ?>" form="manage-form" onchange='(function(){
-                                                let el = $("#dag_select_<?= $username_clean ?>");
-                                                let newDAG = el.val();
-                                                let origDAG = el.attr("orig_value");
-                                                let newDAGName = $("#dag_select_<?= $username_clean ?> option:selected").text();
-                                                let oldDAGName = "<?= $dag_name_clean ?>";
-                                                if (newDAG !== origDAG) {
-                                                    Swal.fire({
-                                                        title: "Switch Data Access Group for <?= $fname_clean . " " . $lname_clean ?>?",
-                                                        html: "From "+oldDAGName+" to "+newDAGName,
-                                                        icon: "warning",
-                                                        iconColor: "<?= $module::$COLORS["primary"] ?>",
-                                                        confirmButtonText: "Switch DAG",
-                                                        allowEnterKey: false,
-                                                        showCancelButton: true,
-                                                        confirmButtonColor: "<?= $module::$COLORS["primary"] ?>"
-                                                    }).then(function(resp) {
-                                                        if (resp.isConfirmed) {
-                                                            clearForm();
-                                                            $("#toSwitchDag").val("<?= $participant["log_id"] ?>");
-                                                            $("#newDag").val(newDAG); 
-                                                            $("#manage-form").submit();
-                                                        } else {
-                                                            el.val(origDAG);
-                                                        }
-                                                    });
-                                                }
-                                                })();'>
-                                                <?php
-                                                foreach ( $project_dags as $project_dag_id => $project_dag_name ) {
-                                                    $selected = $project_dag_id == $dag_id ? "selected" : "";
-                                                    echo "<option value='${project_dag_id}' ${selected}>${project_dag_name}</option>";
-                                                }
-                                                ?>
-                                            </select>
-                                        </td>
-                                    <?php } else if ( $projectHasDags ) { ?>
-                                            <td class="dt-center">
-                                            <?= $dag_name_clean ?>
-                                            </td>
-                                    <?php } ?>
-                                </tr>
-                            <?php } ?>
+
                         </tbody>
                     </table>
                     <button type="button" class="btn btn-secondary rcpro-form-button" onclick='(function(){
@@ -528,6 +452,11 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
     </div>
 </div>
 <script>
+    const RCPRO_module = <?= $module->framework->getJavascriptModuleObjectName() ?>;
+    RCPRO_module.role = <?= $role ?>;
+    RCPRO_module.projectHasDags = JSON.parse('<?= json_encode($projectHasDags) ?>');
+    RCPRO_module.projectDags = JSON.parse('<?= json_encode($project_dags) ?>');
+    RCPRO_module.rcpro_user_dag = JSON.parse('<?= json_encode($rcpro_user_dag) ?>');
     (function ($, window, document) {
         $(document).ready(function () {
             // Function for resetting manage-form values
@@ -544,7 +473,118 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
             }
 
             // Initialize DataTable
+            const columnDef = [{
+                title: 'Username',
+                data: function (row, type, val, meta) {
+                    if (row.password_set) {
+                        return `<span style='white-space:nowrap;'><i title='Password Set' class='fas fa-solid fa-check-circle' style='margin-left:2px;margin-right:2px;color:<?= $module::$COLORS["green"] ?>;'></i>&nbsp;${row.username}</span>`;
+                    } else {
+                        return `<span style='white-space:nowrap;'><i title='Password NOT Set' class='far ra-regular fa-circle-xmark' style='margin-left:2px;margin-right:2px;color:<?= $module::$COLORS["ban"] ?>;'></i>&nbsp;${row.username}</span>`;
+                    }
+                },
+                className: 'dt-center'
+            }];
+            if (RCPRO_module.role > 1) {
+                columnDef.push({
+                    title: 'First Name',
+                    data: 'fname',
+                    className: 'dt-center'
+                });
+                columnDef.push({
+                    title: 'Last Name',
+                    data: 'lname',
+                    className: 'dt-center'
+                });
+                columnDef.push({
+                    title: 'Email',
+                    data: 'email'
+                });
+            }
+            if (RCPRO_module.role > 1 && RCPRO_module.projectHasDags && RCPRO_module.rcpro_user_dag === null) {
+                columnDef.push({
+                    title: 'Data Access Group',
+                    data: function (row, type, val, meta) {
+                        if (type === 'display') {
+                            const select = document.createElement("select");
+                            select.classList.add("dag_select", "form-select", "form-select-sm");
+                            $(select).attr("name", "dag_select_" + row.username);
+                            $(select).attr("id", "dag_select_" + row.username);
+                            $(select).attr("orig_value", row.dag_id);
+                            $(select).attr("form", "manage-form");
+                            $(select).on('change', function () {
+                                let el = $('#dag_select_' + row.username);
+                                let newDAG = el.val();
+                                let origDAG = el.attr("orig_value");
+                                let newDAGName = $("#dag_select_" + row.username + " option:selected").text();
+                                let oldDAGName = row.dag_name;
+                                if (newDag !== origDAG) {
+                                    Swal.fire({
+                                        title: `Switch Data Access Group for ${row.fname} ${row.lname}?`,
+                                        html: "From " + oldDAGName + " to " + newDAGName,
+                                        icon: "warning",
+                                        iconColor: "<?= $module::$COLORS["primary"] ?>",
+                                        confirmButtonText: "Switch DAG",
+                                        allowEnterKey: false,
+                                        showCancelButton: true,
+                                        confirmButtonColor: "<?= $module::$COLORS["primary"] ?>"
+                                    }).then(function (resp) {
+                                        if (resp.isConfirmed) {
+                                            clearForm();
+                                            $("#toSwitchDag").val(row.rcpro_participant_id);
+                                            $("#newDag").val(newDAG);
+                                            $("#manage-form").submit();
+                                        } else {
+                                            el.val(origDAG);
+                                        }
+                                    });
+                                }
+                            });
+                            for (const project_dag_id in RCPRO_module.projectDags) {
+                                const dag_id = row.dag_id || '';
+                                console.log(project_dag_id, dag_id);
+                                const selected = project_dag_id == row.dag_id ? "selected" : "";
+                                const option = document.createElement("option");
+                                option.value = project_dag_id;
+                                option.selected = selected;
+                                option.text = RCPRO_module.projectDags[project_dag_id];
+                                select.append(option);
+                            }
+                            return select.outerHTML;
+                        }
+                        return row.dag_name;
+                    },
+                    className: 'dt-center'
+                });
+            } else {
+                columnDef.push({
+                    title: 'Data Access Group',
+                    data: 'dag_name',
+                    className: 'dt-center'
+                });
+            }
+
+
             let datatable = $('#RCPRO_TABLE').DataTable({
+                deferRender: true,
+                ajax: function (data, callback, settings) {
+                    RCPRO_module.ajax('getParticipants', {})
+                        .then(response => {
+                            callback({ data: response });
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            callback({ data: [] });
+                        });
+                },
+                columns: columnDef,
+                createdRow: function (row, data, dataIndex) {
+                    $(row).addClass('pointer');
+                    $(row).data("id", data.rcpro_participant_id);
+                    $(row).data("username", data.username);
+                    $(row).data("fname", data.fname);
+                    $(row).data("lname", data.lname);
+                    $(row).data("email", data.email);
+                },
                 select: {
                     style: 'single'
                 },
@@ -582,4 +622,4 @@ $participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_i
 </script>
 
 <?php
-include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+include_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';

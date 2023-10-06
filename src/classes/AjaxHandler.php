@@ -10,6 +10,7 @@ class AjaxHandler
     public $args;
     private $methods = [
         "getLogs",
+        "getParticipants",
         "getParticipantsCC",
         "getProjectsCC",
         "getStaffCC",
@@ -61,6 +62,40 @@ class AjaxHandler
             $this->module->logError($e->getMessage(), $e);
         } finally {
             return $this->module->escape($logs);
+        }
+    }
+
+    private function getParticipants()
+    {
+        $participants     = [];
+        $rcpro_project_id = $this->module->PROJECT->getProjectIdFromPID($this->project_id);
+        $rcpro_user_dag   = $this->module->DAG->getCurrentDag($this->module->safeGetUsername(), $this->project_id);
+        $role             = $this->module->getUserRole($this->module->safeGetUsername());
+        try {
+            $participantList = $this->module->PARTICIPANT->getProjectParticipants($rcpro_project_id, $rcpro_user_dag);
+            foreach ( $participantList as $participant ) {
+                $rcpro_participant_id = (int) $participant["log_id"];
+                $link_id              = $this->module->PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
+                $dag_id               = $this->module->DAG->getParticipantDag($link_id);
+                $dag_name             = (string) \REDCap::getGroupNames(false, $dag_id) ?? "Unassigned";
+                $thisParticipant      = [
+                    'username'             => $participant["rcpro_username"] ?? "",
+                    'password_set'         => $participant["pw_set"] === 'True',
+                    'rcpro_participant_id' => $rcpro_participant_id,
+                    'dag_name'             => $dag_name,
+                    'dag_id'               => $dag_id
+                ];
+                if ( $role > 1 ) {
+                    $thisParticipant['fname'] = $participant["fname"] ?? "";
+                    $thisParticipant['lname'] = $participant["lname"] ?? "";
+                    $thisParticipant['email'] = $participant["email"] ?? "";
+                }
+                $participants[] = $thisParticipant;
+            }
+        } catch ( \Throwable $e ) {
+            $this->module->logError('Error fetching participant list', $e);
+        } finally {
+            return $this->module->escape($participants);
         }
     }
 
