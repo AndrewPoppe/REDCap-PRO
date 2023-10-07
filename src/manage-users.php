@@ -159,7 +159,6 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                     $('#role_select_submit').attr("disabled", true);
                     $('#role_select_reset').attr("disabled", true);
                 });
-                handleButtons();
             });
 
             const dt = $('#RCPRO_TABLE').DataTable({
@@ -205,12 +204,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                                 return select.outerHTML;
                             }
                             return row.role;
-                        },
-                        // createdCell: function (td, cellData, rowData, row, col) {
-                        //     $(td).data('order', rowData.role);
-                        //     $(td).attr('data-order', rowData.role);
-
-                        // }
+                        }
                     }
                 ],
                 stateSave: true,
@@ -221,12 +215,11 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                     return JSON.parse(localStorage.getItem('DataTables_staff_' + settings.sInstance))
                 },
                 drawCallback: function (settings) {
-                    $('.role_select').one("change", handleButtons);
+                    document.querySelectorAll('.role_select').forEach((el) => el.onchange = handleButtons);
                 },
                 scrollY: '50vh',
                 scrollCollapse: true
             });
-            $('.role_select').one("change", handleButtons);
             $('#parent').removeClass('dataTableParentHidden');
             $('.wrapper').show();
             $('#loading-container').hide();
