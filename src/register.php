@@ -234,7 +234,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                         download an import template.</p>
                     <table class="table table-bordered table-sm">
                         <caption>Registration Import File Format</caption>
-                        <thead class="thead-dark">
+                        <thead class="thead-dark table-dark">
                             <tr>
                                 <th class="align-middle">Column name</th>
                                 <th class="align-middle">Description</th>
