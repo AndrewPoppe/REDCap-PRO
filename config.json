@@ -54,6 +54,21 @@
             "key": "mfa",
             "name": "<strong>Multi-Factor Authentication</strong>:<br>Should participants be required to use multi-factor authentication (MFA) when logging in? If so, they will be required to enter a code sent to their email address after entering their username and password. This is an additional security measure to prevent unauthorized access.<br><em>Note: this setting enables the MFA option globally, but it still must be enabled in the project settings to take effect</em>",
             "type": "checkbox"
+        },
+        {
+            "key": "api-descriptive",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 248, 197), rgb(255, 248, 197)); border: 1px solid rgba(168, 133, 37, 0.4); border-radius: 0.375rem;'><strong>API Settings</strong><p>These settings control the use of the API. Please take care to understand how the API may be used before enabling it in the system.</p>    </div>",
+            "type": "descriptive"
+        },
+        {
+            "key": "api-enabled-system",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 248, 197), rgb(255, 248, 197)); border: 1px solid rgba(168, 133, 37, 0.4); border-radius: 0.375rem;'><strong>Enable the API</strong></div>Should the API be enabled for use?<br><em>Note: this setting enables the API option globally, but it still must be enabled in the project settings to take effect</em>",
+            "type": "checkbox"
+        },
+        {
+            "key": "api-require-admin",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 248, 197), rgb(255, 248, 197)); border: 1px solid rgba(168, 133, 37, 0.4); border-radius: 0.375rem;'><strong>Restrict API project settings to REDCap administrators</strong></div>Should only REDCap administrators be able to enable/disable the API in project settings? If not, any REDCapPRO manager in the project will be able to enable/disable the API in project settings.<br><em>Note: this setting only applies if the API is enabled globally</em>",
+            "type": "checkbox"
         }
     ],
     "links": {
