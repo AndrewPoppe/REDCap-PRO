@@ -98,6 +98,24 @@
         "importCsvRegister",
         "searchParticipantByEmail"
     ],
+    "action-tags": [
+        {
+            "tag": "@RCPRO-USERNAME",
+            "description": "This transforms a text field into a dropdown selector. The user can select an enrolled participant and populate the field with that participant's username"
+        },
+        {
+            "tag": "@RCPRO-EMAIL",
+            "description": "If @RCPRO-USERNAME is present on the instrument, then when the participant is selected the email field with the @RCPRO-EMAIL tag will be populated with the participant's email address"
+        },
+        {
+            "tag": "@RCPRO-FNAME",
+            "description": "If @RCPRO-USERNAME is present on the instrument, then when the participant is selected the text field with the @RCPRO-FNAME tag will be populated with the participant's first name"
+        },
+        {
+            "tag": "@RCPRO-LNAME",
+            "description": "If @RCPRO-USERNAME is present on the instrument, then when the participant is selected the text field with the @RCPRO-LNAME tag will be populated with the participant's last name"
+        }
+    ],
     "framework-version": 12,
     "compatibility": {
         "php-version-min": "7.3.0",
