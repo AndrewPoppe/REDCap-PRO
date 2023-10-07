@@ -7,6 +7,8 @@ use ExternalModules\Framework;
 
 require_once "src/classes/AjaxHandler.php";
 require_once "src/classes/Auth.php";
+require_once "src/classes/CsvEnrollImport.php";
+require_once "src/classes/CsvRegisterImport.php";
 require_once "src/classes/DAG.php";
 require_once "src/classes/Instrument.php";
 require_once "src/classes/LoginHelper.php";

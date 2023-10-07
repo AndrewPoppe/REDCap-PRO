@@ -87,13 +87,16 @@
         "src/session_check"
     ],
     "auth-ajax-actions": [
+        "exportLogs",
         "getLogs",
         "getParticipants",
         "getParticipantsCC",
         "getProjectsCC",
         "getStaff",
         "getStaffCC",
-        "exportLogs"
+        "importCsvEnroll",
+        "importCsvRegister",
+        "searchParticipantByEmail"
     ],
     "framework-version": 12,
     "compatibility": {
