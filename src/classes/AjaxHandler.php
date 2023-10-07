@@ -13,6 +13,7 @@ class AjaxHandler
         "getParticipants",
         "getParticipantsCC",
         "getProjectsCC",
+        "getStaff",
         "getStaffCC",
         "exportLogs"
     ];
@@ -67,10 +68,14 @@ class AjaxHandler
 
     private function getParticipants()
     {
+        $role = $this->module->getUserRole($this->module->safeGetUsername());
+        if ( $role < 2 ) {
+            throw new REDCapProException("You must be at least a normal user to view this page.");
+        }
+
         $participants     = [];
         $rcpro_project_id = $this->module->PROJECT->getProjectIdFromPID($this->project_id);
         $rcpro_user_dag   = $this->module->DAG->getCurrentDag($this->module->safeGetUsername(), $this->project_id);
-        $role             = $this->module->getUserRole($this->module->safeGetUsername());
         try {
             $participantList = $this->module->PARTICIPANT->getProjectParticipants($rcpro_project_id, $rcpro_user_dag);
             foreach ( $participantList as $participant ) {
@@ -157,6 +162,33 @@ class AjaxHandler
             ];
         }
         return $results;
+    }
+
+    private function getStaff()
+    {
+        $role = $this->module->getUserRole($this->module->safeGetUsername());
+        if ( $role < 3 ) {
+            throw new REDCapProException("You must be a manager to view this page.");
+        }
+        $project  = $this->module->framework->getProject();
+        $userList = $project->getUsers();
+
+        $users = [];
+        foreach ( $userList as $user ) {
+            $username  = $user->getUsername();
+            $fullname  = $this->module->getUserFullname($username);
+            $email     = $user->getEmail();
+            $this_role = $this->module->getUserRole($username);
+
+            $users[] = [
+                "username" => $username,
+                "fullname" => $fullname,
+                "email"    => $email,
+                "role"     => $this_role
+            ];
+        }
+        return $this->module->framework->escape($users);
+
     }
 
     private function getStaffCC()

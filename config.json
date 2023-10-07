@@ -91,6 +91,7 @@
         "getParticipants",
         "getParticipantsCC",
         "getProjectsCC",
+        "getStaff",
         "getStaffCC",
         "exportLogs"
     ],
