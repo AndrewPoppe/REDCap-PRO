@@ -125,4 +125,19 @@ class ProjectSettings
 
         return $mfaEnabledSystem === true && $mfaEnabledProject === true;
     }
+
+    /**
+     * Checks whether API is enabled in this project
+     * 
+     * @param int $pid The redcap project ID
+     * 
+     * @return bool Whether API is enabled in this project
+     */
+    public function apiEnabled(int $pid)
+    {
+        $apiEnabledSystem  = $this->module->getSystemSetting("api-enabled-system");
+        $apiEnabledProject = $this->module->getProjectSetting("api", $pid);
+
+        return $apiEnabledSystem === true && $apiEnabledProject === true;
+    }
 }

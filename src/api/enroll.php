@@ -8,6 +8,12 @@ namespace YaleREDCap\REDCapPRO;
 // It is NOAUTH and No CSRF, so API token is required
 try {
     $apiHandler = new APIParticipantEnroll($module, $_POST);
+
+    $projectSettings = new ProjectSettings($module);
+    if ( !$projectSettings->apiEnabled($apiHandler->project->getProjectId()) ) {
+        throw new \Error("API is not enabled for this project");
+    }
+
     if ( !$apiHandler->valid ) {
         echo json_encode($apiHandler->errorMessages, JSON_PRETTY_PRINT);
         throw new \Error("Invalid API payload");
