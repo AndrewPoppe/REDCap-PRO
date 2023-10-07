@@ -283,9 +283,6 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     }
 }
 
-// Get list of participants
-$participantList = $module->PARTICIPANT->getProjectParticipants($rcpro_project_id, $rcpro_user_dag);
-
 $module->initializeJavascriptModuleObject();
 
 ?>
@@ -313,47 +310,42 @@ $module->initializeJavascriptModuleObject();
     <div id="parent" class="dataTableParentHidden" style="display:hidden;">
         <form class="rcpro-form manage-form" id="manage-form" action="<?= $module->getUrl("src/manage.php"); ?>"
             method="POST" enctype="multipart/form-data" target="_self">
-            <?php if ( count($participantList) === 0 ) { ?>
-                <div>
-                    <p>No participants have been enrolled in this study</p>
-                </div>
-            <?php } else { ?>
-                <div class="form-group">
-                    <table class="rcpro-datatable" id="RCPRO_TABLE" style="width:100%;">
-                        <caption>Study Participants</caption>
-                        <thead>
-                            <tr>
-                                <th id="rcpro_username" class="dt-center">Username</th>
-                                <?php if ( $role > 1 ) { ?>
-                                    <th id="rcpro_fname" class="dt-center">First Name</th>
-                                    <th id="rcpro_lname" class="dt-center">Last Name</th>
-                                    <th id="rcpro_email">Email</th>
-                                <?php } ?>
-                                <?php if ( $projectHasDags ) { ?>
-                                    <th id="rcpro_dag" class="dt-center">Data Access Group</th>
-                                <?php } ?>
-                            </tr>
-                        </thead>
-                        <tbody>
+            <div class="form-group">
+                <table class="rcpro-datatable" id="RCPRO_TABLE" style="width:100%;">
+                    <caption>Study Participants</caption>
+                    <thead>
+                        <tr>
+                            <th id="rcpro_username" class="dt-center">Username</th>
+                            <?php if ( $role > 1 ) { ?>
+                                <th id="rcpro_fname" class="dt-center">First Name</th>
+                                <th id="rcpro_lname" class="dt-center">Last Name</th>
+                                <th id="rcpro_email">Email</th>
+                            <?php } ?>
+                            <?php if ( $projectHasDags ) { ?>
+                                <th id="rcpro_dag" class="dt-center">Data Access Group</th>
+                            <?php } ?>
+                        </tr>
+                    </thead>
+                    <tbody>
 
-                        </tbody>
-                    </table>
-                    <button type="button" class="btn btn-secondary rcpro-form-button" onclick='(function(){
+                    </tbody>
+                </table>
+                <button type="button" class="btn btn-secondary rcpro-form-button" onclick='(function(){
                         let table = $("#RCPRO_TABLE").DataTable();
                         let row = table.rows( { selected: true } );
                         if (row[0].length) {
-                            let participant_id = row.nodes()[0].dataset.id;
+                            let participant_id = $(row.nodes()[0]).data().id;
                             clearForm();
                             $("#toReset").val(participant_id);
                             $("#manage-form").submit();
                         }
                     })();'>Reset Password</button>
-                    <?php if ( $role > 2 ) { ?>
-                        <button type="button" class="btn btn-secondary rcpro-form-button" onclick='(function(){
+                <?php if ( $role > 2 ) { ?>
+                    <button type="button" class="btn btn-secondary rcpro-form-button" onclick='(function(){
                             let table = $("#RCPRO_TABLE").DataTable();
                             let row = table.rows( { selected: true } );
                             if (row[0].length) {
-                                let dataset = row.nodes()[0].dataset;
+                                let dataset = $(row.nodes()[0]).data();
                                 Swal.fire({
                                     title: "Enter the new name for this participant", 
                                     html: `<input id="swal-fname" class="swal2-input" value="${dataset.fname}"><input id="swal-lname" class="swal2-input" value="${dataset.lname}">`,
@@ -389,11 +381,11 @@ $module->initializeJavascriptModuleObject();
                                 });
                             }
                         })();'>Change Name</button>
-                        <button type="button" class="btn btn-secondary rcpro-form-button" onclick='(function(){
+                    <button type="button" class="btn btn-secondary rcpro-form-button" onclick='(function(){
                             let table = $("#RCPRO_TABLE").DataTable();
                             let row = table.rows( { selected: true } );
                             if (row[0].length) {
-                                let dataset = row.nodes()[0].dataset;
+                                let dataset = $(row.nodes()[0]).data();
                                 Swal.fire({
                                     title: "Enter the new email address for "+dataset.fname+" "+dataset.lname,
                                     input: "email",
@@ -411,13 +403,13 @@ $module->initializeJavascriptModuleObject();
                                 });
                             }
                         })();'>Change Email</button>
-                    <?php } ?>
-                    <?php if ( $role > 1 ) { ?>
-                        <button type="button" class="btn btn-rcpro rcpro-form-button" onclick='(function(){
+                <?php } ?>
+                <?php if ( $role > 1 ) { ?>
+                    <button type="button" class="btn btn-rcpro rcpro-form-button" onclick='(function(){
                             let table = $("#RCPRO_TABLE").DataTable();
                             let row = table.rows( { selected: true } );
                             if (row[0].length) {
-                                let dataset = row.nodes()[0].dataset;
+                                let dataset = $(row.nodes()[0]).data();
                                 Swal.fire({
                                     icon: "warning",
                                     iconColor: "<?= $module::$COLORS["primary"] ?>",
@@ -435,19 +427,18 @@ $module->initializeJavascriptModuleObject();
                                 });
                             }
                         })();'>Disenroll</button>
-                    <?php } ?>
-                </div>
-                <input type="hidden" id="toReset" name="toReset">
-                <input type="hidden" id="toChangeEmail" name="toChangeEmail">
-                <input type="hidden" id="newEmail" name="newEmail">
-                <input type="hidden" id="toChangeName" name="toChangeName">
-                <input type="hidden" id="newFirstName" name="newFirstName">
-                <input type="hidden" id="newLastName" name="newLastName">
-                <input type="hidden" id="toDisenroll" name="toDisenroll">
-                <input type="hidden" id="toSwitchDag" name="toSwitchDag">
-                <input type="hidden" id="newDag" name="newDag">
-                <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
-            <?php } ?>
+                <?php } ?>
+            </div>
+            <input type="hidden" id="toReset" name="toReset">
+            <input type="hidden" id="toChangeEmail" name="toChangeEmail">
+            <input type="hidden" id="newEmail" name="newEmail">
+            <input type="hidden" id="toChangeName" name="toChangeName">
+            <input type="hidden" id="newFirstName" name="newFirstName">
+            <input type="hidden" id="newLastName" name="newLastName">
+            <input type="hidden" id="toDisenroll" name="toDisenroll">
+            <input type="hidden" id="toSwitchDag" name="toSwitchDag">
+            <input type="hidden" id="newDag" name="newDag">
+            <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
         </form>
     </div>
 </div>
@@ -481,8 +472,7 @@ $module->initializeJavascriptModuleObject();
                     } else {
                         return `<span style='white-space:nowrap;'><i title='Password NOT Set' class='far ra-regular fa-circle-xmark' style='margin-left:2px;margin-right:2px;color:<?= $module::$COLORS["ban"] ?>;'></i>&nbsp;${row.username}</span>`;
                     }
-                },
-                className: 'dt-center'
+                }
             }];
             if (RCPRO_module.role > 1) {
                 columnDef.push({
@@ -510,16 +500,20 @@ $module->initializeJavascriptModuleObject();
                             $(select).attr("name", "dag_select_" + row.username);
                             $(select).attr("id", "dag_select_" + row.username);
                             $(select).attr("orig_value", row.dag_id);
+                            $(select).attr("orig_dag", row.dag_name);
                             $(select).attr("form", "manage-form");
-                            $(select).on('change', function () {
-                                let el = $('#dag_select_' + row.username);
-                                let newDAG = el.val();
-                                let origDAG = el.attr("orig_value");
-                                let newDAGName = $("#dag_select_" + row.username + " option:selected").text();
-                                let oldDAGName = row.dag_name;
+                            $(select).attr("fname", row.fname);
+                            $(select).attr("lname", row.lname);
+                            $(select).attr("rcpro_participant_id", row.rcpro_participant_id);
+                            $(select).attr('onchange', '(' + function (el) {
+                                const $el = $(el);
+                                let newDAG = $el.val();
+                                let origDAG = $el.attr("orig_value");
+                                let newDAGName = $el.find("option:selected").text();
+                                let oldDAGName = $el.attr("orig_dag");
                                 if (newDag !== origDAG) {
                                     Swal.fire({
-                                        title: `Switch Data Access Group for ${row.fname} ${row.lname}?`,
+                                        title: `Switch Data Access Group for ${$el.attr('fname')} ${$el.attr('lname')}?`,
                                         html: "From " + oldDAGName + " to " + newDAGName,
                                         icon: "warning",
                                         iconColor: "<?= $module::$COLORS["primary"] ?>",
@@ -530,22 +524,21 @@ $module->initializeJavascriptModuleObject();
                                     }).then(function (resp) {
                                         if (resp.isConfirmed) {
                                             clearForm();
-                                            $("#toSwitchDag").val(row.rcpro_participant_id);
+                                            $("#toSwitchDag").val($el.attr('rcpro_participant_id'));
                                             $("#newDag").val(newDAG);
                                             $("#manage-form").submit();
                                         } else {
-                                            el.val(origDAG);
+                                            $el.val(origDAG);
                                         }
                                     });
                                 }
-                            });
+                            }.toString() + ')(this);');
                             for (const project_dag_id in RCPRO_module.projectDags) {
-                                const dag_id = row.dag_id || '';
-                                console.log(project_dag_id, dag_id);
-                                const selected = project_dag_id == row.dag_id ? "selected" : "";
+                                const dag_id = row.dag_id === null ? '' : row.dag_id;
+                                const selected = project_dag_id == dag_id;
                                 const option = document.createElement("option");
                                 option.value = project_dag_id;
-                                option.selected = selected;
+                                $(option).attr('selected', selected);
                                 option.text = RCPRO_module.projectDags[project_dag_id];
                                 select.append(option);
                             }
@@ -584,6 +577,8 @@ $module->initializeJavascriptModuleObject();
                     $(row).data("fname", data.fname);
                     $(row).data("lname", data.lname);
                     $(row).data("email", data.email);
+                    console.log(data);
+                    console.log(row);
                 },
                 select: {
                     style: 'single'

@@ -77,7 +77,7 @@ class AjaxHandler
                 $rcpro_participant_id = (int) $participant["log_id"];
                 $link_id              = $this->module->PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
                 $dag_id               = $this->module->DAG->getParticipantDag($link_id);
-                $dag_name             = (string) \REDCap::getGroupNames(false, $dag_id) ?? "Unassigned";
+                $dag_name             = $this->module->DAG->getDagName($dag_id) ?? "Unassigned";
                 $thisParticipant      = [
                     'username'             => $participant["rcpro_username"] ?? "",
                     'password_set'         => $participant["pw_set"] === 'True',
