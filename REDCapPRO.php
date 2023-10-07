@@ -11,6 +11,7 @@ require_once "src/classes/CsvEnrollImport.php";
 require_once "src/classes/CsvRegisterImport.php";
 require_once "src/classes/DAG.php";
 require_once "src/classes/Instrument.php";
+require_once "src/classes/LoginHelper.php";
 require_once "src/classes/ParticipantHelper.php";
 require_once "src/classes/Project.php";
 require_once "src/classes/ProjectHelper.php";
@@ -891,8 +892,7 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function getAllUsers()
     {
-        global $module;
-        $projects = $module->getProjectsWithModuleEnabled();
+        $projects = $this->framework->getProjectsWithModuleEnabled();
         $users    = array();
         foreach ( $projects as $pid ) {
             $project   = new Project($this, $pid);
@@ -902,11 +902,11 @@ class REDCapPRO extends AbstractExternalModule
                 if ( isset($users[$user]) ) {
                     array_push($users[$user]['projects'], $pid);
                 } else {
-                    $newUser      = $module->getUser($user);
+                    $newUser      = $this->framework->getUser($user);
                     $newUserArr   = [
                         "username" => $user,
                         "email"    => $newUser->getEmail(),
-                        "name"     => $module->getUserFullname($user),
+                        "name"     => $this->getUserFullname($user),
                         "projects" => [ $pid ]
                     ];
                     $users[$user] = $newUserArr;
@@ -1113,5 +1113,13 @@ class REDCapPRO extends AbstractExternalModule
         ]);
 
         return $message;
+    }
+
+    public function includeFont()
+    {
+        echo '<link rel="preconnect" href="https://fonts.googleapis.com">' .
+            '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' .
+            '<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">' .
+            '<style> body, a, a:visited, a.nav-link { font-family: "Atkinson Hyperlegible", sans-serif !important; } </style>';
     }
 }

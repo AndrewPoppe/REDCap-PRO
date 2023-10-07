@@ -7,33 +7,13 @@ namespace YaleREDCap\REDCapPRO;
 if ( !$module->framework->isSuperUser() ) {
     exit();
 }
-
-function createProjectsCell(array $projects)
-{
-    global $module;
-    $result = "<td  class='dt-center'>";
-    foreach ($projects as $project) {
-        $link_class = 'rcpro_project_link';
-        $url = $module->getUrl("src/manage-users.php?pid=${project}");
-        $result .= "<div><a class='${link_class}' href='${url}'>PID ${project}</a></div>";
-    }
-    $result .= "</td>";
-    return $result;
-}
-
+echo '<!DOCTYPE html><html lang="en">';
+$module->includeFont();
 
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $module->UI->ShowControlCenterHeader("Staff");
 echo '<link rel="stylesheet" type="text/css" href="' . $module->getUrl("src/css/rcpro_cc.php") . '">';
-
-// Get array of staff (users)
-$users = $module->getAllUsers();
-
-// FIX: fix pathing potential issue
-global $redcap_version;
-
-$baseUrlPath = APP_PATH_WEBROOT_FULL . 'redcap_v' . $redcap_version . '/';
-
+$module->initializeJavascriptModuleObject();
 ?>
 <div id="loading-container" class="loader-container">
     <div id="loading" class="loader"></div>
@@ -53,35 +33,70 @@ $baseUrlPath = APP_PATH_WEBROOT_FULL . 'redcap_v' . $redcap_version . '/';
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($users as $user) {
-                	if($user["username"] == '') { 
-                		continue; // skip blank users
-                	}
-                		// FIX: fix pathing potential issue
-                    //$userLink = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "ControlCenter/view_users.php?username=" . $user["username"];
-                    $userLink = $baseUrlPath . "ControlCenter/view_users.php?username=" . $user["username"];
-                ?>
-                    <tr>
-                        <td class="rcpro_user_link" onclick="(function(){window.location.href='<?= $userLink ?>';})();"><?= $module->escape($user["username"]) ?></td>
-                        <td class="dt-center"><?= $module->escape($user["name"]) ?></td>
-                        <td><?= $user["email"] ?></td>
-                        <?= createProjectsCell($user["projects"]); ?>
-                    </tr>
-                <?php } ?>
             </tbody>
         </table>
     </div>
 </div>
 <script>
-    (function($, window, document) {
-        $(document).ready(function() {
+    const RCPRO_module = <?= $module->getJavascriptModuleObjectName() ?>;
+    (function ($, window, document) {
+        $(document).ready(function () {
             let dataTable = $('#RCPRO_TABLE').DataTable({
+                deferRender: true,
+                ajax: function (data, callback, settings) {
+                    RCPRO_module.ajax('getStaffCC', {})
+                        .then(response => {
+                            callback({ data: response });
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            callback({ data: [] });
+                        });
+                },
+                columns: [
+                    {
+                        title: 'Username',
+                        className: "rcpro_user_link",
+                        data: 'username',
+                        createdCell: function (td, cellData, rowData, row, col) {
+                            $(td).on('click', function () {
+                                window.location.href = rowData.userLink;
+                            });
+                        }
+                    },
+                    {
+                        title: 'Name',
+                        className: "dt-center",
+                        data: 'name'
+                    },
+                    {
+                        title: 'Email',
+                        data: 'email'
+                    },
+                    {
+                        title: 'Projects',
+                        className: "dt-center",
+                        data: function (row, type, set, meta) {
+                            if (type === 'display') {
+                                const projects = row.projects;
+                                let result = "";
+                                for (const project of projects) {
+                                    const url = `<?= $module->getUrl("src/manage-users.php?pid=") ?>${project}`;
+                                    result += `<div><a class="rcpro_project_link" title="Active" href="${url}">PID ${project}</a></div>`;
+                                }
+                                return result;
+                            } else {
+                                return row.projects;
+                            }
+                        }
+                    },
+                ],
                 dom: 'lBfrtip',
                 stateSave: true,
-                stateSaveCallback: function(settings, data) {
+                stateSaveCallback: function (settings, data) {
                     localStorage.setItem('DataTables_ccstaff_' + settings.sInstance, JSON.stringify(data))
                 },
-                stateLoadCallback: function(settings) {
+                stateLoadCallback: function (settings) {
                     return JSON.parse(localStorage.getItem('DataTables_ccstaff_' + settings.sInstance))
                 },
                 scrollY: '50vh',

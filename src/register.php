@@ -8,6 +8,7 @@ $role            = $module->getUserRole($redcap_username); // 3=admin/manager, 2
 if ( $role < 2 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
+$module->includeFont();
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module->UI->ShowHeader("Register");
@@ -213,8 +214,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 title="Register the participant but do not enroll">Register</button>
             <button type="button" class="btn btn-primary"
                 title="Automatically enroll this participant in the study once they are registered"
-                onclick="getDagAndSubmit();">Register and
-                Enroll</button>
+                onclick="getDagAndSubmit();">Register and Enroll</button>
         </div>
         <input type="hidden" name="dag">
         <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
@@ -431,6 +431,9 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 inputValue: '',
                 showCancelButton: true
             });
+            if (result.isDismissed) {
+                return;
+            }
             selectedDag = result.value;
             $('input[name="dag"]').val(selectedDag);
         }

@@ -26,25 +26,25 @@ class DAG
      */
     public function getPossibleDags(string $redcap_username, int $redcap_pid)
     {
-    		$allDags = array();  // FIX: PHP 8 issue array_keys will no longer gracefully work with a null
+        $allDags = array(); // FIX: PHP 8 issue array_keys will no longer gracefully work with a null
 
         // Get all dags in project
         //$allDags = array_keys($this->getProjectDags());
-        $dagData = $this->getProjectDags();  // calls:  \REDCap::getGroupNames()    // If no groups exist, return FALSE
-      	
-      	if ($dagData !== false) {  
-      		$allDags = array_keys($dagData);
-      	} 
+        $dagData = $this->getProjectDags(); // calls:  \REDCap::getGroupNames()    // If no groups exist, return FALSE
+
+        if ( $dagData !== false ) {
+            $allDags = array_keys($dagData);
+        }
 
         // If there are none, then the user can't have any
-        if (count($allDags) === 0) {
+        if ( count($allDags) === 0 ) {
             return NULL;
         }
 
         // If user is admin, all dags are available to them
         $user = $this->module->getUser($redcap_username);
-        if ($user->isSuperUser()) {
-            $result = [NULL];
+        if ( $user->isSuperUser() ) {
+            $result = [ NULL ];
             return array_merge($result, $allDags);
         }
 
@@ -57,13 +57,13 @@ class DAG
 
             // Get all DAGs the user can switch to with switcher
             $query = $this->module->createQuery();
-            $query->add($SQL, [$redcap_pid, $redcap_username]);
+            $query->add($SQL, [ $redcap_pid, $redcap_username ]);
             $result = $query->execute();
 
             // At least one exists here
-            if ($query->affected_rows > 0) {
+            if ( $query->affected_rows > 0 ) {
                 $dags = array();
-                while ($row = $result->fetch_assoc()) {
+                while ( $row = $result->fetch_assoc() ) {
                     array_push($dags, $row["group_id"]);
                 }
                 return $dags;
@@ -71,8 +71,8 @@ class DAG
 
             // User might only be in one DAG and not in switcher
             $current = $this->getCurrentDag($redcap_username, $redcap_pid);
-            return isset($current) ? [$current] : $allDags;
-        } catch (\Exception $e) {
+            return isset($current) ? [ $current ] : $allDags;
+        } catch ( \Exception $e ) {
             $this->module->logError("Error getting possible DAGs", $e);
         }
     }
@@ -88,9 +88,9 @@ class DAG
     public function getCurrentDag(string $redcap_username, int $redcap_pid)
     {
 
-        $user = $this->module->getUser($redcap_username);
+        $user        = $this->module->getUser($redcap_username);
         $isSuperUser = $user->isSuperUser();
-        if ($isSuperUser) {
+        if ( $isSuperUser ) {
             return null;
         }
 
@@ -99,13 +99,13 @@ class DAG
                 WHERE project_id = ?
                 AND username = ?";
         try {
-            $result = $this->module->query($SQL, [$redcap_pid, $redcap_username]);
-            $dag = null;
-            while ($row = $result->fetch_assoc()) {
+            $result = $this->module->query($SQL, [ $redcap_pid, $redcap_username ]);
+            $dag    = null;
+            while ( $row = $result->fetch_assoc() ) {
                 $dag = $row["group_id"];
             }
             return $dag;
-        } catch (\Exception $e) {
+        } catch ( \Exception $e ) {
             $this->module->logError("Error getting current DAG", $e);
         }
     }
@@ -125,6 +125,19 @@ class DAG
         return \REDCap::getGroupNames();
     }
 
+    public function getDagName($dag_id)
+    {
+        if ( empty((int) $dag_id) ) {
+            return null;
+        }
+        $sql = "SELECT group_name FROM redcap_data_access_groups WHERE group_id = ?";
+        $q   = $this->module->framework->query($sql, [ $dag_id ]);
+        if ( $q->num_rows === 0 ) {
+            return null;
+        }
+        return $q->fetch_assoc()['group_name'];
+    }
+
     /**
      * Get the DAG for a participant given a rcpro link
      * 
@@ -135,11 +148,11 @@ class DAG
     {
         $SQL = "SELECT project_dag WHERE log_id = ?";
         try {
-            $result = $this->module->selectLogs($SQL, [$rcpro_link_id]);
-            if ($row = $result->fetch_assoc()) {
+            $result = $this->module->selectLogs($SQL, [ $rcpro_link_id ]);
+            if ( $row = $result->fetch_assoc() ) {
                 return $row["project_dag"];
             }
-        } catch (\Exception $e) {
+        } catch ( \Exception $e ) {
             $this->module->logError("Error getting participant DAG", $e);
         }
     }
@@ -154,14 +167,14 @@ class DAG
      */
     public function updateDag(int $rcpro_link_id, ?int $dag_id)
     {
-        if ($this->module->countLogsValidated("log_id = ? AND project_dag is not null", [$rcpro_link_id]) > 0) {
+        if ( $this->module->countLogsValidated("log_id = ? AND project_dag is not null", [ $rcpro_link_id ]) > 0 ) {
             $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'project_dag'";
         } else {
             $SQL = "INSERT INTO redcap_external_modules_log_parameters (value, name, log_id) VALUES (?, 'project_dag', ?)";
         }
         try {
-            return $this->module->query($SQL, [$dag_id, $rcpro_link_id]);
-        } catch (\Exception $e) {
+            return $this->module->query($SQL, [ $dag_id, $rcpro_link_id ]);
+        } catch ( \Exception $e ) {
             $this->module->logError("Error updating participant's DAG", $e);
         }
     }

@@ -7,6 +7,8 @@ namespace YaleREDCap\REDCapPRO;
 if ( !$module->framework->isSuperUser() ) {
     exit();
 }
+echo '<!DOCTYPE html><html lang="en">';
+$module->includeFont();
 
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $module->UI->ShowControlCenterHeader("Logs");
@@ -72,7 +74,8 @@ $module->initializeJavascriptModuleObject();
                 columns: columns.map(column => {
                     return {
                         data: column,
-                        defaultContent: ""
+                        defaultContent: "",
+                        className: "dt-center"
                     }
                 }),
                 createdRow: function (row, data, dataIndex, cells) {

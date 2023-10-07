@@ -87,8 +87,13 @@
         "src/session_check"
     ],
     "auth-ajax-actions": [
-        "getLogs",
         "exportLogs",
+        "getLogs",
+        "getParticipants",
+        "getParticipantsCC",
+        "getProjectsCC",
+        "getStaff",
+        "getStaffCC",
         "importCsvEnroll",
         "importCsvRegister",
         "searchParticipantByEmail"
@@ -97,7 +102,7 @@
     "compatibility": {
         "php-version-min": "7.3.0",
         "php-version-max": "",
-        "redcap-version-min": "9.10.0",
+        "redcap-version-min": "13.1.27",
         "redcap-version-max": ""
     },
     "enable-no-auth-logging": true

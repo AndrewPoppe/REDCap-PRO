@@ -39,7 +39,8 @@ display: inline-block;
 padding: 20px;
 margin-left: auto;
 margin-right: auto;
-width: 50vw !important;
+min-width: 50vw !important;
+max-width: 100vw !important;
 }
 
 .outer_container {
@@ -78,6 +79,7 @@ vertical-align: middle;
 
 table {
 border-collapse: collapse;
+font-size: small;
 }
 
 table.dataTable tbody tr.even {
@@ -122,8 +124,8 @@ cursor: pointer !important;
 text-decoration: line-through !important;
 }
 
-.rcpro_participant_link,
-.rcpro_user_link {
+td.rcpro_participant_link,
+td.rcpro_user_link {
 color:
 <?= $module::$COLORS["blue"] ?> !important;
 font-weight: bold !important;

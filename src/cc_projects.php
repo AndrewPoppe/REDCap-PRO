@@ -7,17 +7,17 @@ namespace YaleREDCap\REDCapPRO;
 if ( !$module->framework->isSuperUser() ) {
     exit();
 }
-
-require_once("classes/Project.php");
 ?>
-
+<!DOCTYPE html>
+<html lang="en">
 <title>REDCapPRO Projects</title>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro_cc.php") ?>">
 
 <?php
+$module->includeFont();
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $module->UI->ShowControlCenterHeader("Projects");
-$redcap_project_ids = $module->getProjectsWithModuleEnabled();
+$module->initializeJavascriptModuleObject();
 ?>
 <div id="loading-container" class="loader-container">
     <div id="loading" class="loader"></div>
@@ -38,61 +38,93 @@ $redcap_project_ids = $module->getProjectsWithModuleEnabled();
                 <th scope="col" class='dt-center'># Records</th>
             </thead>
             <tbody>
-                <?php
-                foreach ($redcap_project_ids as $id) {
-                    $thisProject                = new Project($module, $id);
-                    $rcpro_project_id           = $module->PROJECT->getProjectIdFromPID($thisProject->redcap_pid);
-                    $project_rcpro_home         = $module->getUrl("src/home.php?pid=${id}");
-                    $project_home               = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "index.php?pid=${id}";
-                    $project_rcpro_manage       = $module->getUrl("src/manage.php?pid=${id}");
-                    $project_rcpro_manage_users = $module->getUrl("src/manage-users.php?pid=${id}");
-                    $project_records            = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "DataEntry/record_status_dashboard.php?pid=${id}"
-                ?>
-                    <tr>
-                        <!-- Project ID -->
-                        <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_rcpro_home ?>', '_blank').focus();})()">
-                            <?= $rcpro_project_id ?>
-                        </td>
-                        <!-- REDCap PID -->
-                        <td class='dt-center'>
-                            <?= $id ?>
-                        </td>
-                        <!-- Title -->
-                        <td>
-                            <?= $thisProject->info["app_title"] ?>
-                        </td>
-                        <!-- Status -->
-                        <td class='dt-center'>
-                            <?= $thisProject->getStatus() ?>
-                        </td>
-                        <!-- # Participants -->
-                        <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_rcpro_manage ?>', '_blank').focus();})()">
-                            <?= $thisProject->getParticipantCount($rcpro_project_id) ?>
-                        </td>
-                        <!-- # Staff Members -->
-                        <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_rcpro_manage_users ?>', '_blank').focus();})()">
-                            <?= count($thisProject->staff["allStaff"]) ?>
-                        </td>
-                        <!-- # Records -->
-                        <td class='dt-center rcpro_participant_link' onclick="(function(){window.open('<?= $project_records ?>', '_blank').focus();})()">
-                            <?= $thisProject->getRecordCount() ?>
-                        </td>
-                    </tr>
-                <?php } ?>
+
             </tbody>
         </table>
     </div>
 </div>
 <script>
-    (function($, window, document) {
-        $(document).ready(function() {
+    (function ($, window, document) {
+        const RCPRO_module = <?= $module->getJavascriptModuleObjectName() ?>;
+        $(document).ready(function () {
             let dataTable = $('#RCPRO_TABLE').DataTable({
                 dom: 'lftip',
+                deferRender: true,
+                ajax: function (data, callback, settings) {
+                    RCPRO_module.ajax('getProjectsCC', {})
+                        .then(response => {
+                            callback({ data: response });
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            callback({ data: [] });
+                        });
+                },
+                columns: [
+                    {
+                        title: 'Project ID',
+                        className: "dt-center rcpro_participant_link",
+                        data: function (row, type, set, meta) {
+                            if (type === 'display') {
+                                return `<div onclick="(function(){window.open('${row.project_rcpro_home}', '_blank').focus();})()">${row.rcpro_project_id}</div>`;
+                            } else {
+                                return row.rcpro_project_id;
+                            }
+                        }
+                    },
+                    {
+                        title: 'REDCap PID',
+                        className: "dt-center",
+                        data: 'project_id'
+                    },
+                    {
+                        title: 'Title',
+                        data: 'title'
+                    },
+                    {
+                        title: 'Status',
+                        className: "dt-center",
+                        data: 'status'
+                    },
+                    {
+                        title: '# Participants',
+                        className: "dt-center rcpro_participant_link",
+                        data: function (row, type, set, meta) {
+                            if (type === 'display') {
+                                return `<div onclick="(function(){window.open('${row.project_rcpro_manage}', '_blank').focus();})()">${row.participant_count}</div>`;
+                            } else {
+                                return row.participant_count;
+                            }
+                        }
+                    },
+                    {
+                        title: '# Staff Members',
+                        className: "dt-center rcpro_participant_link",
+                        data: function (row, type, set, meta) {
+                            if (type === 'display') {
+                                return `<div onclick="(function(){window.open('${row.project_rcpro_manage_users}', '_blank').focus();})()">${row.staff_count}</div>`;
+                            } else {
+                                return row.staff_count;
+                            }
+                        }
+                    },
+                    {
+                        title: '# Records',
+                        className: "dt-center rcpro_participant_link",
+                        data: function (row, type, set, meta) {
+                            if (type === 'display') {
+                                return `<div onclick="(function(){window.open('${row.project_records}', '_blank').focus();})()">${row.record_count}</div>`;
+                            } else {
+                                return row.record_count;
+                            }
+                        }
+                    }
+                ],
                 stateSave: true,
-                stateSaveCallback: function(settings, data) {
+                stateSaveCallback: function (settings, data) {
                     localStorage.setItem('DataTables_ccproj_' + settings.sInstance, JSON.stringify(data))
                 },
-                stateLoadCallback: function(settings) {
+                stateLoadCallback: function (settings) {
                     return JSON.parse(localStorage.getItem('DataTables_ccproj_' + settings.sInstance))
                 },
                 scrollX: true,

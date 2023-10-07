@@ -18,13 +18,16 @@ class UI
                 <head>
                     <meta charset="UTF-8">
                     <title>REDCapPRO ' . $title . '</title>
+                    <link rel="preconnect" href="https://fonts.googleapis.com">
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
                     <link rel="shortcut icon" href="' . $this->module->getUrl("images/favicon.ico") . '"/>
                     <link rel="icon" type="image/png" sizes="32x32" href="' . $this->module->getUrl("images/favicon-32x32.png") . '">
                     <link rel="icon" type="image/png" sizes="16x16" href="' . $this->module->getUrl("images/favicon-16x16.png") . '">
                     <link rel="stylesheet" href="' . $this->module->getUrl("lib/bootstrap/css/bootstrap.min.css") . '">
                     <script async src="' . $this->module->getUrl("lib/bootstrap/js/bootstrap.bundle.min.js") . '"></script>
                     <style>
-                        body { font: 14px sans-serif; }
+                        body {  font-family: "Atkinson Hyperlegible", sans-serif; }
                         .wrapper { width: 360px; padding: 20px; }
                         .form-group { margin-top: 20px; }
                         .center { display: flex; justify-content: center; align-items: center; }

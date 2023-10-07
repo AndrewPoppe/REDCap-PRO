@@ -4,13 +4,10 @@ namespace YaleREDCap\REDCapPRO;
 
 /** @var REDCapPRO $module */
 
-use YaleREDCap\REDCapPRO\LoginHelper;
-
 // Initialize Authentication
 $module->AUTH->init();
 
 // Login Helper
-require_once("classes/LoginHelper.php");
 $Login = new LoginHelper($module);
 
 // Check if the user is already logged in, if yes then redirect then to the survey

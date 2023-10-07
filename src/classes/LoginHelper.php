@@ -2,8 +2,6 @@
 
 namespace YaleREDCap\REDCapPRO;
 
-require_once("ProjectSettings.php");
-
 class LoginHelper
 {
 

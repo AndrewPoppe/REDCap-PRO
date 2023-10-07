@@ -8,17 +8,15 @@ $role = $module->getUserRole($module->safeGetUsername()); // 3=admin/manager, 2=
 if ( $role < 3 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
+$module->includeFont();
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $module->UI->ShowHeader("Users");
 echo "<title>" . $module->APPTITLE . " - Staff</title>
 <link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>";
 
-$proj_id = $module->PROJECT->getProjectIdFromPID($project_id);
-
 // Get list of users
-$project  = $module->getProject();
-$userList = $project->getUsers();
+$project = $module->getProject();
 
 // Check for errors
 if ( isset($_GET["error"]) ) {
@@ -34,6 +32,8 @@ if ( isset($_GET["error"]) ) {
     <?php
 }
 
+$module->framework->initializeJavascriptModuleObject();
+
 // Update roles if requested
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
@@ -41,6 +41,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     $module->logForm("Submitted Manage Staff Form", $_POST);
 
     try {
+        $userList = $project->getUsers();
         foreach ( $userList as $user ) {
             $username = $user->getUsername();
             parse_str($username, $username_temp);
@@ -101,75 +102,31 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     <div id="parent" class="dataTableParentHidden">
         <form class="rcpro-form" id="manage-users-form" action="<?php echo $module->getUrl("src/manage-users.php"); ?>"
             method="POST" enctype="multipart/form-data" target="_self">
-            <?php
-
-            $userListCount = 0;
-
-            if ( $userList != null ) {
-                $userListCount = count($userList);
-            }
-
-            if ( $userListCount === 0 ) { ?>
-                <div>
-                    <p>No users have access to this project.</p>
-                </div>
-            <?php } else { ?>
-                <div class="form-group">
-                    <table class="rcpro-datatable" id="RCPRO_TABLE">
-                        <caption></caption>
-                        <thead>
-                            <tr>
-                                <th id="rcpro_username">Username</th>
-                                <th id="rcpro_name">Name</th>
-                                <th id="rcpro_email">Email</th>
-                                <th id="rcpro_role">User Role</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-
-                            <?php
-                            foreach ( $userList as $user ) {
-                                $username       = $user->getUsername();
-                                $username_clean = \REDCap::escapeHtml($username);
-                                $fullname_clean = \REDCap::escapeHtml($module->getUserFullname($username));
-                                $email_clean    = \REDCap::escapeHtml($user->getEmail());
-                                $role           = $module->getUserRole($username);
-                                ?>
-                                <tr>
-                                    <td>
-                                        <?php echo $username_clean; ?>
-                                    </td>
-                                    <td>
-                                        <?php echo $fullname_clean; ?>
-                                    </td>
-                                    <td>
-                                        <?php echo $email_clean; ?>
-                                    </td>
-                                    <td data-order="<?php echo $role; ?>">
-                                        <select class="role_select" name="role_select_<?php echo $username_clean; ?>"
-                                            id="role_select_<?php echo $username_clean; ?>" orig_value="<?php echo $role; ?>"
-                                            form="manage-users-form">
-                                            <option value=0 <?php echo ($role === 0 ? "selected" : ""); ?>>No Access</option>
-                                            <option value=1 <?php echo ($role === 1 ? "selected" : ""); ?>>Monitor</option>
-                                            <option value=2 <?php echo ($role === 2 ? "selected" : ""); ?>>Normal User</option>
-                                            <option value=3 <?php echo ($role === 3 ? "selected" : ""); ?>>Manager</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            <?php } ?>
-                        </tbody>
-                    </table>
-                    <button class="btn btn-rcpro rcpro-form-button role_select_button" id="role_select_submit" type="submit"
-                        disabled>Save Changes</button>
-                    <button class="btn btn-secondary rcpro-form-button role_select_button" id="role_select_reset"
-                        disabled>Reset</button>
-                </div>
-            <?php } ?>
+            <div class="form-group">
+                <table class="rcpro-datatable" id="RCPRO_TABLE">
+                    <caption></caption>
+                    <thead>
+                        <tr>
+                            <th id="rcpro_username">Username</th>
+                            <th id="rcpro_name">Name</th>
+                            <th id="rcpro_email">Email</th>
+                            <th id="rcpro_role">User Role</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+                <button class="btn btn-rcpro rcpro-form-button role_select_button" id="role_select_submit" type="submit"
+                    disabled>Save Changes</button>
+                <button class="btn btn-secondary rcpro-form-button role_select_button" id="role_select_reset"
+                    disabled>Reset</button>
+            </div>
             <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
         </form>
     </div>
 </div>
 <script>
+    const RCPRO_module = <?= $module->framework->getJavascriptModuleObjectName() ?>;
     (function ($, window, document) {
         $(document).ready(function () {
             function checkRoleChanges() {
@@ -205,6 +162,51 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             });
 
             const dt = $('#RCPRO_TABLE').DataTable({
+                deferRender: true,
+                ajax: function (data, callback, settings) {
+                    RCPRO_module.ajax('getStaff', {})
+                        .then(response => {
+                            callback({ data: response });
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            callback({ data: [] });
+                        });
+                },
+                columns: [
+                    {
+                        title: 'Username',
+                        data: 'username'
+                    },
+                    {
+                        title: 'Name',
+                        data: 'fullname'
+                    },
+                    {
+                        title: 'Email',
+                        data: 'email'
+                    },
+                    {
+                        title: 'User Role',
+                        data: function (row, type, val, meta) {
+                            if (type === 'display') {
+                                const select = document.createElement('select');
+                                select.name = `role_select_${row.username}`;
+                                select.id = `role_select_${row.username}`;
+                                $(select).addClass('role_select');
+                                $(select).attr('orig_value', row.role);
+                                $(select).attr('form', 'manage-users-form');
+                                select.add(new Option('No Access', 0, row.role == 0 ? 'selected' : ''));
+                                select.add(new Option('Monitor', 1, row.role == 1 ? 'selected' : ''));
+                                select.add(new Option('Normal User', 2, row.role == 2 ? 'selected' : ''));
+                                select.add(new Option('Manager', 3, row.role == 3 ? 'selected' : ''));
+
+                                return select.outerHTML;
+                            }
+                            return row.role;
+                        }
+                    }
+                ],
                 stateSave: true,
                 stateSaveCallback: function (settings, data) {
                     localStorage.setItem('DataTables_staff_' + settings.sInstance, JSON.stringify(data))
@@ -213,12 +215,11 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                     return JSON.parse(localStorage.getItem('DataTables_staff_' + settings.sInstance))
                 },
                 drawCallback: function (settings) {
-                    $('.role_select').one("change", handleButtons);
+                    document.querySelectorAll('.role_select').forEach((el) => el.onchange = handleButtons);
                 },
                 scrollY: '50vh',
                 scrollCollapse: true
             });
-            $('.role_select').one("change", handleButtons);
             $('#parent').removeClass('dataTableParentHidden');
             $('.wrapper').show();
             $('#loading-container').hide();
