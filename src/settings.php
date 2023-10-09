@@ -248,6 +248,10 @@ $apiSettingsAdminOnly    = $module->getSystemSetting("api-require-admin");
                                 <?php echo $api_err; ?>
                             </span>
                         </div>
+                        <p>
+                            The API URL for this system is
+                            <code><?= $module->getProjectlessUrl("src/api.php", true, true) ?></code>
+                        </p>
                     </div>
                 </div>
                 <br>

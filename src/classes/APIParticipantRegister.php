@@ -122,7 +122,7 @@ class APIParticipantRegister extends APIHandler
         }
     }
 
-    public function registerUsers() : bool
+    public function takeAction() : bool
     {
         $success = true;
         try {

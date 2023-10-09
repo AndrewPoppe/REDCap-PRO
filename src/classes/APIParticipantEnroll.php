@@ -153,7 +153,7 @@ class APIParticipantEnroll extends APIHandler
         }
     }
 
-    public function enrollUsers() : bool
+    public function takeAction() : bool
     {
         $success = true;
         try {

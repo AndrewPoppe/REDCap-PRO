@@ -100,12 +100,10 @@
         "src/forgot-password",
         "src/forgot-username",
         "src/session_check",
-        "src/api/enroll",
-        "src/api/register"
+        "src/api"
     ],
     "no-csrf-pages": [
-        "src/api/enroll",
-        "src/api/register"
+        "src/api"
     ],
     "auth-ajax-actions": [
         "exportLogs",
