@@ -32,6 +32,7 @@
     - [Register Participants](#register-participants)
     - [Enroll Participants](#enroll-participants)
   - [Action Tags](#action-tags)
+  - [Changelog](#changelog)
 
 ## Overview
 
@@ -285,3 +286,19 @@ information about **REDCapPRO** participants. These are described below:
 | @RCPRO-EMAIL    |        text         |          email           | If @RCPRO-USERNAME is present on the instrument, then when it is selected the field with the @RCPRO-EMAIL tag will be populated with the participant's email address |
 | @RCPRO-FNAME    |        text         |           none           | Like @RCPRO-EMAIL, but the field will be populated with the participant's first name                                                                                 |
 | @RCPRO-LNAME    |        text         |           none           | Likewise, with last name                                                                                                                                             |
+## Changelog
+
+| Version | Release Date | Description                                                                                                   |
+| ------- | ------------ | ------------------------------------------------------------------------------------------------------------- |
+| 2.0.0   | 2023-10-09   | Major release - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.0.0)                 |
+| 1.0.1   | 2022-04-01   | Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/1.0.1)                       |
+| 1.0.0   | 2022-03-31   | Change and bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/1.0.0)            |
+| 0.5.0   | 2022-03-30   | Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.5.0)                       |
+| 0.4.9   | 2022-03-24   | Minor bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.9)                 |
+| 0.4.8   | 2022-02-23   | Minor bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.8)                 |
+| 0.4.7   | 2022-01-04   | Minor bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.7)                 |
+| 0.4.6   | 2021-12-14   | Minor bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.6)                 |
+| 0.4.5   | 2021-12-12   | Medium security fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.5)           |
+| 0.4.4   | 2021-11-15   | Improvement - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.4)                   |
+| 0.4.3   | 2021-11-12   | Improvement and minor bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.3) |
+| 0.4.2   | 2021-11-04   | Initial release                                                                                               |
