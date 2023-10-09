@@ -5,6 +5,9 @@ namespace YaleREDCap\REDCapPRO;
 use ExternalModules\AbstractExternalModule;
 use ExternalModules\Framework;
 
+require_once "src/classes/APIHandler.php";
+require_once "src/classes/APIParticipantEnroll.php";
+require_once "src/classes/APIParticipantRegister.php";
 require_once "src/classes/AjaxHandler.php";
 require_once "src/classes/Auth.php";
 require_once "src/classes/CsvEnrollImport.php";
@@ -1121,5 +1124,14 @@ class REDCapPRO extends AbstractExternalModule
             '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' .
             '<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">' .
             '<style> body, a, a:visited, a.nav-link { font-family: "Atkinson Hyperlegible", sans-serif !important; } </style>';
+    }
+
+    public function getProjectlessUrl(string $path, bool $noAuth, bool $useApiEndpoint)
+    {
+        $pid = $_GET['pid'];
+        unset($_GET['pid']);
+        $result      = $this->framework->getUrl($path, true, true);
+        $_GET['pid'] = $pid;
+        return $result;
     }
 }

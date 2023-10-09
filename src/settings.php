@@ -59,6 +59,9 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         // Validate MFA
         $new_settings["mfa"] = $post_settings["mfa"] === "true";
 
+        // Validate API
+        $new_settings["api"] = $post_settings["api"] === "true";
+
         // Validate Primary Contact
         $new_settings["pc-name"]  = \REDCap::escapeHtml($post_settings["pc-name"]);
         $new_settings["pc-email"] = \REDCap::escapeHtml($post_settings["pc-email"]);
@@ -100,6 +103,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 $settings                = $module->getProjectSettings();
 $preventEmailLoginSystem = $module->getSystemSetting("prevent-email-login-system");
 $allowMfa                = $module->getSystemSetting("mfa");
+$allowApi                = $module->getSystemSetting("api-enabled-system");
+$apiSettingsAdminOnly    = $module->getSystemSetting("api-require-admin");
 
 ?>
 
@@ -209,6 +214,44 @@ $allowMfa                = $module->getSystemSetting("mfa");
                                 <?php echo $mfa_err; ?>
                             </span>
                         </div>
+                    </div>
+                </div>
+                <br>
+            <?php }
+            if ( $allowApi && (!$apiSettingsAdminOnly || $module->framework->getUser()->isSuperUser()) ) {
+                $apiChecked = $settings["api"] ? "checked" : "";
+                ?>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="fa-stack">
+                            <i class="fas fa-laptop-code fa-2x"></i>
+                        </span>
+                        <nbsp></nbsp>
+                        <strong>API</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">
+                            Should participants be allowed to use the API to register and enroll participants?<br>
+                            If so, they will be able to use their REDCap API tokens to register and enroll participants in
+                            this project.<br>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input <?php echo (!empty($api_err)) ? 'is-invalid' : ''; ?>"
+                                type="checkbox" id="api-check" <?= $apiChecked ?> onclick="(function(){
+                                $('#api').val($('#api-check')[0].checked);
+                            })()">
+                            <label class="form-check-label" style="vertical-align:middle;" for="api-check">Checking this
+                                will allow users to use the API.</label>
+                            <input type="text" name="api" id="api"
+                                value="<?= $apiChecked === "checked" ? "true" : "false" ?>" hidden>
+                            <span class="invalid-feedback">
+                                <?php echo $api_err; ?>
+                            </span>
+                        </div>
+                        <p>
+                            The API URL for this system is
+                            <code><?= $module->getProjectlessUrl("src/api.php", true, true) ?></code>
+                        </p>
                     </div>
                 </div>
                 <br>
