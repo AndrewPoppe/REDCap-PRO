@@ -34,7 +34,6 @@ class AjaxHandler
         if ( !in_array($this->method, $this->methods, true) ) {
             throw new REDCapProException("Invalid ajax method");
         }
-
         try {
             return $this->{$this->method}();
         } catch ( \Throwable $e ) {

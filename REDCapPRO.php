@@ -190,6 +190,9 @@ class REDCapPRO extends AbstractExternalModule
         $repeat_instance
     ) {
 
+        // workaround for $group_id bug - Might cause other issues? Is $response_id ever not set in a condition when $group_id is set?
+        $group_id = (isset($response_id) && $response_id !== "") ? $group_id : null;
+
         // Initialize Authentication
         if ( isset($record) ) {
             \Session::savecookie("record", $record, 0, true);
@@ -198,7 +201,7 @@ class REDCapPRO extends AbstractExternalModule
         $auth->init();
 
         // Participant is logged in to their account
-        if ( $auth->is_logged_in() ) {
+        if ( $this->AUTH->is_logged_in() ) {
             // Settings
             $settings = new ProjectSettings($this);
 
@@ -220,8 +223,6 @@ class REDCapPRO extends AbstractExternalModule
             // Get RCPRO project ID
             $projectHelper    = new ProjectHelper($this);
             $rcpro_project_id = $projectHelper->getProjectIdFromPID($project_id);
-
-
 
             // Determine whether participant is enrolled in the study.
             $rcpro_participant_id = $auth->get_participant_id();
@@ -347,6 +348,8 @@ class REDCapPRO extends AbstractExternalModule
             // Store cookie to return to survey
         } else {
             $auth->set_survey_url(APP_PATH_SURVEY_FULL . "?s=${survey_hash}");
+            $auth->set_redcap_project_id($project_id);
+            $auth->set_data_access_group_id($group_id);
             \Session::savecookie($this->APPTITLE . "_survey_url", APP_PATH_SURVEY_FULL . "?s=${survey_hash}", 0, TRUE);
             $auth->set_survey_active_state(TRUE);
             header("location: " . $this->getUrl("src/login.php", true) . "&s=${survey_hash}");
@@ -752,6 +755,7 @@ class REDCapPRO extends AbstractExternalModule
         }
     }
 
+
     /**
      * Sends an email that contains the MFA token.
      * 
@@ -788,6 +792,27 @@ class REDCapPRO extends AbstractExternalModule
         }
     }
 
+
+    public function sendAutoEnrollNotificationEmail(string $email, $project_id)
+    {
+        $settings = new ProjectSettings($this);
+        $subject  = "REDCapPRO Auto-Enrollment";
+        $from     = $settings->getEmailFromAddress();
+        $body     = "<html><body><div>
+        <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
+        <p>This is a notification that a participant has been automatically enrolled in your project.</p>
+        <p><strong>Project ID</strong>: " . $project_id . "</p>
+        <p><strong>Project Title</strong>: " . $this->framework->getProject($project_id)->getTitle() . "</p>
+        <br>
+        <a href='" . $this->framework->getUrl('src/manage.php?PID=' . $project_id) . "'>Click here to manage your REDCapPRO participants</a>
+        </div></body></html>";
+
+        try {
+            return \REDCap::email($email, $from, $subject, $body);
+        } catch ( \Exception $e ) {
+            $this->logError("Error sending auto-enroll notificaiton email", $e);
+        }
+    }
 
     /////////////////////\\\\\\\\\\\\\\\\\\\\\\       
     /////   REDCAP USER-RELATED METHODS   \\\\\ 
@@ -1108,6 +1133,14 @@ class REDCapPRO extends AbstractExternalModule
             }
             if ( isset($settings["lockout-seconds"]) && $settings["lockout-seconds"] < 0 ) {
                 $message = "The minimum lockout duration is 0 seconds.";
+            }
+            $site_key   = $settings["recaptcha-site-key"];
+            $secret_key = $settings["recaptcha-secret-key"];
+            if ( isset($site_key) && empty($secret_key) ) {
+                $message = "You must enter a secret key if you enter a site key.";
+            }
+            if ( isset($secret_key) && empty($site_key) ) {
+                $message = "You must enter a site key if you enter a secret key.";
             }
         }
 

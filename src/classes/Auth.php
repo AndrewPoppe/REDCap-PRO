@@ -111,11 +111,31 @@ class Auth
         return $_SESSION[$this->APPTITLE . "_username"];
     }
 
+    public function get_redcap_project_id()
+    {
+        return $_SESSION[$this->APPTITLE . "_redcap_project_id"];
+    }
+
+    public function get_data_access_group_id()
+    {
+        return $_SESSION[$this->APPTITLE . "_data_access_group_id"];
+    }
+
     // SETS
 
     public function deactivate_survey_link()
     {
         unset($_SESSION[$this->APPTITLE . "_survey_link_active"]);
+    }
+
+    public function set_redcap_project_id($project_id)
+    {
+        $_SESSION[$this->APPTITLE . "_redcap_project_id"] = $project_id;
+    }
+
+    public function set_data_access_group_id($dag_id)
+    {
+        $_SESSION[$this->APPTITLE . "_data_access_group_id"] = $dag_id;
     }
 
     /**
@@ -210,7 +230,8 @@ class Auth
         unset($_SESSION[$this->APPTITLE . "_mfa_code_time"]);
     }
 
-    public function is_mfa_verified() {
+    public function is_mfa_verified()
+    {
         return $_SESSION[$this->APPTITLE . "_mfa_code_verified"];
     }
 

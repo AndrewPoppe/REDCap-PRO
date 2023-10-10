@@ -31,8 +31,8 @@ if ( isset($_GET["error"]) ) {
 }
 
 // Get possible languages
-$settings     = new ProjectSettings($module);
-$languageList = $settings->getLanguageFiles();
+$projectSettings = new ProjectSettings($module);
+$languageList    = $projectSettings->getLanguageFiles();
 
 // Update settings if requested
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
@@ -72,6 +72,17 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             $any_err   = true;
         }
 
+        if ( $module->getSystemSetting("allow-self-registration-system") ) {
+            // Validate Allow Self-Registration
+            $new_settings["allow-self-registration"] = $post_settings["allow-self-registration"] === "on";
+
+            // Validate Auto-Enroll Upon Self-Registration
+            $new_settings["auto-enroll-upon-self-registration"] = $new_settings["allow-self-registration"] && $post_settings["auto-enroll-upon-self-registration"] === "on";
+
+            // Validate Auto-Enroll Notification Email
+            $new_email                                      = trim(filter_input(INPUT_POST, "auto-enroll-notification-email", FILTER_VALIDATE_EMAIL));
+            $new_settings["auto-enroll-notification-email"] = $new_email;
+        }
 
         if ( !$any_err ) {
 
@@ -101,11 +112,18 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 }
 
 // Get current project settings
-$settings                = $module->getProjectSettings();
-$preventEmailLoginSystem = $module->getSystemSetting("prevent-email-login-system");
-$allowMfa                = $module->getSystemSetting("mfa");
-$allowApi                = $module->getSystemSetting("api-enabled-system");
-$apiSettingsAdminOnly    = $module->getSystemSetting("api-require-admin");
+$settings                       = $module->getProjectSettings();
+$preventEmailLoginSystem        = $module->getSystemSetting("prevent-email-login-system");
+$allowMfa                       = $module->getSystemSetting("mfa");
+$project_id                     = (int) $module->framework->getProjectId();
+$allowSelfRegistrationSystem    = $module->framework->getSystemSetting("allow-self-registration-system");
+$allowAutoEnrollSystem          = (bool) $module->framework->getSystemSetting("allow-auto-enroll-upon-self-registration-system");
+$allowSelfRegistration          = $projectSettings->shouldAllowSelfRegistration($project_id);
+$autoEnrollUponSelfRegistration = $projectSettings->shouldEnrollUponRegistration($project_id);
+$autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEmail($project_id);
+$selfRegistrationAdminOnly      = $module->getSystemSetting("self-registration-require-admin");
+$allowApi                       = $module->getSystemSetting("api-enabled-system");
+$apiSettingsAdminOnly           = $module->getSystemSetting("api-require-admin");
 
 ?>
 
@@ -128,7 +146,6 @@ $apiSettingsAdminOnly    = $module->getSystemSetting("api-require-admin");
                         <select class="form-select <?php echo (!empty($lang_err)) ? 'is-invalid' : ''; ?>"
                             name="reserved-language-project" aria-label="language select">
                             <?php
-                            //foreach ($langs as $lang => $file) {  // FIX: $lang  is global $lang, and this lang in loop will STOMP on the global.
                             foreach ( $languageList as $lang_item => $file ) {
                                 $selected_lang = $settings["reserved-language-project"];
                                 $selected      = ($lang_item === $selected_lang) || (!isset($selected_lang) && $lang_item === "English") ? "selected" : "";
@@ -257,6 +274,82 @@ $apiSettingsAdminOnly    = $module->getSystemSetting("api-require-admin");
                 </div>
                 <br>
             <?php } ?>
+            <?php
+            if ( $allowSelfRegistrationSystem && (!$selfRegistrationAdminOnly || $module->framework->getUser()->isSuperUser()) ) {
+                $allowSelfRegistrationChecked          = $allowSelfRegistration ? "checked" : "";
+                $autoEnrollUponSelfRegistrationChecked = $autoEnrollUponSelfRegistration ? "checked" : "";
+                ?>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="fa-stack">
+                            <i class="fas fa-pen-to-square fa-stack-2x"></i>
+                        </span>
+                        <nbsp></nbsp>
+                        <strong>Participant Self-Registration</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">
+                            <strong>Should participants be allowed to create their own accounts?</strong><br>
+                            <em>Checking this option will allow participants to register themselves
+                                if they do not already have an account.</em>
+                        </div>
+                        <div class="form-check">
+                            <input
+                                class="form-check-input <?php echo (!empty($self_registration_err)) ? 'is-invalid' : ''; ?>"
+                                aria-expanded="<?= $allowSelfRegistrationChecked ?>" type="checkbox"
+                                id="allow-self-registration-form-check" <?= $allowSelfRegistrationChecked ?>
+                                name="allow-self-registration" onchange="(function(){
+                                    <?php if ( $allowAutoEnrollSystem ) { ?>
+                                        const isChecked = $('#allow-self-registration-form-check')[0].checked;
+                                        if (!isChecked) {
+                                            $('#auto-enroll-upon-self-registration')[0].checked = false;
+                                            $('#auto-enroll-notification-email').attr('disabled', true);
+                                        }
+                                        $('#auto-enroll-upon-self-registration').attr('disabled', !isChecked);
+                                    <?php } ?>
+                            })()">
+                            <label class="form-check-label" style="vertical-align:middle;"
+                                for="allow-self-registration-form-check">Allow Participant Self-Registration</label>
+                            <span class="invalid-feedback">
+                                <?php echo $self_registration_err; ?>
+                            </span>
+                        </div>
+                        <?php if ( $allowAutoEnrollSystem ) { ?>
+                            <br><br>
+                            <div class="card-title">
+                                <strong>Should participants be automatically enrolled when they self-register?</strong><br>
+                                <em>Checking this option will automatically enroll a participant in your study when they
+                                    self-register.</em>
+                            </div>
+                            <div class="form-check" id="auto-enroll-settings">
+                                <input class="form-check-input <?php echo (!empty($auto_enroll_err)) ? 'is-invalid' : ''; ?>"
+                                    name="auto-enroll-upon-self-registration" type="checkbox"
+                                    id="auto-enroll-upon-self-registration" <?= $autoEnrollUponSelfRegistrationChecked ?>
+                                    onchange="(function(){
+                                    const isChecked = $('#auto-enroll-upon-self-registration')[0].checked;
+                                    $('#auto-enroll-notification-email').attr('disabled', !isChecked);
+                            })()">
+                                <label class="form-check-label" style="vertical-align:middle;"
+                                    for="auto-enroll-upon-self-registration">Auto-Enroll Upon Self-Registration</label>
+                                <span class="invalid-feedback">
+                                    <?php echo $auto_enroll_err; ?>
+                                </span>
+                            </div>
+                            <br>
+                            <div class="form-group">
+                                <label>Email address to notify when new participants are auto-enrolled</label>
+                                <input type="email" name="auto-enroll-notification-email" id="auto-enroll-notification-email"
+                                    class="form-control <?= (!empty($auto_enroll_notification_err) ? 'is-invalid' : '') ?>"
+                                    value="<?= $autoEnrollNotificationEmail ?>">
+                                <span class="invalid-feedback">
+                                    <?php echo $auto_enroll_notification_err; ?>
+                                </span>
+                            </div>
+                        <?php } ?>
+                    </div>
+                </div>
+                <br>
+            <?php } ?>
             <div class="card">
                 <div class="card-header">
                     <span class="fa-stack">
@@ -317,9 +410,18 @@ $apiSettingsAdminOnly    = $module->getSystemSetting("api-require-admin");
             form.addEventListener('change', function () {
                 $('#rcpro-submit-button').attr("disabled", null);
             });
+            <?php if ( $allowAutoEnrollSystem ) { ?>
+                const isChecked = $('#allow-self-registration-form-check')[0].checked;
+                if (!isChecked) {
+                    $('#auto-enroll-upon-self-registration')[0].checked = false;
+                }
+
+                $('#auto-enroll-upon-self-registration').attr('disabled', !isChecked);
+                $('#auto-enroll-notification-email').attr('disabled', !$('#auto-enroll-upon-self-registration')[0].checked);
+            <?php } ?>
         });
     })(window.jQuery, window, document);
 </script>
 
 <?php
-include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+include_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';

@@ -126,6 +126,27 @@ class ProjectSettings
         return $mfaEnabledSystem === true && $mfaEnabledProject === true;
     }
 
+    public function shouldAllowSelfRegistration(int $pid) : bool
+    {
+        $allowSelfRegistrationSystem  = $this->module->getSystemSetting("allow-self-registration-system");
+        $allowSelfRegistrationProject = $this->module->getProjectSetting("allow-self-registration", $pid);
+
+        return $allowSelfRegistrationSystem === true && $allowSelfRegistrationProject === true;
+    }
+
+    public function shouldEnrollUponRegistration(int $pid) : bool
+    {
+        $enrollUponRegistrationSystem  = $this->module->getSystemSetting("allow-auto-enroll-upon-self-registration-system");
+        $enrollUponRegistrationProject = $this->module->getProjectSetting("auto-enroll-upon-self-registration", $pid);
+
+        return $enrollUponRegistrationSystem === true && $enrollUponRegistrationProject === true;
+    }
+
+    public function getAutoEnrollNotificationEmail(int $pid) : string
+    {
+        return $this->module->getProjectSetting("auto-enroll-notification-email", $pid) ?? "";
+    }
+
     /**
      * Checks whether API is enabled in this project
      * 

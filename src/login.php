@@ -249,6 +249,14 @@ if ( !empty($login_err) ) {
         <?= $module->tt("login_password") ?>
     </a>?
 </div>
+<?php if ( $settings->shouldAllowSelfRegistration((int) $module->getProjectId()) ) { ?>
+    <div style="text-align: center;">
+        Don't have an account?
+        <a href="<?= $module->getUrl("src/create-account.php", true); ?>">
+            Create one
+        </a>
+    </div>
+<?php } ?>
 <style>
     a {
         text-decoration: none !important;
