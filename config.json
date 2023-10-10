@@ -56,13 +56,23 @@
             "type": "checkbox"
         },
         {
+            "key": "self-registration-descriptive",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 197,248), rgb(255, 197,248)); border: 1px solid rgba(168, 37, 133, 0.4); border-radius: 0.375rem;'><strong>Self-Registration and Enrollment Settings</strong><p>These settings control the ability for participants to register and/or enroll themselves. Please take care to understand the implications of this before enabling it in the system.</p></div>",
+            "type": "descriptive"
+        },
+        {
             "key": "allow-self-registration-system",
-            "name": "<strong>Allow Self-Registration</strong>:<br>Should participants be allowed to create their own accounts? (default is No)<br><em>Note: this must also be enabled in a project's settings to take effect</em>",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 197,248), rgb(255, 197,248)); border: 1px solid rgba(168, 37, 133, 0.4); border-radius: 0.375rem;'><strong>Allow Self-Registration:</strong></div><br>Should participants be allowed to create their own accounts? (default is No)<br><em>Note: this must also be enabled in a project's settings to take effect</em>",
+            "type": "checkbox"
+        },
+        {
+            "key": "self-registration-require-admin",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 197, 248), rgb(255, 197, 248)); border: 1px solid rgba(168, 37, 133, 0.4); border-radius: 0.375rem;'><strong>Restrict Self-Registration project settings to REDCap administrators:</strong></div>Should only REDCap administrators be able to enable/disable the API in project settings? If not, any REDCapPRO manager in the project will be able to enable/disable participant self-registration and/or enrollment in project settings.<br><em>Note: this setting only applies if participant self-registration is enabled globally</em>",
             "type": "checkbox"
         },
         {
             "key": "allow-auto-enroll-upon-self-registration-system",
-            "name": "<strong>Allow Auto-Enroll Upon Self-Registration</strong>:<br>Should participants be automatically enrolled in the project upon self-registration? (default is No)<br><em>Note: this must also be enabled in a project's settings to take effect</em>",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 197,248), rgb(255, 197,248)); border: 1px solid rgba(168, 37, 133, 0.4); border-radius: 0.375rem;'><strong>Allow Auto-Enroll Upon Self-Registration:</strong></div><br>Should participants be automatically enrolled in the project upon self-registration? (default is No)<br><em>Note: this must also be enabled in a project's settings to take effect</em>",
             "type": "checkbox",
             "branchingLogic": {
                 "field": "allow-self-registration-system",
@@ -71,12 +81,12 @@
         },
         {
             "key": "recaptcha-site-key",
-            "name": "<strong>reCAPTCHA Site Key</strong>:<br>Site key for reCAPTCHA v2 (default is empty)<br><em>It is fine to use the same value as the REDCap site key (found on Modules/Services Configuration page)</em>",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 197,248), rgb(255, 197,248)); border: 1px solid rgba(168, 37, 133, 0.4); border-radius: 0.375rem;'><strong>reCAPTCHA Site Key:</strong></div><br>Site key for reCAPTCHA v2 (default is empty)<br><em>It is fine to use the same value as the REDCap site key (found on Modules/Services Configuration page)</em>",
             "type": "text"
         },
         {
             "key": "recaptcha-secret-key",
-            "name": "<strong>reCAPTCHA Secret Key</strong>:<br>Secret key for reCAPTCHA v2 (default is empty)<br><em>It is fine to use the same value as the REDCap secret key (found on Modules/Services Configuration page)</em>",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 197,248), rgb(255, 197,248)); border: 1px solid rgba(168, 37, 133, 0.4); border-radius: 0.375rem;'><strong>reCAPTCHA Secret Key:</strong></div><br>Secret key for reCAPTCHA v2 (default is empty)<br><em>It is fine to use the same value as the REDCap secret key (found on Modules/Services Configuration page)</em>",
             "type": "password"
         }
     ],

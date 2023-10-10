@@ -116,6 +116,7 @@ $allowAutoEnrollSystem          = (bool) $module->framework->getSystemSetting("a
 $allowSelfRegistration          = $projectSettings->shouldAllowSelfRegistration($project_id);
 $autoEnrollUponSelfRegistration = $projectSettings->shouldEnrollUponRegistration($project_id);
 $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEmail($project_id);
+$selfRegistrationAdminOnly      = $module->getSystemSetting("self-registration-require-admin");
 
 ?>
 
@@ -229,7 +230,7 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
                 <br>
             <?php } ?>
             <?php
-            if ( $allowSelfRegistrationSystem ) {
+            if ( $allowSelfRegistrationSystem && (!$selfRegistrationAdminOnly || $module->framework->getUser()->isSuperUser()) ) {
                 $allowSelfRegistrationChecked          = $allowSelfRegistration ? "checked" : "";
                 $autoEnrollUponSelfRegistrationChecked = $autoEnrollUponSelfRegistration ? "checked" : "";
                 ?>
