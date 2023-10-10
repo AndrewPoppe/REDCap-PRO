@@ -5,21 +5,22 @@ namespace YaleREDCap\REDCapPRO;
 /** @var REDCapPRO $module */
 
 // Initialize Authentication
-$module->AUTH->init();
+$auth = new Auth($module->APPTITLE);
+$auth->init();
 
 // Login Helper
 $Login = new LoginHelper($module);
 
 // Check if the user is already logged in, if yes then redirect then to the survey
-if ( $module->AUTH->is_logged_in() ) {
-    $survey_url        = $module->AUTH->get_survey_url();
-    $survey_url_active = $module->AUTH->is_survey_link_active();
+if ( $auth->is_logged_in() ) {
+    $survey_url        = $auth->get_survey_url();
+    $survey_url_active = $auth->is_survey_link_active();
 
     if ( empty($survey_url) || empty($survey_url_active) || $survey_url_active !== TRUE ) {
         return;
     }
 
-    $module->AUTH->deactivate_survey_link();
+    $auth->deactivate_survey_link();
     header("location: ${survey_url}");
     return;
 }
@@ -30,6 +31,9 @@ $username_err = $password_err = $login_err = "";
 
 // Project Settings
 $settings = new ProjectSettings($module);
+
+// Participant Helper
+$participantHelper = new ParticipantHelper($module);
 
 // Processing form data when form is submitted
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
@@ -42,8 +46,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         $username_err = $module->tt("login_err1");
     } else {
         $username           = \REDCap::escapeHtml(trim($_POST["username"]));
-        $usernameExists     = $module->PARTICIPANT->usernameIsTaken($username);
-        $emailExists        = $module->PARTICIPANT->checkEmailExists($username);
+        $usernameExists     = $participantHelper->usernameIsTaken($username);
+        $emailExists        = $participantHelper->checkEmailExists($username);
         $emailLoginsAllowed = $settings->emailLoginsAllowed($module->getProjectId());
     }
 
@@ -92,7 +96,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 // --> USERNAME/EMAIL EXISTS
             } else {
 
-                $participant = $usernameExists ? $module->PARTICIPANT->getParticipant($username) : $module->PARTICIPANT->getParticipantFromEmail($username);
+                $participant = $usernameExists ? $participantHelper->getParticipant($username) : $participantHelper->getParticipantFromEmail($username);
                 $stored_hash = $Login->getHash($participant["log_id"]);
 
                 // Check that this username is not locked out
@@ -134,7 +138,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                     // Rehash password if necessary
                     if ( password_needs_rehash($stored_hash, PASSWORD_DEFAULT) ) {
                         $new_hash = password_hash($password, PASSWORD_DEFAULT);
-                        $module->PARTICIPANT->storeHash($new_hash, $participant["log_id"]);
+                        $participantHelper->storeHash($new_hash, $participant["log_id"]);
                     }
 
                     // Reset failed attempts and failed IP
@@ -142,11 +146,11 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                     $Login->resetFailedLogin($participant["log_id"]);
 
                     // Store data in session variables
-                    $module->AUTH->set_login_values($participant);
+                    $auth->set_login_values($participant);
 
                     // Redirect user to appropriate page
-                    if ( $module->AUTH->is_survey_url_set() ) {
-                        header("location: " . $module->AUTH->get_survey_url());
+                    if ( $auth->is_survey_url_set() ) {
+                        header("location: " . $auth->get_survey_url());
                     } elseif ( isset($qstring["s"]) ) {
                         header("location: " . APP_PATH_SURVEY_FULL . $_SERVER['QUERY_STRING']);
                     } else {
@@ -193,7 +197,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 }
 
 // This method starts the html doc
-$module->UI->ShowParticipantHeader($module->tt("login_title"));
+$ui = new UI($module);
+$ui->ShowParticipantHeader($module->tt("login_title"));
 ?>
 
 <div style="text-align: center;">
@@ -255,4 +260,4 @@ if ( !empty($login_err) ) {
         text-shadow: 0px 0px 5px #900000;
     }
 </style>
-<?php $module->UI->EndParticipantPage(); ?>
+<?php $ui->EndParticipantPage(); ?>

@@ -16,7 +16,8 @@ if ( !$module->framework->isSuperUser() ) {
 <?php
 $module->includeFont();
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
-$module->UI->ShowControlCenterHeader("Projects");
+$ui = new UI($module);
+$ui->ShowControlCenterHeader("Projects");
 $module->initializeJavascriptModuleObject();
 ?>
 <div id="loading-container" class="loader-container">

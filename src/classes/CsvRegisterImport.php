@@ -96,10 +96,11 @@ class CsvRegisterImport
 
     private function checkEmail(string $email) : void
     {
+        $participantHelper = new ParticipantHelper($this->module);
         if ( !filter_var($email, FILTER_VALIDATE_EMAIL) ) {
             $this->errorMessages[] = "Invalid email address: $email";
             $this->rowValid        = false;
-        } elseif ( $this->module->PARTICIPANT->checkEmailExists($email) ) {
+        } elseif ( $participantHelper->checkEmailExists($email) ) {
             $this->errorMessages[] = "Email address already exists: $email";
             $this->rowValid        = false;
         } elseif ( in_array($email, $this->emails, true) ) {
@@ -111,9 +112,10 @@ class CsvRegisterImport
 
     private function checkDag(int $dag) : void
     {
-        $this->dags = $this->module->DAG->getProjectDags();
+        $dagHelper  = new DAG($this->module);
+        $this->dags = $dagHelper->getProjectDags();
         $dagIds     = array_keys($this->dags);
-        $userDag    = $this->module->DAG->getCurrentDag($this->module->safeGetUsername(), $this->project_id);
+        $userDag    = $dagHelper->getCurrentDag($this->module->safeGetUsername(), $this->project_id);
 
         if ( !empty($dag) && !in_array($dag, $dagIds) ) {
             $this->errorMessages[] = "Invalid DAG: " . $dag;
@@ -130,12 +132,14 @@ class CsvRegisterImport
         $success = true;
         try {
             foreach ( $this->cleanContents as $row ) {
-                $rcpro_username = $this->module->PARTICIPANT->createParticipant($row['email'], $row['fname'], $row['lname']);
+                $participantHelper = new ParticipantHelper($this->module);
+                $rcpro_username    = $participantHelper->createParticipant($row['email'], $row['fname'], $row['lname']);
                 $this->module->sendNewParticipantEmail($rcpro_username, $row['email'], $row['fname'], $row['lname']);
                 if ( $row['enroll'] ) {
-                    $rcpro_participant_id = $this->module->PARTICIPANT->getParticipantIdFromUsername($rcpro_username);
+                    $rcpro_participant_id = $participantHelper->getParticipantIdFromUsername($rcpro_username);
                     $dagId                = $row['dag'] === '[No Assignment]' ? null : (int) $row['dag'];
-                    $result               = $this->module->PROJECT->enrollParticipant($rcpro_participant_id, $this->project_id, $dagId, $rcpro_username);
+                    $projectHelper        = new ProjectHelper($this->module);
+                    $result               = $projectHelper->enrollParticipant($rcpro_participant_id, $this->project_id, $dagId, $rcpro_username);
                     if ( !$result || $result === -1 ) {
                         $this->module->log('Error enrolling participant via CSV', [
                             'rcpro_username'       => $rcpro_username,

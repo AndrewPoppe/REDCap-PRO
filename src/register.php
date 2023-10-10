@@ -11,7 +11,8 @@ if ( $role < 2 ) {
 $module->includeFont();
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->UI->ShowHeader("Register");
+$ui = new UI($module);
+$ui->ShowHeader("Register");
 echo "<title>" . $module->APPTITLE . " - Register</title>";
 $module->initializeJavascriptModuleObject();
 
@@ -31,10 +32,11 @@ if ( isset($_GET["error"]) ) {
 
 // DAGs (for automatic enrollment)
 $project_id         = (int) $module->framework->getProjectId();
-$project_dags       = $module->framework->escape($module->DAG->getProjectDags());
+$dagHelper          = new DAG($module);
+$project_dags       = $module->framework->escape($dagHelper->getProjectDags());
 $project_dags[null] = "Unassigned";
 $projectHasDags     = count($project_dags) > 1;
-$redcap_dag         = $module->framework->escape($module->DAG->getCurrentDag($redcap_username, $project_id));
+$redcap_dag         = $module->framework->escape($dagHelper->getCurrentDag($redcap_username, $project_id));
 if ( $projectHasDags ) {
     ?>
     <script>
@@ -61,6 +63,9 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     // Log submission
     $module->logForm("Submitted Register Form", $_POST);
 
+    // Participant Helper
+    $participantHelper = new ParticipantHelper($module);
+
     // Validate Name
     $fname       = trim($_POST["REDCapPRO_FName"]);
     $fname_clean = \REDCap::escapeHtml($fname);
@@ -81,7 +86,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         $email_err = "Please enter a valid email address.";
         $any_error = true;
     } else {
-        $result = $module->PARTICIPANT->checkEmailExists($param_email);
+        $result = $participantHelper->checkEmailExists($param_email);
         if ( $result === null ) {
             echo "Oops! Something went wrong. Please try again later.";
             return;
@@ -106,7 +111,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     if ( !$any_error ) {
         $icon = $title = $html = "";
         try {
-            $username = $module->PARTICIPANT->createParticipant($email, $fname_clean, $lname_clean);
+            $participantHelper = new ParticipantHelper($module);
+            $username          = $participantHelper->createParticipant($email, $fname_clean, $lname_clean);
             $module->sendNewParticipantEmail($username, $email, $fname_clean, $lname_clean);
             $icon  = "success";
             $title = "Participant Registered";
@@ -118,9 +124,10 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             // If we are also enrolling the participant, do that now
             $action = filter_input(INPUT_POST, "action", FILTER_SANITIZE_STRING);
             if ( $action !== "register" ) {
-                $rcpro_participant_id = $module->PARTICIPANT->getParticipantIdFromUsername($username);
+                $rcpro_participant_id = $participantHelper->getParticipantIdFromUsername($username);
 
-                $result = $module->PROJECT->enrollParticipant($rcpro_participant_id, $project_id, $dag, $username);
+                $projectHelper = new ProjectHelper($module);
+                $result        = $projectHelper->enrollParticipant($rcpro_participant_id, $project_id, $dag, $username);
                 if ( $result === -1 ) {
                     $icon  = "error";
                     $title = 'This participant is already enrolled in this project';

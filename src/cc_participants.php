@@ -25,7 +25,10 @@ if ( isset($_GET["error"]) ) {
 }
 
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
-$module->UI->ShowControlCenterHeader("Participants");
+$ui = new UI($module);
+$ui->ShowControlCenterHeader("Participants");
+
+$participantHelper = new ParticipantHelper($module);
 
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
@@ -60,7 +63,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
             // Try to change name
             else {
-                $result = $module->PARTICIPANT->changeName($rcpro_participant_id, $newFirstName, $newLastName);
+                $result = $participantHelper->changeName($rcpro_participant_id, $newFirstName, $newLastName);
                 if ( !$result ) {
                     $title = "Trouble updating participant's name.";
                     $icon  = "error";
@@ -74,11 +77,11 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         } else if ( !empty($_POST["toChangeEmail"]) ) {
             $function = "change participant's email address";
             $newEmail = $_POST["newEmail"];
-            if ( $module->PARTICIPANT->checkEmailExists($newEmail) ) {
+            if ( $participantHelper->checkEmailExists($newEmail) ) {
                 $icon  = "error";
                 $title = "The provided email address is already associated with a REDCapPRO account.";
             } else {
-                $result = $module->PARTICIPANT->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
+                $result = $participantHelper->changeEmailAddress(intval($_POST["toChangeEmail"]), $newEmail);
                 if ( !$result ) {
                     $icon  = "error";
                     $title = "Trouble changing participant's email address.";
@@ -93,14 +96,14 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             $toUpdate   = intval($_POST["toUpdateActivity"]);
             $function   = "update participant's active status";
             $reactivate = $_POST["statusAction"] === "reactivate";
-            if ( !$module->PARTICIPANT->checkParticipantExists($toUpdate) ) {
+            if ( !$participantHelper->checkParticipantExists($toUpdate) ) {
                 $icon  = "error";
                 $title = "The provided participant does not exist in the system.";
             } else {
                 if ( $reactivate ) {
-                    $result = $module->PARTICIPANT->reactivateParticipant($toUpdate);
+                    $result = $participantHelper->reactivateParticipant($toUpdate);
                 } else {
-                    $result = $module->PARTICIPANT->deactivateParticipant($toUpdate);
+                    $result = $participantHelper->deactivateParticipant($toUpdate);
                 }
                 if ( !$result ) {
                     $verb  = $reactivate ? "reactivating" : "deactivating";
@@ -121,7 +124,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 }
 $module->initializeJavascriptModuleObject();
 // Get array of participants
-$participants = $module->PARTICIPANT->getAllParticipants();
+$participants = $participantHelper->getAllParticipants();
 
 ?>
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>

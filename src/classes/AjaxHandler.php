@@ -34,7 +34,7 @@ class AjaxHandler
         if ( !in_array($this->method, $this->methods, true) ) {
             throw new REDCapProException("Invalid ajax method");
         }
-      
+
         try {
             return $this->{$this->method}();
         } catch ( \Throwable $e ) {
@@ -78,15 +78,18 @@ class AjaxHandler
         }
 
         $participants     = [];
-        $rcpro_project_id = $this->module->PROJECT->getProjectIdFromPID($this->project_id);
-        $rcpro_user_dag   = $this->module->DAG->getCurrentDag($this->module->safeGetUsername(), $this->project_id);
+        $projectHelper    = new ProjectHelper($this->module);
+        $rcpro_project_id = $projectHelper->getProjectIdFromPID($this->project_id);
+        $dagHelper        = new DAG($this->module);
+        $rcpro_user_dag   = $dagHelper->getCurrentDag($this->module->safeGetUsername(), $this->project_id);
         try {
-            $participantList = $this->module->PARTICIPANT->getProjectParticipants($rcpro_project_id, $rcpro_user_dag);
+            $participantHelper = new ParticipantHelper($this->module);
+            $participantList   = $participantHelper->getProjectParticipants($rcpro_project_id, $rcpro_user_dag);
             foreach ( $participantList as $participant ) {
                 $rcpro_participant_id = (int) $participant["log_id"];
-                $link_id              = $this->module->PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
-                $dag_id               = $this->module->DAG->getParticipantDag($link_id);
-                $dag_name             = $this->module->DAG->getDagName($dag_id) ?? "Unassigned";
+                $link_id              = $projectHelper->getLinkId($rcpro_participant_id, $rcpro_project_id);
+                $dag_id               = $dagHelper->getParticipantDag($link_id);
+                $dag_name             = $dagHelper->getDagName($dag_id) ?? "Unassigned";
                 $thisParticipant      = [
                     'username'             => $participant["rcpro_username"] ?? "",
                     'password_set'         => $participant["pw_set"] === 'True',
@@ -113,23 +116,23 @@ class AjaxHandler
         if ( !$this->module->framework->isSuperUser() ) {
             throw new REDCapProException("You must be an admin to view this page");
         }
-
-        $participants = $this->module->PARTICIPANT->getAllParticipants();
-        $results      = [];
+        $participantHelper = new ParticipantHelper($this->module);
+        $participants      = $participantHelper->getAllParticipants();
+        $results           = [];
         foreach ( $participants as $participant ) {
             $participant_clean    = $this->module->escape($participant);
             $rcpro_participant_id = (int) $participant_clean["log_id"];
             $results[]            = [
                 'log_id'               => $participant_clean["log_id"],
                 'rcpro_participant_id' => $rcpro_participant_id,
-                'projects_array'       => $this->module->PARTICIPANT->getParticipantProjects($rcpro_participant_id),
-                'info'                 => $this->module->framework->escape($this->module->PARTICIPANT->getParticipantInfo($rcpro_participant_id)),
+                'projects_array'       => $participantHelper->getParticipantProjects($rcpro_participant_id),
+                'info'                 => $this->module->framework->escape($participantHelper->getParticipantInfo($rcpro_participant_id)),
                 'username'             => $participant_clean["rcpro_username"] ?? "",
                 'password_set'         => $participant_clean["pw_set"] === 'True',
                 'fname'                => $participant_clean["fname"] ?? "",
                 'lname'                => $participant_clean["lname"] ?? "",
                 'email'                => $participant_clean["email"] ?? "",
-                'isActive'             => $this->module->PARTICIPANT->isParticipantActive($rcpro_participant_id)
+                'isActive'             => $participantHelper->isParticipantActive($rcpro_participant_id)
             ];
         }
         return $results;
@@ -145,7 +148,8 @@ class AjaxHandler
         $results            = [];
         foreach ( $redcap_project_ids as $id ) {
             $thisProject                = new Project($this->module, $id);
-            $rcpro_project_id           = $this->module->PROJECT->getProjectIdFromPID($thisProject->redcap_pid);
+            $projectHelper              = new ProjectHelper($this->module);
+            $rcpro_project_id           = $projectHelper->getProjectIdFromPID($thisProject->redcap_pid);
             $project_rcpro_home         = $this->module->getUrl("src/home.php?pid=${id}");
             $project_rcpro_manage       = $this->module->getUrl("src/manage.php?pid=${id}");
             $project_rcpro_manage_users = $this->module->getUrl("src/manage-users.php?pid=${id}");
@@ -326,7 +330,8 @@ class AjaxHandler
                 return "<font style='color: red;'>Search term is not a valid email address</font>";
             }
             $this->module->logEvent("Searching for participant by email", [ 'email' => $email ]);
-            $result               = $this->module->PARTICIPANT->searchParticipants($email);
+            $participantHelper    = new ParticipantHelper($this->module);
+            $result               = $participantHelper->searchParticipants($email);
             $hint                 = "";
             $rcpro_participant_id = null;
             while ( $row = $result->fetch_assoc() ) {
@@ -341,7 +346,7 @@ class AjaxHandler
 
             if ( $hint === "" ) {
                 $response = "No Participants Found";
-            } elseif ( isset($rcpro_participant_id) && !$this->module->PARTICIPANT->isParticipantActive($rcpro_participant_id) ) {
+            } elseif ( isset($rcpro_participant_id) && !$participantHelper->isParticipantActive($rcpro_participant_id) ) {
                 $response = "<div class='searchResult'>The user associated with this email is not currently active in REDCapPRO.<br>Contact your REDCap Administrator with questions.</div>";
             } else {
                 $response = $hint;

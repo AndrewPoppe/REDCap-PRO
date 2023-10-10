@@ -12,7 +12,8 @@ $module->includeFont();
 
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->UI->ShowHeader("Manage");
+$ui = new UI($module);
+$ui->ShowHeader("Manage");
 echo "<title>" . $module->APPTITLE . " - Manage</title>";
 
 // Check for errors
@@ -29,14 +30,19 @@ if ( isset($_GET["error"]) ) {
     <?php
 }
 
+// Participant Helper
+$participantHelper = new ParticipantHelper($module);
+
 // RCPRO Project ID
 $project_id       = (int) $module->framework->getProjectId();
-$rcpro_project_id = $module->PROJECT->getProjectIdFromPID($project_id);
+$projectHelper    = new ProjectHelper($module);
+$rcpro_project_id = $projectHelper->getProjectIdFromPID($project_id);
 
 // DAGs
-$rcpro_user_dag     = $module->DAG->getCurrentDag($module->safeGetUsername(), $project_id);
-$project_dags       = $module->DAG->getProjectDags();
-$user_dags          = $module->DAG->getPossibleDags($module->safeGetUsername(), $project_id);
+$dagHelper          = new DAG($module);
+$rcpro_user_dag     = $dagHelper->getCurrentDag($module->safeGetUsername(), $project_id);
+$project_dags       = $dagHelper->getProjectDags();
+$user_dags          = $dagHelper->getPossibleDags($module->safeGetUsername(), $project_id);
 $project_dags[NULL] = "Unassigned";
 $projectHasDags     = count($project_dags) > 1;
 
@@ -46,7 +52,7 @@ $no_permission = "You do not have the required role to do that.";
 // Management Functions
 function disenroll(int $rcpro_participant_id)
 {
-    global $role, $module, $rcpro_project_id, $no_permission;
+    global $role, $module, $rcpro_project_id, $no_permission, $participantHelper, $projectHelper;
     $function = "disenroll participant";
 
     // Check role
@@ -54,8 +60,8 @@ function disenroll(int $rcpro_participant_id)
         $title = $no_permission;
         $icon  = "error";
     } else {
-        $rcpro_username = $module->PARTICIPANT->getUserName($rcpro_participant_id);
-        $result         = $module->PROJECT->disenrollParticipant($rcpro_participant_id, $rcpro_project_id, $rcpro_username);
+        $rcpro_username = $participantHelper->getUserName($rcpro_participant_id);
+        $result         = $projectHelper->disenrollParticipant($rcpro_participant_id, $rcpro_project_id, $rcpro_username);
         if ( !$result ) {
             $title = "Trouble disenrolling participant.";
             $icon  = "error";
@@ -85,7 +91,7 @@ function resetPassword(int $rcpro_participant_id)
 
 function changeName(int $rcpro_participant_id, string $newFirstName, string $newLastName)
 {
-    global $role, $module, $no_permission;
+    global $role, $module, $no_permission, $participantHelper;
     $function = "change participant's name";
 
     $trimmedFirstName = trim($newFirstName);
@@ -98,14 +104,14 @@ function changeName(int $rcpro_participant_id, string $newFirstName, string $new
     }
 
     // Check that names are valid
-    else if ( $trimmedFirstName === "" || $trimmedLastName === "" ) {
+    elseif ( $trimmedFirstName === "" || $trimmedLastName === "" ) {
         $title = "You need to provide valid first and last names.";
         $icon  = "error";
     }
 
     // Try to change name
     else {
-        $result = $module->PARTICIPANT->changeName($rcpro_participant_id, $trimmedFirstName, $trimmedLastName);
+        $result = $participantHelper->changeName($rcpro_participant_id, $trimmedFirstName, $trimmedLastName);
         if ( !$result ) {
             $title = "Trouble updating participant's name.";
             $icon  = "error";
@@ -119,7 +125,7 @@ function changeName(int $rcpro_participant_id, string $newFirstName, string $new
 
 function changeEmail(int $rcpro_participant_id, string $newEmail)
 {
-    global $role, $module, $no_permission;
+    global $role, $module, $no_permission, $participantHelper;
     $function = "change participant's email address";
 
     // Check role
@@ -129,14 +135,14 @@ function changeEmail(int $rcpro_participant_id, string $newEmail)
     }
 
     // Check that email is not already associated with a participant
-    else if ( $module->PARTICIPANT->checkEmailExists($newEmail) ) {
+    elseif ( $participantHelper->checkEmailExists($newEmail) ) {
         $title = "The provided email address is already associated with a REDCapPRO account.";
         $icon  = "error";
     }
 
     // Try to change email
     else {
-        $result = $module->PARTICIPANT->changeEmailAddress($rcpro_participant_id, $newEmail);
+        $result = $participantHelper->changeEmailAddress($rcpro_participant_id, $newEmail);
         if ( !$result ) {
             $title = "Trouble changing participant's email address.";
             $icon  = "error";
@@ -150,7 +156,7 @@ function changeEmail(int $rcpro_participant_id, string $newEmail)
 
 function switchDAG(int $rcpro_participant_id, ?string $newDAG)
 {
-    global $role, $module, $project_dags, $rcpro_project_id, $no_permission;
+    global $role, $module, $project_dags, $rcpro_project_id, $no_permission, $dagHelper, $participantHelper, $projectHelper;
     $function = "switch participant's Data Access Group";
 
     // Check role
@@ -160,18 +166,18 @@ function switchDAG(int $rcpro_participant_id, ?string $newDAG)
     }
 
     // Check new DAG
-    else if ( !isset($newDAG) || !in_array($newDAG, array_keys($project_dags)) ) {
+    elseif ( !isset($newDAG) || !in_array($newDAG, array_keys($project_dags)) ) {
         $title = "The provided DAG is invalid.";
         $icon  = "error";
     } else {
         $newDAG  = $newDAG === "" ? NULL : $newDAG;
-        $link_id = $module->PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
-        $result  = $module->DAG->updateDag($link_id, $newDAG);
+        $link_id = $projectHelper->getLinkId($rcpro_participant_id, $rcpro_project_id);
+        $result  = $dagHelper->updateDag($link_id, $newDAG);
         if ( !$result ) {
             $title = "Trouble switching participant's Data Access Group.";
             $icon  = "error";
         } else {
-            $participant_info = $module->PARTICIPANT->getParticipantInfo($rcpro_participant_id);
+            $participant_info = $participantHelper->getParticipantInfo($rcpro_participant_id);
             $module->logEvent("Participant DAG Switched", [
                 "rcpro_participant_id" => $participant_info["User_ID"],
                 "rcpro_username"       => $participant_info["Username"],
@@ -232,7 +238,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         }
 
         // Check that the participant is actually enrolled in this project
-        if ( !$error && !$module->PROJECT->participantEnrolled($rcpro_participant_id, $rcpro_project_id) ) {
+        if ( !$error && !$projectHelper->participantEnrolled($rcpro_participant_id, $rcpro_project_id) ) {
             $function = $generic_function;
             $icon     = "error";
             $title    = "Participant is Not Enrolled";
@@ -241,9 +247,9 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
         // Check that the Data Access Group of the participant matches that of the user
         if ( !$error && $projectHasDags ) {
-            $rcpro_link_id   = $module->PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
-            $participant_dag = intval($module->DAG->getParticipantDag($rcpro_link_id));
-            $user_dag        = $module->DAG->getCurrentDag($module->safeGetUsername(), $module->framework->getProjectId());
+            $rcpro_link_id   = $projectHelper->getLinkId($rcpro_participant_id, $rcpro_project_id);
+            $participant_dag = intval($dagHelper->getParticipantDag($rcpro_link_id));
+            $user_dag        = $dagHelper->getCurrentDag($module->safeGetUsername(), $module->framework->getProjectId());
             if ( isset($user_dag) && $participant_dag !== $user_dag ) {
                 $function = $generic_function;
                 $icon     = "error";
@@ -258,22 +264,22 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         }
 
         // SEND A PASSWORD RESET EMAIL
-        else if ( !$error && !empty($_POST["toReset"]) ) {
+        elseif ( !$error && !empty($_POST["toReset"]) ) {
             list( $function, $showConfirm, $icon, $title ) = resetPassword(intval($_POST["toReset"]));
         }
 
         // CHANGE THE PARTICIPANT'S NAME
-        else if ( !$error && !empty($_POST["toChangeName"]) ) {
+        elseif ( !$error && !empty($_POST["toChangeName"]) ) {
             list( $function, $showConfirm, $icon, $title ) = changeName(intval($_POST["toChangeName"]), $_POST["newFirstName"], $_POST["newLastName"]);
         }
 
         // CHANGE THE PARTICIPANT'S EMAIL ADDRESS
-        else if ( !$error && !empty($_POST["toChangeEmail"]) ) {
+        elseif ( !$error && !empty($_POST["toChangeEmail"]) ) {
             list( $function, $showConfirm, $icon, $title ) = changeEmail(intval($_POST["toChangeEmail"]), $_POST["newEmail"]);
         }
 
         // CHANGE THE PARTICIPANT'S DATA ACCESS GROUP
-        else if ( !$error && !empty($_POST["toSwitchDag"]) ) {
+        elseif ( !$error && !empty($_POST["toSwitchDag"]) ) {
             list( $function, $showConfirm, $icon, $title ) = switchDAG(intval($_POST["toSwitchDag"]), $_POST["newDag"]);
         }
     } catch ( \Exception $e ) {
@@ -577,8 +583,6 @@ $module->initializeJavascriptModuleObject();
                     $(row).data("fname", data.fname);
                     $(row).data("lname", data.lname);
                     $(row).data("email", data.email);
-                    console.log(data);
-                    console.log(row);
                 },
                 select: {
                     style: 'single'

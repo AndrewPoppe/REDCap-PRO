@@ -11,7 +11,8 @@ if ( $role < 2 ) {
 $module->includeFont();
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->UI->ShowHeader("Enroll");
+$ui = new UI($module);
+$ui->ShowHeader("Enroll");
 
 echo "<title>" . $module->APPTITLE . " - Enroll</title>";
 
@@ -33,6 +34,8 @@ if ( isset($_GET["error"]) ) {
     <?php
 }
 
+$dagHelper = new DAG($module);
+
 if ( isset($_POST["id"]) && isset($project_id) ) {
 
     $rcpro_participant_id = intval($_POST["id"]);
@@ -41,20 +44,22 @@ if ( isset($_POST["id"]) && isset($project_id) ) {
     $module->logForm("Submitted Enroll Form", $_POST);
 
     // If participant is not active, don't enroll them
-    if ( !$module->PARTICIPANT->isParticipantActive($rcpro_participant_id) ) {
+    $participantHelper = new ParticipantHelper($module);
+    if ( !$participantHelper->isParticipantActive($rcpro_participant_id) ) {
 
         echo "<script defer>Swal.fire({'title':'This participant is not currently active in REDCapPRO', 'html':'Contact your REDCap Administrator with questions.', 'icon':'info', 'showConfirmButton': false});</script>";
     } else {
 
-        $redcap_dag = $module->DAG->getCurrentDag($module->safeGetUsername(), $module->framework->getProjectId());
+        $redcap_dag = $dagHelper->getCurrentDag($module->safeGetUsername(), $module->framework->getProjectId());
         $dag        = filter_var($_POST["dag"], FILTER_VALIDATE_INT);
         $dag        = $dag === 0 ? null : $dag;
-        if ( (!empty($redcap_dag) && $dag !== $redcap_dag) || !in_array($dag, array_keys($module->DAG->getProjectDags())) ) {
+        if ( (!empty($redcap_dag) && $dag !== $redcap_dag) || !in_array($dag, array_keys($dagHelper->getProjectDags())) ) {
             $dag = $redcap_dag;
         }
         $pid            = intval($project_id);
-        $rcpro_username = $module->PARTICIPANT->getUserName($rcpro_participant_id);
-        $result         = $module->PROJECT->enrollParticipant($rcpro_participant_id, $pid, $dag, $rcpro_username);
+        $rcpro_username = $participantHelper->getUserName($rcpro_participant_id);
+        $projectHelper  = new ProjectHelper($module);
+        $result         = $projectHelper->enrollParticipant($rcpro_participant_id, $pid, $dag, $rcpro_username);
 
         if ( $result === -1 ) {
             echo "<script defer>Swal.fire({'title':'This participant is already enrolled in this project', 'icon':'info', 'showConfirmButton': false});</script>";
@@ -124,8 +129,8 @@ $module->initializeJavascriptModuleObject();
                     </div>
                 </div>
 
-                <?php if ( $module->DAG->getProjectDags() ) {
-                    $userDag = $module->DAG->getCurrentDag($module->safeGetUsername(), $module->framework->getProjectId());
+                <?php if ( $dagHelper->getProjectDags() ) {
+                    $userDag = $dagHelper->getCurrentDag($module->safeGetUsername(), $module->framework->getProjectId());
                     if ( isset($userDag) && $userDag != "" ) {
                         $dagName = isset($userDag) ? \REDCap::getGroupNames(false, $userDag) : "No Assignment";
                         ?>
@@ -143,7 +148,7 @@ $module->initializeJavascriptModuleObject();
                                 <select class="form-control" id="dag" name="dag">
                                     <option value="">No Assignment</option>
                                     <?php
-                                    $projectDags = $module->framework->escape($module->DAG->getProjectDags());
+                                    $projectDags = $module->framework->escape($dagHelper->getProjectDags());
                                     foreach ( $projectDags as $dag => $name ) {
                                         echo "<option value='" . $dag . "' " . ($dag == "" ? "selected" : "") . ">$name</option>";
                                     }

@@ -63,10 +63,11 @@ class APIParticipantRegister extends APIHandler
 
     private function checkEmail(string $email) : void
     {
+        $participantHelper = new ParticipantHelper($this->module);
         if ( !filter_var($email, FILTER_VALIDATE_EMAIL) ) {
             $this->errorMessages[] = "Invalid email address: $email";
             $this->userValid       = false;
-        } elseif ( $this->module->PARTICIPANT->checkEmailExists($email) ) {
+        } elseif ( $participantHelper->checkEmailExists($email) ) {
             $this->errorMessages[] = "Email address already exists: $email";
             $this->userValid       = false;
         } elseif ( in_array($email, $this->emails, true) ) {
@@ -78,10 +79,11 @@ class APIParticipantRegister extends APIHandler
 
     private function checkDag(int $dag) : void
     {
-        $dags       = $this->module->DAG->getProjectDags();
+        $dagHelper  = new DAG($this->module);
+        $dags       = $dagHelper->getProjectDags();
         $this->dags = $dags === false ? [] : $dags;
         $dagIds     = array_keys($this->dags);
-        $userDag    = $this->module->DAG->getCurrentDag($this->user->getUsername(), $this->project->getProjectId());
+        $userDag    = $dagHelper->getCurrentDag($this->user->getUsername(), $this->project->getProjectId());
 
         if ( !empty($dag) && !in_array($dag, $dagIds) ) {
             $this->errorMessages[] = "Invalid DAG: " . $dag;
@@ -95,12 +97,13 @@ class APIParticipantRegister extends APIHandler
 
     private function checkActiveStatus(string $email)
     {
-        $participant_exists = $this->module->PARTICIPANT->checkEmailExists($email);
+        $participantHelper  = new ParticipantHelper($this->module);
+        $participant_exists = $participantHelper->checkEmailExists($email);
         if ( !$participant_exists ) {
             return;
         }
-        $rcpro_participant_id = $this->module->PARTICIPANT->getParticipantIdFromEmail($email);
-        $active               = $this->module->PARTICIPANT->isParticipantActive($rcpro_participant_id);
+        $rcpro_participant_id = $participantHelper->getParticipantIdFromEmail($email);
+        $active               = $participantHelper->isParticipantActive($rcpro_participant_id);
         if ( !$active ) {
             $this->errorMessages[] = "Participant is not active: " . $email;
             $this->userValid       = false;
@@ -109,13 +112,15 @@ class APIParticipantRegister extends APIHandler
 
     private function checkEnrollment(string $email)
     {
-        $participant_exists = $this->module->PARTICIPANT->checkEmailExists($email);
+        $participantHelper  = new ParticipantHelper($this->module);
+        $participant_exists = $participantHelper->checkEmailExists($email);
         if ( !$participant_exists ) {
             return;
         }
-        $rcpro_participant_id = $this->module->PARTICIPANT->getParticipantIdFromEmail($email);
-        $rcpro_project_id     = $this->module->PROJECT->getProjectIdFromPID($this->project->getProjectId());
-        $enrolled             = $this->module->PARTICIPANT->enrolledInProject($rcpro_participant_id, $rcpro_project_id);
+        $rcpro_participant_id = $participantHelper->getParticipantIdFromEmail($email);
+        $projectHelper        = new ProjectHelper($this->module);
+        $rcpro_project_id     = $projectHelper->getProjectIdFromPID($this->project->getProjectId());
+        $enrolled             = $participantHelper->enrolledInProject($rcpro_participant_id, $rcpro_project_id);
         if ( $enrolled ) {
             $this->errorMessages[] = "Participant already enrolled in project: " . $email;
             $this->userValid       = false;
@@ -124,18 +129,20 @@ class APIParticipantRegister extends APIHandler
 
     public function takeAction() : bool
     {
-        $success = true;
+        $success           = true;
+        $participantHelper = new ParticipantHelper($this->module);
         try {
             foreach ( $this->users as $user ) {
-                if ( !$this->module->PARTICIPANT->checkEmailExists($user['email']) ) {
-                    $rcpro_username = $this->module->PARTICIPANT->createParticipant($user['email'], $user['fname'], $user['lname']);
+                if ( !$participantHelper->checkEmailExists($user['email']) ) {
+                    $rcpro_username = $participantHelper->createParticipant($user['email'], $user['fname'], $user['lname']);
                     $this->module->sendNewParticipantEmail($rcpro_username, $user['email'], $user['fname'], $user['lname']);
                 }
                 if ( $user['enroll'] ) {
-                    $rcpro_participant_id = $this->module->PARTICIPANT->getParticipantIdFromEmail($user['email']);
-                    $rcpro_username       = $rcpro_username ?? $this->module->PARTICIPANT->getUsername($rcpro_participant_id);
+                    $rcpro_participant_id = $participantHelper->getParticipantIdFromEmail($user['email']);
+                    $rcpro_username       = $rcpro_username ?? $participantHelper->getUsername($rcpro_participant_id);
                     $dagId                = $user['dag'] === '[No Assignment]' ? null : (int) $user['dag'];
-                    $result               = $this->module->PROJECT->enrollParticipant($rcpro_participant_id, $this->project->getProjectId(), $dagId, $rcpro_username);
+                    $projectHelper        = new ProjectHelper($this->module);
+                    $result               = $projectHelper->enrollParticipant($rcpro_participant_id, $this->project->getProjectId(), $dagId, $rcpro_username);
                     if ( !$result || $result === -1 ) {
                         $this->module->logEvent("Error enrolling participant", [
                             'rcpro_username'       => $rcpro_username,

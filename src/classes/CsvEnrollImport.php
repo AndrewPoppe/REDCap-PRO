@@ -62,14 +62,15 @@ class CsvEnrollImport
                 continue;
             }
 
+            $participantHelper = new ParticipantHelper($this->module);
             if ( $this->indices['usernameIndex'] !== false ) {
                 $username = trim($this->module->framework->escape($row[$this->indices['usernameIndex']]));
                 $this->checkUsername($username);
-                $email = $this->module->PARTICIPANT->getParticipant($username)['email'];
+                $email = $participantHelper->getParticipant($username)['email'];
             } else {
                 $email = trim($this->module->framework->escape($row[$this->indices['emailIndex']]));
                 $this->checkEmail($email);
-                $username = $this->module->PARTICIPANT->getParticipantFromEmail($email)['rcpro_username'];
+                $username = $participantHelper->getParticipantFromEmail($email)['rcpro_username'];
             }
 
             if ( empty($username) && empty($email) ) {
@@ -104,13 +105,14 @@ class CsvEnrollImport
 
     private function checkEmail(string $email) : void
     {
+        $participantHelper = new ParticipantHelper($this->module);
         if ( !filter_var($email, FILTER_VALIDATE_EMAIL) ) {
             $this->errorMessages[] = "Invalid email address: $email";
             $this->rowValid        = false;
-        } elseif ( !$this->module->PARTICIPANT->checkEmailExists($email) ) {
+        } elseif ( !$participantHelper->checkEmailExists($email) ) {
             $this->errorMessages[] = "Email address is not associated with a REDCapPRO participant: $email";
             $this->rowValid        = false;
-        } elseif ( !$this->module->PARTICIPANT->isParticipantActive($this->module->PARTICIPANT->getParticipantIdFromEmail($email)) ) {
+        } elseif ( !$participantHelper->isParticipantActive($participantHelper->getParticipantIdFromEmail($email)) ) {
             $this->errorMessages[] = "Participant is not currently active in REDCapPRO: $email";
             $this->rowValid        = false;
         } elseif ( in_array($email, $this->emails, true) ) {
@@ -122,11 +124,12 @@ class CsvEnrollImport
 
     private function checkUsername(string $username) : void
     {
-        $participant = $this->module->PARTICIPANT->getParticipant($username);
+        $participantHelper = new ParticipantHelper($this->module);
+        $participant       = $participantHelper->getParticipant($username);
         if ( $participant === null ) {
             $this->errorMessages[] = "Username is not associated with a REDCapPRO participant: $username";
             $this->rowValid        = false;
-        } elseif ( !$this->module->PARTICIPANT->isParticipantActive($participant['log_id']) ) {
+        } elseif ( !$participantHelper->isParticipantActive($participant['log_id']) ) {
             $this->errorMessages[] = "Participant is not currently active in REDCapPRO: $username";
             $this->rowValid        = false;
         } elseif ( in_array($username, $this->usernames, true) ) {
@@ -138,9 +141,10 @@ class CsvEnrollImport
 
     private function checkDag(int $dag) : void
     {
-        $this->dags = $this->module->DAG->getProjectDags();
+        $dagHelper  = new DAG($this->module);
+        $this->dags = $dagHelper->getProjectDags();
         $dagIds     = array_keys($this->dags);
-        $userDag    = $this->module->DAG->getCurrentDag($this->module->safeGetUsername(), $this->project_id);
+        $userDag    = $dagHelper->getCurrentDag($this->module->safeGetUsername(), $this->project_id);
 
         if ( !empty($dag) && !in_array($dag, $dagIds) ) {
             $this->errorMessages[] = "Invalid DAG: " . $dag;
@@ -157,12 +161,14 @@ class CsvEnrollImport
         $success = true;
         try {
             foreach ( $this->cleanContents as $row ) {
-                $rcpro_participant    = $this->module->PARTICIPANT->getParticipantFromEmail($row['email']);
+                $participantHelper    = new ParticipantHelper($this->module);
+                $rcpro_participant    = $participantHelper->getParticipantFromEmail($row['email']);
                 $rcpro_participant_id = $rcpro_participant['log_id'];
                 $rcpro_username       = $rcpro_participant['rcpro_username'];
 
-                $dagId  = $row['dag'] === '[No Assignment]' ? null : (int) $row['dag'];
-                $result = $this->module->PROJECT->enrollParticipant($rcpro_participant_id, $this->project_id, $dagId, $rcpro_username);
+                $dagId         = $row['dag'] === '[No Assignment]' ? null : (int) $row['dag'];
+                $projectHelper = new ProjectHelper($this->module);
+                $result        = $projectHelper->enrollParticipant($rcpro_participant_id, $this->project_id, $dagId, $rcpro_username);
                 if ( !$result || $result === -1 ) {
                     $this->module->log('Error enrolling participant via CSV', [
                         'rcpro_username'       => $rcpro_username,
@@ -206,13 +212,14 @@ class CsvEnrollImport
         $html .= $this->hasDags ? '<th class="text-center">DAG ID</th>' : '';
         $html .= '</tr></thead><tbody>';
         foreach ( $this->cleanContents as $row ) {
-            $participant = $this->module->PARTICIPANT->getParticipantFromEmail($row['email']);
+            $participantHelper = new ParticipantHelper($this->module);
+            $participant       = $participantHelper->getParticipantFromEmail($row['email']);
             $html .= '<tr class="bg-light">';
             $html .= '<td class="text-center">' . $participant['rcpro_username'] . '</td>';
             $html .= '<td class="text-center">' . $participant['fname'] . '</td>';
             $html .= '<td class="text-center">' . $participant['lname'] . '</td>';
             $html .= '<td class="text-center">' . $participant['email'] . '</td>';
-            $dagValue    = $row['dag'];
+            $dagValue          = $row['dag'];
             if ( (int) $dagValue !== 0 ) {
                 $dagValue = $dagValue . ' (' . $this->dags[$dagValue] . ')';
             }

@@ -10,7 +10,8 @@ if ( $role < 3 ) {
 $module->includeFont();
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->UI->ShowHeader("Logs");
+$ui = new UI($module);
+$ui->ShowHeader("Logs");
 $module->initializeJavascriptModuleObject();
 ?>
 

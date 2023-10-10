@@ -11,7 +11,8 @@ if ( $role < 3 ) {
 $module->includeFont();
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->UI->ShowHeader("Users");
+$ui = new UI($module);
+$ui->ShowHeader("Users");
 echo "<title>" . $module->APPTITLE . " - Staff</title>
 <link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>";
 

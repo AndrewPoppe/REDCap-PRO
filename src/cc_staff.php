@@ -11,7 +11,8 @@ echo '<!DOCTYPE html><html lang="en">';
 $module->includeFont();
 
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
-$module->UI->ShowControlCenterHeader("Staff");
+$ui = new UI($module);
+$ui->ShowControlCenterHeader("Staff");
 echo '<link rel="stylesheet" type="text/css" href="' . $module->getUrl("src/css/rcpro_cc.php") . '">';
 $module->initializeJavascriptModuleObject();
 ?>
