@@ -250,7 +250,7 @@ surveys tied to this project, or certain actions taken regarding participants en
 
 ![self-registration](images/screenshots/create-account.png)
 
-As of REDCapPRO v2.1.0, the option exists to allow participants to register themselves with **REDCapPRO**. This is done by enabling the `Allow Self-Registration` option in both the system configuration and in the project settings. When this option is enabled, a **"Don't have an account? Create one"** link will appear on the login page that will take the participant to a registration page.
+As of REDCapPRO v2.1.0, the option exists to allow participants to register themselves with **REDCapPRO**. This is done by enabling the `Allow Self-Registration` option in both the [system configuration](#system-settings) and in the [project settings](#settings). When this option is enabled, a **"Don't have an account? Create one"** link will appear on the login page that will take the participant to a registration page.
 
 ## REDCapPRO Control Center Menu
 
