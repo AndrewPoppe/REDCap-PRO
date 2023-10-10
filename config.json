@@ -172,7 +172,7 @@
     ],
     "framework-version": 12,
     "compatibility": {
-        "php-version-min": "7.3.0",
+        "php-version-min": "7.4.0",
         "php-version-max": "",
         "redcap-version-min": "13.1.27",
         "redcap-version-max": ""
