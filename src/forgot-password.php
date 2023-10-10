@@ -5,27 +5,30 @@ namespace YaleREDCap\REDCapPRO;
 /** @var REDCapPRO $module */
 
 # Initialize authentication session on page
-$module->AUTH->init();
+$auth = new Auth($module->APPTITLE);
+$auth->init();
 
-$module->UI->ShowParticipantHeader($module->tt("forgot_password_title"));
+$ui = new UI($module);
+$ui->ShowParticipantHeader($module->tt("forgot_password_title"));
 
 // Processing form data when form is submitted
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
+if ( $_SERVER["REQUEST_METHOD"] === "POST" ) {
 
     $err = null;
 
     // Validate username/email
-    if (empty(trim($_POST["username"]))) {
+    if ( empty(trim($_POST["username"])) ) {
         $err = $module->tt("forgot_password_err1");
     } else {
         $username = \REDCap::escapeHtml(trim($_POST["username"]));
         // Check input errors before sending reset email
-        if (!$err) {
-            $rcpro_participant_id = $module->PARTICIPANT->getParticipantIdFromUsername($username);
-            if (!isset($rcpro_participant_id)) {
-                $rcpro_participant_id = $module->PARTICIPANT->getParticipantIdFromEmail($username);
+        if ( !$err ) {
+            $participantHelper    = new ParticipantHelper($module);
+            $rcpro_participant_id = $participantHelper->getParticipantIdFromUsername($username);
+            if ( !isset($rcpro_participant_id) ) {
+                $rcpro_participant_id = $participantHelper->getParticipantIdFromEmail($username);
             }
-            if (isset($rcpro_participant_id)) {
+            if ( isset($rcpro_participant_id) ) {
                 $module->logEvent("Password Reset Email Sent", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $username
@@ -42,9 +45,13 @@ echo '<div style="text-align: center;"><p>' . $module->tt("forgot_password_messa
 ?>
 <form action="<?= $module->getUrl("src/forgot-password.php", true); ?>" method="post">
     <div class="form-group">
-        <label><?= $module->tt("forgot_password_username_label") ?></label>
+        <label>
+            <?= $module->tt("forgot_password_username_label") ?>
+        </label>
         <input type="text" name="username" class="form-control <?php echo (!empty($err)) ? 'is-invalid' : ''; ?>">
-        <span class="invalid-feedback"><?php echo $err; ?></span>
+        <span class="invalid-feedback">
+            <?php echo $err; ?>
+        </span>
     </div>
     <div class="form-group d-grid">
         <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
@@ -53,7 +60,9 @@ echo '<div style="text-align: center;"><p>' . $module->tt("forgot_password_messa
 </form>
 <hr>
 <div style="text-align: center;">
-    <a href="<?= $module->getUrl("src/forgot-username.php", true); ?>"><?= $module->tt("forgot_password_forgot_username") ?></a>
+    <a href="<?= $module->getUrl("src/forgot-username.php", true); ?>">
+        <?= $module->tt("forgot_password_forgot_username") ?>
+    </a>
 </div>
 <style>
     a {
@@ -66,4 +75,4 @@ echo '<div style="text-align: center;"><p>' . $module->tt("forgot_password_messa
         text-shadow: 0px 0px 5px #900000;
     }
 </style>
-<?php $module->UI->EndParticipantPage(); ?>
+<?php $ui->EndParticipantPage(); ?>

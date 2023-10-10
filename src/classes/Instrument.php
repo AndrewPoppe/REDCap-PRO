@@ -85,8 +85,10 @@ class Instrument
     function update_form()
     {
         if ( isset($this->username) ) {
-            $rcpro_project_id  = $this->module->PROJECT->getProjectIdFromPID($this->module->framework->getProjectId());
-            $participants      = $this->module->PARTICIPANT->getProjectParticipants($rcpro_project_id, $this->rcpro_dag);
+            $projectHelper     = new ProjectHelper($this->module);
+            $rcpro_project_id  = $projectHelper->getProjectIdFromPID($this->module->framework->getProjectId());
+            $participantHelper = new ParticipantHelper($this->module);
+            $participants      = $participantHelper->getProjectParticipants($rcpro_project_id, $this->rcpro_dag);
             $options           = "<option value=''>''</option>";
             $participants_json = json_encode($participants);
             foreach ( $participants as $participant ) {

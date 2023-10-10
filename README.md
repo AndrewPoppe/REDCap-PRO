@@ -28,7 +28,11 @@
     - [Participants](#participants)
     - [Staff](#staff)
     - [Logs](#logs-1)
+  - [API](#api)
+    - [Register Participants](#register-participants)
+    - [Enroll Participants](#enroll-participants)
   - [Action Tags](#action-tags)
+  - [Changelog](#changelog)
 
 ## Overview
 
@@ -80,17 +84,19 @@ These are settings/configuration options accessible in the normal External Modul
 
 ### System Settings
 
-| Setting                         |   Type   | Description                                                                                                                                                                                                                                            |     Default Value     |
-| :------------------------------ | :------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------: |
-| **Language File**               | Dropdown | The language that participant-facing text in the module will appear in. This system setting can be overridden by the corresponding project setting. See the [Translation](#translation) section below for more information.                            |        English        |
-| **Email From Address**          |  Email   | This will be the From email address for all system emails. This can help if emails are being sent to spam or are not delivered.                                                                                                                        | noreply@REDCapPRO.com |
-| **Prevent Email Login**         | Checkbox | Should participants be prevented from using their email address to log in to the system. Checking this will require that they login using their participant username only.<br>*Note: if checked, this overrides the associated project-level setting.* |       Unchecked       |
-| **Warning Time**                |  Number  | Number of minutes to wait before warning participant of inactivity timeout                                                                                                                                                                             |       1 minute        |
-| **Timeout Time**                |  Number  | Number of minutes to wait before logging participant out due to inactivity                                                                                                                                                                             |       5 minutes       |
-| **Password Length**             | Integer  | Minimum length of participant's password in characters                                                                                                                                                                                                 |     8 characters      |
-| **Login Attempts**              | Integer  | Number of consecutive failed login attempts before being locked out                                                                                                                                                                                    |      3 attempts       |
-| **Lockout Duration**            | Integer  | Length of a lockout due to failed login attempts, in seconds                                                                                                                                                                                           |      300 seconds      |
-| **Multi-Factor Authentication** | Checkbox | Require participants to use multi-factor authentication when logging in. This requires participants to enter a code sent to their email address in addition to their password.                                                                         |       Unchecked       |
+| Setting                                                    |   Type   | Description                                                                                                                                                                                                                                            |     Default Value     |
+| :--------------------------------------------------------- | :------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------: |
+| **Language File**                                          | Dropdown | The language that participant-facing text in the module will appear in. This system setting can be overridden by the corresponding project setting. See the [Translation](#translation) section below for more information.                            |        English        |
+| **Email From Address**                                     |  Email   | This will be the From email address for all system emails. This can help if emails are being sent to spam or are not delivered.                                                                                                                        | noreply@REDCapPRO.com |
+| **Prevent Email Login**                                    | Checkbox | Should participants be prevented from using their email address to log in to the system. Checking this will require that they login using their participant username only.<br>*Note: if checked, this overrides the associated project-level setting.* |       Unchecked       |
+| **Warning Time**                                           |  Number  | Number of minutes to wait before warning participant of inactivity timeout                                                                                                                                                                             |       1 minute        |
+| **Timeout Time**                                           |  Number  | Number of minutes to wait before logging participant out due to inactivity                                                                                                                                                                             |       5 minutes       |
+| **Password Length**                                        | Integer  | Minimum length of participant's password in characters                                                                                                                                                                                                 |     8 characters      |
+| **Login Attempts**                                         | Integer  | Number of consecutive failed login attempts before being locked out                                                                                                                                                                                    |      3 attempts       |
+| **Lockout Duration**                                       | Integer  | Length of a lockout due to failed login attempts, in seconds                                                                                                                                                                                           |      300 seconds      |
+| **Multi-Factor Authentication**                            | Checkbox | Require participants to use multi-factor authentication when logging in. This requires participants to enter a code sent to their email address in addition to their password.                                                                         |       Unchecked       |
+| **Enable the API**                                         | Checkbox | Enable the API for this system. This allows you to register and enroll participants using the [API](#api).                                                                                                                                             |       Unchecked       |
+| **Restrict API project settings to REDCap administrators** | Checkbox | If checked, only REDCap administrators will be able to access the API settings in the project. If unchecked, any user with access to the REDCapPRO project settings page will be able to access the API settings.                                      |       Unchecked       |
 
 ### Project Settings
 
@@ -136,10 +142,36 @@ This tab allows a user to search for a registered participant in order to enroll
 set the participant's Data Access Group at this time as well, if applicable. This tab is available to Normal Users and 
 above.
 
+You can enroll many participants at once by importing a CSV file. The file must be formatted with the following columns. *Note: the participants must already be registered with **REDCapPRO** before they can be enrolled in a project.*
+
+| Column name  | Description                                      | Possible values                                            | Required | Notes                                                                                                                                                                                                                                                                                                                                      |
+| ------------ | ------------------------------------------------ | ---------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **username** | REDCapPRO username of the participant            | Any text                                                   | Required | Either this column or the `email` column must be present in the import file. **NOT BOTH**                                                                                                                                                                                                                                                  |
+| **email**    | Email address of the participant                 | Valid email                                                | Required | Either this column or the `username` column must be present in the import file. **NOT BOTH**                                                                                                                                                                                                                                               |
+| **dag**      | Data Access Group to enroll the participant into | Integer value representing the Data Access Group ID number | Optional | This value can be found on the DAGs page in the project. <br>The usual DAG rules apply, so you can only assign a participant to a DAG if that DAG exists in the project. If you are assigned to a DAG yourself, you can only assign participants to that DAG. If you are not assigned to a DAG, you can assign the participant to any DAG. |
+
+You can also register (and optionally enroll) many participants at once by importing a CSV file on the [Register](#Register) tab.
+
 ### Register
 This tab allows a user to register a participant with **REDCapPRO**. Users also have the option to enroll at the same 
 time as registering. They can set the participant's Data Access Group at this time as well, if applicable.  This tab is 
 available to Normal Users and above.
+
+You can also register (and optionally enroll) many participants at once by importing a CSV file. The file must be formatted with the following columns.
+
+
+| Column name | Description                                                                       | Possible values                                            | Required | Notes                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **fname**   | First name of the participant                                                     | Any text                                                   | Required |                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **lname**   | Last name of the participant                                                      | Any text                                                   | Required |                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **email**   | Email address of the participant                                                  | Valid email                                                | Required | The email address must not match the email address of a registered participant. If so, you will receive an error message and the import will be cancelled.                                                                                                                                                                                                                                                              |
+| **enroll**  | Whether or not to enroll the participant into this study once they are registered | `Y` to enroll  <br>`<Blank>` not to enroll                 | Optional | You can omit the column entirely if you do not want to enroll any of the newly registered participants.                                                                                                                                                                                                                                                                                                                 |
+| **dag**     | Data Access Group to enroll the participant into                                  | Integer value representing the Data Access Group ID number | Optional | This value can be found on the DAGs page in the project. If enroll is not "Y" for a row, then the DAG value is ignored for that row.  <br>The usual DAG rules apply, so you can only assign a participant to a DAG if that DAG exists in the project. If you are assigned to a DAG yourself, you can only assign participants to that DAG. If you are not assigned to a DAG, you can assign the participant to any DAG. |
+
+*Note: The column names are case-sensitive. The order of the columns does not matter.*
+
+*Note: If you are using Excel to create the CSV file, you will need to save the file as a CSV file in order for REDCap to recognize it as such.*
+
 
 ### Study Staff
 This tab allows Managers to set the `role` of users in the study project. All
@@ -162,6 +194,7 @@ accessible by managers.
 | **Language**                   | Dropdown | The language that participant-facing text in the module will appear in. This overrides the default system setting. See the [Translation](#translation) section for more information.                                                                                       |    English    |
 | **Prevent Email Login**        | Checkbox | If checked, this prevents participants from using their email address to log in to surveys. Instead, they must use their REDCapPRO username to log in. <br>*If email logins are prevented at the system level, this setting will not appear in the project setttings tab.* |   Unchecked   |
 | **Multifactor Authentication** | Checkbox | Require participants to use multi-factor authentication when logging in. This requires participants to enter a code sent to their email address in addition to their password.                                                                                             |   Unchecked   |
+| **API**                        | Checkbox | Enable the API for this project. This allows you to register and enroll participants using the [API](#api).                                                                                                                                                                |   Unchecked   |
 | **Study Contact Name**         |   Text   | The name of the study staff member that study participants should contact with questions/problems. This will appear in emails sent to the participant                                                                                                                      |      N/A      |
 | **Study Contact Email**        |  Email   | Email address that participants should contact.                                                                                                                                                                                                                            |      N/A      |
 | **Study Contact Phone**        |  Phone   | Phone number that participants should contact.                                                                                                                                                                                                                             |      N/A      |
@@ -201,6 +234,46 @@ a `role` of Monitor or above.
 Similar to the project's Logs tab, this lists all logs made by **REDCapPRO** across
 the system.
 
+## API
+
+This module provides an API for interacting with **REDCapPRO**. Using this API is similar to using the REDCap API. You must make a POST request to the API URL (The API URL is found on the project settings page.) The data must contain these three keys:
+
+1. **token**: The REDCap API token
+2. **action**: The action you want to perform (either `register` or `enroll`, see below)
+3. **data**: A JSON encoded array of participants. Details about the format of the data are described below. 
+   
+### Register Participants
+This method allows you to register participants with **REDCapPRO**. 
+
+* **token**: The REDCap API token
+* **action**: `register`
+* **data**: A JSON string which represents an array of participant objects. The `data` array can contain any number of participants. Each participant object must have the following:
+  
+| Field name | Description                                                                       | Possible values                                            | Required | Notes                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **fname**  | First name of the participant                                                     | Any text                                                   | Required |                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **lname**  | Last name of the participant                                                      | Any text                                                   | Required |                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **email**  | Email address of the participant                                                  | Valid email                                                | Required | The email address must not match the email address of a registered participant. If so, you will receive an error message and the import will be cancelled.                                                                                                                                                                                                                                                         |
+| **enroll** | Whether or not to enroll the participant into this study once they are registered | `Y` to enroll  <br>Omit to not enroll                      | Optional |                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **dag**    | Data Access Group to enroll the participant into                                  | Integer value representing the Data Access Group ID number | Optional | This value can be found on the DAGs page in the project. If enroll is not "Y" for a participant, then the DAG value is ignored.  <br>The usual DAG rules apply, so you can only assign a participant to a DAG if that DAG exists in the project. If you are assigned to a DAG yourself, you can only assign participants to that DAG. If you are not assigned to a DAG, you can assign the participant to any DAG. |
+
+*Note: The field names are case-sensitive. The order of the fields does not matter.*
+
+### Enroll Participants
+
+This method allows you to enroll already-registered participants into a **REDCapPRO** project. 
+
+* **token**: The REDCap API token
+* **action**: `enroll`
+* **data**: A JSON string which represents an array of participant objects. The `data` array can contain any number of participants. Each participant object must have the following:
+  
+
+| Field name   | Description                                      | Possible values                                            | Required | Notes                                                                                                                                                                                                                                                                                                                                       |
+| ------------ | ------------------------------------------------ | ---------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **username** | REDCapPRO username of the participant            | Any text                                                   | Required | Either this field or the `email` field must be present in the import file. **NOT BOTH**                                                                                                                                                                                                                                                     |
+| **email**    | Email address of the participant                 | Valid email                                                | Required | Either this field or the `username` field must be present in the import file. **NOT BOTH**                                                                                                                                                                                                                                                  |
+| **dag**      | Data Access Group to enroll the participant into | Integer value representing the Data Access Group ID number | Optional | This value can be found on the DAGs page in the project.  <br>The usual DAG rules apply, so you can only assign a participant to a DAG if that DAG exists in the project. If you are assigned to a DAG yourself, you can only assign participants to that DAG. If you are not assigned to a DAG, you can assign the participant to any DAG. |
+
 ## Action Tags
 
 This module provides several action tags for populating REDCap fields with 
@@ -213,3 +286,20 @@ information about **REDCapPRO** participants. These are described below:
 | @RCPRO-EMAIL    |        text         |          email           | If @RCPRO-USERNAME is present on the instrument, then when it is selected the field with the @RCPRO-EMAIL tag will be populated with the participant's email address |
 | @RCPRO-FNAME    |        text         |           none           | Like @RCPRO-EMAIL, but the field will be populated with the participant's first name                                                                                 |
 | @RCPRO-LNAME    |        text         |           none           | Likewise, with last name                                                                                                                                             |
+## Changelog
+
+| Version | Release Date | Description                                                                                                   |
+| ------- | ------------ | ------------------------------------------------------------------------------------------------------------- |
+| 2.0.1   | 2023-10-09   | Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.0.1)                       |
+| 2.0.0   | 2023-10-09   | Major release - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.0.0)                 |
+| 1.0.1   | 2022-04-01   | Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/1.0.1)                       |
+| 1.0.0   | 2022-03-31   | Change and bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/1.0.0)            |
+| 0.5.0   | 2022-03-30   | Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.5.0)                       |
+| 0.4.9   | 2022-03-24   | Minor bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.9)                 |
+| 0.4.8   | 2022-02-23   | Minor bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.8)                 |
+| 0.4.7   | 2022-01-04   | Minor bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.7)                 |
+| 0.4.6   | 2021-12-14   | Minor bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.6)                 |
+| 0.4.5   | 2021-12-12   | Medium security fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.5)           |
+| 0.4.4   | 2021-11-15   | Improvement - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.4)                   |
+| 0.4.3   | 2021-11-12   | Improvement and minor bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.3) |
+| 0.4.2   | 2021-11-04   | Initial release                                                                                               |

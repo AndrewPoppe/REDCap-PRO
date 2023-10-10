@@ -4,9 +4,11 @@ namespace YaleREDCap\REDCapPRO;
 /** @var REDCapPRO $module */
 
 $role = $module->getUserRole($module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+$module->includeFont();
 echo "<title>" . $module->APPTITLE . " - Home</title>";
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->UI->ShowHeader("Home");
+$ui = new UI($module);
+$ui->ShowHeader("Home");
 ?>
 
 
@@ -37,4 +39,4 @@ $module->UI->ShowHeader("Home");
 </div>
 
 <?php
-include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+include_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';

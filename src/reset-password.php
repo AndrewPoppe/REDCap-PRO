@@ -4,10 +4,14 @@ namespace YaleREDCap\REDCapPRO;
 
 /** @var REDCapPRO $module */
 
-# Initialize authentication session on page
-$module->AUTH->init();
+// Initialize authentication session on page
+$auth = new Auth($module->APPTITLE);
+$auth->init();
 
-# Parse query string to grab token.
+// UI
+$ui = new UI($module);
+
+// Parse query string to grab token.
 parse_str($_SERVER['QUERY_STRING'], $qstring);
 
 // Redirect to login page if we shouldn't be here
@@ -22,7 +26,8 @@ $new_password_err = $confirm_password_err = "";
 
 
 // Verify password reset token
-$verified_participant = $module->PARTICIPANT->verifyPasswordResetToken($qstring["t"]);
+$participantHelper    = new ParticipantHelper($module);
+$verified_participant = $participantHelper->verifyPasswordResetToken($qstring["t"]);
 
 // Processing form data when form is submitted
 if ( $_SERVER["REQUEST_METHOD"] === "POST" ) {
@@ -70,11 +75,11 @@ if ( $_SERVER["REQUEST_METHOD"] === "POST" ) {
     if ( !$any_error ) {
 
         // Grab all user details
-        $participant = $module->PARTICIPANT->getParticipant($_POST["username"]);
+        $participant = $participantHelper->getParticipant($_POST["username"]);
 
         // Update password
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
-        $result        = $module->PARTICIPANT->storeHash($password_hash, $participant["log_id"]);
+        $result        = $participantHelper->storeHash($password_hash, $participant["log_id"]);
         if ( empty($result) || $result === FALSE ) {
             echo $module->tt("error_generic1");
             echo "<br>";
@@ -83,23 +88,23 @@ if ( $_SERVER["REQUEST_METHOD"] === "POST" ) {
         }
 
         // Password was successfully set. Expire the token.
-        $module->PARTICIPANT->expirePasswordResetToken($participant["log_id"]);
+        $participantHelper->expirePasswordResetToken($participant["log_id"]);
 
         // Store data in session variables
-        $module->AUTH->set_login_values($participant);
+        $auth->set_login_values($participant);
 
-        if ( $module->AUTH->is_survey_url_set() ) {
-            header("location: " . $module->AUTH->get_survey_url());
+        if ( $auth->is_survey_url_set() ) {
+            header("location: " . $auth->get_survey_url());
         } else {
-            $module->UI->ShowParticipantHeader($module->tt("reset_password_title2"));
+            $ui->ShowParticipantHeader($module->tt("reset_password_title2"));
             echo "<div style='text-align:center;'><p>" . $module->tt("ui_close_tab") . "</p></div>";
-            $module->UI->EndParticipantPage();
+            $ui->EndParticipantPage();
         }
         return;
     }
 }
 
-$module->UI->ShowParticipantHeader($module->tt("reset_password_title"));
+$ui->ShowParticipantHeader($module->tt("reset_password_title"));
 
 if ( $verified_participant ) {
     ?>
@@ -147,4 +152,4 @@ if ( $verified_participant ) {
         <?= $module->tt("reset_password_err5") ?>
     </div>
 <?php } ?>
-<?php $module->UI->EndParticipantPage(); ?>
+<?php $ui->EndParticipantPage(); ?>

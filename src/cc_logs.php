@@ -7,9 +7,12 @@ namespace YaleREDCap\REDCapPRO;
 if ( !$module->framework->isSuperUser() ) {
     exit();
 }
+echo '<!DOCTYPE html><html lang="en">';
+$module->includeFont();
 
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
-$module->UI->ShowControlCenterHeader("Logs");
+$ui = new UI($module);
+$ui->ShowControlCenterHeader("Logs");
 
 ?>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
@@ -50,16 +53,10 @@ $module->initializeJavascriptModuleObject();
 <script>
     (function ($, window, document) {
         const RCPRO_module = <?= $module->getJavascriptModuleObjectName() ?>;
-        const columns = ["<?= implode('", "', REDCapPRO::$logColumnsCC)?>"];
-        
+        const columns = ["<?= implode('", "', REDCapPRO::$logColumnsCC) ?>"];
+
         function logExport(type) {
-            $.ajax({
-                'type': 'POST',
-                'url': "<?= $module->getUrl("src/logger.php") ?>",
-                'data': JSON.stringify({
-                    export_type: type
-                })
-            });
+            RCPRO_module.ajax('exportLogs', { cc: true, export_type: type });
         }
 
         $(document).ready(function () {
@@ -68,7 +65,7 @@ $module->initializeJavascriptModuleObject();
                 ajax: function (data, callback, settings) {
                     RCPRO_module.ajax('getLogs', { cc: true })
                         .then(response => {
-                            callback({ data: response});
+                            callback({ data: response });
                         })
                         .catch(error => {
                             console.error(error);
@@ -78,10 +75,11 @@ $module->initializeJavascriptModuleObject();
                 columns: columns.map(column => {
                     return {
                         data: column,
-                        defaultContent: ""
+                        defaultContent: "",
+                        className: "dt-center"
                     }
                 }),
-                createdRow: function(row, data, dataIndex, cells) {
+                createdRow: function (row, data, dataIndex, cells) {
                     let allData = "<div style=\"display: block; text-align:left;\"><ul>";
                     for (column of columns) {
                         const value = data[column];
@@ -91,7 +89,7 @@ $module->initializeJavascriptModuleObject();
                     }
                     allData += "</ul></div>";
                     $(row).addClass('hover pointer');
-                    $(row).on('click', function() {
+                    $(row).on('click', function () {
                         Swal.fire({
                             confirmButtonColor: "<?= $module::$COLORS["primary"] ?>",
                             allowEnterKey: false,

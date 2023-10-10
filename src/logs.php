@@ -7,9 +7,11 @@ $role = $module->getUserRole($module->safeGetUsername()); // 3=admin/manager, 2=
 if ( $role < 3 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
+$module->includeFont();
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$module->UI->ShowHeader("Logs");
+$ui = new UI($module);
+$ui->ShowHeader("Logs");
 $module->initializeJavascriptModuleObject();
 ?>
 
@@ -55,13 +57,7 @@ $module->initializeJavascriptModuleObject();
         const columns = ["<?= implode('", "', REDCapPRO::$logColumns) ?>"];
 
         function logExport(type) {
-            $.ajax({
-                'type': 'POST',
-                'url': "<?= $module->getUrl("src/logger.php") ?>",
-                'data': JSON.stringify({
-                    export_type: type
-                })
-            });
+            RCPRO_module.ajax('exportLogs', { cc: false, export_type: type });
         }
 
         $(document).ready(function () {

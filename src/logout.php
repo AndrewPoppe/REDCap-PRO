@@ -4,10 +4,11 @@ namespace YaleREDCap\REDCapPRO;
 /** @var REDCapPRO $module */
 
 // Initialize the session
-$module->AUTH->init();
+$auth = new Auth($module->APPTITLE);
+$auth->init();
 
 // Destroy the session.
-$module->AUTH->destroySession();
+$auth->destroySession();
 
 // Unset all of the session variables
 session_unset();
@@ -16,7 +17,8 @@ session_unset();
 $cancelPopup = $_GET['cancelPopup'];
 
 // This method starts the html doc
-$module->UI->ShowParticipantHeader($module->tt("logout_title"));
+$ui = new UI($module);
+$ui->ShowParticipantHeader($module->tt("logout_title"));
 ?>
 <style>
     .swal2-timer-progress-bar {
@@ -28,9 +30,11 @@ $module->UI->ShowParticipantHeader($module->tt("logout_title"));
     }
 </style>
 <div style="text-align: center;">
-    <p><?= $module->tt("ui_close_tab") ?></p>
+    <p>
+        <?= $module->tt("ui_close_tab") ?>
+    </p>
 </div>
-<?php if (!$cancelPopup) { ?>
+<?php if ( !$cancelPopup ) { ?>
     <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
     <script>
         Swal.fire({
@@ -43,4 +47,4 @@ $module->UI->ShowParticipantHeader($module->tt("logout_title"));
         });
     </script>
 <?php }
-$module->UI->EndParticipantPage(); ?>
+$ui->EndParticipantPage(); ?>

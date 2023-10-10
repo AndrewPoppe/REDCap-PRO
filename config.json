@@ -88,6 +88,21 @@
             "key": "recaptcha-secret-key",
             "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 197,248), rgb(255, 197,248)); border: 1px solid rgba(168, 37, 133, 0.4); border-radius: 0.375rem;'><strong>reCAPTCHA Secret Key:</strong></div><br>Secret key for reCAPTCHA v2 (default is empty)<br><em>It is fine to use the same value as the REDCap secret key (found on Modules/Services Configuration page)</em>",
             "type": "password"
+        },
+        {
+            "key": "api-descriptive",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 248, 197), rgb(255, 248, 197)); border: 1px solid rgba(168, 133, 37, 0.4); border-radius: 0.375rem;'><strong>API Settings</strong><p>These settings control the use of the API. Please take care to understand how the API may be used before enabling it in the system.</p>    </div>",
+            "type": "descriptive"
+        },
+        {
+            "key": "api-enabled-system",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 248, 197), rgb(255, 248, 197)); border: 1px solid rgba(168, 133, 37, 0.4); border-radius: 0.375rem;'><strong>Enable the API</strong></div>Should the API be enabled for use?<br><em>Note: this setting enables the API option globally, but it still must be enabled in the project settings to take effect</em>",
+            "type": "checkbox"
+        },
+        {
+            "key": "api-require-admin",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 248, 197), rgb(255, 248, 197)); border: 1px solid rgba(168, 133, 37, 0.4); border-radius: 0.375rem;'><strong>Restrict API project settings to REDCap administrators</strong></div>Should only REDCap administrators be able to enable/disable the API in project settings? If not, any REDCapPRO manager in the project will be able to enable/disable the API in project settings.<br><em>Note: this setting only applies if the API is enabled globally</em>",
+            "type": "checkbox"
         }
     ],
     "links": {
@@ -119,16 +134,47 @@
         "src/forgot-password",
         "src/forgot-username",
         "src/session_check",
-        "src/create-account"
+        "src/create-account",
+        "src/api"
+    ],
+    "no-csrf-pages": [
+        "src/api"
     ],
     "auth-ajax-actions": [
-        "getLogs"
+        "exportLogs",
+        "getLogs",
+        "getParticipants",
+        "getParticipantsCC",
+        "getProjectsCC",
+        "getStaff",
+        "getStaffCC",
+        "importCsvEnroll",
+        "importCsvRegister",
+        "searchParticipantByEmail"
+    ],
+    "action-tags": [
+        {
+            "tag": "@RCPRO-USERNAME",
+            "description": "This transforms a text field into a dropdown selector. The user can select an enrolled participant and populate the field with that participant's username"
+        },
+        {
+            "tag": "@RCPRO-EMAIL",
+            "description": "If @RCPRO-USERNAME is present on the instrument, then when the participant is selected the email field with the @RCPRO-EMAIL tag will be populated with the participant's email address"
+        },
+        {
+            "tag": "@RCPRO-FNAME",
+            "description": "If @RCPRO-USERNAME is present on the instrument, then when the participant is selected the text field with the @RCPRO-FNAME tag will be populated with the participant's first name"
+        },
+        {
+            "tag": "@RCPRO-LNAME",
+            "description": "If @RCPRO-USERNAME is present on the instrument, then when the participant is selected the text field with the @RCPRO-LNAME tag will be populated with the participant's last name"
+        }
     ],
     "framework-version": 12,
     "compatibility": {
         "php-version-min": "7.3.0",
         "php-version-max": "",
-        "redcap-version-min": "9.10.0",
+        "redcap-version-min": "13.1.27",
         "redcap-version-max": ""
     },
     "enable-no-auth-logging": true

@@ -18,11 +18,13 @@ border: none !important;
 table#RCPRO_TABLE tr,
 table#RCPRO_TABLE tbody {
 border: none !important;
+font-size: small;
 }
 
 
 table.dataTable th {
 border-top: none !important;
+font-size: small;
 }
 
 table.dataTable td {

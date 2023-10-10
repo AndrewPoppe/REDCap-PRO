@@ -78,7 +78,7 @@ class ProjectSettings
      * @param string $prefix The module prefix.
      * @param string $version The version of the module.
      * 
-     * @return Array An associative array with the language names as keys and the full path to the INI file as values.
+     * @return array An associative array with the language names as keys and the full path to the INI file as values.
      */
     public function getLanguageFiles()
     {
@@ -145,5 +145,20 @@ class ProjectSettings
     public function getAutoEnrollNotificationEmail(int $pid) : string
     {
         return $this->module->getProjectSetting("auto-enroll-notification-email", $pid) ?? "";
+    }
+
+    /**
+     * Checks whether API is enabled in this project
+     * 
+     * @param int $pid The redcap project ID
+     * 
+     * @return bool Whether API is enabled in this project
+     */
+    public function apiEnabled(int $pid)
+    {
+        $apiEnabledSystem  = $this->module->getSystemSetting("api-enabled-system");
+        $apiEnabledProject = $this->module->getProjectSetting("api", $pid);
+
+        return $apiEnabledSystem === true && $apiEnabledProject === true;
     }
 }

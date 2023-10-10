@@ -5,8 +5,13 @@ namespace YaleREDCap\REDCapPRO;
 use ExternalModules\AbstractExternalModule;
 use ExternalModules\Framework;
 
+require_once "src/classes/APIHandler.php";
+require_once "src/classes/APIParticipantEnroll.php";
+require_once "src/classes/APIParticipantRegister.php";
 require_once "src/classes/AjaxHandler.php";
 require_once "src/classes/Auth.php";
+require_once "src/classes/CsvEnrollImport.php";
+require_once "src/classes/CsvRegisterImport.php";
 require_once "src/classes/DAG.php";
 require_once "src/classes/Instrument.php";
 require_once "src/classes/LoginHelper.php";
@@ -142,24 +147,26 @@ class REDCapPRO extends AbstractExternalModule
     public $LOGO_URL = "https://i.imgur.com/5Xq2Vqt.png";
     public $LOGO_ALTERNATE_URL = "https://i.imgur.com/fu0t8V1.png";
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->AUTH        = new Auth($this->APPTITLE);
-        $this->UI          = new UI($this);
-        $this->PARTICIPANT = new ParticipantHelper($this);
-        $this->PROJECT     = new ProjectHelper($this);
-        $this->DAG         = new DAG($this);
-    }
-
-
     //////////////\\\\\\\\\\\\\\       
     /////   REDCAP HOOKS   \\\\\ 
     //////////////\\\\\\\\\\\\\\
 
     public function redcap_module_ajax($action, $payload, $project_id, $record, $instrument, $event_id, $repeat_instance, $survey_hash, $response_id, $survey_queue_hash, $page, $page_full, $user_id, $group_id)
     {
-        $ajaxHandler = new AjaxHandler($this, $action, $payload, $project_id);
+        $other       = [
+            "record"            => $record,
+            "instrument"        => $instrument,
+            "event_id"          => $event_id,
+            "repeat_instance"   => $repeat_instance,
+            "survey_hash"       => $survey_hash,
+            "response_id"       => $response_id,
+            "survey_queue_hash" => $survey_queue_hash,
+            "page"              => $page,
+            "page_full"         => $page_full,
+            "user_id"           => $user_id,
+            "group_id"          => $group_id
+        ];
+        $ajaxHandler = new AjaxHandler($this, $action, $payload, $project_id, $other);
         return $ajaxHandler->handleAjax();
     }
 
@@ -168,7 +175,8 @@ class REDCapPRO extends AbstractExternalModule
         if ( strpos($_SERVER["PHP_SELF"], "surveys") !== false ) {
             return;
         }
-        $this->AUTH->destroySession();
+        $auth = new Auth($this->APPTITLE);
+        $auth->destroySession();
     }
 
     public function redcap_survey_page_top(
@@ -189,30 +197,36 @@ class REDCapPRO extends AbstractExternalModule
         if ( isset($record) ) {
             \Session::savecookie("record", $record, 0, true);
         }
-        $this->AUTH->init();
+        $auth = new Auth($this->APPTITLE);
+        $auth->init();
 
         // Participant is logged in to their account
         if ( $this->AUTH->is_logged_in() ) {
             // Settings
             $settings = new ProjectSettings($this);
 
+            // UI
+            $ui = new UI($this);
+
+            // Participant helper
+            $participantHelper = new ParticipantHelper($this);
+
             // Check MFA Token
-            if ( $settings->mfaEnabled((int) $project_id) && !$this->AUTH->is_mfa_verified() ) {
-                $code             = $this->AUTH->get_mfa_code();
-                $participantEmail = $this->PARTICIPANT->getEmail($this->AUTH->get_participant_id());
+            if ( $settings->mfaEnabled((int) $project_id) && !$auth->is_mfa_verified() ) {
+                $code             = $auth->get_mfa_code();
+                $participantEmail = $participantHelper->getEmail($auth->get_participant_id());
                 $this->sendMfaTokenEmail($participantEmail, $code);
                 header("location: " . $this->framework->getUrl("src/mfa.php", true));
                 return;
             }
 
             // Get RCPRO project ID
-            $rcpro_project_id = $this->PROJECT->getProjectIdFromPID($project_id);
-
-
+            $projectHelper    = new ProjectHelper($this);
+            $rcpro_project_id = $projectHelper->getProjectIdFromPID($project_id);
 
             // Determine whether participant is enrolled in the study.
-            $rcpro_participant_id = $this->AUTH->get_participant_id();
-            if ( !$this->PARTICIPANT->enrolledInProject($rcpro_participant_id, $rcpro_project_id) ) {
+            $rcpro_participant_id = $auth->get_participant_id();
+            if ( !$participantHelper->enrolledInProject($rcpro_participant_id, $rcpro_project_id) ) {
                 $this->logEvent("Participant not enrolled", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_project_id"     => $rcpro_project_id,
@@ -223,7 +237,7 @@ class REDCapPRO extends AbstractExternalModule
                     "response_id"          => $response_id,
                     "repeat_instance"      => $repeat_instance
                 ]);
-                $this->UI->ShowParticipantHeader($this->tt("not_enrolled_title"));
+                $ui->ShowParticipantHeader($this->tt("not_enrolled_title"));
                 echo "<p style='text-align:center;'>" . $this->tt("not_enrolled_message1") . "<br>";
                 $study_contact = $this->getContactPerson($this->tt("not_enrolled_subject"));
                 echo $this->tt("not_enrolled_message2");
@@ -231,14 +245,15 @@ class REDCapPRO extends AbstractExternalModule
                     echo "<br>" . $study_contact["info"];
                 }
                 echo "</p>";
-                $this->UI->EndParticipantPage();
+                $ui->EndParticipantPage();
                 $this->exitAfterHook();
             }
 
             // Determine whether participant is in the appropriate DAG
             if ( isset($group_id) ) {
-                $rcpro_link_id = $this->PROJECT->getLinkId($rcpro_participant_id, $rcpro_project_id);
-                $rcpro_dag     = $this->DAG->getParticipantDag($rcpro_link_id);
+                $rcpro_link_id = $projectHelper->getLinkId($rcpro_participant_id, $rcpro_project_id);
+                $dag           = new DAG($this);
+                $rcpro_dag     = $dag->getParticipantDag($rcpro_link_id);
 
                 if ( $group_id !== $rcpro_dag ) {
                     $this->logEvent("Participant wrong DAG", [
@@ -251,7 +266,7 @@ class REDCapPRO extends AbstractExternalModule
                         "response_id"          => $response_id,
                         "repeat_instance"      => $repeat_instance
                     ]);
-                    $this->UI->ShowParticipantHeader($this->tt("wrong_dag_title"));
+                    $ui->ShowParticipantHeader($this->tt("wrong_dag_title"));
                     echo "<p style='text-align:center;'>" . $this->tt("wrong_dag_message1") . "<br>";
                     $study_contact = $this->getContactPerson($this->tt("wrong_dag_subject"));
                     echo $this->tt("not_enrolled_message2");
@@ -259,7 +274,7 @@ class REDCapPRO extends AbstractExternalModule
                         echo "<br>" . $study_contact["info"];
                     }
                     echo "</p>";
-                    $this->UI->EndParticipantPage();
+                    $ui->EndParticipantPage();
                     $this->exitAfterHook();
                 }
             }
@@ -268,7 +283,7 @@ class REDCapPRO extends AbstractExternalModule
             \REDCap::logEvent(
                 "REDCapPRO Survey Accessed",
                 // action description
-                "REDCapPRO User: " . $this->AUTH->get_username() . "\n" .
+                "REDCapPRO User: " . $auth->get_username() . "\n" .
                 "Instrument: ${instrument}\n",
                 // changes made
                 NULL,
@@ -280,8 +295,8 @@ class REDCapPRO extends AbstractExternalModule
                 $project_id // project id
             );
             $this->logEvent("REDCapPRO Survey Accessed", [
-                "rcpro_username"  => $this->AUTH->get_username(),
-                "rcpro_user_id"   => $this->AUTH->get_participant_id(),
+                "rcpro_username"  => $auth->get_username(),
+                "rcpro_user_id"   => $auth->get_participant_id(),
                 "record"          => $record,
                 "event"           => $event_id,
                 "instrument"      => $instrument,
@@ -332,11 +347,11 @@ class REDCapPRO extends AbstractExternalModule
             // Participant is not logged into their account
             // Store cookie to return to survey
         } else {
-            $this->AUTH->set_survey_url(APP_PATH_SURVEY_FULL . "?s=${survey_hash}");
-            $this->AUTH->set_redcap_project_id($project_id);
-            $this->AUTH->set_data_access_group_id($group_id);
+            $auth->set_survey_url(APP_PATH_SURVEY_FULL . "?s=${survey_hash}");
+            $auth->set_redcap_project_id($project_id);
+            $auth->set_data_access_group_id($group_id);
             \Session::savecookie($this->APPTITLE . "_survey_url", APP_PATH_SURVEY_FULL . "?s=${survey_hash}", 0, TRUE);
-            $this->AUTH->set_survey_active_state(TRUE);
+            $auth->set_survey_active_state(TRUE);
             header("location: " . $this->getUrl("src/login.php", true) . "&s=${survey_hash}");
             $this->exitAfterHook();
         }
@@ -351,7 +366,8 @@ class REDCapPRO extends AbstractExternalModule
         echo '<link href="' . $this->getUrl("lib/select2/select2.min.css") . '" rel="stylesheet" />
         <script src="' . $this->getUrl("lib/select2/select2.min.js") . '"></script>';
 
-        $rcpro_dag  = $this->DAG->getCurrentDag($this->safeGetUsername(), $project_id);
+        $dag        = new DAG($this);
+        $rcpro_dag  = $dag->getCurrentDag($this->safeGetUsername(), $project_id);
         $instrument = new Instrument($this, $instrument, $rcpro_dag);
         $instrument->update_form();
     }
@@ -369,10 +385,11 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function redcap_module_project_enable($version, $pid)
     {
-        if ( !$this->PROJECT->checkProject($pid) ) {
-            $this->PROJECT->addProject($pid);
+        $projectHelper = new ProjectHelper($this);
+        if ( !$projectHelper->checkProject($pid) ) {
+            $projectHelper->addProject($pid);
         } else {
-            $this->PROJECT->setProjectActive($pid, 1);
+            $projectHelper->setProjectActive($pid, 1);
         }
         $this->changeUserRole($this->safeGetUsername(), NULL, 3);
         $this->logEvent("Module Enabled", [
@@ -391,7 +408,8 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function redcap_module_project_disable($version, $project_id)
     {
-        $this->PROJECT->setProjectActive($project_id, 0);
+        $projectHelper = new ProjectHelper($this);
+        $projectHelper->setProjectActive($project_id, 0);
         $this->logEvent("Module Disabled", [
             "redcap_user" => $this->safeGetUsername(),
             "version"     => $version
@@ -498,8 +516,9 @@ class REDCapPRO extends AbstractExternalModule
             $subject = $this->tt("email_inquiry_subject");
         }
         $body = "";
-        if ( $this->AUTH->is_logged_in() ) {
-            $username = $this->AUTH->get_username();
+        $auth = new Auth($this->APPTITLE);
+        if ( $auth->is_logged_in() ) {
+            $username = $auth->get_username();
             $body .= $this->tt("email_inquiry_username", $username) . "\n";
         }
         if ( $this->framework->getProjectId() ) {
@@ -588,9 +607,10 @@ class REDCapPRO extends AbstractExternalModule
 
             $settings = new ProjectSettings($this);
 
-            $rcpro_participant_id = $this->PARTICIPANT->getParticipantIdFromUsername($username);
+            $participantHelper    = new ParticipantHelper($this);
+            $rcpro_participant_id = $participantHelper->getParticipantIdFromUsername($username);
             $hours_valid          = 24;
-            $token                = $this->PARTICIPANT->createResetToken($rcpro_participant_id, $hours_valid);
+            $token                = $participantHelper->createResetToken($rcpro_participant_id, $hours_valid);
 
             // create email
             $subject = $this->tt("email_new_participant_subject");
@@ -634,12 +654,13 @@ class REDCapPRO extends AbstractExternalModule
     {
         try {
 
-            $settings = new ProjectSettings($this);
+            $settings          = new ProjectSettings($this);
+            $participantHelper = new ParticipantHelper($this);
 
             // generate token
-            $token          = $this->PARTICIPANT->createResetToken($rcpro_participant_id);
-            $to             = $this->PARTICIPANT->getEmail($rcpro_participant_id);
-            $username       = $this->PARTICIPANT->getUserName($rcpro_participant_id);
+            $token          = $participantHelper->createResetToken($rcpro_participant_id);
+            $to             = $participantHelper->getEmail($rcpro_participant_id);
+            $username       = $participantHelper->getUserName($rcpro_participant_id);
             $username_clean = \REDCap::escapeHtml($username);
 
             // create email
@@ -674,7 +695,7 @@ class REDCapPRO extends AbstractExternalModule
             $redcap_user = $selfInitiated ? null : $this->safeGetUsername();
 
             // Get all projects to which participant is currently enrolled
-            $project_ids = $this->PARTICIPANT->getEnrolledProjects($rcpro_participant_id);
+            $project_ids = $participantHelper->getEnrolledProjects($rcpro_participant_id);
             foreach ( $project_ids as $project_id ) {
                 $this->logEvent("Password Reset Email - ${status}", [
                     "rcpro_participant_id"  => $rcpro_participant_id,
@@ -904,8 +925,7 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function getAllUsers()
     {
-        global $module;
-        $projects = $module->getProjectsWithModuleEnabled();
+        $projects = $this->framework->getProjectsWithModuleEnabled();
         $users    = array();
         foreach ( $projects as $pid ) {
             $project   = new Project($this, $pid);
@@ -915,11 +935,11 @@ class REDCapPRO extends AbstractExternalModule
                 if ( isset($users[$user]) ) {
                     array_push($users[$user]['projects'], $pid);
                 } else {
-                    $newUser      = $module->getUser($user);
+                    $newUser      = $this->framework->getUser($user);
                     $newUserArr   = [
                         "username" => $user,
                         "email"    => $newUser->getEmail(),
-                        "name"     => $module->getUserFullname($user),
+                        "name"     => $this->getUserFullname($user),
                         "projects" => [ $pid ]
                     ];
                     $users[$user] = $newUserArr;
@@ -1134,5 +1154,22 @@ class REDCapPRO extends AbstractExternalModule
         ]);
 
         return $message;
+    }
+
+    public function includeFont()
+    {
+        echo '<link rel="preconnect" href="https://fonts.googleapis.com">' .
+            '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' .
+            '<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">' .
+            '<style> body, a, a:visited, a.nav-link { font-family: "Atkinson Hyperlegible", sans-serif !important; } </style>';
+    }
+
+    public function getProjectlessUrl(string $path, bool $noAuth, bool $useApiEndpoint)
+    {
+        $pid = $_GET['pid'];
+        unset($_GET['pid']);
+        $result      = $this->framework->getUrl($path, true, true);
+        $_GET['pid'] = $pid;
+        return $result;
     }
 }
