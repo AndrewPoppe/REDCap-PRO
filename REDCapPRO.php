@@ -5,10 +5,10 @@ namespace YaleREDCap\REDCapPRO;
 use ExternalModules\AbstractExternalModule;
 use ExternalModules\Framework;
 
+require_once "src/classes/AjaxHandler.php";
 require_once "src/classes/APIHandler.php";
 require_once "src/classes/APIParticipantEnroll.php";
 require_once "src/classes/APIParticipantRegister.php";
-require_once "src/classes/AjaxHandler.php";
 require_once "src/classes/Auth.php";
 require_once "src/classes/CsvEnrollImport.php";
 require_once "src/classes/CsvRegisterImport.php";
@@ -201,7 +201,7 @@ class REDCapPRO extends AbstractExternalModule
         $auth->init();
 
         // Participant is logged in to their account
-        if ( $this->AUTH->is_logged_in() ) {
+        if ( $auth->is_logged_in() ) {
             // Settings
             $settings = new ProjectSettings($this);
 

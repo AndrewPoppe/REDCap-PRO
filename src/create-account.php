@@ -10,25 +10,29 @@ if ( isset($recaptcha_site_key) ) {
 }
 
 // Initialize Authentication
-$module->AUTH->init();
+$auth = new Auth($module->APPTITLE);
+$auth->init();
+
+// UI Helper
+$ui = new UI($module);
 
 // Check if the user is already logged in, if yes then redirect then to the survey
-if ( $module->AUTH->is_logged_in() ) {
-    $survey_url        = $module->AUTH->get_survey_url();
-    $survey_url_active = $module->AUTH->is_survey_link_active();
+if ( $auth->is_logged_in() ) {
+    $survey_url        = $auth->get_survey_url();
+    $survey_url_active = $auth->is_survey_link_active();
 
     if ( empty($survey_url) || empty($survey_url_active) || $survey_url_active !== TRUE ) {
         return;
     }
 
-    $module->AUTH->deactivate_survey_link();
+    $auth->deactivate_survey_link();
     header("location: ${survey_url}");
     return;
 }
 
 // Check to make sure a project survey led them here
-$project_id = $module->AUTH->get_redcap_project_id();
-if ( !$module->AUTH->is_survey_url_set() || empty($project_id) ) {
+$project_id = $auth->get_redcap_project_id();
+if ( !$auth->is_survey_url_set() || empty($project_id) ) {
     echo "You must access this page from a REDCap survey link.";
     return;
 }
@@ -86,23 +90,25 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     // Check that account does not already exist
     if ( !$any_errors ) {
         try {
-            $emailExists = $module->PARTICIPANT->checkEmailExists($email);
+            $participantHelper = new ParticipantHelper($module);
+            $emailExists       = $participantHelper->checkEmailExists($email);
             if ( $emailExists ) {
                 // Send email to user with link to reset password
-                $rcpro_participant_id = $module->PARTICIPANT->getParticipantIdFromEmail($email);
-                $rcpro_username       = $module->PARTICIPANT->getUserName($rcpro_participant_id);
+                $rcpro_participant_id = $participantHelper->getParticipantIdFromEmail($email);
+                $rcpro_username       = $participantHelper->getUserName($rcpro_participant_id);
                 $module->sendPasswordResetEmail($rcpro_participant_id, true);
             } else {
                 // Create the account
-                $rcpro_username       = $module->PARTICIPANT->createParticipant($email, $fname, $lname);
-                $rcpro_participant_id = $module->PARTICIPANT->getParticipantIdFromUsername($rcpro_username);
+                $rcpro_username       = $participantHelper->createParticipant($email, $fname, $lname);
+                $rcpro_participant_id = $participantHelper->getParticipantIdFromUsername($rcpro_username);
                 $module->sendNewParticipantEmail($rcpro_username, $email, $fname, $lname);
             }
 
             // Enroll the user in the project if that setting is enabled
             if ( $settings->shouldEnrollUponRegistration((int) $project_id) ) {
-                $data_access_group = $module->AUTH->get_data_access_group_id();
-                $module->PROJECT->enrollParticipant($rcpro_participant_id, $project_id, $data_access_group, $rcpro_username);
+                $data_access_group = $auth->get_data_access_group_id();
+                $projectHelper     = new ProjectHelper($module);
+                $projectHelper->enrollParticipant($rcpro_participant_id, $project_id, $data_access_group, $rcpro_username);
                 $emailToNotify = $settings->getAutoEnrollNotificationEmail((int) $project_id);
                 if ( !empty($emailToNotify) ) {
                     $module->sendAutoEnrollNotificationEmail($emailToNotify, $project_id);
@@ -110,7 +116,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             }
 
             // Give confirmation message
-            $module->UI->ShowParticipantHeader('Account Created');
+            $ui->ShowParticipantHeader('Account Created');
             ?>
             <div style="text-align: center;">
                 <p>
@@ -118,7 +124,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 </p>
             </div>
             <?php
-            $module->UI->EndParticipantPage();
+            $ui->EndParticipantPage();
             return;
         } catch ( \Throwable $e ) {
             $any_errors = true;
@@ -129,7 +135,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 }
 
 // This method starts the html doc
-$module->UI->ShowParticipantHeader('Create Account');
+$ui->ShowParticipantHeader('Create Account');
 ?>
 
 <div style="text-align: center;">
@@ -204,4 +210,4 @@ $module->UI->ShowParticipantHeader('Create Account');
         /* border: 1px solid #dc3545; */
     }
 </style>
-<?php $module->UI->EndParticipantPage(); ?>
+<?php $ui->EndParticipantPage(); ?>

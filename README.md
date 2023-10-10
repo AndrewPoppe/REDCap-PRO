@@ -23,6 +23,7 @@
     - [Study Staff](#study-staff)
     - [Settings](#settings)
     - [Logs](#logs)
+  - [Self-Registration](#self-registration)
   - [REDCapPRO Control Center Menu](#redcappro-control-center-menu)
     - [Projects](#projects)
     - [Participants](#participants)
@@ -35,6 +36,8 @@
   - [Changelog](#changelog)
 
 ## Overview
+
+![login](images/screenshots/login.png)
 
 ### What is REDCapPRO?
 **REDCapPRO** is an external module for [REDCap](https://projectredcap.org) that allows participants/patients to directly report study data (*i.e.*, ePRO). Its primary purpose is to allow the identification of a survey participant and to log that information in a REDCap project's audit trail in a manner compliant with regulatory stipulations (primarily FDA's 21 CFR Part 11). The reason this is needed is that there is no built-in REDCap feature that provides all of the following:
@@ -66,14 +69,28 @@ To achieve this, project users must first register a participant with **REDCapPR
 2. Enable the module in a REDCap project
 3. **Register:** A staff member of the study registers a participant with **REDCapPRO**
    * The participant is registered system-wide. They use the same username and password for all REDCapPRO surveys in this REDCap system regardless of which REDCap project the survey belongs to.
+   * *Note: as of REDCapPRO 2.1.0, the option exists for participants to register themselves. See the [Self-Registration](#self-registration) section below for more information.*
 4. **Enroll:** The study staff member then enrolls the participant in this particular REDCap project
+   * *Note: as of REDCapPRO 2.1.0, the option exists for participants to enroll themselves. See the [Self-Registration](#self-registration) section below for more information.*
 5. Survey invitations can then be sent to the participant using REDCap survey distribution tools like normal. Participants will be required to **log in** with their **REDCapPRO** username (or email address) and password to access the survey. Because the login credentials are not tied to a specific record, public surveys are compatible with **REDCapPRO**.
 
 ### What is the process like for participants?
+
+![create-password](images/screenshots/create-password.png)
+
 * Upon registration with **REDCapPRO**, the participant will receive an email with a
 link to set their password.
 * When the participant clicks a link to start a survey in a **REDCapPRO** project, they will see a login screen and will need to supply their username and password.
 * They have the option to be sent a password reset email, a username reminder email, and/or an email address reminder email from the login screen.
+
+![forgot-password](images/screenshots/forgot-password.png)
+
+![forgot-username](images/screenshots/forgot-username.png)
+
+* If it is enabled in the project, they will also be required to provide a multifactor token after successfully logging in with their username and password
+
+![mfa](images/screenshots/mfa.png)
+
 
 ## Installation
 * This External Module should be installed via the REDCapREPO
@@ -84,19 +101,24 @@ These are settings/configuration options accessible in the normal External Modul
 
 ### System Settings
 
-| Setting                                                    |   Type   | Description                                                                                                                                                                                                                                            |     Default Value     |
-| :--------------------------------------------------------- | :------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------: |
-| **Language File**                                          | Dropdown | The language that participant-facing text in the module will appear in. This system setting can be overridden by the corresponding project setting. See the [Translation](#translation) section below for more information.                            |        English        |
-| **Email From Address**                                     |  Email   | This will be the From email address for all system emails. This can help if emails are being sent to spam or are not delivered.                                                                                                                        | noreply@REDCapPRO.com |
-| **Prevent Email Login**                                    | Checkbox | Should participants be prevented from using their email address to log in to the system. Checking this will require that they login using their participant username only.<br>*Note: if checked, this overrides the associated project-level setting.* |       Unchecked       |
-| **Warning Time**                                           |  Number  | Number of minutes to wait before warning participant of inactivity timeout                                                                                                                                                                             |       1 minute        |
-| **Timeout Time**                                           |  Number  | Number of minutes to wait before logging participant out due to inactivity                                                                                                                                                                             |       5 minutes       |
-| **Password Length**                                        | Integer  | Minimum length of participant's password in characters                                                                                                                                                                                                 |     8 characters      |
-| **Login Attempts**                                         | Integer  | Number of consecutive failed login attempts before being locked out                                                                                                                                                                                    |      3 attempts       |
-| **Lockout Duration**                                       | Integer  | Length of a lockout due to failed login attempts, in seconds                                                                                                                                                                                           |      300 seconds      |
-| **Multi-Factor Authentication**                            | Checkbox | Require participants to use multi-factor authentication when logging in. This requires participants to enter a code sent to their email address in addition to their password.                                                                         |       Unchecked       |
-| **Enable the API**                                         | Checkbox | Enable the API for this system. This allows you to register and enroll participants using the [API](#api).                                                                                                                                             |       Unchecked       |
-| **Restrict API project settings to REDCap administrators** | Checkbox | If checked, only REDCap administrators will be able to access the API settings in the project. If unchecked, any user with access to the REDCapPRO project settings page will be able to access the API settings.                                      |       Unchecked       |
+| Setting                                                                  |   Type   | Description                                                                                                                                                                                                                                            |     Default Value     |
+| :----------------------------------------------------------------------- | :------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------: |
+| **Language File**                                                        | Dropdown | The language that participant-facing text in the module will appear in. This system setting can be overridden by the corresponding project setting. See the [Translation](#translation) section below for more information.                            |        English        |
+| **Email From Address**                                                   |  Email   | This will be the From email address for all system emails. This can help if emails are being sent to spam or are not delivered.                                                                                                                        | noreply@REDCapPRO.com |
+| **Prevent Email Login**                                                  | Checkbox | Should participants be prevented from using their email address to log in to the system. Checking this will require that they login using their participant username only.<br>*Note: if checked, this overrides the associated project-level setting.* |       Unchecked       |
+| **Warning Time**                                                         |  Number  | Number of minutes to wait before warning participant of inactivity timeout                                                                                                                                                                             |       1 minute        |
+| **Timeout Time**                                                         |  Number  | Number of minutes to wait before logging participant out due to inactivity                                                                                                                                                                             |       5 minutes       |
+| **Password Length**                                                      | Integer  | Minimum length of participant's password in characters                                                                                                                                                                                                 |     8 characters      |
+| **Login Attempts**                                                       | Integer  | Number of consecutive failed login attempts before being locked out                                                                                                                                                                                    |      3 attempts       |
+| **Lockout Duration**                                                     | Integer  | Length of a lockout due to failed login attempts, in seconds                                                                                                                                                                                           |      300 seconds      |
+| **Multi-Factor Authentication**                                          | Checkbox | Require participants to use multi-factor authentication when logging in. This requires participants to enter a code sent to their email address in addition to their password.                                                                         |       Unchecked       |
+| **Allow Self-Registration**                                              | Checkbox | Allow participants to [register themselves](#self-registration) with **REDCapPRO**. If checked, a link will appear on the login page that will take the participant to a registration page.                                                            |       Unchecked       |
+| **Restrict Self-Registration project settings to REDCap administrators** | Checkbox | If checked, only REDCap administrators will be able to access the self-registration settings in the project. If unchecked, any REDCapPRO manager will be able to access the self-registration settings.                                                |       Unchecked       |
+| **Allow Auto-Enroll Upon Self-Registration**                             | Checkbox | Allow participants to enroll themselves in a project when they register. If checked, the participant will be automatically enrolled in the REDCapPRO project when they self-register                                                                   |       Unchecked       |
+| **reCaptcha Site Key**                                                   |   Text   | The site key for the reCaptcha v2 service. This is used to prevent bots from registering. You can use the same site key used for REDCap for this purpose as well, if you wish.                                                                         |        (blank)        |
+| **reCaptcha Secret Key**                                                 |   Text   | The secret key for the reCaptcha v2 service. This is used to prevent bots from registering. You can use the same secret key used for REDCap for this purpose as well, if you wish.                                                                     |        (blank)        |
+| **Enable the API**                                                       | Checkbox | Enable the API for this system. This allows you to register and enroll participants using the [API](#api).                                                                                                                                             |       Unchecked       |
+| **Restrict API project settings to REDCap administrators**               | Checkbox | If checked, only REDCap administrators will be able to access the API settings in the project. If unchecked, any REDCapPRO manager will be able to access the API settings.                                                                            |       Unchecked       |
 
 ### Project Settings
 
@@ -115,10 +137,16 @@ If the language you desire does not appear in the `Language File` dropdown in th
 The **REDCapPRO** Project Menu is accessible via a link in the Applications section of the REDCap project side menu. Access to the different sections of the menu is restricted based on the `role` of the user (see the Study Staff tab description for details). The link to the menu itself is only visible to users or role `Monitor` or above, although the Home tab is accessible by anyone. 
 
 ### Home Tab
+
+![home](images/screenshots/home.png)
+
 This is an informational page.
 This tab is accessible by any role (including no access).
 
 ### Manage Participants
+
+![manage](images/screenshots/manage.png)
+
 This tab allows a user to view enrolled participants in this study project and to 
 take various actions on study participants. The actions available
 and the information that is visible depends on the `role` of the user. The tab
@@ -138,6 +166,9 @@ itself is available to Monitors and above.
 | Disenroll         | Action | Removes the participant from this study project                                                                                                                                                            |    <u>Normal User</u>    |
 
 ### Enroll
+
+![enroll](images/screenshots/enroll.png)
+
 This tab allows a user to search for a registered participant in order to enroll them into this study project. Users can
 set the participant's Data Access Group at this time as well, if applicable. This tab is available to Normal Users and 
 above.
@@ -153,6 +184,9 @@ You can enroll many participants at once by importing a CSV file. The file must 
 You can also register (and optionally enroll) many participants at once by importing a CSV file on the [Register](#Register) tab.
 
 ### Register
+
+![register](images/screenshots/register.png)
+
 This tab allows a user to register a participant with **REDCapPRO**. Users also have the option to enroll at the same 
 time as registering. They can set the participant's Data Access Group at this time as well, if applicable.  This tab is 
 available to Normal Users and above.
@@ -174,6 +208,9 @@ You can also register (and optionally enroll) many participants at once by impor
 
 
 ### Study Staff
+
+![staff](images/screenshots/manage-users.png)
+
 This tab allows Managers to set the `role` of users in the study project. All
 REDCap users are shown in this table. Set the role of the user according to this
 guide:
@@ -187,21 +224,33 @@ guide:
 *<u>Note</u>: REDCap administrators have full Manager permissions in **REDCapPRO** no matter what `role` they have in the project (or if they appear in the staff list at all)*
 
 ### Settings
+
+![settings](images/screenshots/settings.png)
+
 This tab contains some project-level configuration options. This tab is only 
 accessible by managers.
-| Setting                        |   Type   | Description                                                                                                                                                                                                                                                                | Default Value |
-| :----------------------------- | :------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-----------: |
-| **Language**                   | Dropdown | The language that participant-facing text in the module will appear in. This overrides the default system setting. See the [Translation](#translation) section for more information.                                                                                       |    English    |
-| **Prevent Email Login**        | Checkbox | If checked, this prevents participants from using their email address to log in to surveys. Instead, they must use their REDCapPRO username to log in. <br>*If email logins are prevented at the system level, this setting will not appear in the project setttings tab.* |   Unchecked   |
-| **Multifactor Authentication** | Checkbox | Require participants to use multi-factor authentication when logging in. This requires participants to enter a code sent to their email address in addition to their password.                                                                                             |   Unchecked   |
-| **API**                        | Checkbox | Enable the API for this project. This allows you to register and enroll participants using the [API](#api).                                                                                                                                                                |   Unchecked   |
-| **Study Contact Name**         |   Text   | The name of the study staff member that study participants should contact with questions/problems. This will appear in emails sent to the participant                                                                                                                      |      N/A      |
-| **Study Contact Email**        |  Email   | Email address that participants should contact.                                                                                                                                                                                                                            |      N/A      |
-| **Study Contact Phone**        |  Phone   | Phone number that participants should contact.                                                                                                                                                                                                                             |      N/A      |
+| Setting                                                             |   Type   | Description                                                                                                                                                                                                                                                                | Default Value |
+| :------------------------------------------------------------------ | :------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-----------: |
+| **Language**                                                        | Dropdown | The language that participant-facing text in the module will appear in. This overrides the default system setting. See the [Translation](#translation) section for more information.                                                                                       |    English    |
+| **Prevent Email Login**                                             | Checkbox | If checked, this prevents participants from using their email address to log in to surveys. Instead, they must use their REDCapPRO username to log in. <br>*If email logins are prevented at the system level, this setting will not appear in the project setttings tab.* |   Unchecked   |
+| **Multifactor Authentication**                                      | Checkbox | Require participants to use multi-factor authentication when logging in. This requires participants to enter a code sent to their email address in addition to their password.                                                                                             |   Unchecked   |
+| **API**                                                             | Checkbox | Enable the API for this project. This allows you to register and enroll participants using the [API](#api).                                                                                                                                                                |   Unchecked   |
+| **Allow Self-Registration**                                         | Checkbox | Allow participants to [register themselves](#self-registration) with **REDCapPRO**. If checked, a link will appear on the login page that will take the participant to a registration page.                                                                                |   Unchecked   |
+| **Auto-Enroll Upon Self-Registration**                              | Checkbox | Participants will be automatically enrolled in this project when they self-register.                                                                                                                                                                                       |   Unchecked   |
+| **Email address to notify when new participants are auto-enrolled** |  Email   | If auto-enroll is enabled, this email address will be notified when a participant self-registers and is auto-enrolled.                                                                                                                                                     |    (blank)    |
+| **Study Contact Name**                                              |   Text   | The name of the study staff member that study participants should contact with questions/problems. This will appear in emails sent to the participant                                                                                                                      |      N/A      |
+| **Study Contact Email**                                             |  Email   | Email address that participants should contact.                                                                                                                                                                                                                            |      N/A      |
+| **Study Contact Phone**                                             |  Phone   | Phone number that participants should contact.                                                                                                                                                                                                                             |      N/A      |
 ### Logs
 This tab allows Managers to view and export the logs of **REDCapPRO** relevant to this study
 project. It only contains information about actions taken in this project, on
 surveys tied to this project, or certain actions taken regarding participants enrolled in this project. This tab is only accessible by Managers.
+
+## Self-Registration
+
+![self-registration](images/screenshots/create-account.png)
+
+As of REDCapPRO v2.1.0, the option exists to allow participants to register themselves with **REDCapPRO**. This is done by enabling the `Allow Self-Registration` option in both the system configuration and in the project settings. When this option is enabled, a **"Don't have an account? Create one"** link will appear on the login page that will take the participant to a registration page.
 
 ## REDCapPRO Control Center Menu
 
@@ -210,10 +259,16 @@ Control Center. Being in the Control Center, it is only accessible to REDCap
 administrators. It has the following sections:
 
 ### Projects
+
+![cc-projects](images/screenshots/cc_projects.png)
+
 This table shows all of the REDCap projects that currently have **REDCapPRO**
 enabled and some basic information about them.
 
 ### Participants
+
+![cc-participants](images/screenshots/cc_participants.png)
+
 This table lists all registered participants in the system. It lists every study
 project that each participant is enrolled in. It allows the following actions to
 be taken on a participant:
@@ -226,11 +281,17 @@ be taken on a participant:
 | Reactivate/Deactivate Account | A deactivated participant is unable to be enrolled in additional projects. However, they are still able to interact normally with projects to which they are already enrolled. |
 
 ### Staff
+
+![cc-staff](images/screenshots/cc_staff.png)
+
 This table lists all REDCap users that have a `role` above No Access in any 
 **REDCapPRO** study project. It lists all projects that each user has access to with
 a `role` of Monitor or above.
 
 ### Logs
+
+![cc-logs](images/screenshots/cc_logs.png)
+
 Similar to the project's Logs tab, this lists all logs made by **REDCapPRO** across
 the system.
 
@@ -290,7 +351,7 @@ information about **REDCapPRO** participants. These are described below:
 
 | Version | Release Date | Description                                                                                                   |
 | ------- | ------------ | ------------------------------------------------------------------------------------------------------------- |
-| 2.1.0   | 2023-10-10   | Feature release - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.1.0)
+| 2.1.0   | 2023-10-10   | Feature release - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.1.0)               |
 | 2.0.1   | 2023-10-09   | Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.0.1)                       |
 | 2.0.0   | 2023-10-09   | Major release - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.0.0)                 |
 | 1.0.1   | 2022-04-01   | Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/1.0.1)                       |
