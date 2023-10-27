@@ -49,7 +49,13 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     // Check reCAPTCHA if enabled
     if ( isset($recaptcha_site_key) ) {
         $recpatch_secret_key = $module->framework->getSystemSetting('recaptcha-secret-key');
-        $recaptcha_response  = trim(filter_input(INPUT_POST, 'g-recaptcha-response'));
+        $recaptcha_response  = trim(filter_input(INPUT_POST, 'g-recaptcha-response', FILTER_VALIDATE_REGEXP, array(
+            "options" => array(
+                "regexp" => "/^[a-zA-Z0-9_-]+$/"
+            )
+        )));
+        var_dump($recaptcha_response);
+        exit;
 
         if ( empty($recaptcha_response) ) {
             $any_errors    = true;
