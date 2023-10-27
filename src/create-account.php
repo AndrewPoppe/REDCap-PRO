@@ -54,8 +54,6 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 "regexp" => "/^[a-zA-Z0-9_-]+$/"
             )
         )));
-        var_dump($recaptcha_response);
-        exit;
 
         if ( empty($recaptcha_response) ) {
             $any_errors    = true;
