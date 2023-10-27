@@ -247,6 +247,7 @@ class REDCapPRO extends AbstractExternalModule
                 echo "</p>";
                 $ui->EndParticipantPage();
                 $this->exitAfterHook();
+                return;
             }
 
             // Determine whether participant is in the appropriate DAG
@@ -276,6 +277,7 @@ class REDCapPRO extends AbstractExternalModule
                     echo "</p>";
                     $ui->EndParticipantPage();
                     $this->exitAfterHook();
+                    return;
                 }
             }
 
@@ -354,6 +356,7 @@ class REDCapPRO extends AbstractExternalModule
             $auth->set_survey_active_state(TRUE);
             header("location: " . $this->getUrl("src/login.php", true) . "&s=${survey_hash}");
             $this->exitAfterHook();
+            return;
         }
     }
 
