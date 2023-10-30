@@ -37,8 +37,8 @@ class AjaxHandler
         try {
             return $this->{$this->method}();
         } catch ( \Throwable $e ) {
-            $this->module->logError($e->getMessage(), $e);
-            return $this->module->escape($e->getMessage());
+            $this->module->logError($e->getMessage() ?? 'Error', $e);
+            return $this->module->escape($e->getMessage() ?? 'Error');
         }
     }
 
@@ -72,8 +72,8 @@ class AjaxHandler
     private function getParticipants()
     {
         $role = $this->module->getUserRole($this->module->safeGetUsername());
-        if ( $role < 2 ) {
-            throw new REDCapProException("You must be at least a normal user to view this page.");
+        if ( $role < 1 ) {
+            throw new REDCapProException("You must be at least a monitor to view this page.");
         }
 
         $participants     = [];

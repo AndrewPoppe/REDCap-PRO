@@ -971,6 +971,9 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function logError(string $message, \Throwable $e)
     {
+        if (empty($message)) {
+            $message = 'Error';
+        }
         $params = [
             "error_code"    => $e->getCode(),
             "error_message" => $e->getMessage(),
@@ -981,7 +984,7 @@ class REDCapPRO extends AbstractExternalModule
             "module_token"  => $this->getModuleToken()
         ];
         if ( isset($e->rcpro) ) {
-            $params = array_merge($params, $e->rcpro);
+            $params = array_merge($params, ['rcpro' => $e->rcpro]);
         }
         $this->logEvent($message, $params);
     }
@@ -1016,7 +1019,7 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return mixed
      */
-    public function logEvent(string $message, $parameters)
+    public function logEvent(string $message, array $parameters)
     {
         $parameters["module_token"] = $this->getModuleToken();
         $parameterNames             = array_keys($parameters) ?? [];

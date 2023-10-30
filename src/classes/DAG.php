@@ -29,12 +29,8 @@ class DAG
         $allDags = array(); // FIX: PHP 8 issue array_keys will no longer gracefully work with a null
 
         // Get all dags in project
-        //$allDags = array_keys($this->getProjectDags());
-        $dagData = $this->getProjectDags(); // calls:  \REDCap::getGroupNames()    // If no groups exist, return FALSE
-
-        if ( $dagData !== false ) {
-            $allDags = array_keys($dagData);
-        }
+        $dagData = $this->getProjectDags();
+        $allDags = array_keys($dagData);
 
         // If there are none, then the user can't have any
         if ( count($allDags) === 0 ) {
@@ -113,16 +109,17 @@ class DAG
     /**
      * Get all DAGs in the current project
      * 
-     * This is clearly just a wrapper around the REDCap module's method.
-     * It is included here for consistency with other DAG methods.
-     * 
-     * @return mixed array of group names with their corresponding group_id's as
-     * array keys. Returns FALSE if no data access groups exist for the current 
-     * project. 
+     * @return array array of group names with their corresponding group_id's as
+     * array keys. Returns empty array if no data access groups exist for the current 
+     * project.
      */
     public function getProjectDags()
     {
-        return \REDCap::getGroupNames();
+        $dags = \REDCap::getGroupNames();
+        if ( $dags === false ) {
+            $dags = array();
+        }
+        return $dags;
     }
 
     public function getDagName($dag_id)

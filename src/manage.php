@@ -327,7 +327,7 @@ $module->initializeJavascriptModuleObject();
                                 <th id="rcpro_lname" class="dt-center">Last Name</th>
                                 <th id="rcpro_email">Email</th>
                             <?php } ?>
-                            <?php if ( $projectHasDags ) { ?>
+                            <?php if ( $role > 1 && $projectHasDags ) { ?>
                                 <th id="rcpro_dag" class="dt-center">Data Access Group</th>
                             <?php } ?>
                         </tr>
@@ -554,7 +554,7 @@ $module->initializeJavascriptModuleObject();
                     },
                     className: 'dt-center'
                 });
-            } else {
+            } else if (RCPRO_module.role > 1 && RCPRO_module.projectHasDags) {
                 columnDef.push({
                     title: 'Data Access Group',
                     data: 'dag_name',

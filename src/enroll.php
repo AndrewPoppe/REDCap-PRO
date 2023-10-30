@@ -53,7 +53,8 @@ if ( isset($_POST["id"]) && isset($project_id) ) {
         $redcap_dag = $dagHelper->getCurrentDag($module->safeGetUsername(), $module->framework->getProjectId());
         $dag        = filter_var($_POST["dag"], FILTER_VALIDATE_INT);
         $dag        = $dag === 0 ? null : $dag;
-        if ( (!empty($redcap_dag) && $dag !== $redcap_dag) || !in_array($dag, array_keys($dagHelper->getProjectDags())) ) {
+        $project_dags = $dagHelper->getProjectDags();
+        if ( (!empty($redcap_dag) && $dag !== $redcap_dag) || !in_array($dag, array_keys( $project_dags )) ) {
             $dag = $redcap_dag;
         }
         $pid            = intval($project_id);
@@ -129,7 +130,7 @@ $module->initializeJavascriptModuleObject();
                     </div>
                 </div>
 
-                <?php if ( $dagHelper->getProjectDags() ) {
+                <?php if ( count($dagHelper->getProjectDags()) > 0) {
                     $userDag = $dagHelper->getCurrentDag($module->safeGetUsername(), $module->framework->getProjectId());
                     if ( isset($userDag) && $userDag != "" ) {
                         $dagName = isset($userDag) ? \REDCap::getGroupNames(false, $userDag) : "No Assignment";

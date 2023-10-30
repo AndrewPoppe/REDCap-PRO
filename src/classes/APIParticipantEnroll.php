@@ -120,8 +120,7 @@ class APIParticipantEnroll extends APIHandler
     private function checkDag(int $dag) : void
     {
         $dagHelper  = new DAG($this->module);
-        $dags       = $dagHelper->getProjectDags();
-        $this->dags = $dags === false ? [] : $dags;
+        $this->dags       = $dagHelper->getProjectDags();
         $dagIds     = array_keys($this->dags);
         $userDag    = $dagHelper->getCurrentDag($this->user->getUsername(), $this->project->getProjectId());
 
