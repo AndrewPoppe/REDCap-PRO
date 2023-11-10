@@ -347,10 +347,12 @@ information about **REDCapPRO** participants. These are described below:
 | @RCPRO-EMAIL    |        text         |          email           | If @RCPRO-USERNAME is present on the instrument, then when it is selected the field with the @RCPRO-EMAIL tag will be populated with the participant's email address |
 | @RCPRO-FNAME    |        text         |           none           | Like @RCPRO-EMAIL, but the field will be populated with the participant's first name                                                                                 |
 | @RCPRO-LNAME    |        text         |           none           | Likewise, with last name                                                                                                                                             |
+
 ## Changelog
 
 | Version | Release Date | Description                                                                                                   |
 | ------- | ------------ | ------------------------------------------------------------------------------------------------------------- |
+| 2.1.3   | 2023-11-10   | Minor Change to UI Text - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.1.3)       |
 | 2.1.2   | 2023-10-30   | Major Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.1.2)                 |
 | 2.1.1   | 2023-10-27   | Minor Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.1.1)                 |
 | 2.1.0   | 2023-10-10   | Feature release - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.1.0)               |
