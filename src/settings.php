@@ -249,9 +249,10 @@ $apiSettingsAdminOnly           = $module->getSystemSetting("api-require-admin")
                     </div>
                     <div class="card-body">
                         <div class="card-title">
-                            Should participants be allowed to use the API to register and enroll participants?<br>
+                            Should users be allowed to use the API to register and enroll participants?<br>
                             If so, they will be able to use their REDCap API tokens to register and enroll participants in
                             this project.<br>
+                            <a href="https://github.com/AndrewPoppe/REDCap-PRO#api" target="_blank" rel="noopener noreferrer">More information</a>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input <?php echo (!empty($api_err)) ? 'is-invalid' : ''; ?>"
