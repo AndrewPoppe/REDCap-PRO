@@ -205,42 +205,51 @@ class Auth
         }
     }
 
-    // MFA
-    public function generate_mfa_code()
-    {
-        $code                                         = random_int(100000, 999999);
-        $_SESSION[$this->APPTITLE . "_mfa_code"]      = $code;
-        $_SESSION[$this->APPTITLE . "_mfa_code_time"] = time();
-        return $code;
-    }
+    ///////////////////
+    /////   MFA   /////
+    ///////////////////
 
-    public function get_mfa_code()
-    {
-        return $_SESSION[$this->APPTITLE . "_mfa_code"] ?? $this->generate_mfa_code();
-    }
 
-    public function get_mfa_code_time()
-    {
-        return $_SESSION[$this->APPTITLE . "_mfa_code_time"];
-    }
-
-    public function clear_mfa_code()
-    {
-        unset($_SESSION[$this->APPTITLE . "_mfa_code"]);
-        unset($_SESSION[$this->APPTITLE . "_mfa_code_time"]);
-    }
+    // --- General MFA --- \\
 
     public function is_mfa_verified()
     {
         return $_SESSION[$this->APPTITLE . "_mfa_code_verified"];
     }
 
-    public function check_mfa_code(int $code)
+
+    // --- Email MFA --- \\
+
+    public function generate_email_mfa_code()
     {
-        $codeMatches = $code === $this->get_mfa_code();
-        $codeExpired = time() - $this->get_mfa_code_time() > $this->mfa_duration;
+        $code                                         = random_int(100000, 999999);
+        $_SESSION[$this->APPTITLE . "_email_mfa_code"]      = $code;
+        $_SESSION[$this->APPTITLE . "_email_mfa_code_time"] = time();
+        return $code;
+    }
+
+    public function get_email_mfa_code()
+    {
+        return $_SESSION[$this->APPTITLE . "_email_mfa_code"] ?? $this->generate_email_mfa_code();
+    }
+
+    public function get_email_mfa_code_time()
+    {
+        return $_SESSION[$this->APPTITLE . "_email_mfa_code_time"];
+    }
+
+    public function clear_email_mfa_code()
+    {
+        unset($_SESSION[$this->APPTITLE . "_email_mfa_code"]);
+        unset($_SESSION[$this->APPTITLE . "_email_mfa_code_time"]);
+    }
+
+    public function check_email_mfa_code(int $code)
+    {
+        $codeMatches = $code === $this->get_email_mfa_code();
+        $codeExpired = time() - $this->get_email_mfa_code_time() > $this->mfa_duration;
         if ( $codeExpired ) {
-            $this->clear_mfa_code();
+            $this->clear_email_mfa_code();
         }
         $success = $codeMatches && !$codeExpired;
         if ( $success ) {
@@ -248,4 +257,35 @@ class Auth
         }
         return $success;
     }
+
+    // --- TOTP Authenticator MFA --- \\
+
+    public function get_totp_mfa_qr_url(string $otpauth)
+    {
+        return APP_PATH_WEBROOT_FULL . "redcap_v" . REDCAP_VERSION . "/Authentication/generate_qrcode.php?value=" . urlencode($otpauth);
+    }
+
+    public function create_totp_mfa_secret() {
+        $ga = new \GoogleAuthenticator();
+        $secret = $ga->createSecret();
+        return $secret;
+    }
+
+    public function create_totp_mfa_otpauth(string $email, string $secret) {
+        $scheme = 'otpauth';
+        $type = 'totp';
+        $issuer = urlencode($this->APPTITLE . ' (' . SERVER_NAME . ')');
+        $accountName = urlencode($email);
+        $otpauth = $scheme.'://'.$type.'/'.$issuer.':'.$accountName.'?secret='.$secret.'&issuer='.$issuer;
+        return $otpauth;
+    }
+
+    public function check_totp_mfa_code(string $code, REDCapPRO $module) {
+        $ga = new \GoogleAuthenticator();
+        $secret = $this->get_totp_mfa_secret($module);
+        $codeIsCorrect = $ga->verifyCode($secret, $code, 2);
+        return $codeIsCorrect;
+    }
+
+
 }

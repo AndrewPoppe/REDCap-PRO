@@ -299,3 +299,7 @@ transform: rotate(0deg);
 transform: rotate(360deg);
 }
 }
+
+.text-muted-more {
+    color: #aaa;
+}

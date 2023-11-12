@@ -39,4 +39,19 @@ $ui->ShowHeader("Home");
 </div>
 
 <?php
+
+try {
+    $auth = new Auth('REDCapPRO');
+    $email = 'test@test.com';
+    $secret = $auth->create_totp_mfa_secret($email);
+    $otpauth = $auth->create_totp_mfa_otpauth($email, $secret);
+
+    var_dump($otpauth);
+
+    print "<img src='".$auth->get_totp_mfa_qr_url($otpauth)."'>";
+
+} catch (\Throwable $e) {
+    echo "". $e->getMessage() ."";
+}
+
 include_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';

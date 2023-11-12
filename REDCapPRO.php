@@ -213,9 +213,6 @@ class REDCapPRO extends AbstractExternalModule
 
             // Check MFA Token
             if ( $settings->mfaEnabled((int) $project_id) && !$auth->is_mfa_verified() ) {
-                $code             = $auth->get_mfa_code();
-                $participantEmail = $participantHelper->getEmail($auth->get_participant_id());
-                $this->sendMfaTokenEmail($participantEmail, $code);
                 header("location: " . $this->framework->getUrl("src/mfa.php", true));
                 return;
             }

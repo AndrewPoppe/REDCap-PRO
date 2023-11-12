@@ -88,8 +88,8 @@ class ProjectSettings
             $files = glob($path . "*.{i,I}{n,N}{i,I}", GLOB_BRACE);
             foreach ( $files as $filename ) {
                 if ( is_file($filename) ) {
-                    $lang         = pathinfo($filename, PATHINFO_FILENAME);
-                    $langs[$lang] = $filename;
+                    $thisLang         = pathinfo($filename, PATHINFO_FILENAME);
+                    $langs[$thisLang] = $filename;
                 }
             }
         }
@@ -125,6 +125,24 @@ class ProjectSettings
 
         return $mfaEnabledSystem === true && $mfaEnabledProject === true;
     }
+
+    /**
+     * Checks whether an authenticator app is enabled for this project
+     * 
+     * @param int $pid The redcap project ID
+     * 
+     * @return bool Whether an authenticator app is enabled for this project
+     */
+    public function mfaAuthenticatorAppEnabled(int $pid)
+    {
+        $mfaAuthenticatorAppEnabledSystem  = $this->module->getSystemSetting("mfa-authenticator-app");
+        $mfaAuthenticatorAppEnabledProject = $this->module->getProjectSetting("mfa-authenticator-app", $pid);
+
+        return $mfaAuthenticatorAppEnabledSystem === true && $mfaAuthenticatorAppEnabledProject === true;
+    }
+
+
+
 
     public function shouldAllowSelfRegistration(int $pid) : bool
     {

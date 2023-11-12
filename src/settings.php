@@ -59,6 +59,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
         // Validate MFA
         $new_settings["mfa"] = $post_settings["mfa"] === "true";
+        $new_settings["mfa-authenticator-app"] = $post_settings["mfa-authenticator-app"] === "on";
 
         // Validate API
         $new_settings["api"] = $post_settings["api"] === "true";
@@ -115,6 +116,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 $settings                       = $module->getProjectSettings();
 $preventEmailLoginSystem        = $module->getSystemSetting("prevent-email-login-system");
 $allowMfa                       = $module->getSystemSetting("mfa");
+$allowMfaAuthenticatorApp       = $module->getSystemSetting("mfa-authenticator-app");
+$mfaAuthenticatorAppEnabled     = $projectSettings->mfaAuthenticatorAppEnabled($project_id);
 $project_id                     = (int) $module->framework->getProjectId();
 $allowSelfRegistrationSystem    = $module->framework->getSystemSetting("allow-self-registration-system");
 $allowAutoEnrollSystem          = (bool) $module->framework->getSystemSetting("allow-auto-enroll-upon-self-registration-system");
@@ -186,7 +189,7 @@ $apiSettingsAdminOnly           = $module->getSystemSetting("api-require-admin")
                             <input
                                 class="form-check-input <?php echo (!empty($prevent_email_login_err)) ? 'is-invalid' : ''; ?>"
                                 type="checkbox" id="prevent-email-login-check" <?= $checked ?> onclick="(function(){
-                                $('#prevent-email-login').val($('#prevent-email-login-check')[0].checked);
+                                $('#prevent-email-login').val($('#prevent-email-login-check').get(0).checked);
                             })()">
                             <label class="form-check-label" style="vertical-align:middle;"
                                 for="prevent-email-login-check">Checking this will require that they login using their
@@ -203,6 +206,7 @@ $apiSettingsAdminOnly           = $module->getSystemSetting("api-require-admin")
             <?php }
             if ( $allowMfa ) {
                 $mfaChecked = $settings["mfa"] ? "checked" : "";
+                $mfaAuthenticatorAppChecked = $mfaAuthenticatorAppEnabled ? "checked" : "";
                 ?>
                 <div class="card">
                     <div class="card-header">
@@ -214,15 +218,20 @@ $apiSettingsAdminOnly           = $module->getSystemSetting("api-require-admin")
                     </div>
                     <div class="card-body">
                         <div class="card-title">
-                            Should participants be required to use multi-factor authentication (MFA) when logging in?<br>
-                            If so, they will be required to enter a code sent to their email address after entering their
-                            username and password.<br>This is an additional security measure to prevent unauthorized access.
+                            <strong>Should participants be required to use multi-factor authentication (MFA) when logging in?</strong><br>
+                            <em>If so, they will be required to enter a code sent to their email address after entering their
+                            username and password.<br>This is an additional security measure to prevent unauthorized access.</em>
                             <br>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input <?php echo (!empty($mfa_err)) ? 'is-invalid' : ''; ?>"
                                 type="checkbox" id="mfa-check" <?= $mfaChecked ?> onclick="(function(){
-                                $('#mfa').val($('#mfa-check')[0].checked);
+                                    const checked = $('#mfa-check').get(0).checked;
+                                $('#mfa').val(checked);
+                                <?php if ( $allowMfaAuthenticatorApp ) { ?>
+                                    $('#mfa-authenticator-app').attr('disabled', !checked);
+                                    $('#mfa-authenticator-app-title').toggleClass('text-muted-more', !checked);
+                                <?php } ?>
                             })()">
                             <label class="form-check-label" style="vertical-align:middle;" for="mfa-check">Checking this
                                 will require MFA.</label>
@@ -232,6 +241,21 @@ $apiSettingsAdminOnly           = $module->getSystemSetting("api-require-admin")
                                 <?php echo $mfa_err; ?>
                             </span>
                         </div>
+                        <?php if ( $allowMfaAuthenticatorApp ) { ?>
+                            <br><br>
+                            <div class="card-title" id="mfa-authenticator-app-title">
+                                <strong>Should an authenticator app such as Google Authenticator or Microsoft Authenticator be allowed for MFA?</strong><br>
+                                <em>Checking this option will allow participants to use an authenticator app to generate their MFA code.</em>
+                            </div>
+                            <div class="form-check" id="auto-enroll-settings">
+                                <input class="form-check-input"
+                                    name="mfa-authenticator-app" type="checkbox"
+                                    id="mfa-authenticator-app" <?= $mfaAuthenticatorAppChecked ?>
+                                >
+                                <label class="form-check-label" style="vertical-align:middle;"
+                                    for="mfa-authenticator-app">Allow MFA Authenticator App</label>
+                            </div>
+                        <?php } ?>
                     </div>
                 </div>
                 <br>
@@ -257,7 +281,7 @@ $apiSettingsAdminOnly           = $module->getSystemSetting("api-require-admin")
                         <div class="form-check">
                             <input class="form-check-input <?php echo (!empty($api_err)) ? 'is-invalid' : ''; ?>"
                                 type="checkbox" id="api-check" <?= $apiChecked ?> onclick="(function(){
-                                $('#api').val($('#api-check')[0].checked);
+                                $('#api').val($('#api-check').get(0).checked);
                             })()">
                             <label class="form-check-label" style="vertical-align:middle;" for="api-check">Checking this
                                 will allow users to use the API.</label>
@@ -301,12 +325,14 @@ $apiSettingsAdminOnly           = $module->getSystemSetting("api-require-admin")
                                 id="allow-self-registration-form-check" <?= $allowSelfRegistrationChecked ?>
                                 name="allow-self-registration" onchange="(function(){
                                     <?php if ( $allowAutoEnrollSystem ) { ?>
-                                        const isChecked = $('#allow-self-registration-form-check')[0].checked;
+                                        const isChecked = $('#allow-self-registration-form-check').get(0).checked;
                                         if (!isChecked) {
-                                            $('#auto-enroll-upon-self-registration')[0].checked = false;
+                                            $('#auto-enroll-upon-self-registration').get(0).checked = false;
                                             $('#auto-enroll-notification-email').attr('disabled', true);
+                                            $('#auto-enroll-notification-email-label').toggleClass('text-muted-more', true);
                                         }
                                         $('#auto-enroll-upon-self-registration').attr('disabled', !isChecked);
+                                        $('#auto-enroll-settings-title').toggleClass('text-muted-more', !isChecked);
                                     <?php } ?>
                             })()">
                             <label class="form-check-label" style="vertical-align:middle;"
@@ -317,7 +343,7 @@ $apiSettingsAdminOnly           = $module->getSystemSetting("api-require-admin")
                         </div>
                         <?php if ( $allowAutoEnrollSystem ) { ?>
                             <br><br>
-                            <div class="card-title">
+                            <div class="card-title" id="auto-enroll-settings-title">
                                 <strong>Should participants be automatically enrolled when they self-register?</strong><br>
                                 <em>Checking this option will automatically enroll a participant in your study when they
                                     self-register.</em>
@@ -327,8 +353,9 @@ $apiSettingsAdminOnly           = $module->getSystemSetting("api-require-admin")
                                     name="auto-enroll-upon-self-registration" type="checkbox"
                                     id="auto-enroll-upon-self-registration" <?= $autoEnrollUponSelfRegistrationChecked ?>
                                     onchange="(function(){
-                                    const isChecked = $('#auto-enroll-upon-self-registration')[0].checked;
+                                    const isChecked = $('#auto-enroll-upon-self-registration').get(0).checked;
                                     $('#auto-enroll-notification-email').attr('disabled', !isChecked);
+                                    $('#auto-enroll-notification-email-label').toggleClass('text-muted-more', !isChecked);
                             })()">
                                 <label class="form-check-label" style="vertical-align:middle;"
                                     for="auto-enroll-upon-self-registration">Auto-Enroll Upon Self-Registration</label>
@@ -338,7 +365,7 @@ $apiSettingsAdminOnly           = $module->getSystemSetting("api-require-admin")
                             </div>
                             <br>
                             <div class="form-group">
-                                <label>Email address to notify when new participants are auto-enrolled</label>
+                                <label id="auto-enroll-notification-email-label">Email address to notify when new participants are auto-enrolled</label>
                                 <input type="email" name="auto-enroll-notification-email" id="auto-enroll-notification-email"
                                     class="form-control <?= (!empty($auto_enroll_notification_err) ? 'is-invalid' : '') ?>"
                                     value="<?= $autoEnrollNotificationEmail ?>">
@@ -412,13 +439,21 @@ $apiSettingsAdminOnly           = $module->getSystemSetting("api-require-admin")
                 $('#rcpro-submit-button').attr("disabled", null);
             });
             <?php if ( $allowAutoEnrollSystem ) { ?>
-                const isChecked = $('#allow-self-registration-form-check')[0].checked;
+                const isChecked = $('#allow-self-registration-form-check').get(0).checked;
                 if (!isChecked) {
-                    $('#auto-enroll-upon-self-registration')[0].checked = false;
+                    $('#auto-enroll-upon-self-registration').get(0).checked = false;
                 }
 
                 $('#auto-enroll-upon-self-registration').attr('disabled', !isChecked);
-                $('#auto-enroll-notification-email').attr('disabled', !$('#auto-enroll-upon-self-registration')[0].checked);
+                $('#auto-enroll-settings-title').toggleClass('text-muted-more', !isChecked);
+                const autoEnrollChecked = $('#auto-enroll-upon-self-registration').get(0).checked;
+                $('#auto-enroll-notification-email').attr('disabled', !autoEnrollChecked);
+                $('#auto-enroll-notification-email-label').toggleClass('text-muted-more', !autoEnrollChecked);
+            <?php } ?>
+            <?php if ($allowMfa && $allowMfaAuthenticatorApp) { ?>
+                const mfaChecked = $('#mfa-check').get(0).checked;
+                $('#mfa-authenticator-app').attr('disabled', !mfaChecked);
+                $('#mfa-authenticator-app-title').toggleClass('text-muted-more', !mfaChecked);
             <?php } ?>
         });
     })(window.jQuery, window, document);
