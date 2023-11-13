@@ -23,6 +23,11 @@ if ( !$settings->mfaEnabled((int) $module->framework->getProjectId()) ) {
     return;
 }
 
+// Initialize Participant Helper and get basic participant info
+$participantHelper = new ParticipantHelper($module);
+$rcpro_participant_id = (int) $auth->get_participant_id();
+$participantEmail = $participantHelper->getEmail($rcpro_participant_id);
+
 // Processing form data when form is submitted
 $isPost = $_SERVER["REQUEST_METHOD"] == "POST";
 if ( $isPost ) {
@@ -35,7 +40,13 @@ if ( $isPost ) {
         if ($emailMfa) {
             $codeIsCorrect = $auth->check_email_mfa_code($code);
         } else {
-            $codeIsCorrect = $auth->check_totp_mfa_code($code);
+            // Authenticator App
+            $mfa_secret = $participantHelper->getMfaSecret($rcpro_participant_id);
+            if (empty($mfa_secret)) {
+                $mfa_secret = $auth->create_totp_mfa_secret();
+                $participantHelper->storeMfaSecret($rcpro_participant_id, $mfa_secret);
+            }
+            $codeIsCorrect = $auth->check_totp_mfa_code($code, $mfa_secret);
         }
         if ( $codeIsCorrect ) {
             // Redirect user to appropriate page
@@ -58,20 +69,18 @@ if ( $isPost ) {
     }
 }
 
-$participantHelper = new ParticipantHelper($module);
-$participantEmail = $participantHelper->getEmail($auth->get_participant_id());
-
 // Check if user initiated a resend of email MFA code or if email is the only MFA method enabled
 $resend = filter_input(INPUT_GET, "resend", FILTER_VALIDATE_BOOLEAN);
 $mfaAuthenticatorAppEnabled = $settings->mfaAuthenticatorAppEnabled($project_id);
 if ( $resend || (!$isPost && !$mfaAuthenticatorAppEnabled)) {
     $auth->clear_email_mfa_code();
-    $code             = $auth->get_email_mfa_code();
+    $code = $auth->get_email_mfa_code();
     $module->sendMfaTokenEmail($participantEmail, $code);
 }
 
 // Which should be shown?
-$showEmail = $resend || $emailMfa;
+$showEmail = $resend || $emailMfa || !$mfaAuthenticatorAppEnabled;
+$showAuthenticatorApp = !$showEmail && $isPost;
 
 // This method starts the html doc
 $ui = new UI($module);
@@ -81,7 +90,7 @@ $ui->ShowParticipantHeader('');
 <!-- Email MFA only -->
 <!-- Either it is the only MFA method enabled or the user chose Email MFA -->
 
-<div id="emailMFAContainer" style="display: <?= $showEmail ? 'block' : 'none' ?>;">
+<div id="emailMFAContainer" class="mfaOptionContainer" style="display: <?= $showEmail ? 'block' : 'none' ?>;">
     <div style="text-align: center;">
         <span style="font-size: large;">
             <?= $resend ? $module->tt("mfa_resend1") : $module->tt("mfa_text1") ?>
@@ -103,9 +112,9 @@ $ui->ShowParticipantHeader('');
                 <?= $mfa_err; ?>
             </span>
         </div>
-        <div class="form-group d-grid">
-            <?= $mfaAuthenticatorAppEnabled ? '<button type="button" class="btn btn-secondary" onclick="showMFAChoice();">Cancel</button>' : '' ?>
-            <input type="submit" class="btn btn-primary" value="<?= 'Submit' ?? $module->tt("mfa_button_text") ?>">
+        <div class="form-group row">
+            <?= $mfaAuthenticatorAppEnabled ? '<div class="col-6"><button type="button" class="btn btn-secondary btn-mfa-control" onclick="window.rcpro.showMFAChoice();">'. $module->tt("mfa_cancel_button_text") . '</button></div>' : '' ?>
+            <div class="col"><button type="submit" class="btn btn-primary btn-mfa-control"><?= $module->tt("mfa_submit_button_text") ?></button></div>
         </div>
         <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
         <input type="hidden" name="emailMfa" value="true">
@@ -120,18 +129,58 @@ $ui->ShowParticipantHeader('');
 
 <!-- Authenticator App MFA only -->
 <!-- User chose Authenticator App MFA -->
-<div id="mfaAuthenticatorContainer" style="display: none;">
+<div id="mfaAuthenticatorContainer" class="mfaOptionContainer" style="display: <?= $showAuthenticatorApp ? 'block' : 'none' ?>;">
     <?php if ($mfaAuthenticatorAppEnabled) { ?>
-        Testing Authenticator App MFA
+    <div style="text-align: center;">
+        <h4>
+            <div class="row align-items-center" onclick="window.rcpro.chooseAuthenticatorAppMFA();">
+            <div class="col-2">
+                <span class="fa-layers fa-fw fa-2x" style="color: #900000;">
+                    <i class="fa-solid fa-mobile-screen" data-fa-transform="grow-4"></i>
+                    <i class="fa-solid fa-lock-hashtag" data-fa-transform="shrink-8 up-2"></i>
+                </span>
+            </div>
+            <div class="col">
+                <?= $module->framework->tt("mfa_text4")?>
+            </div>    
+        </h4>
+        <span style="font-size: large;">
+            <?= $module->framework->tt("mfa_text5") ?>
+        </span>
+    </div>
+
+    <form action="<?= $module->getUrl("src/mfa.php", true); ?>" method="post">
+        <div class="form-group">
+            <label>
+                <?= $module->tt("mfa_text6") ?>
+            </label>
+            <input type="text" name="mfa_token" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>">
+            <span class="invalid-feedback">
+                <?= $mfa_err; ?>
+            </span>
+        </div>
+        <div class="form-group row">
+            <div class="col-6"><button type="button" class="btn btn-secondary btn-mfa-control" onclick="window.rcpro.showMFAChoice();"><?=$module->tt("mfa_cancel_button_text")?></button></div>
+            <div class="col"><button type="submit" class="btn btn-primary btn-mfa-control"><?= $module->tt("mfa_submit_button_text") ?></button></div>
+        </div>
+        <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
+        <input type="hidden" name="authApp" value="true">
+    </form>
+    <hr>
+    <div style="text-align: center;">
+        <?= $module->tt('mfa_info1') ?> <a href="javascript:;" onclick="window.rcpro.showMFAInfo();return false;">
+            <?= $module->tt('mfa_info2') ?>
+        </a>
+    </div>
     <?php } ?>
 </div>
 
 
 <!-- Choose MFA Method -->
-<div id="mfaChoiceContainer" style="display: <?= $showEmail ? 'none' : 'block' ?>;">
+<div id="mfaChoiceContainer" style="display: <?= ($showEmail || $showAuthenticatorApp) ? 'none' : 'block' ?>;">
     <h4>Choose MFA Method</h4>
     <div class="container" style="border-collapse: collapse;" >
-            <div class="row align-items-center p-2 mfa-option" onclick="chooseAuthenticatorAppMFA();">
+            <div class="row align-items-center p-2 mfa-option" onclick="window.rcpro.chooseAuthenticatorAppMFA();">
                 <div class="col-1">
                     <span class="fa-layers fa-fw fa-2x" style="color: #900000;">
                         <i class="fa-solid fa-mobile-screen" data-fa-transform="grow-4"></i>
@@ -146,7 +195,7 @@ $ui->ShowParticipantHeader('');
                     </span>
                 </div>
             </div>
-            <div class="row align-items-center p-2 mfa-option" onclick="chooseEmailMFA();">
+            <div class="row align-items-center p-2 mfa-option" onclick="window.rcpro.chooseEmailMFA();">
                 <div class="col-1">
                     <span class="fa-layers fa-fw fa-2x" style="color: #900000;">
                         <i class="fa-solid fas fa-envelope"></i>
@@ -196,11 +245,45 @@ $ui->ShowParticipantHeader('');
         text-shadow: 0px 0px 5px #900000;
     }
 
-    div#emailMFAContainer {
+    div.mfaOptionContainer  {
         width: 360px;
         margin: auto;
     }
+
+    button.btn-mfa-control {
+        width: 100%;
+    }
 </style>
 <script src="<?= $module->framework->getUrl('lib/jQuery/jquery-3.7.1.min.js', true) ?>"></script>
-<script defer src="<?= $module->framework->getUrl('src/js/mfa.js', true) ?>"></script>
+<?php $module->framework->initializeJavascriptModuleObject(); ?>
+<script>
+
+    window.rcpro = <?= $module->framework->getJavascriptModuleObjectName() ?>;
+
+    window.rcpro.chooseAuthenticatorAppMFA = function() {
+        $('#mfaChoiceContainer').hide();
+        $('#mfaAuthenticatorContainer').show();
+    }
+
+    window.rcpro.chooseEmailMFA = function() {
+        window.rcpro.ajax('sendMfaTokenEmail', [])
+            .then(function(result) {
+                if (!result) {
+                    console.log('Error sending email');
+                    return;
+                }
+                $('#mfaChoiceContainer').hide();
+                $('#emailMFAContainer').show();
+            });
+    }
+
+    window.rcpro.showMFAChoice = function() {
+        $('#mfaChoiceContainer').show();
+        $('#mfaAuthenticatorContainer').hide();
+        $('#emailMFAContainer').hide();
+    }
+
+
+
+</script>
 <?php $ui->EndParticipantPage(); ?>

@@ -18,7 +18,8 @@ class AjaxHandler
         "getStaffCC",
         "importCsvEnroll",
         "importCsvRegister",
-        "searchParticipantByEmail"
+        "searchParticipantByEmail",
+        "sendMfaTokenEmail"
     ];
     public function __construct(REDCapPRO $module, string $method, array $params, $project_id, $args = null)
     {
@@ -352,6 +353,20 @@ class AjaxHandler
             }
             return $response;
 
+        } catch ( \Throwable $e ) {
+            $this->module->logError($e->getMessage(), $e);
+        }
+    }
+
+    private function sendMfaTokenEmail() {
+        try {
+            $auth = new Auth($this->module->APPTITLE);
+            $auth->init();
+            $participantHelper = new ParticipantHelper($this->module);
+            $participantEmail = $participantHelper->getEmail($auth->get_participant_id());
+            $auth->clear_email_mfa_code();
+            $code = $auth->get_email_mfa_code();
+            return $this->module->sendMfaTokenEmail($participantEmail, $code);
         } catch ( \Throwable $e ) {
             $this->module->logError($e->getMessage(), $e);
         }

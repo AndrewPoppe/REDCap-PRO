@@ -280,11 +280,9 @@ class Auth
         return $otpauth;
     }
 
-    public function check_totp_mfa_code(string $code, REDCapPRO $module) {
+    public function check_totp_mfa_code(string $code, string $secret) {
         $ga = new \GoogleAuthenticator();
-        $secret = $this->get_totp_mfa_secret($module);
-        $codeIsCorrect = $ga->verifyCode($secret, $code, 2);
-        return $codeIsCorrect;
+        return $ga->verifyCode($secret, $code, 2);
     }
 
 

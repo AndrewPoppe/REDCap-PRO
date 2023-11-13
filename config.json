@@ -166,6 +166,9 @@
         "importCsvRegister",
         "searchParticipantByEmail"
     ],
+    "no-auth-ajax-actions": [
+        "sendMfaTokenEmail"
+    ],
     "action-tags": [
         {
             "tag": "@RCPRO-USERNAME",

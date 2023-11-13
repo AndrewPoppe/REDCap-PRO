@@ -690,4 +690,48 @@ class ParticipantHelper
             $this->module->logError("Error verifying password reset token", $e);
         }
     }
+
+    /**
+     * Retrieve stored MFA secret for given participant
+     * 
+     * @param int $rcpro_participant_id
+     * 
+     * @return string|NULL secret
+     */
+    public function getMfaSecret(int $rcpro_participant_id)
+    {
+        $SQL = "SELECT mfa_secret WHERE log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+        try {
+            $result = $this->module->queryLogs($SQL, [ $rcpro_participant_id ]);
+            $resultAssoc = $result->fetch_assoc();
+            if (!empty($resultAssoc)) {
+                return $resultAssoc["mfa_secret"];
+            }
+        } catch ( \Exception $e ) {
+            $this->module->logError("Error fetching MFA secret", $e);
+        }
+    }
+
+    /**
+     * Store MFA secret for given participant
+     * 
+     * @param int $rcpro_participant_id
+     * @param string $secret
+     * 
+     * @return bool|NULL success/failure/null
+     */
+    public function storeMfaSecret(int $rcpro_participant_id, string $secret) {
+        $SQL = "INSERT INTO redcap_external_modules_log_parameters (log_id, name, value) VALUES (?, 'mfa_secret', ?);";
+        try {
+            $res = $this->module->framework->query($SQL, [ $rcpro_participant_id, $secret]);
+            $this->module->logEvent("MFA Secret Stored", [
+                "rcpro_participant_id" => $rcpro_participant_id,
+                "rcpro_username"       => $this->getUserName($rcpro_participant_id)
+            ]);
+            return $res;
+        } catch ( \Exception $e ) {
+            $this->module->logError("Error storing MFA secret", $e);
+        }
+    }
+
 }
