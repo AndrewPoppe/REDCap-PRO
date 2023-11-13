@@ -149,7 +149,8 @@
         "src/forgot-username",
         "src/session_check",
         "src/create-account",
-        "src/api"
+        "src/api",
+        "src/generate_qr_code"
     ],
     "no-csrf-pages": [
         "src/api"
@@ -167,7 +168,8 @@
         "searchParticipantByEmail"
     ],
     "no-auth-ajax-actions": [
-        "sendMfaTokenEmail"
+        "sendMfaTokenEmail",
+        "showMFAInfo"
     ],
     "action-tags": [
         {

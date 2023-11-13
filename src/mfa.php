@@ -46,7 +46,16 @@ if ( $isPost ) {
                 $mfa_secret = $auth->create_totp_mfa_secret();
                 $participantHelper->storeMfaSecret($rcpro_participant_id, $mfa_secret);
             }
-            $codeIsCorrect = $auth->check_totp_mfa_code($code, $mfa_secret);
+            if ($module->framework->throttle('message = "Checked Authenticator App MFA Code" AND participant_id = ?', [$rcpro_participant_id],60, 10)) {
+                $codeIsCorrect = false;
+                $mfa_err = $module->tt("mfa_err3");
+            } else {
+                $codeIsCorrect = $auth->check_totp_mfa_code($code, $mfa_secret);
+                $module->framework->log("Checked Authenticator App MFA Code", [
+                    'participant_id' => $rcpro_participant_id,
+                    'codeIsCorrect' => $codeIsCorrect
+                ]);
+            }
         }
         if ( $codeIsCorrect ) {
             // Redirect user to appropriate page
@@ -62,7 +71,7 @@ if ( $isPost ) {
                 }
             }
         } else {
-            $mfa_err = $module->tt("mfa_err1");
+            $mfa_err = $mfa_err ?? $module->tt("mfa_err1");
         }
     } catch ( \Throwable $e ) {
         $module->log($e->getMessage());
@@ -92,6 +101,18 @@ $ui->ShowParticipantHeader('');
 
 <div id="emailMFAContainer" class="mfaOptionContainer" style="display: <?= $showEmail ? 'block' : 'none' ?>;">
     <div style="text-align: center;">
+        <h4>
+            <div class="row align-items-center">
+                <div class="col-2">
+                <span class="fa-layers fa-fw fa-2x" style="color: #900000;">
+                            <i class="fa-solid fas fa-envelope"></i>
+                        </span>
+                </div>
+                <div class="col">
+                    <?= $module->framework->tt("mfa_text7")?>
+                </div>
+            </div>    
+        </h4>
         <span style="font-size: large;">
             <?= $resend ? $module->tt("mfa_resend1") : $module->tt("mfa_text1") ?>
             <strong>
@@ -104,10 +125,10 @@ $ui->ShowParticipantHeader('');
 
     <form action="<?= $module->getUrl("src/mfa.php", true); ?>" method="post">
         <div class="form-group">
-            <label>
+            <!-- <label>
                 <?= $module->tt("mfa_text3") ?>
-            </label>
-            <input type="text" name="mfa_token" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>">
+            </label> -->
+            <input type="text" name="mfa_token" placeholder="<?= $module->framework->tt("mfa_text3") ?>" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>">
             <span class="invalid-feedback">
                 <?= $mfa_err; ?>
             </span>
@@ -127,22 +148,23 @@ $ui->ShowParticipantHeader('');
     </div>
 </div>
 
-<!-- Authenticator App MFA only -->
+<!-- Authenticator App MFA -->
 <!-- User chose Authenticator App MFA -->
 <div id="mfaAuthenticatorContainer" class="mfaOptionContainer" style="display: <?= $showAuthenticatorApp ? 'block' : 'none' ?>;">
     <?php if ($mfaAuthenticatorAppEnabled) { ?>
     <div style="text-align: center;">
         <h4>
-            <div class="row align-items-center" onclick="window.rcpro.chooseAuthenticatorAppMFA();">
-            <div class="col-2">
-                <span class="fa-layers fa-fw fa-2x" style="color: #900000;">
-                    <i class="fa-solid fa-mobile-screen" data-fa-transform="grow-4"></i>
-                    <i class="fa-solid fa-lock-hashtag" data-fa-transform="shrink-8 up-2"></i>
-                </span>
+            <div class="row align-items-center">
+                <div class="col-2">
+                    <span class="fa-layers fa-fw fa-2x" style="color: #900000;">
+                        <i class="fa-solid fa-mobile-screen" data-fa-transform="grow-4"></i>
+                        <i class="fa-solid fa-lock-hashtag" data-fa-transform="shrink-8 up-2"></i>
+                    </span>
+                </div>
+                <div class="col">
+                    <?= $module->framework->tt("mfa_text4")?>
+                </div>    
             </div>
-            <div class="col">
-                <?= $module->framework->tt("mfa_text4")?>
-            </div>    
         </h4>
         <span style="font-size: large;">
             <?= $module->framework->tt("mfa_text5") ?>
@@ -151,10 +173,10 @@ $ui->ShowParticipantHeader('');
 
     <form action="<?= $module->getUrl("src/mfa.php", true); ?>" method="post">
         <div class="form-group">
-            <label>
+            <!-- <label>
                 <?= $module->tt("mfa_text6") ?>
-            </label>
-            <input type="text" name="mfa_token" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>">
+            </label> -->
+            <input type="text" name="mfa_token" placeholder="<?= $module->framework->tt("mfa_text6") ?>" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>">
             <span class="invalid-feedback">
                 <?= $mfa_err; ?>
             </span>
@@ -168,8 +190,8 @@ $ui->ShowParticipantHeader('');
     </form>
     <hr>
     <div style="text-align: center;">
-        <?= $module->tt('mfa_info1') ?> <a href="javascript:;" onclick="window.rcpro.showMFAInfo();return false;">
-            <?= $module->tt('mfa_info2') ?>
+        <a href="javascript:;" onclick="window.rcpro.showMFAInfo();return false;">
+            <?= $module->tt('mfa_info1') ?>
         </a>
     </div>
     <?php } ?>
@@ -181,7 +203,7 @@ $ui->ShowParticipantHeader('');
     <h4>Choose MFA Method</h4>
     <div class="container" style="border-collapse: collapse;" >
             <div class="row align-items-center p-2 mfa-option" onclick="window.rcpro.chooseAuthenticatorAppMFA();">
-                <div class="col-1">
+                <div class="col-2">
                     <span class="fa-layers fa-fw fa-2x" style="color: #900000;">
                         <i class="fa-solid fa-mobile-screen" data-fa-transform="grow-4"></i>
                         <i class="fa-solid fa-lock-hashtag" data-fa-transform="shrink-8 up-2"></i>
@@ -196,17 +218,22 @@ $ui->ShowParticipantHeader('');
                 </div>
             </div>
             <div class="row align-items-center p-2 mfa-option" onclick="window.rcpro.chooseEmailMFA();">
-                <div class="col-1">
+                <div class="col-2">
                     <span class="fa-layers fa-fw fa-2x" style="color: #900000;">
                         <i class="fa-solid fas fa-envelope"></i>
                     </span>
                 </div>
-                <div class="col">
+                <div class="col" id="emailChoice">
                     <span>
                         <strong style="color: #900000;">Use Email</strong>
                         <br>
                         <span style="font-size: small;">Not Recommended</span>
                     </span>
+                </div>
+                <div class="col mfaLoading text-center" id="emailLoading" style="display: none;">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
                 </div>
             </div>
         </ul>
@@ -215,7 +242,7 @@ $ui->ShowParticipantHeader('');
 
 <style>
     .wrapper {
-        width: 720px;
+        width: 540px;
     }
     img#rcpro-logo {
         display: block;
@@ -253,6 +280,10 @@ $ui->ShowParticipantHeader('');
     button.btn-mfa-control {
         width: 100%;
     }
+
+    .mfaLoading {
+        color: #900000;
+    }
 </style>
 <script src="<?= $module->framework->getUrl('lib/jQuery/jquery-3.7.1.min.js', true) ?>"></script>
 <?php $module->framework->initializeJavascriptModuleObject(); ?>
@@ -266,8 +297,10 @@ $ui->ShowParticipantHeader('');
     }
 
     window.rcpro.chooseEmailMFA = function() {
+        window.rcpro.showEmailLoading();
         window.rcpro.ajax('sendMfaTokenEmail', [])
             .then(function(result) {
+                window.rcpro.hideEmailLoading();
                 if (!result) {
                     console.log('Error sending email');
                     return;
@@ -283,7 +316,51 @@ $ui->ShowParticipantHeader('');
         $('#emailMFAContainer').hide();
     }
 
+    window.rcpro.showMFAInfo = function() {
+        window.rcpro.ajax('showMFAInfo', [])
+            .then(function(result) {
+                if (!result) {
+                    console.log('Error showing MFA info');
+                    return;
+                }
+                window.rcpro.showModal(result);
+            });
+    }
 
+    window.rcpro.showModal = function(results) {
+        console.log(results);
+        const modal = $('#authAppInfoTemplate').clone();
+        $(modal).find('#authenticatorAppQr').attr('src', results.url);
+        modal.modal('show');
+    }
+
+    window.rcpro.showEmailLoading = function() {
+        $('#emailLoading').show();
+        $('#emailChoice').hide();
+    }
+
+    window.rcpro.hideEmailLoading = function() {
+        $('#emailLoading').hide();
+        $('#emailChoice').show();
+    }
 
 </script>
+<!-- Authenticator App Info Modal Template -->
+<div class="modal fade" id="authAppInfoTemplate" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="authAppInfoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="authAppInfoLabel">TESTTESTTEST</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <img id="authenticatorAppQr">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">TESTTESTTEST</button>
+        <button type="button" class="btn btn-primary">TESTTESTTEST</button>
+      </div>
+    </div>
+  </div>
+</div>
 <?php $ui->EndParticipantPage(); ?>

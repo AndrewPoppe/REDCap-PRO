@@ -260,9 +260,9 @@ class Auth
 
     // --- TOTP Authenticator MFA --- \\
 
-    public function get_totp_mfa_qr_url(string $otpauth)
+    public function get_totp_mfa_qr_url(string $otpauth, REDCapPRO $module)
     {
-        return APP_PATH_WEBROOT_FULL . "redcap_v" . REDCAP_VERSION . "/Authentication/generate_qrcode.php?value=" . urlencode($otpauth);
+        return $module->framework->getUrl("src/generate_qr_code.php?otpauth=" . urlencode($otpauth), true);
     }
 
     public function create_totp_mfa_secret() {
