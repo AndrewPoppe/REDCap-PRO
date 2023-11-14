@@ -45,7 +45,6 @@ if ( $isPost ) {
         // Is Email
         $emailMfa   = filter_input(INPUT_POST, "emailMfa", FILTER_VALIDATE_BOOLEAN);
         $code          = filter_input(INPUT_POST, "mfa_token", FILTER_VALIDATE_INT);
-
         if ($emailMfa) {
             $codeIsCorrect = $auth->check_email_mfa_code($code);
         } else {
@@ -128,14 +127,11 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
         </span>
     </div>
 
-    <form action="<?= $module->getUrl("src/mfa.php", true); ?>" method="post">
+    <form class="needs-validation" action="<?= $module->getUrl("src/mfa.php", true); ?>" method="post" novalidate>
         <div class="form-group">
-            <!-- <label>
-                <?= $module->framework->tt("mfa_text3") ?>
-            </label> -->
-            <input type="text" name="mfa_token" placeholder="<?= $module->framework->tt("mfa_text3") ?>" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>">
-            <span class="invalid-feedback">
-                <?= $mfa_err; ?>
+            <input type="text" name="mfa_token" placeholder="<?= $module->framework->tt("mfa_text3") ?>" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>" required pattern="\d{6,6}">
+            <span class="invalid-feedback" data-original="<?=$module->framework->tt("mfa_err5");?>">
+                <?= $mfa_err ?>
             </span>
         </div>
         <div class="form-group row">
@@ -176,14 +172,11 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
         </span>
     </div>
 
-    <form action="<?= $module->getUrl("src/mfa.php", true); ?>" method="post">
+    <form class="needs-validation" action="<?= $module->getUrl("src/mfa.php", true); ?>" method="post" novalidate>
         <div class="form-group">
-            <!-- <label>
-                <?= $module->framework->tt("mfa_text6") ?>
-            </label> -->
-            <input type="text" name="mfa_token" placeholder="<?= $module->framework->tt("mfa_text6") ?>" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>">
-            <span class="invalid-feedback">
-                <?= $mfa_err; ?>
+            <input type="text" name="mfa_token" placeholder="<?= $module->framework->tt("mfa_text6") ?>" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>" required pattern="\d{6,8}">
+            <span class="invalid-feedback" data-original="<?=$module->framework->tt("mfa_err5");?>">
+                <?= $mfa_err  ?>
             </span>
         </div>
         <div class="form-group row">
@@ -435,6 +428,39 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
             'success': successToast,
             'error': errorToast
         };
+
+        $('.needs-validation').each(function() {
+            $(this).on('submit', function(event) {
+                $(this).find('is-invalid').removeClass('is-invalid');
+                $(this).find('.invalid-feedback').each(function() {
+                    $(this).text($(this).data('original'));
+                });
+                if (!this.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                $(this).addClass('was-validated');
+            });
+        });
+
+        // (() => {
+        //     'use strict'
+
+        //     // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        //     const forms = document.querySelectorAll('.needs-validation');
+
+        //     // Loop over them and prevent submission
+        //     Array.from(forms).forEach(form => {
+        //         form.addEventListener('submit', event => {
+        //             if (!form.checkValidity()) {
+        //                 event.preventDefault();
+        //                 event.stopPropagation();
+        //             }
+
+        //             form.classList.add('was-validated')
+        //         }, false);
+        //     })
+        // })();
     });
 </script>
 <!-- Authenticator App Info Modal -->
