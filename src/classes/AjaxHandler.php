@@ -395,7 +395,7 @@ class AjaxHandler
                 'email' => $participantEmail
             ];
         } catch ( \Throwable $e ) {
-            $this->module->logError($e->getMessage(), $e);
+            $this->module->logError('Error showing Authenticator App Info', $e);
         }
     }
 
@@ -404,9 +404,12 @@ class AjaxHandler
             $auth = new Auth($this->module->APPTITLE);
             $auth->init();
             $rcpro_participant_id = $auth->get_participant_id();
+            if ($rcpro_participant_id == 0) {
+                throw new REDCapProException("No participant ID found");
+            }
             return $this->module->sendAuthenticatorAppInfoEmail($rcpro_participant_id);
         } catch ( \Throwable $e ) {
-            $this->module->logError($e->getMessage(), $e);
+            $this->module->logError('Error sending Authenticator App Info email', $e);
         }
     }
 }

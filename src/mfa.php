@@ -62,6 +62,7 @@ if ( $isPost ) {
             }
         }
         if ( $codeIsCorrect ) {
+            $auth->set_mfa_verification_status(true);
             // Redirect user to appropriate page
             if ( $auth->is_survey_url_set() ) {
                 header("location: " . $auth->get_survey_url());
@@ -97,7 +98,7 @@ $showAuthenticatorApp = !$showEmail && $isPost;
 
 // This method starts the html doc
 $ui = new UI($module);
-$ui->ShowParticipantHeader('');
+$ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
 ?>
 
 <!-- Email MFA only -->
@@ -109,8 +110,8 @@ $ui->ShowParticipantHeader('');
             <div class="row align-items-center">
                 <div class="col-2">
                 <span class="fa-layers fa-fw fa-2x text-rcpro">
-                            <i class="fa-solid fas fa-envelope"></i>
-                        </span>
+                    <i class="fa-solid fas fa-envelope"></i>
+                </span>
                 </div>
                 <div class="col">
                     <?= $module->framework->tt("mfa_text7")?>
@@ -205,7 +206,14 @@ $ui->ShowParticipantHeader('');
 
 <!-- Choose MFA Method -->
 <div id="mfaChoiceContainer" style="display: <?= ($showEmail || $showAuthenticatorApp) ? 'none' : 'block' ?>;">
-    <h4>Choose MFA Method</h4>
+    <div style="text-align: center;">
+        <p>
+            <?= $module->tt("mfa_text9") ?>
+        </p>
+        <p>
+            <?= $module->tt("mfa_text10") ?>
+        </p>
+    </div>
     <div class="container" style="border-collapse: collapse;" >
             <div class="row align-items-center p-2 mfa-option" onclick="window.rcpro.chooseAuthenticatorAppMFA();">
                 <div class="col-2">
@@ -216,9 +224,9 @@ $ui->ShowParticipantHeader('');
                 </div>
                 <div class="col">
                     <span>
-                        <strong class="text-rcpro">Use an Authenticator App</strong>
+                        <strong class="text-rcpro"><?= $module->framework->tt('mfa_text11')?></strong>
                         <br>
-                        <span style="font-size: small;">Recommended</span>
+                        <span style="font-size: small;"><?= $module->framework->tt('mfa_text13')?></span>
                     </span>
                 </div>
             </div>
@@ -230,9 +238,9 @@ $ui->ShowParticipantHeader('');
                 </div>
                 <div class="col" id="emailChoice">
                     <span>
-                        <strong class="text-rcpro">Use Email</strong>
+                        <strong class="text-rcpro"><?= $module->framework->tt('mfa_text12')?></strong>
                         <br>
-                        <span style="font-size: small;">Not Recommended</span>
+                        <span style="font-size: small;"><?= $module->framework->tt('mfa_text14')?></span>
                     </span>
                 </div>
                 <div class="col mfaLoading text-center" id="emailLoading" style="display: none;">
@@ -315,6 +323,11 @@ $ui->ShowParticipantHeader('');
     .accordion-rcpro button.accordion-button:not(.collapsed)::after {
         background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23900000'><path fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/></svg>") !important;
     }
+
+    .fast-spin {
+        -webkit-animation: fa-spin 0.5s infinite linear;
+        animation: fa-spin 0.5s infinite linear;
+    }
 </style>
 <script src="<?= $module->framework->getUrl('lib/jQuery/jquery-3.7.1.min.js', true) ?>"></script>
 <?php $module->framework->initializeJavascriptModuleObject(); ?>
@@ -323,11 +336,13 @@ $ui->ShowParticipantHeader('');
     window.rcpro = <?= $module->framework->getJavascriptModuleObjectName() ?>;
 
     window.rcpro.chooseAuthenticatorAppMFA = function() {
+        $('.is-invalid').removeClass('is-invalid');
         $('#mfaChoiceContainer').hide();
         $('#mfaAuthenticatorContainer').show();
     }
 
     window.rcpro.chooseEmailMFA = function() {
+        $('.is-invalid').removeClass('is-invalid');
         window.rcpro.showEmailLoading();
         window.rcpro.ajax('sendMfaTokenEmail', [])
             .then(function(result) {
@@ -349,23 +364,32 @@ $ui->ShowParticipantHeader('');
 
     window.rcpro.showMFAInfo = function() {
         <?php if ($showFullAuthenticatorAppInfo) { ?>
+            window.rcpro.toasts.loading.show();
             window.rcpro.ajax('showMFAInfo', [])
             .then(function(result) {
+                window.rcpro.toasts.loading.hide();
                 if (!result) {
                     console.log('Error showing MFA info');
                     return;
                 }
                 window.rcpro.showModal(result);
+            })
+            .catch(function(error) {
+                window.rcpro.showToast('error', error);
             });
         <?php } else { ?>
+            window.rcpro.toasts.loading.show();
             window.rcpro.ajax('sendMFAInfo', [])
             .then(function(result) {
                 if (!result) {
-                    console.log('Error sending MFA info');
+                    window.rcpro.showToast('error', 'Error sending Authenticator info');
                     return;
                 }
-
+                window.rcpro.showToast('success', 'Sent email with Authenticator info');
             })
+            .catch(function(error) {
+                window.rcpro.showToast('error', error);
+            });
         <?php } ?>
     }
 
@@ -379,6 +403,13 @@ $ui->ShowParticipantHeader('');
         modal.modal('show');
     }
 
+    window.rcpro.showToast = function(type, message = '') {
+        window.rcpro.toasts.loading.hide();
+        const toast = window.rcpro.toasts[type];
+        toast._element.querySelector('.message').innerText = new String(message).trim() ?? '';
+        toast.show();
+    }
+
     window.rcpro.showEmailLoading = function() {
         $('#emailLoading').show();
         $('#emailChoice').hide();
@@ -389,6 +420,22 @@ $ui->ShowParticipantHeader('');
         $('#emailChoice').show();
     }
 
+    $(document).ready(function() {
+        const loadToastEl = document.getElementById('loadingToast');
+        const loadToast = new bootstrap.Toast(loadToastEl, { autohide: false });
+        
+        const successToastEl = document.getElementById('successToast');
+        const successToast = new bootstrap.Toast(successToastEl, { autohide: true });
+        
+        const errorToastEl = document.getElementById('errorToast');
+        const errorToast = new bootstrap.Toast(errorToastEl, { autohide: true });
+
+        window.rcpro.toasts = {
+            'loading': loadToast,
+            'success': successToast,
+            'error': errorToast
+        };
+    });
 </script>
 <!-- Authenticator App Info Modal -->
 <div class="modal fade" id="authAppInfoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="authAppInfoLabel" aria-hidden="true">
@@ -396,7 +443,7 @@ $ui->ShowParticipantHeader('');
     <div class="modal-content">
       <div class="modal-header bg-rcpro text-light">
         <h5 class="modal-title" id="authAppInfoLabel"><?= $module->framework->tt('mfa_info2')?></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <h4><i class="fa-regular fa-circle-exclamation text-rcpro"></i> <?=$module->framework->tt('mfa_info22')?></h4>
@@ -471,5 +518,44 @@ $ui->ShowParticipantHeader('');
       </div>
     </div>
   </div>
+</div>
+<!-- Toasts -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="loadingToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-body text-bg-dark">
+            <div class="row align-items-center">
+                <div class="col-2">
+                    <i class="text-rcpro fa-duotone fa-spinner-third fast-spin fa-2xl ms-2"></i>
+                </div>
+                <div class="col">
+                    <span class="message">Please wait...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="successToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-body text-bg-success">
+            <div class="row align-items-center">
+                <div class="col-2">
+                    <i class="fa-regular fa-circle-check fa-2xl ms-2"></i>
+                </div>
+                <div class="col">
+                    <span class="message"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="errorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-body text-bg-danger">
+            <div class="row align-items-center">
+                <div class="col-2">
+                    <i class="fa-regular fa-circle-xmark fa-2xl ms-2"></i>
+                </div>
+                <div class="col">
+                    <span class="message"></span>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <?php $ui->EndParticipantPage(); ?>

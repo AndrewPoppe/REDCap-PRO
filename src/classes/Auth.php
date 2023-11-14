@@ -217,6 +217,11 @@ class Auth
         return $_SESSION[$this->APPTITLE . "_mfa_code_verified"];
     }
 
+    public function set_mfa_verification_status(bool $status)
+    {
+        $_SESSION[$this->APPTITLE . "_mfa_code_verified"] = $status;
+    }
+
 
     // --- Email MFA --- \\
 
