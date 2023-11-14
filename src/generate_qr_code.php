@@ -34,12 +34,12 @@ if ($participant_secret !== $otpauth_secret) {
 $qrPath1 = APP_PATH_LIBRARIES . "phpqrcode/lib/full/qrlib.php";
 $qrPath2 = APP_PATH_LIBRARIES . "phpqrcode/qrlib.php";
 
-if (file_exists($module->framework->getSafePath($qrPath1, APP_PATH_LIBRARIES))) {
-    require_once $module->framework->getSafePath($qrPath1, APP_PATH_LIBRARIES);
-} elseif (file_exists($module->framework->getSafePath($qrPath2, APP_PATH_LIBRARIES))) {
-    require_once $module->framework->getSafePath($qrPath2, APP_PATH_LIBRARIES);
+if (file_exists($qrPath1)) {
+    require_once $qrPath1;
+} elseif (file_exists($qrPath2)) {
+    require_once $qrPath2;
 } else {
-    throw new \Exception("Could not find QR Code library");
+    throw new REDCapProException("Could not find QR Code library");
 }
 
 // Output QR code image
