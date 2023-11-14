@@ -2,6 +2,8 @@
 
 namespace YaleREDCap\REDCapPRO;
 
+/** @var REDCapPRO $module */
+
 // Only allow logged in participants to access this page
 $auth = new Auth($module->APPTITLE);
 $auth->init();
@@ -29,7 +31,16 @@ if ($participant_secret !== $otpauth_secret) {
 }
 
 // Get QR Code class
-require_once APP_PATH_LIBRARIES . "phpqrcode/lib/full/qrlib.php";
+$qrPath1 = APP_PATH_LIBRARIES . "phpqrcode/lib/full/qrlib.php";
+$qrPath2 = APP_PATH_LIBRARIES . "phpqrcode/qrlib.php";
+
+if (file_exists($module->framework->getSafePath($qrPath1, APP_PATH_LIBRARIES))) {
+    require_once $module->framework->getSafePath($qrPath1, APP_PATH_LIBRARIES);
+} elseif (file_exists($module->framework->getSafePath($qrPath2, APP_PATH_LIBRARIES))) {
+    require_once $module->framework->getSafePath($qrPath2, APP_PATH_LIBRARIES);
+} else {
+    throw new \Exception("Could not find QR Code library");
+}
 
 // Output QR code image
 \QRcode::png($otpauth, false, 'H', 4);
