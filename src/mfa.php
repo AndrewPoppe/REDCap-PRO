@@ -28,6 +28,15 @@ $participantHelper = new ParticipantHelper($module);
 $rcpro_participant_id = (int) $auth->get_participant_id();
 $participantEmail = $participantHelper->getEmail($rcpro_participant_id);
 
+// Check if Authenticator App Secret already exists, if applicable
+$showFullAuthenticatorAppInfo = false;
+$mfa_secret = $participantHelper->getMfaSecret($rcpro_participant_id);
+if (empty($mfa_secret) && $settings->mfaAuthenticatorAppEnabled($project_id)) {
+    $showFullAuthenticatorAppInfo = true;
+    $mfa_secret = $auth->create_totp_mfa_secret();
+    $participantHelper->storeMfaSecret($rcpro_participant_id, $mfa_secret);
+}
+
 // Processing form data when form is submitted
 $isPost = $_SERVER["REQUEST_METHOD"] == "POST";
 if ( $isPost ) {
@@ -41,14 +50,9 @@ if ( $isPost ) {
             $codeIsCorrect = $auth->check_email_mfa_code($code);
         } else {
             // Authenticator App
-            $mfa_secret = $participantHelper->getMfaSecret($rcpro_participant_id);
-            if (empty($mfa_secret)) {
-                $mfa_secret = $auth->create_totp_mfa_secret();
-                $participantHelper->storeMfaSecret($rcpro_participant_id, $mfa_secret);
-            }
             if ($module->framework->throttle('message = "Checked Authenticator App MFA Code" AND participant_id = ?', [$rcpro_participant_id],60, 10)) {
                 $codeIsCorrect = false;
-                $mfa_err = $module->tt("mfa_err3");
+                $mfa_err = $module->framework->tt("mfa_err3");
             } else {
                 $codeIsCorrect = $auth->check_totp_mfa_code($code, $mfa_secret);
                 $module->framework->log("Checked Authenticator App MFA Code", [
@@ -65,13 +69,13 @@ if ( $isPost ) {
                 header("location: " . APP_PATH_SURVEY_FULL . $_SERVER['QUERY_STRING']);
             } else {
                 $study_contact = $module->getContactPerson();
-                echo $module->tt("login_err9");
+                echo $module->framework->tt("login_err9");
                 if ( isset($study_contact["name"]) ) {
                     echo ":<br>" . $study_contact["info"];
                 }
             }
         } else {
-            $mfa_err = $mfa_err ?? $module->tt("mfa_err1");
+            $mfa_err = $mfa_err ?? $module->framework->tt("mfa_err1");
         }
     } catch ( \Throwable $e ) {
         $module->log($e->getMessage());
@@ -104,7 +108,7 @@ $ui->ShowParticipantHeader('');
         <h4>
             <div class="row align-items-center">
                 <div class="col-2">
-                <span class="fa-layers fa-fw fa-2x" style="color: #900000;">
+                <span class="fa-layers fa-fw fa-2x text-rcpro">
                             <i class="fa-solid fas fa-envelope"></i>
                         </span>
                 </div>
@@ -114,19 +118,19 @@ $ui->ShowParticipantHeader('');
             </div>    
         </h4>
         <span style="font-size: large;">
-            <?= $resend ? $module->tt("mfa_resend1") : $module->tt("mfa_text1") ?>
+            <?= $resend ? $module->framework->tt("mfa_resend1") : $module->framework->tt("mfa_text1") ?>
             <strong>
                 <?= $participantEmail ?>
             </strong>
             <br>
-            <?= $module->tt("mfa_text2") ?>
+            <?= $module->framework->tt("mfa_text2") ?>
         </span>
     </div>
 
     <form action="<?= $module->getUrl("src/mfa.php", true); ?>" method="post">
         <div class="form-group">
             <!-- <label>
-                <?= $module->tt("mfa_text3") ?>
+                <?= $module->framework->tt("mfa_text3") ?>
             </label> -->
             <input type="text" name="mfa_token" placeholder="<?= $module->framework->tt("mfa_text3") ?>" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>">
             <span class="invalid-feedback">
@@ -134,16 +138,16 @@ $ui->ShowParticipantHeader('');
             </span>
         </div>
         <div class="form-group row">
-            <?= $mfaAuthenticatorAppEnabled ? '<div class="col-6"><button type="button" class="btn btn-secondary btn-mfa-control" onclick="window.rcpro.showMFAChoice();">'. $module->tt("mfa_cancel_button_text") . '</button></div>' : '' ?>
-            <div class="col"><button type="submit" class="btn btn-primary btn-mfa-control"><?= $module->tt("mfa_submit_button_text") ?></button></div>
+            <?= $mfaAuthenticatorAppEnabled ? '<div class="col-6"><button type="button" class="btn btn-secondary btn-mfa-control" onclick="window.rcpro.showMFAChoice();">'. $module->framework->tt("mfa_cancel_button_text") . '</button></div>' : '' ?>
+            <div class="col"><button type="submit" class="btn btn-primary btn-mfa-control"><?= $module->framework->tt("mfa_submit_button_text") ?></button></div>
         </div>
         <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
         <input type="hidden" name="emailMfa" value="true">
     </form>
     <hr>
     <div style="text-align: center;">
-        <?= $module->tt('mfa_resend2') ?> <a href="<?= $module->getUrl("src/mfa.php?resend=true", true); ?>">
-            <?= $module->tt('mfa_resend3') ?>
+        <?= $module->framework->tt('mfa_resend2') ?> <a href="<?= $module->getUrl("src/mfa.php?resend=true", true); ?>">
+            <?= $module->framework->tt('mfa_resend3') ?>
         </a>
     </div>
 </div>
@@ -174,7 +178,7 @@ $ui->ShowParticipantHeader('');
     <form action="<?= $module->getUrl("src/mfa.php", true); ?>" method="post">
         <div class="form-group">
             <!-- <label>
-                <?= $module->tt("mfa_text6") ?>
+                <?= $module->framework->tt("mfa_text6") ?>
             </label> -->
             <input type="text" name="mfa_token" placeholder="<?= $module->framework->tt("mfa_text6") ?>" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>">
             <span class="invalid-feedback">
@@ -182,16 +186,17 @@ $ui->ShowParticipantHeader('');
             </span>
         </div>
         <div class="form-group row">
-            <div class="col-6"><button type="button" class="btn btn-secondary btn-mfa-control" onclick="window.rcpro.showMFAChoice();"><?=$module->tt("mfa_cancel_button_text")?></button></div>
-            <div class="col"><button type="submit" class="btn btn-primary btn-mfa-control"><?= $module->tt("mfa_submit_button_text") ?></button></div>
+            <div class="col-6"><button type="button" class="btn btn-secondary btn-mfa-control" onclick="window.rcpro.showMFAChoice();"><?=$module->framework->tt("mfa_cancel_button_text")?></button></div>
+            <div class="col"><button type="submit" class="btn btn-primary btn-mfa-control"><?= $module->framework->tt("mfa_submit_button_text") ?></button></div>
         </div>
         <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
         <input type="hidden" name="authApp" value="true">
     </form>
     <hr>
     <div style="text-align: center;">
+        <?= $module->framework->tt('mfa_info25') ?>
         <a href="javascript:;" onclick="window.rcpro.showMFAInfo();return false;">
-            <?= $module->tt('mfa_info1') ?>
+            <?= $showFullAuthenticatorAppInfo ? $module->framework->tt('mfa_info1') : $module->framework->tt('mfa_info24') ?>
         </a>
     </div>
     <?php } ?>
@@ -204,14 +209,14 @@ $ui->ShowParticipantHeader('');
     <div class="container" style="border-collapse: collapse;" >
             <div class="row align-items-center p-2 mfa-option" onclick="window.rcpro.chooseAuthenticatorAppMFA();">
                 <div class="col-2">
-                    <span class="fa-layers fa-fw fa-2x" style="color: #900000;">
+                    <span class="fa-layers fa-fw fa-2x text-rcpro">
                         <i class="fa-solid fa-mobile-screen" data-fa-transform="grow-4"></i>
                         <i class="fa-solid fa-lock-hashtag" data-fa-transform="shrink-8 up-2"></i>
                     </span>
                 </div>
                 <div class="col">
                     <span>
-                        <strong style="color: #900000;">Use an Authenticator App</strong>
+                        <strong class="text-rcpro">Use an Authenticator App</strong>
                         <br>
                         <span style="font-size: small;">Recommended</span>
                     </span>
@@ -219,13 +224,13 @@ $ui->ShowParticipantHeader('');
             </div>
             <div class="row align-items-center p-2 mfa-option" onclick="window.rcpro.chooseEmailMFA();">
                 <div class="col-2">
-                    <span class="fa-layers fa-fw fa-2x" style="color: #900000;">
+                    <span class="fa-layers fa-fw fa-2x text-rcpro">
                         <i class="fa-solid fas fa-envelope"></i>
                     </span>
                 </div>
                 <div class="col" id="emailChoice">
                     <span>
-                        <strong style="color: #900000;">Use Email</strong>
+                        <strong class="text-rcpro">Use Email</strong>
                         <br>
                         <span style="font-size: small;">Not Recommended</span>
                     </span>
@@ -265,11 +270,11 @@ $ui->ShowParticipantHeader('');
     
     a {
         text-decoration: none !important;
-        color: #900000 !important;
+        color: <?= $module::$COLORS["primary"] ?> !important;
         font-weight: bold !important;
     }
     a:hover {
-        text-shadow: 0px 0px 5px #900000;
+        text-shadow: 0px 0px 5px <?= $module::$COLORS["primary"] ?>;
     }
 
     div.mfaOptionContainer  {
@@ -282,7 +287,33 @@ $ui->ShowParticipantHeader('');
     }
 
     .mfaLoading {
-        color: #900000;
+        color: <?= $module::$COLORS["primary"] ?>;
+    }
+    
+    .text-rcpro {
+        color: <?= $module::$COLORS["primary"] ?>;
+    }
+    .bg-rcpro {
+        background-color: <?= $module::$COLORS["primary"] ?>;
+    }
+    .border-rcpro {
+        border-color: <?= $module::$COLORS["primary"] ?> !important;
+    }
+ 
+    .accordion-rcpro button.accordion-button {
+        color: <?= $module::$COLORS["primary"] ?>;
+    }
+    .accordion-rcpro button.accordion-button:hover {
+        background-color: <?= $module::$COLORS["primaryExtraLight"] ?>80;
+    }
+    .accordion-rcpro button.accordion-button:not(.collapsed) {
+        background-color: <?= $module::$COLORS["primaryExtraLight"] ?>;
+    }
+    .accordion-rcpro button.accordion-button:focus {
+        box-shadow: none;
+    }
+    .accordion-rcpro button.accordion-button:not(.collapsed)::after {
+        background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23900000'><path fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/></svg>") !important;
     }
 </style>
 <script src="<?= $module->framework->getUrl('lib/jQuery/jquery-3.7.1.min.js', true) ?>"></script>
@@ -317,7 +348,8 @@ $ui->ShowParticipantHeader('');
     }
 
     window.rcpro.showMFAInfo = function() {
-        window.rcpro.ajax('showMFAInfo', [])
+        <?php if ($showFullAuthenticatorAppInfo) { ?>
+            window.rcpro.ajax('showMFAInfo', [])
             .then(function(result) {
                 if (!result) {
                     console.log('Error showing MFA info');
@@ -325,12 +357,25 @@ $ui->ShowParticipantHeader('');
                 }
                 window.rcpro.showModal(result);
             });
+        <?php } else { ?>
+            window.rcpro.ajax('sendMFAInfo', [])
+            .then(function(result) {
+                if (!result) {
+                    console.log('Error sending MFA info');
+                    return;
+                }
+
+            })
+        <?php } ?>
     }
 
     window.rcpro.showModal = function(results) {
         console.log(results);
-        const modal = $('#authAppInfoTemplate').clone();
-        $(modal).find('#authenticatorAppQr').attr('src', results.url);
+        const modal = $('#authAppInfoModal');
+        modal.find('#authenticatorAppQr').attr('src', results.url);
+        modal.find('#authenticatorAppUrl').attr('href', results.url);
+        modal.find('#authAppAccountName').text(results.email);
+        modal.find('#authAppAccountKey').text(results.mfa_secret);
         modal.modal('show');
     }
 
@@ -345,20 +390,84 @@ $ui->ShowParticipantHeader('');
     }
 
 </script>
-<!-- Authenticator App Info Modal Template -->
-<div class="modal fade" id="authAppInfoTemplate" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="authAppInfoLabel" aria-hidden="true">
-  <div class="modal-dialog">
+<!-- Authenticator App Info Modal -->
+<div class="modal fade" id="authAppInfoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="authAppInfoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="authAppInfoLabel">TESTTESTTEST</h5>
+      <div class="modal-header bg-rcpro text-light">
+        <h5 class="modal-title" id="authAppInfoLabel"><?= $module->framework->tt('mfa_info2')?></h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <img id="authenticatorAppQr">
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">TESTTESTTEST</button>
-        <button type="button" class="btn btn-primary">TESTTESTTEST</button>
+        <h4><i class="fa-regular fa-circle-exclamation text-rcpro"></i> <?=$module->framework->tt('mfa_info22')?></h4>
+        <p><?=$module->framework->tt('mfa_info23')?></p>
+        <div class="accordion accordion-rcpro" id="authAppInfoAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="authAppHeading1">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#authAppInfoStep1" aria-expanded="true" aria-controls="authAppInfoStep1">
+                        <strong><?= $module->framework->tt('mfa_info3')?></strong>
+                    </button>
+                </h2>
+                <div id="authAppInfoStep1" class="accordion-collapse collapse show" aria-labelledby="authAppHeading1" data-bs-parent="#authAppInfoAccordion">
+                    <div class="accordion-body">
+                        <p><?= $module->framework->tt('mfa_info4')?></p>
+                        <ul>
+                        <li><?= $module->framework->tt('mfa_info5')?>
+                            <ul>
+                                <li><img style="width: 2rem;" src="<?= $module->framework->getUrl('images/ga.webp', true)?>"> <strong><?= $module->framework->tt('mfa_info20') ?></strong></li>
+                                <li><img style="width: 2rem;" src="<?= $module->framework->getUrl('images/ma.webp', true)?>"> <strong><?= $module->framework->tt('mfa_info21') ?></strong></li>
+                            </ul>
+                        </li>
+                        <li><?= $module->framework->tt('mfa_info6')?></li>
+                        <li><?= $module->framework->tt('mfa_info7')?></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="authAppHeading2">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#authAppInfoStep2" aria-expanded="false" aria-controls="authAppInfoStep2">
+                        <strong><?= $module->framework->tt('mfa_info8')?></strong>
+                    </button>
+                </h2>
+                <div id="authAppInfoStep2" class="accordion-collapse collapse" aria-labelledby="authAppHeading2" data-bs-parent="#authAppInfoAccordion">
+                    <div class="accordion-body">
+                        <div class="row align-items-center">
+                            <div class="col-7">
+                                <p><strong><?= $module->framework->tt('mfa_info9')?></strong></p>
+                                <p><?= $module->framework->tt('mfa_info10')?></p>
+                                <br>
+                                <div class="border border-rcpro p-2 rounded" style="font-size:small">
+                                    <i class="fa-solid fas fa-asterisk text-rcpro"></i> <?= $module->framework->tt('mfa_info11')?>
+                                    <ul>
+                                        <li><span><?= $module->framework->tt('mfa_info12')?></span> <strong><span id="authAppAccountName"></span></strong></span></li>
+                                        <li><span><?= $module->framework->tt('mfa_info13')?></span> <strong><span id="authAppAccountKey"></span></strong></span></li>
+                                        <li><span><?= $module->framework->tt('mfa_info14')?></span> <em><?= $module->framework->tt('mfa_info15')?></em></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col text-center">
+                                <img id="authenticatorAppQr"><br>
+                                <a id="authenticatorAppUrl" href="" target="_blank" rel="noopener noreferer"><?= $module->framework->tt('mfa_info19')?></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="authAppHeading3">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" aria-labelledby="authAppHeading3" data-bs-target="#authAppInfoStep3" aria-expanded="false" aria-controls="authAppInfoStep3">
+                        <strong><?= $module->framework->tt('mfa_info16')?></strong>
+                    </button>
+                </h2>
+                <div id="authAppInfoStep3" class="accordion-collapse collapse" data-bs-parent="#authAppInfoAccordion">
+                    <div class="accordion-body">
+                        <p><strong><?= $module->framework->tt('mfa_info17')?></strong></p>
+                        <p><i class="fa-solid fa-check text-success"></i> <?= $module->framework->tt('mfa_info18')?></p>
+                    </div>
+                </div>
+            </div>
+        </div>
       </div>
     </div>
   </div>

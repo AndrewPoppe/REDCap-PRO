@@ -103,7 +103,7 @@ class Auth
 
     public function get_participant_id()
     {
-        return $_SESSION[$this->APPTITLE . "_participant_id"];
+        return (int) $_SESSION[$this->APPTITLE . "_participant_id"];
     }
 
     public function get_username()
@@ -285,5 +285,15 @@ class Auth
         return $ga->verifyCode($secret, $code, 2);
     }
 
-
+    public function get_totp_mfa_secret_from_otpauth(string $otpauth) {
+        if (empty($otpauth)) {
+            return null;
+        }
+        $qstring = parse_url($otpauth, PHP_URL_QUERY);
+        if (!$qstring) {
+            return null;
+        }
+        parse_str($qstring, $params);
+        return $params['secret'];
+    }
 }

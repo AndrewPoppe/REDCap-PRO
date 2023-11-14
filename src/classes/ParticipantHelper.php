@@ -219,6 +219,67 @@ class ParticipantHelper
     }
 
     /**
+     * Create and store token for getting participant's Authenticator App information
+     * 
+     * @param mixed $rcpro_participant_id
+     * @param int $hours_valid - how long should the token be valid for
+     * 
+     * @return string token
+     */
+    public function createAuthenticatorAppInfoToken($rcpro_participant_id, int $hours_valid = 1)
+    {
+        $token    = bin2hex(random_bytes(32));
+        $token_ts = time() + ($hours_valid * 60 * 60);
+
+        $existingToken = $this->getAuthenticatorAppInfoToken($rcpro_participant_id);
+        try {
+            if (empty($existingToken)) {
+                $SQL = "INSERT INTO redcap_external_modules_log_parameters (log_id, name, value) VALUES 
+                        (?, 'aa_mfa_token', ?),
+                        (?, 'aa_mfa_token_ts', ?),
+                        (?, 'aa_mfa_token_valid', 1)";
+                $result = $this->module->query($SQL, [ $rcpro_participant_id, $token, $rcpro_participant_id, $token_ts, $rcpro_participant_id ]);
+                if (!$result) {
+                    throw new REDCapProException([ "rcpro_participant_id" => $rcpro_participant_id ]);
+                }
+                return $token;
+            } else {
+                $SQL1     = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'aa_mfa_token'";
+                $SQL2     = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'aa_mfa_token_ts'";
+                $SQL3     = "UPDATE redcap_external_modules_log_parameters SET value = 1 WHERE log_id = ? AND name = 'aa_mfa_token_valid'";
+        
+                $result1 = $this->module->query($SQL1, [ $token, $rcpro_participant_id ]);
+                $result2 = $this->module->query($SQL2, [ $token_ts, $rcpro_participant_id ]);
+                $result3 = $this->module->query($SQL3, [ $rcpro_participant_id ]);
+                if ( !$result1 || !$result2 || !$result3 ) {
+                    throw new REDCapProException([ "rcpro_participant_id" => $rcpro_participant_id ]);
+                }
+                return $token;
+            }
+        } catch ( \Exception $e ) {
+            $this->module->logError("Error creating Authenticator App Info token", $e);
+        }
+    }
+
+    /**
+     * Gets the Authenticator App Info token for the given participant
+     * 
+     * @param mixed $rcpro_participant_id
+     * 
+     * @return string|NULL token
+     */
+    public function getAuthenticatorAppInfoToken($rcpro_participant_id)
+    {
+        $SQL = "SELECT value FROM redcap_external_modules_log_parameters WHERE log_id = ? AND name = 'aa_mfa_token'";
+        try {
+            $result = $this->module->query($SQL, [ $rcpro_participant_id ]);
+            return $result->fetch_assoc()["value"];
+        } catch ( \Exception $e ) {
+            $this->module->logError("Error getting Authenticator App Info token", $e);
+        }
+    }
+
+    /**
      * Creates a "random" username
      * It creates an 8-digit username (between 10000000 and 99999999)
      * Of the form: XXX-XX-XXX
@@ -285,6 +346,23 @@ class ParticipantHelper
     public function expirePasswordResetToken($rcpro_participant_id)
     {
         $SQL = "UPDATE redcap_external_modules_log_parameters SET value = 0 WHERE log_id = ? AND name = 'token_valid'";
+        try {
+            return $this->module->query($SQL, [ $rcpro_participant_id ]);
+        } catch ( \Exception $e ) {
+            $this->module->logError("Error expiring password reset token.", $e);
+        }
+    }
+
+    /**
+     * Sets the Authenticator App Info token as invalid/expired
+     * 
+     * @param mixed $rcpro_participant_id id of participant
+     * 
+     * @return bool|null success or failure
+     */
+    public function expireAuthenticatorAppInfoToken($rcpro_participant_id)
+    {
+        $SQL = "UPDATE redcap_external_modules_log_parameters SET value = 0 WHERE log_id = ? AND name = 'aa_mfa_token_valid'";
         try {
             return $this->module->query($SQL, [ $rcpro_participant_id ]);
         } catch ( \Exception $e ) {
@@ -688,6 +766,32 @@ class ParticipantHelper
             }
         } catch ( \Exception $e ) {
             $this->module->logError("Error verifying password reset token", $e);
+        }
+    }
+
+    /**
+     * Verify that the supplied Authenticator App Info token is valid.
+     * 
+     * @param string $token
+     * 
+     * @return array with participant id and username
+     */
+    public function verifyAuthenticatorAppInfoToken(string $token)
+    {
+        $SQL = "SELECT log_id rcpro_participant_id, rcpro_username WHERE message = 'PARTICIPANT' AND aa_mfa_token = ? AND aa_mfa_token_ts > ? AND aa_mfa_token_valid = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
+        try {
+            $result = $this->module->selectLogs($SQL, [ $token, time() ]);
+            if ( $result->num_rows > 0 ) {
+                $result_array = $result->fetch_assoc();
+                $this->expireAuthenticatorAppInfoToken($result_array['rcpro_participant_id']);
+                $this->module->logEvent("Authenticator App Info Token Verified", [
+                    'rcpro_participant_id' => $result_array['rcpro_participant_id'],
+                    'rcpro_username'       => $result_array['rcpro_username']
+                ]);
+                return $result_array;
+            }
+        } catch ( \Exception $e ) {
+            $this->module->logError("Error verifying Authenticator App Info token", $e);
         }
     }
 

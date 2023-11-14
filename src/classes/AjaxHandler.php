@@ -20,7 +20,8 @@ class AjaxHandler
         "importCsvRegister",
         "searchParticipantByEmail",
         "sendMfaTokenEmail",
-        "showMFAInfo"
+        "showMFAInfo",
+        "sendMFAInfo"
     ];
     public function __construct(REDCapPRO $module, string $method, array $params, $project_id, $args = null)
     {
@@ -381,13 +382,29 @@ class AjaxHandler
             $rcpro_participant_id = $auth->get_participant_id();
             $participantEmail = $participantHelper->getEmail($rcpro_participant_id);
             $mfa_secret = $participantHelper->getMfaSecret($rcpro_participant_id);
+            if (empty($mfa_secret)) {
+                $mfa_secret = $auth->create_totp_mfa_secret();
+                $participantHelper->storeMfaSecret($rcpro_participant_id, $mfa_secret);
+            }
             $otpauth = $auth->create_totp_mfa_otpauth($participantEmail, $mfa_secret);
             $url = $auth->get_totp_mfa_qr_url($otpauth, $this->module);
             
             return [
-                'mfa_secret'=> $mfa_secret,
-                'url'=> $url
+                'mfa_secret' => $mfa_secret,
+                'url' => $url,
+                'email' => $participantEmail
             ];
+        } catch ( \Throwable $e ) {
+            $this->module->logError($e->getMessage(), $e);
+        }
+    }
+
+    private function sendMFAInfo() {
+        try {
+            $auth = new Auth($this->module->APPTITLE);
+            $auth->init();
+            $rcpro_participant_id = $auth->get_participant_id();
+            return $this->module->sendAuthenticatorAppInfoEmail($rcpro_participant_id);
         } catch ( \Throwable $e ) {
             $this->module->logError($e->getMessage(), $e);
         }

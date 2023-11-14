@@ -150,7 +150,8 @@
         "src/session_check",
         "src/create-account",
         "src/api",
-        "src/generate_qr_code"
+        "src/generate_qr_code",
+        "src/authenticator-app-info"
     ],
     "no-csrf-pages": [
         "src/api"
@@ -169,7 +170,8 @@
     ],
     "no-auth-ajax-actions": [
         "sendMfaTokenEmail",
-        "showMFAInfo"
+        "showMFAInfo",
+        "sendMFAInfo"
     ],
     "action-tags": [
         {
