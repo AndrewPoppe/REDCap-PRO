@@ -56,16 +56,16 @@
             "type": "descriptive"
         },
         {
-            "key": "mfa",
+            "key": "mfa-system",
             "name": "<div class='p-2' style='background-image: linear-gradient(rgb(197, 248, 255), rgb(197, 248, 255)); border: 1px solid rgba(37, 168, 133, 0.4); border-radius: 0.375rem;'><strong>Multi-Factor Authentication</strong>:</div><br>Should participants be required to use multi-factor authentication (MFA) when logging in? If so, they will be required to enter a code after entering their username and password. This is an additional security measure to prevent unauthorized access.<br><em>Note: this setting enables the MFA option globally, but it still must be enabled in the project settings to take effect</em>",
             "type": "checkbox"
         },
         {
-            "key": "mfa-authenticator-app",
+            "key": "mfa-authenticator-app-system",
             "name": "<div class='p-2' style='background-image: linear-gradient(rgb(197, 248, 255), rgb(197, 248, 255)); border: 1px solid rgba(37, 168, 133, 0.4); border-radius: 0.375rem;'><strong>Multi-Factor Authentication: Authenticator App</strong>:</div><br>Should participants be allowed to use an authenticator app (such as Google Authenticator or Microsoft Authenticator) to generate their MFA code? If not, they will be required to use the code sent to their email address.<br><em>Note: this setting only applies if MFA is enabled globally, but it still must be enabled in the project settings to take effect</em>",
             "type": "checkbox",
             "branchingLogic": {
-                "field": "mfa",
+                "field": "mfa-system",
                 "value": "1"
             }
         },

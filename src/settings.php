@@ -73,7 +73,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             $any_err   = true;
         }
 
-        if ( $module->getSystemSetting("allow-self-registration-system") ) {
+        if ( $module->framework->getSystemSetting("allow-self-registration-system") ) {
             // Validate Allow Self-Registration
             $new_settings["allow-self-registration"] = $post_settings["allow-self-registration"] === "on";
 
@@ -113,20 +113,20 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 }
 
 // Get current project settings
-$settings                       = $module->getProjectSettings();
-$preventEmailLoginSystem        = $module->getSystemSetting("prevent-email-login-system");
-$allowMfa                       = $module->getSystemSetting("mfa");
-$allowMfaAuthenticatorApp       = $module->getSystemSetting("mfa-authenticator-app");
-$mfaAuthenticatorAppEnabled     = $projectSettings->mfaAuthenticatorAppEnabled($project_id);
+$settings                       = $module->framework->getProjectSettings();
+$preventEmailLoginSystem        = $module->framework->getSystemSetting("prevent-email-login-system");
+$allowMfa                       = $module->framework->getSystemSetting("mfa-system");
+$allowMfaAuthenticatorApp       = $module->framework->getSystemSetting("mfa-authenticator-app-system");
 $project_id                     = (int) $module->framework->getProjectId();
+$mfaAuthenticatorAppEnabled     = $projectSettings->mfaAuthenticatorAppEnabled($project_id);
 $allowSelfRegistrationSystem    = $module->framework->getSystemSetting("allow-self-registration-system");
 $allowAutoEnrollSystem          = (bool) $module->framework->getSystemSetting("allow-auto-enroll-upon-self-registration-system");
 $allowSelfRegistration          = $projectSettings->shouldAllowSelfRegistration($project_id);
 $autoEnrollUponSelfRegistration = $projectSettings->shouldEnrollUponRegistration($project_id);
 $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEmail($project_id);
-$selfRegistrationAdminOnly      = $module->getSystemSetting("self-registration-require-admin");
-$allowApi                       = $module->getSystemSetting("api-enabled-system");
-$apiSettingsAdminOnly           = $module->getSystemSetting("api-require-admin");
+$selfRegistrationAdminOnly      = $module->framework->getSystemSetting("self-registration-require-admin");
+$allowApi                       = $module->framework->getSystemSetting("api-enabled-system");
+$apiSettingsAdminOnly           = $module->framework->getSystemSetting("api-require-admin");
 
 ?>
 
