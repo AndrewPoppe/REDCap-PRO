@@ -35,6 +35,9 @@ if (!$verified_participant) { ?>
     exit;
 }
 
+// They have a valid token. Set their MFA verification status to true.
+$auth->set_mfa_verification_status(true);
+
 $rcpro_participant_id = $verified_participant["rcpro_participant_id"];
 $participant_email = $participantHelper->getEmail($rcpro_participant_id);
 $mfa_secret = $participantHelper->getMfaSecret($rcpro_participant_id);

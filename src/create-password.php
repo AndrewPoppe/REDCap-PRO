@@ -8,11 +8,6 @@ namespace YaleREDCap\REDCapPRO;
 $auth = new Auth($module->APPTITLE);
 $auth->init();
 
-// UI
-$ui = new UI($module);
-
-$participantHelper = new ParticipantHelper($module);
-
 # Parse query string to grab token.
 parse_str($_SERVER['QUERY_STRING'], $qstring);
 
@@ -26,8 +21,11 @@ if ( !isset($qstring["t"]) && $_SERVER["REQUEST_METHOD"] !== "POST" ) {
 $new_password     = $confirm_password = "";
 $new_password_err = $confirm_password_err = "";
 
+// UI
+$ui = new UI($module);
 
 // Verify password reset token
+$participantHelper = new ParticipantHelper($module);
 $verified_user = $participantHelper->verifyPasswordResetToken($qstring["t"]);
 
 // Processing form data when form is submitted
@@ -103,7 +101,9 @@ if ( $_SERVER["REQUEST_METHOD"] === "POST" ) {
 $ui->ShowParticipantHeader($module->tt("create_password_title"));
 
 if ( $verified_user ) {
-
+    // They have a valid token. Set their MFA verification status to true.
+    $auth->set_mfa_verification_status(true);
+    
     $module->logEvent("Participant opened create password page", [
         "rcpro_username" => $verified_user["rcpro_username"]
     ]);

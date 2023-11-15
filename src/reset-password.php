@@ -107,6 +107,8 @@ if ( $_SERVER["REQUEST_METHOD"] === "POST" ) {
 $ui->ShowParticipantHeader($module->tt("reset_password_title"));
 
 if ( $verified_participant ) {
+    // They have a valid token. Set their MFA verification status to true.
+    $auth->set_mfa_verification_status(true);
     ?>
     <div style="text-align: center;">
         <p>
