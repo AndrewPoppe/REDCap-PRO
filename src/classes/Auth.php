@@ -159,7 +159,7 @@ class Auth
         $this->set_survey_username($participant["rcpro_username"]);
         $this->set_survey_record();
         $_SESSION["username"]                          = $participant["rcpro_username"];
-        $_SESSION[$this->APPTITLE . "_participant_id"] = $participant["log_id"];
+        $_SESSION[$this->APPTITLE . "_participant_id"] = $participant["log_id"] ?? $participant["rcpro_participant_id"];
         $_SESSION[$this->APPTITLE . "_username"]       = $participant["rcpro_username"];
         $_SESSION[$this->APPTITLE . "_email"]          = $participant["email"];
         $_SESSION[$this->APPTITLE . "_fname"]          = $participant["fname"];

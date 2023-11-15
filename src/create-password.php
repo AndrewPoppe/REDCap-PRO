@@ -26,7 +26,7 @@ $ui = new UI($module);
 
 // Verify password reset token
 $participantHelper = new ParticipantHelper($module);
-$verified_user = $participantHelper->verifyPasswordResetToken($qstring["t"]);
+$verified_participant = $participantHelper->verifyPasswordResetToken($qstring["t"]);
 
 // Processing form data when form is submitted
 if ( $_SERVER["REQUEST_METHOD"] === "POST" ) {
@@ -100,12 +100,13 @@ if ( $_SERVER["REQUEST_METHOD"] === "POST" ) {
 
 $ui->ShowParticipantHeader($module->tt("create_password_title"));
 
-if ( $verified_user ) {
-    // They have a valid token. Set their MFA verification status to true.
+if ( $verified_participant ) {
+    // They have a valid token. Set their Login and MFA verification status to true.
+    $auth->set_login_values($verified_participant);
     $auth->set_mfa_verification_status(true);
-    
+
     $module->logEvent("Participant opened create password page", [
-        "rcpro_username" => $verified_user["rcpro_username"]
+        "rcpro_username" => $verified_participant["rcpro_username"]
     ]);
 
     echo "<p>" . $module->tt("create_password_message3") . "</p>";
@@ -115,7 +116,7 @@ if ( $verified_user ) {
         <div class="form-group">
             <span>
                 <?= $module->tt("create_password_username_label") ?><span style="color: #900000; font-weight: bold;">
-                    <?= $verified_user["rcpro_username"]; ?>
+                    <?= $verified_participant["rcpro_username"]; ?>
                 </span>
             </span>
         </div>
@@ -143,7 +144,7 @@ if ( $verified_user ) {
             <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
         </div>
         <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
-        <input type="hidden" name="username" value="<?= $verified_user["rcpro_username"] ?>">
+        <input type="hidden" name="username" value="<?= $verified_participant["rcpro_username"] ?>">
     </form>
     </div>
     </body>

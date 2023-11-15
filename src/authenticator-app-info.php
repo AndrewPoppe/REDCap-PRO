@@ -35,7 +35,8 @@ if (!$verified_participant) { ?>
     exit;
 }
 
-// They have a valid token. Set their MFA verification status to true.
+// They have a valid token. Set their Login and MFA verification status to true.
+$auth->set_login_values($verified_participant);
 $auth->set_mfa_verification_status(true);
 
 $rcpro_participant_id = $verified_participant["rcpro_participant_id"];
