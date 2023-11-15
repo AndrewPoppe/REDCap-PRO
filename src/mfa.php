@@ -129,7 +129,7 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
 
     <form class="needs-validation" action="<?= $module->getUrl("src/mfa.php", true); ?>" method="post" novalidate>
         <div class="form-group">
-            <input type="text" name="mfa_token" placeholder="<?= $module->framework->tt("mfa_text3") ?>" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>" required pattern="\d{6,6}">
+            <input type="text" name="mfa_token" placeholder="<?= $module->framework->tt("mfa_text3") ?>" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>" required pattern="\d{6,6}" inputmode="numeric" autocomplete="one-time-code">
             <span class="invalid-feedback" data-original="<?=$module->framework->tt("mfa_err5");?>">
                 <?= $mfa_err ?>
             </span>
@@ -174,7 +174,7 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
 
     <form class="needs-validation" action="<?= $module->getUrl("src/mfa.php", true); ?>" method="post" novalidate>
         <div class="form-group">
-            <input type="text" name="mfa_token" placeholder="<?= $module->framework->tt("mfa_text6") ?>" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>" required pattern="\d{6,8}">
+            <input type="text" name="mfa_token" placeholder="<?= $module->framework->tt("mfa_text6") ?>" class="form-control <?= (!empty($mfa_err)) ? 'is-invalid' : ''; ?>" required pattern="\d{6,8}"  inputmode="numeric" autocomplete="one-time-code">
             <span class="invalid-feedback" data-original="<?=$module->framework->tt("mfa_err5");?>">
                 <?= $mfa_err  ?>
             </span>
