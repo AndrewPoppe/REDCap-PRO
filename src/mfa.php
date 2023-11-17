@@ -46,6 +46,7 @@ if ( $isPost ) {
         $emailMfa   = filter_input(INPUT_POST, "emailMfa", FILTER_VALIDATE_BOOLEAN);
         $code          = filter_input(INPUT_POST, "mfa_token", FILTER_VALIDATE_INT);
         if ($emailMfa) {
+            $thisPreferredMethod = 'email';
             $codeIsCorrect = $auth->check_email_mfa_code($code);
         } else {
             // Authenticator App
@@ -53,6 +54,7 @@ if ( $isPost ) {
                 $codeIsCorrect = false;
                 $mfa_err = $module->framework->tt("mfa_err3");
             } else {
+                $thisPreferredMethod = 'authenticator-app';
                 $codeIsCorrect = $auth->check_totp_mfa_code($code, $mfa_secret);
                 $module->framework->log("Checked Authenticator App MFA Code", [
                     'participant_id' => $rcpro_participant_id,
@@ -61,6 +63,9 @@ if ( $isPost ) {
             }
         }
         if ( $codeIsCorrect ) {
+            // Set MFA method preference
+            $participantHelper->setMfaMethodPreference($rcpro_participant_id, $thisPreferredMethod);
+            // Set MFA verification status
             $auth->set_mfa_verification_status(true);
             // Redirect user to appropriate page
             if ( $auth->is_survey_url_set() ) {
@@ -82,26 +87,34 @@ if ( $isPost ) {
     }
 }
 
-// Check if user initiated a resend of email MFA code or if email is the only MFA method enabled
-$resend = filter_input(INPUT_GET, "resend", FILTER_VALIDATE_BOOLEAN);
+// Is the option to use an Authenticator App enabled?
 $mfaAuthenticatorAppEnabled = $settings->mfaAuthenticatorAppEnabled($project_id);
-if ( $resend || (!$isPost && !$mfaAuthenticatorAppEnabled)) {
+
+// Get user's current MFA method preference
+$mfaMethodfPreference = $mfaAuthenticatorAppEnabled ? $participantHelper->getMfaMethodPreference($rcpro_participant_id) : null;
+
+// Check if user initiated a resend of email MFA code or if email is the only MFA method enabled or if email is the user's current preference
+$resend = filter_input(INPUT_GET, "resend", FILTER_VALIDATE_BOOLEAN);
+
+if ( $resend || (!$isPost && !$mfaAuthenticatorAppEnabled) || (!$isPost && $mfaMethodfPreference === 'email')) {
     $auth->clear_email_mfa_code();
     $code = $auth->get_email_mfa_code();
     $module->sendMfaTokenEmail($participantEmail, $code);
 }
 
 // Which should be shown?
-$showEmail = $resend || $emailMfa || !$mfaAuthenticatorAppEnabled;
-$showAuthenticatorApp = !$showEmail && $isPost;
+$showEmail = $mfaMethodfPreference === 'email' || $resend || $emailMfa || !$mfaAuthenticatorAppEnabled;
+$showAuthenticatorApp = !$showEmail && ($isPost || $mfaMethodfPreference === 'authenticator-app');
 
 // This method starts the html doc
 $ui = new UI($module);
 $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
+
 ?>
 
 <!-- Email MFA only -->
-<!-- Either it is the only MFA method enabled or the user chose Email MFA -->
+<!-- Either it is the only MFA method enabled or the user chose Email MFA or it is their current preference -->
+
 
 <div id="emailMFAContainer" class="mfaOptionContainer" style="display: <?= $showEmail ? 'block' : 'none' ?>;">
     <div style="text-align: center;">
@@ -135,7 +148,7 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
             </span>
         </div>
         <div class="form-group row">
-            <?= $mfaAuthenticatorAppEnabled ? '<div class="col-6"><button type="button" class="btn btn-secondary btn-mfa-control" onclick="window.rcpro.showMFAChoice();">'. $module->framework->tt("mfa_cancel_button_text") . '</button></div>' : '' ?>
+            <?= $mfaAuthenticatorAppEnabled ? '<div class="col-6"><button type="button" class="btn btn-secondary btn-mfa-control" onclick="window.rcpro.showMFAChoice();">'. $module->framework->tt("mfa_cancel_button_text2") . '</button></div>' : '' ?>
             <div class="col"><button type="submit" class="btn btn-primary btn-mfa-control"><?= $module->framework->tt("mfa_submit_button_text") ?></button></div>
         </div>
         <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
@@ -180,7 +193,7 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
             </span>
         </div>
         <div class="form-group row">
-            <div class="col-6"><button type="button" class="btn btn-secondary btn-mfa-control" onclick="window.rcpro.showMFAChoice();"><?=$module->framework->tt("mfa_cancel_button_text")?></button></div>
+            <div class="col-6"><button type="button" class="btn btn-secondary btn-mfa-control" onclick="window.rcpro.showMFAChoice();"><?=$module->framework->tt("mfa_cancel_button_text2")?></button></div>
             <div class="col"><button type="submit" class="btn btn-primary btn-mfa-control"><?= $module->framework->tt("mfa_submit_button_text") ?></button></div>
         </div>
         <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
@@ -341,7 +354,7 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
             .then(function(result) {
                 window.rcpro.hideEmailLoading();
                 if (!result) {
-                    console.log('Error sending email');
+                    window.rcpro.showToast('error', 'Error sending email');
                     return;
                 }
                 $('#mfaChoiceContainer').hide();
@@ -442,25 +455,6 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
                 $(this).addClass('was-validated');
             });
         });
-
-        // (() => {
-        //     'use strict'
-
-        //     // Fetch all the forms we want to apply custom Bootstrap validation styles to
-        //     const forms = document.querySelectorAll('.needs-validation');
-
-        //     // Loop over them and prevent submission
-        //     Array.from(forms).forEach(form => {
-        //         form.addEventListener('submit', event => {
-        //             if (!form.checkValidity()) {
-        //                 event.preventDefault();
-        //                 event.stopPropagation();
-        //             }
-
-        //             form.classList.add('was-validated')
-        //         }, false);
-        //     })
-        // })();
     });
 </script>
 <!-- Authenticator App Info Modal -->
