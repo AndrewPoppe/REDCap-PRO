@@ -48,7 +48,7 @@ echo '<div style="text-align: center;"><p>' . $module->tt("forgot_password_messa
         <label>
             <?= $module->tt("forgot_password_username_label") ?>
         </label>
-        <input type="text" name="username" class="form-control <?php echo (!empty($err)) ? 'is-invalid' : ''; ?>">
+        <input type="text" name="username" class="form-control <?php echo (!empty($err)) ? 'is-invalid' : ''; ?>" autocomplete="username" inputmode="email">
         <span class="invalid-feedback">
             <?php echo $err; ?>
         </span>

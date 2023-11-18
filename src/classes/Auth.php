@@ -103,7 +103,7 @@ class Auth
 
     public function get_participant_id()
     {
-        return $_SESSION[$this->APPTITLE . "_participant_id"];
+        return (int) $_SESSION[$this->APPTITLE . "_participant_id"];
     }
 
     public function get_username()
@@ -159,7 +159,7 @@ class Auth
         $this->set_survey_username($participant["rcpro_username"]);
         $this->set_survey_record();
         $_SESSION["username"]                          = $participant["rcpro_username"];
-        $_SESSION[$this->APPTITLE . "_participant_id"] = $participant["log_id"];
+        $_SESSION[$this->APPTITLE . "_participant_id"] = $participant["log_id"] ?? $participant["rcpro_participant_id"];
         $_SESSION[$this->APPTITLE . "_username"]       = $participant["rcpro_username"];
         $_SESSION[$this->APPTITLE . "_email"]          = $participant["email"];
         $_SESSION[$this->APPTITLE . "_fname"]          = $participant["fname"];
@@ -205,47 +205,104 @@ class Auth
         }
     }
 
-    // MFA
-    public function generate_mfa_code()
-    {
-        $code                                         = random_int(100000, 999999);
-        $_SESSION[$this->APPTITLE . "_mfa_code"]      = $code;
-        $_SESSION[$this->APPTITLE . "_mfa_code_time"] = time();
-        return $code;
-    }
+    ///////////////////
+    /////   MFA   /////
+    ///////////////////
 
-    public function get_mfa_code()
-    {
-        return $_SESSION[$this->APPTITLE . "_mfa_code"] ?? $this->generate_mfa_code();
-    }
 
-    public function get_mfa_code_time()
-    {
-        return $_SESSION[$this->APPTITLE . "_mfa_code_time"];
-    }
-
-    public function clear_mfa_code()
-    {
-        unset($_SESSION[$this->APPTITLE . "_mfa_code"]);
-        unset($_SESSION[$this->APPTITLE . "_mfa_code_time"]);
-    }
+    // --- General MFA --- \\
 
     public function is_mfa_verified()
     {
         return $_SESSION[$this->APPTITLE . "_mfa_code_verified"];
     }
 
-    public function check_mfa_code(int $code)
+    public function set_mfa_verification_status(bool $status)
     {
-        $codeMatches = $code === $this->get_mfa_code();
-        $codeExpired = time() - $this->get_mfa_code_time() > $this->mfa_duration;
+        $_SESSION[$this->APPTITLE . "_mfa_code_verified"] = $status;
+    }
+
+
+    // --- Email MFA --- \\
+
+    public function generate_email_mfa_code()
+    {
+        $code                                               = random_int(100000, 999999);
+        $_SESSION[$this->APPTITLE . "_email_mfa_code"]      = $code;
+        $_SESSION[$this->APPTITLE . "_email_mfa_code_time"] = time();
+        return $code;
+    }
+
+    public function get_email_mfa_code()
+    {
+        return $_SESSION[$this->APPTITLE . "_email_mfa_code"] ?? $this->generate_email_mfa_code();
+    }
+
+    public function get_email_mfa_code_time()
+    {
+        return $_SESSION[$this->APPTITLE . "_email_mfa_code_time"];
+    }
+
+    public function clear_email_mfa_code()
+    {
+        unset($_SESSION[$this->APPTITLE . "_email_mfa_code"]);
+        unset($_SESSION[$this->APPTITLE . "_email_mfa_code_time"]);
+    }
+
+    public function check_email_mfa_code(int $code)
+    {
+        $codeMatches = $code === $this->get_email_mfa_code();
+        $codeExpired = time() - $this->get_email_mfa_code_time() > $this->mfa_duration;
         if ( $codeExpired ) {
-            $this->clear_mfa_code();
+            $this->clear_email_mfa_code();
         }
         $success = $codeMatches && !$codeExpired;
         if ( $success ) {
             $_SESSION[$this->APPTITLE . "_mfa_code_verified"] = true;
         }
         return $success;
+    }
+
+    // --- TOTP Authenticator MFA --- \\
+
+    public function get_totp_mfa_qr_url(string $otpauth, REDCapPRO $module)
+    {
+        return $module->framework->getUrl("src/generate_qr_code.php?otpauth=" . urlencode($otpauth), true);
+    }
+
+    public function create_totp_mfa_secret()
+    {
+        $ga     = new \GoogleAuthenticator();
+        $secret = $ga->createSecret();
+        return $secret;
+    }
+
+    public function create_totp_mfa_otpauth(string $email, string $secret)
+    {
+        $scheme      = 'otpauth';
+        $type        = 'totp';
+        $issuer      = urlencode($this->APPTITLE . ' (' . SERVER_NAME . ')');
+        $accountName = urlencode($email);
+        $otpauth     = $scheme . '://' . $type . '/' . $issuer . ':' . $accountName . '?secret=' . $secret . '&issuer=' . $issuer;
+        return $otpauth;
+    }
+
+    public function check_totp_mfa_code(string $code, string $secret)
+    {
+        $ga = new \GoogleAuthenticator();
+        return $ga->verifyCode($secret, $code, 2);
+    }
+
+    public function get_totp_mfa_secret_from_otpauth(string $otpauth)
+    {
+        if ( empty($otpauth) ) {
+            return null;
+        }
+        $qstring = parse_url($otpauth, PHP_URL_QUERY);
+        if ( !$qstring ) {
+            return null;
+        }
+        parse_str($qstring, $params);
+        return $params['secret'];
     }
 }
