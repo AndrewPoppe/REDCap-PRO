@@ -62,12 +62,17 @@
         },
         {
             "key": "mfa-authenticator-app-system",
-            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(197, 248, 255), rgb(197, 248, 255)); border: 1px solid rgba(37, 168, 133, 0.4); border-radius: 0.375rem;'><strong>Multi-Factor Authentication: Authenticator App</strong>:</div><br>Should participants be allowed to use an authenticator app (such as Google Authenticator or Microsoft Authenticator) to generate their MFA code? If not, they will be required to use the code sent to their email address.<br><em>Note: this setting only applies if MFA is enabled globally, but it still must be enabled in the project settings to take effect</em>",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(197, 248, 255), rgb(197, 248, 255)); border: 1px solid rgba(37, 168, 133, 0.4); border-radius: 0.375rem;'><strong>Multi-Factor Authentication with Authenticator App</strong>:</div><br>Should participants be allowed to use an authenticator app (such as Google Authenticator or Microsoft Authenticator) to generate their MFA code? If not, they will be required to use the code sent to their email address.<br><em>Note: this setting only applies if MFA is enabled globally, but it still must be enabled in the project settings to take effect</em>",
             "type": "checkbox",
             "branchingLogic": {
                 "field": "mfa-system",
                 "value": "1"
             }
+        },
+        {
+            "key": "mfa-require-admin",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(197, 248, 255), rgb(197, 248, 255)); border: 1px solid rgba(37, 168, 133, 0.4); border-radius: 0.375rem;'><strong>Restrict MFA project settings to REDCap administrators</strong>:</div><br>Should only REDCap administrators be able to enable/disable MFA options in project settings? If not, any REDCapPRO manager in the project will be able to enable/disable MFA options in project settings.<br><em>Note: this setting only applies if MFA is enabled globally</em>",
+            "type": "checkbox"
         },
         {
             "key": "self-registration-descriptive",

@@ -227,7 +227,7 @@ class Auth
 
     public function generate_email_mfa_code()
     {
-        $code                                         = random_int(100000, 999999);
+        $code                                               = random_int(100000, 999999);
         $_SESSION[$this->APPTITLE . "_email_mfa_code"]      = $code;
         $_SESSION[$this->APPTITLE . "_email_mfa_code_time"] = time();
         return $code;
@@ -270,32 +270,36 @@ class Auth
         return $module->framework->getUrl("src/generate_qr_code.php?otpauth=" . urlencode($otpauth), true);
     }
 
-    public function create_totp_mfa_secret() {
-        $ga = new \GoogleAuthenticator();
+    public function create_totp_mfa_secret()
+    {
+        $ga     = new \GoogleAuthenticator();
         $secret = $ga->createSecret();
         return $secret;
     }
 
-    public function create_totp_mfa_otpauth(string $email, string $secret) {
-        $scheme = 'otpauth';
-        $type = 'totp';
-        $issuer = urlencode($this->APPTITLE . ' (' . SERVER_NAME . ')');
+    public function create_totp_mfa_otpauth(string $email, string $secret)
+    {
+        $scheme      = 'otpauth';
+        $type        = 'totp';
+        $issuer      = urlencode($this->APPTITLE . ' (' . SERVER_NAME . ')');
         $accountName = urlencode($email);
-        $otpauth = $scheme.'://'.$type.'/'.$issuer.':'.$accountName.'?secret='.$secret.'&issuer='.$issuer;
+        $otpauth     = $scheme . '://' . $type . '/' . $issuer . ':' . $accountName . '?secret=' . $secret . '&issuer=' . $issuer;
         return $otpauth;
     }
 
-    public function check_totp_mfa_code(string $code, string $secret) {
+    public function check_totp_mfa_code(string $code, string $secret)
+    {
         $ga = new \GoogleAuthenticator();
         return $ga->verifyCode($secret, $code, 2);
     }
 
-    public function get_totp_mfa_secret_from_otpauth(string $otpauth) {
-        if (empty($otpauth)) {
+    public function get_totp_mfa_secret_from_otpauth(string $otpauth)
+    {
+        if ( empty($otpauth) ) {
             return null;
         }
         $qstring = parse_url($otpauth, PHP_URL_QUERY);
-        if (!$qstring) {
+        if ( !$qstring ) {
             return null;
         }
         parse_str($qstring, $params);

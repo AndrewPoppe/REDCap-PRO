@@ -116,14 +116,14 @@ class ProjectSettings
     /**
      * Checks whether MFA is enabled in this project
      *
-     * @param int $pid The redcap project ID
+     * @param int $project_id The redcap project ID
      *
      * @return bool Whether MFA is enabled in this project
      */
-    public function mfaEnabled(int $pid)
+    public function mfaEnabled(int $project_id)
     {
         $mfaEnabledSystem  = $this->module->framework->getSystemSetting("mfa-system");
-        $mfaEnabledProject = $this->module->framework->getProjectSetting("mfa", $pid);
+        $mfaEnabledProject = $this->module->framework->getProjectSetting("mfa", $project_id);
 
         return $mfaEnabledSystem === true && $mfaEnabledProject === true;
     }

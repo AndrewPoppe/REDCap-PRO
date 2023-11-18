@@ -34,6 +34,15 @@ if ( isset($_GET["error"]) ) {
 $projectSettings = new ProjectSettings($module);
 $languageList    = $projectSettings->getLanguageFiles();
 
+// Should these settings shown / updated?
+$isAdmin                     = $module->framework->getUser()->isSuperUser();
+$allowMfaSystem              = $module->framework->getSystemSetting("mfa-system");
+$allowApiSystem              = $module->framework->getSystemSetting("api-enabled-system");
+$allowSelfRegistrationSystem = $module->framework->getSystemSetting("allow-self-registration-system");
+$showMfa                     = $allowMfaSystem && ($isAdmin || !$module->framework->getSystemSetting("mfa-require-admin"));
+$showApi                     = $allowApiSystem && ($isAdmin || !$module->framework->getSystemSetting("api-require-admin"));
+$showSelfRegistration        = $allowSelfRegistrationSystem && ($isAdmin || !$module->framework->getSystemSetting("self-registration-require-admin"));
+
 // Update settings if requested
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
@@ -57,13 +66,6 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         // Validate Prevent Email Login
         $new_settings["prevent-email-login"] = $post_settings["prevent-email-login"] === "true";
 
-        // Validate MFA
-        $new_settings["mfa"] = $post_settings["mfa"] === "true";
-        $new_settings["mfa-authenticator-app"] = $post_settings["mfa-authenticator-app"] === "on";
-
-        // Validate API
-        $new_settings["api"] = $post_settings["api"] === "true";
-
         // Validate Primary Contact
         $new_settings["pc-name"]  = \REDCap::escapeHtml($post_settings["pc-name"]);
         $new_settings["pc-email"] = \REDCap::escapeHtml($post_settings["pc-email"]);
@@ -73,16 +75,23 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             $any_err   = true;
         }
 
-        if ( $module->framework->getSystemSetting("allow-self-registration-system") ) {
-            // Validate Allow Self-Registration
-            $new_settings["allow-self-registration"] = $post_settings["allow-self-registration"] === "on";
+        // Validate MFA
+        if ( $showMfa ) {
+            $new_settings["mfa"]                   = $post_settings["mfa"] === "true";
+            $new_settings["mfa-authenticator-app"] = $post_settings["mfa-authenticator-app"] === "on";
+        }
 
-            // Validate Auto-Enroll Upon Self-Registration
+        // Validate API
+        if ( $showApi ) {
+            $new_settings["api"] = $post_settings["api"] === "true";
+        }
+
+        // Validate Self-Registration
+        if ( $showSelfRegistration ) {
+            $new_settings["allow-self-registration"]            = $post_settings["allow-self-registration"] === "on";
             $new_settings["auto-enroll-upon-self-registration"] = $new_settings["allow-self-registration"] && $post_settings["auto-enroll-upon-self-registration"] === "on";
-
-            // Validate Auto-Enroll Notification Email
-            $new_email                                      = trim(filter_input(INPUT_POST, "auto-enroll-notification-email", FILTER_VALIDATE_EMAIL));
-            $new_settings["auto-enroll-notification-email"] = $new_email;
+            $new_email                                          = trim(filter_input(INPUT_POST, "auto-enroll-notification-email", FILTER_VALIDATE_EMAIL));
+            $new_settings["auto-enroll-notification-email"]     = $new_email;
         }
 
         if ( !$any_err ) {
@@ -115,18 +124,13 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 // Get current project settings
 $settings                       = $module->framework->getProjectSettings();
 $preventEmailLoginSystem        = $module->framework->getSystemSetting("prevent-email-login-system");
-$allowMfa                       = $module->framework->getSystemSetting("mfa-system");
 $allowMfaAuthenticatorApp       = $module->framework->getSystemSetting("mfa-authenticator-app-system");
 $project_id                     = (int) $module->framework->getProjectId();
 $mfaAuthenticatorAppEnabled     = $projectSettings->mfaAuthenticatorAppEnabled($project_id);
-$allowSelfRegistrationSystem    = $module->framework->getSystemSetting("allow-self-registration-system");
 $allowAutoEnrollSystem          = (bool) $module->framework->getSystemSetting("allow-auto-enroll-upon-self-registration-system");
 $allowSelfRegistration          = $projectSettings->shouldAllowSelfRegistration($project_id);
 $autoEnrollUponSelfRegistration = $projectSettings->shouldEnrollUponRegistration($project_id);
 $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEmail($project_id);
-$selfRegistrationAdminOnly      = $module->framework->getSystemSetting("self-registration-require-admin");
-$allowApi                       = $module->framework->getSystemSetting("api-enabled-system");
-$apiSettingsAdminOnly           = $module->framework->getSystemSetting("api-require-admin");
 
 ?>
 
@@ -204,8 +208,8 @@ $apiSettingsAdminOnly           = $module->framework->getSystemSetting("api-requ
                 </div>
                 <br>
             <?php }
-            if ( $allowMfa ) {
-                $mfaChecked = $settings["mfa"] ? "checked" : "";
+            if ( $showMfa ) {
+                $mfaChecked                 = $settings["mfa"] ? "checked" : "";
                 $mfaAuthenticatorAppChecked = $mfaAuthenticatorAppEnabled ? "checked" : "";
                 ?>
                 <div class="card">
@@ -218,9 +222,12 @@ $apiSettingsAdminOnly           = $module->framework->getSystemSetting("api-requ
                     </div>
                     <div class="card-body">
                         <div class="card-title">
-                            <strong>Should participants be required to use multi-factor authentication (MFA) when logging in?</strong><br>
-                            <em>If so, they will be required to enter a code sent to their email address after entering their
-                            username and password.<br>This is an additional security measure to prevent unauthorized access.</em>
+                            <strong>Should participants be required to use multi-factor authentication (MFA) when logging
+                                in?</strong><br>
+                            <em>If so, they will be required to enter a code sent to their email address after entering
+                                their
+                                username and password.<br>This is an additional security measure to prevent unauthorized
+                                access.</em>
                             <br>
                         </div>
                         <div class="form-check">
@@ -244,23 +251,23 @@ $apiSettingsAdminOnly           = $module->framework->getSystemSetting("api-requ
                         <?php if ( $allowMfaAuthenticatorApp ) { ?>
                             <br><br>
                             <div class="card-title" id="mfa-authenticator-app-title">
-                                <strong>Should an authenticator app such as Google Authenticator or Microsoft Authenticator be allowed for MFA?</strong><br>
-                                <em>Checking this option will allow participants to use an authenticator app to generate their MFA code.</em>
+                                <strong>Should an authenticator app such as Google Authenticator or Microsoft Authenticator be
+                                    allowed for MFA?</strong><br>
+                                <em>Checking this option will allow participants to use an authenticator app to generate their
+                                    MFA code.</em>
                             </div>
                             <div class="form-check" id="auto-enroll-settings">
-                                <input class="form-check-input"
-                                    name="mfa-authenticator-app" type="checkbox"
-                                    id="mfa-authenticator-app" <?= $mfaAuthenticatorAppChecked ?>
-                                >
-                                <label class="form-check-label" style="vertical-align:middle;"
-                                    for="mfa-authenticator-app">Allow MFA Authenticator App</label>
+                                <input class="form-check-input" name="mfa-authenticator-app" type="checkbox"
+                                    id="mfa-authenticator-app" <?= $mfaAuthenticatorAppChecked ?>>
+                                <label class="form-check-label" style="vertical-align:middle;" for="mfa-authenticator-app">Allow
+                                    MFA Authenticator App</label>
                             </div>
                         <?php } ?>
                     </div>
                 </div>
                 <br>
             <?php }
-            if ( $allowApi && (!$apiSettingsAdminOnly || $module->framework->getUser()->isSuperUser()) ) {
+            if ( $showApi ) {
                 $apiChecked = $settings["api"] ? "checked" : "";
                 ?>
                 <div class="card">
@@ -276,7 +283,8 @@ $apiSettingsAdminOnly           = $module->framework->getSystemSetting("api-requ
                             Should users be allowed to use the API to register and enroll participants?<br>
                             If so, they will be able to use their REDCap API tokens to register and enroll participants in
                             this project.<br>
-                            <a href="https://github.com/AndrewPoppe/REDCap-PRO#api" target="_blank" rel="noopener noreferrer">More information</a>
+                            <a href="https://github.com/AndrewPoppe/REDCap-PRO#api" target="_blank"
+                                rel="noopener noreferrer">More information</a>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input <?php echo (!empty($api_err)) ? 'is-invalid' : ''; ?>"
@@ -300,7 +308,7 @@ $apiSettingsAdminOnly           = $module->framework->getSystemSetting("api-requ
                 <br>
             <?php } ?>
             <?php
-            if ( $allowSelfRegistrationSystem && (!$selfRegistrationAdminOnly || $module->framework->getUser()->isSuperUser()) ) {
+            if ( $showSelfRegistration ) {
                 $allowSelfRegistrationChecked          = $allowSelfRegistration ? "checked" : "";
                 $autoEnrollUponSelfRegistrationChecked = $autoEnrollUponSelfRegistration ? "checked" : "";
                 ?>
@@ -365,7 +373,8 @@ $apiSettingsAdminOnly           = $module->framework->getSystemSetting("api-requ
                             </div>
                             <br>
                             <div class="form-group">
-                                <label id="auto-enroll-notification-email-label">Email address to notify when new participants are auto-enrolled</label>
+                                <label id="auto-enroll-notification-email-label">Email address to notify when new participants
+                                    are auto-enrolled</label>
                                 <input type="email" name="auto-enroll-notification-email" id="auto-enroll-notification-email"
                                     class="form-control <?= (!empty($auto_enroll_notification_err) ? 'is-invalid' : '') ?>"
                                     value="<?= $autoEnrollNotificationEmail ?>">
@@ -438,7 +447,7 @@ $apiSettingsAdminOnly           = $module->framework->getSystemSetting("api-requ
             form.addEventListener('change', function () {
                 $('#rcpro-submit-button').attr("disabled", null);
             });
-            <?php if ( $allowAutoEnrollSystem ) { ?>
+            <?php if ( $showSelfRegistration && $allowAutoEnrollSystem ) { ?>
                 const isChecked = $('#allow-self-registration-form-check').get(0).checked;
                 if (!isChecked) {
                     $('#auto-enroll-upon-self-registration').get(0).checked = false;
@@ -450,7 +459,7 @@ $apiSettingsAdminOnly           = $module->framework->getSystemSetting("api-requ
                 $('#auto-enroll-notification-email').attr('disabled', !autoEnrollChecked);
                 $('#auto-enroll-notification-email-label').toggleClass('text-muted-more', !autoEnrollChecked);
             <?php } ?>
-            <?php if ($allowMfa && $allowMfaAuthenticatorApp) { ?>
+            <?php if ( $showMfa && $allowMfaAuthenticatorApp ) { ?>
                 const mfaChecked = $('#mfa-check').get(0).checked;
                 $('#mfa-authenticator-app').attr('disabled', !mfaChecked);
                 $('#mfa-authenticator-app-title').toggleClass('text-muted-more', !mfaChecked);

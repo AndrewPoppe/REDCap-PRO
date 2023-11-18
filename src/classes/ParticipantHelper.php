@@ -711,21 +711,21 @@ class ParticipantHelper
 
         $existingToken = $this->getAuthenticatorAppInfoToken($rcpro_participant_id);
         try {
-            if (empty($existingToken)) {
-                $SQL = "INSERT INTO redcap_external_modules_log_parameters (log_id, name, value) VALUES 
+            if ( empty($existingToken) ) {
+                $SQL    = "INSERT INTO redcap_external_modules_log_parameters (log_id, name, value) VALUES 
                         (?, 'aa_mfa_token', ?),
                         (?, 'aa_mfa_token_ts', ?),
                         (?, 'aa_mfa_token_valid', 1)";
                 $result = $this->module->query($SQL, [ $rcpro_participant_id, $token, $rcpro_participant_id, $token_ts, $rcpro_participant_id ]);
-                if (!$result) {
+                if ( !$result ) {
                     throw new REDCapProException([ "rcpro_participant_id" => $rcpro_participant_id ]);
                 }
                 return $token;
             } else {
-                $SQL1     = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'aa_mfa_token'";
-                $SQL2     = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'aa_mfa_token_ts'";
-                $SQL3     = "UPDATE redcap_external_modules_log_parameters SET value = 1 WHERE log_id = ? AND name = 'aa_mfa_token_valid'";
-        
+                $SQL1 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'aa_mfa_token'";
+                $SQL2 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'aa_mfa_token_ts'";
+                $SQL3 = "UPDATE redcap_external_modules_log_parameters SET value = 1 WHERE log_id = ? AND name = 'aa_mfa_token_valid'";
+
                 $result1 = $this->module->query($SQL1, [ $token, $rcpro_participant_id ]);
                 $result2 = $this->module->query($SQL2, [ $token_ts, $rcpro_participant_id ]);
                 $result3 = $this->module->query($SQL3, [ $rcpro_participant_id ]);
@@ -811,9 +811,9 @@ class ParticipantHelper
     {
         $SQL = "SELECT mfa_secret WHERE log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = $this->module->queryLogs($SQL, [ $rcpro_participant_id ]);
+            $result      = $this->module->queryLogs($SQL, [ $rcpro_participant_id ]);
             $resultAssoc = $result->fetch_assoc();
-            if (!empty($resultAssoc)) {
+            if ( !empty($resultAssoc) ) {
                 return $resultAssoc["mfa_secret"];
             }
         } catch ( \Exception $e ) {
@@ -829,10 +829,11 @@ class ParticipantHelper
      * 
      * @return bool|NULL success/failure/null
      */
-    public function storeMfaSecret(int $rcpro_participant_id, string $secret) {
+    public function storeMfaSecret(int $rcpro_participant_id, string $secret)
+    {
         $SQL = "INSERT INTO redcap_external_modules_log_parameters (log_id, name, value) VALUES (?, 'mfa_secret', ?);";
         try {
-            $res = $this->module->framework->query($SQL, [ $rcpro_participant_id, $secret]);
+            $res = $this->module->framework->query($SQL, [ $rcpro_participant_id, $secret ]);
             $this->module->logEvent("MFA Secret Stored", [
                 "rcpro_participant_id" => $rcpro_participant_id,
                 "rcpro_username"       => $this->getUserName($rcpro_participant_id)
@@ -851,30 +852,31 @@ class ParticipantHelper
      * 
      * @return bool|NULL success/failure/null
      */
-    public function setMfaMethodPreference(int $rcpro_participant_id, string $method) {
+    public function setMfaMethodPreference(int $rcpro_participant_id, string $method)
+    {
         try {
 
-            if (!in_array($method, ["authenticator-app", "email"])) {
+            if ( !in_array($method, [ "authenticator-app", "email" ]) ) {
                 throw new REDCapProException("Invalid MFA method");
             }
 
             $currentPreference = $this->getMfaMethodPreference($rcpro_participant_id);
 
-            if ($currentPreference === $method) {
+            if ( $currentPreference === $method ) {
                 return true;
             }
-            
-            if (empty($currentPreference)) {
+
+            if ( empty($currentPreference) ) {
                 $SQL = "INSERT INTO redcap_external_modules_log_parameters (value, name, log_id) VALUES (?, 'mfa_method_preference', ?);";
             } else {
                 $SQL = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'mfa_method_preference';";
             }
 
-            $res = $this->module->framework->query($SQL, [ $method, $rcpro_participant_id]);
+            $res = $this->module->framework->query($SQL, [ $method, $rcpro_participant_id ]);
             $this->module->logEvent("MFA Method Preference Stored", [
-                "rcpro_participant_id"      => $rcpro_participant_id,
-                "rcpro_username"            => $this->getUserName($rcpro_participant_id),
-                "mfa_method_preference"     => $method
+                "rcpro_participant_id"  => $rcpro_participant_id,
+                "rcpro_username"        => $this->getUserName($rcpro_participant_id),
+                "mfa_method_preference" => $method
             ]);
             return $res;
         } catch ( \Throwable $e ) {
@@ -889,12 +891,13 @@ class ParticipantHelper
      * 
      * @return string|NULL method
      */
-     public function getMfaMethodPreference(int $rcpro_participant_id) {
+    public function getMfaMethodPreference(int $rcpro_participant_id)
+    {
         $SQL = "SELECT mfa_method_preference WHERE log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
-            $result = $this->module->selectLogs($SQL, [ $rcpro_participant_id ]);
+            $result      = $this->module->selectLogs($SQL, [ $rcpro_participant_id ]);
             $resultAssoc = $result->fetch_assoc();
-            if (!empty($resultAssoc)) {
+            if ( !empty($resultAssoc) ) {
                 return $resultAssoc["mfa_method_preference"];
             }
         } catch ( \Exception $e ) {

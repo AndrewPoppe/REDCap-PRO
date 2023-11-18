@@ -808,9 +808,9 @@ class REDCapPRO extends AbstractExternalModule
             $participantHelper = new ParticipantHelper($this);
 
             // generate token
-            $token          = $participantHelper->createAuthenticatorAppInfoToken($rcpro_participant_id);
-            $to             = $participantHelper->getEmail($rcpro_participant_id);
-            
+            $token = $participantHelper->createAuthenticatorAppInfoToken($rcpro_participant_id);
+            $to    = $participantHelper->getEmail($rcpro_participant_id);
+
             // create email
             $subject = $this->tt("email_authenticator_app_mfa_info_subject");
             $from    = $settings->getEmailFromAddress();
@@ -1013,7 +1013,7 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function logError(string $message, \Throwable $e)
     {
-        if (empty($message)) {
+        if ( empty($message) ) {
             $message = 'Error';
         }
         $params = [
@@ -1026,7 +1026,7 @@ class REDCapPRO extends AbstractExternalModule
             "module_token"  => $this->getModuleToken()
         ];
         if ( isset($e->rcpro) ) {
-            $params = array_merge($params, ['rcpro' => $e->rcpro]);
+            $params = array_merge($params, [ 'rcpro' => $e->rcpro ]);
         }
         $this->logEvent($message, $params);
     }
