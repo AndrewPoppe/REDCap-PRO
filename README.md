@@ -363,7 +363,8 @@ information about **REDCapPRO** participants. These are described below:
 
 | Version | Release Date | Description                                                                                                   |
 | ------- | ------------ | ------------------------------------------------------------------------------------------------------------- |
-| 2.2.0   | 2023-11-21   | Feature release - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.2.0)               |
+| 2.2.1   | 2023-11-20   | Minor Change and Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.2.1)      |
+| 2.2.0   | 2023-11-19   | Feature release - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.2.0)               |
 | 2.1.3   | 2023-11-10   | Minor Change to UI Text - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.1.3)       |
 | 2.1.2   | 2023-10-30   | Major Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.1.2)                 |
 | 2.1.1   | 2023-10-27   | Minor Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.1.1)                 |
