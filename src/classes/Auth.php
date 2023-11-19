@@ -267,7 +267,7 @@ class Auth
 
     public function get_totp_mfa_qr_url(string $otpauth, REDCapPRO $module)
     {
-        return $module->framework->getUrl("src/generate_qr_code.php?otpauth=" . urlencode($otpauth), true);
+        return $module->framework->getUrl("src/generate_qr_code.php?otpauth=" . $otpauth, true);
     }
 
     public function create_totp_mfa_secret()
@@ -277,14 +277,24 @@ class Auth
         return $secret;
     }
 
-    public function create_totp_mfa_otpauth(string $email, string $secret)
+    /**
+     * Summary of create_totp_mfa_otpauth
+     *
+     * This function generates the OTPAuth URL for TOTP-based Multi-Factor Authentication (MFA).
+     * It returns the urlencoded OTPAuth URL string.
+     * 
+     * @param string $rcpro_username
+     * @param string $secret
+     * @return string The urlencoded OTPAuth URL string.
+     */
+    public function create_totp_mfa_otpauth(string $rcpro_username, string $secret)
     {
         $scheme      = 'otpauth';
         $type        = 'totp';
-        $issuer      = urlencode($this->APPTITLE . ' (' . SERVER_NAME . ')');
-        $accountName = urlencode($email);
+        $issuer      = $this->APPTITLE . ' (' . SERVER_NAME . ')';
+        $accountName = $rcpro_username;
         $otpauth     = $scheme . '://' . $type . '/' . $issuer . ':' . $accountName . '?secret=' . $secret . '&issuer=' . $issuer;
-        return $otpauth;
+        return urlencode($otpauth);
     }
 
     public function check_totp_mfa_code(string $code, string $secret)

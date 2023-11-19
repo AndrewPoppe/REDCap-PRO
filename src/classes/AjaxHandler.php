@@ -382,19 +382,19 @@ class AjaxHandler
             $auth->init();
             $participantHelper    = new ParticipantHelper($this->module);
             $rcpro_participant_id = $auth->get_participant_id();
-            $participantEmail     = $participantHelper->getEmail($rcpro_participant_id);
+            $rcpro_username       = $participantHelper->getUserName($rcpro_participant_id);
             $mfa_secret           = $participantHelper->getMfaSecret($rcpro_participant_id);
             if ( empty($mfa_secret) ) {
                 $mfa_secret = $auth->create_totp_mfa_secret();
                 $participantHelper->storeMfaSecret($rcpro_participant_id, $mfa_secret);
             }
-            $otpauth = $auth->create_totp_mfa_otpauth($participantEmail, $mfa_secret);
+            $otpauth = $auth->create_totp_mfa_otpauth($rcpro_username, $mfa_secret);
             $url     = $auth->get_totp_mfa_qr_url($otpauth, $this->module);
 
             return [
                 'mfa_secret' => $mfa_secret,
                 'url'        => $url,
-                'email'      => $participantEmail
+                'username'   => $rcpro_username
             ];
         } catch ( \Throwable $e ) {
             $this->module->logError('Error showing Authenticator App Info', $e);

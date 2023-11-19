@@ -201,7 +201,9 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
             </div>
             <div class="form-group row">
                 <div class="col-6"><button type="button" class="btn btn-secondary btn-mfa-control"
-                        onclick="window.rcpro.showMFAChoice();"><?= $module->framework->tt("mfa_cancel_button_text2") ?></button>
+                        onclick="window.rcpro.showMFAChoice();">
+                        <?= $module->framework->tt("mfa_cancel_button_text2") ?>
+                    </button>
                 </div>
                 <div class="col"><button type="submit" class="btn btn-primary btn-mfa-control">
                         <?= $module->framework->tt("mfa_submit_button_text") ?>
@@ -451,7 +453,7 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
         const modal = $('#authAppInfoModal');
         modal.find('#authenticatorAppQr').attr('src', results.url);
         modal.find('#authenticatorAppUrl').attr('href', results.url);
-        modal.find('#authAppAccountName').text(results.email);
+        modal.find('#authAppAccountName').text(results.username);
         modal.find('#authAppAccountKey').text(results.mfa_secret);
         modal.modal('show');
     }
@@ -518,8 +520,11 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
             </div>
             <div class="modal-body">
                 <h4><i class="fa-regular fa-circle-exclamation text-rcpro"></i>
-                    <?= $module->framework->tt('mfa_info22') ?></h4>
-                <p><?= $module->framework->tt('mfa_info23') ?></p>
+                    <?= $module->framework->tt('mfa_info22') ?>
+                </h4>
+                <p>
+                    <?= $module->framework->tt('mfa_info23') ?>
+                </p>
                 <div class="accordion accordion-rcpro" id="authAppInfoAccordion">
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="authAppHeading1">
@@ -545,12 +550,14 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
                                                     src="<?= $module->framework->getUrl('images/ga.webp', true) ?>">
                                                 <strong>
                                                     <?= $module->framework->tt('mfa_info20') ?>
-                                                </strong></li>
+                                                </strong>
+                                            </li>
                                             <li><img style="width: 2rem;"
                                                     src="<?= $module->framework->getUrl('images/ma.webp', true) ?>">
                                                 <strong>
                                                     <?= $module->framework->tt('mfa_info21') ?>
-                                                </strong></li>
+                                                </strong>
+                                            </li>
                                         </ul>
                                     </li>
                                     <li>
