@@ -385,7 +385,10 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
     }
 </style>
 <script src="<?= $module->framework->getUrl('lib/jQuery/jquery-3.7.1.min.js', true) ?>"></script>
-<?php $module->framework->initializeJavascriptModuleObject(); ?>
+<?php
+$module->framework->initializeJavascriptModuleObject();
+$module->framework->tt_transferToJavascriptModuleObject();
+?>
 <script>
 
     window.rcpro = <?= $module->framework->getJavascriptModuleObjectName() ?>;
@@ -403,7 +406,8 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
             .then(function (result) {
                 window.rcpro.hideEmailLoading();
                 if (!result) {
-                    window.rcpro.showToast('error', 'Error sending email');
+                    // Error sending email
+                    window.rcpro.showToast('error', window.rcpro.tt('mfa_messaging1'));
                     return;
                 }
                 $('#mfaChoiceContainer').hide();
@@ -424,26 +428,31 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
                 .then(function (result) {
                     window.rcpro.toasts.loading.hide();
                     if (!result) {
-                        console.log('Error showing MFA info');
+                        // Error showing MFA info
+                        window.rcpro.showToast('error', window.rcpro.tt('mfa_messaging2'));
                         return;
                     }
                     window.rcpro.showModal(result);
                 })
                 .catch(function (error) {
-                    window.rcpro.showToast('error', error);
+                    // Error showing MFA info
+                    window.rcpro.showToast('error', window.rcpro.tt('mfa_messaging2'));
                 });
         <?php } else { ?>
             window.rcpro.toasts.loading.show();
             window.rcpro.ajax('sendMFAInfo', [])
                 .then(function (result) {
                     if (!result) {
-                        window.rcpro.showToast('error', 'Error sending Authenticator info');
+                        // Error sending Authenticator info
+                        window.rcpro.showToast('error', window.rcpro.tt('mfa_messaging3'));
                         return;
                     }
-                    window.rcpro.showToast('success', 'Sent email with Authenticator info');
+                    // Sent email with Authenticator info
+                    window.rcpro.showToast('success', window.rcpro.tt('mfa_messaging4'));
                 })
                 .catch(function (error) {
-                    window.rcpro.showToast('error', error);
+                    // Error sending Authenticator info
+                    window.rcpro.showToast('error', window.rcpro.tt('mfa_messaging3'));
                 });
         <?php } ?>
     }
@@ -658,7 +667,9 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
                     <i class="text-rcpro fa-duotone fa-spinner-third fast-spin fa-2xl ms-2"></i>
                 </div>
                 <div class="col">
-                    <span class="message">Please wait...</span>
+                    <span class="message">
+                        <?= $module->framework->tt('mfa_messaging5') ?>
+                    </span>
                 </div>
             </div>
         </div>
