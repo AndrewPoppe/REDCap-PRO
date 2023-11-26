@@ -219,7 +219,7 @@ if ( !empty($login_err) ) {
             <?= $settings->emailLoginsAllowed($module->getProjectId()) ? $module->tt("login_username_label2") : $module->tt("login_username_label") ?>
         </label>
         <input type="text" name="username" class="form-control <?= (!empty($username_err)) ? 'is-invalid' : ''; ?>"
-            value="<?= $username; ?>">
+            value="<?= $username; ?>" autocomplete="username" inputmode="email">
         <span class="invalid-feedback">
             <?= $username_err; ?>
         </span>
@@ -228,7 +228,8 @@ if ( !empty($login_err) ) {
         <label>
             <?= $module->tt("login_password_label") ?>
         </label>
-        <input type="password" name="password" class="form-control <?= (!empty($password_err)) ? 'is-invalid' : ''; ?>">
+        <input type="password" name="password" class="form-control <?= (!empty($password_err)) ? 'is-invalid' : ''; ?>"
+            autocomplete="current-password">
         <span class="invalid-feedback">
             <?= $password_err; ?>
         </span>
@@ -251,9 +252,9 @@ if ( !empty($login_err) ) {
 </div>
 <?php if ( $settings->shouldAllowSelfRegistration((int) $module->getProjectId()) ) { ?>
     <div style="text-align: center;">
-        Don't have an account?
+        <?= $module->tt("create_user1") ?>
         <a href="<?= $module->getUrl("src/create-account.php", true); ?>">
-            Create one
+            <?= $module->tt("create_user2") ?>
         </a>
     </div>
 <?php } ?>

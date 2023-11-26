@@ -35,17 +35,18 @@ class REDCapPRO extends AbstractExternalModule
     public $PROJECT;
     public $DAG;
     static $COLORS = [
-        "primary"          => "#900000",
-        "secondary"        => "#17a2b8",
-        "primaryHighlight" => "#c91616",
-        "primaryDark"      => "#7a0000",
-        "primaryLight"     => "#ffadad",
-        "lightGrey"        => "#f9f9f9",
-        "mediumGrey"       => "#dddddd",
-        "darkGrey"         => "#6c757d",
-        "blue"             => "#000090",
-        "green"            => "#009000",
-        "ban"              => "tomato"
+        "primary"           => "#900000",
+        "secondary"         => "#17a2b8",
+        "primaryHighlight"  => "#c91616",
+        "primaryDark"       => "#7a0000",
+        "primaryLight"      => "#ffadad",
+        "primaryExtraLight" => "#fff0f0",
+        "lightGrey"         => "#f9f9f9",
+        "mediumGrey"        => "#dddddd",
+        "darkGrey"          => "#6c757d",
+        "blue"              => "#000090",
+        "green"             => "#009000",
+        "ban"               => "tomato"
     ];
 
     static $logColumnsCC = [
@@ -213,9 +214,6 @@ class REDCapPRO extends AbstractExternalModule
 
             // Check MFA Token
             if ( $settings->mfaEnabled((int) $project_id) && !$auth->is_mfa_verified() ) {
-                $code             = $auth->get_mfa_code();
-                $participantEmail = $participantHelper->getEmail($auth->get_participant_id());
-                $this->sendMfaTokenEmail($participantEmail, $code);
                 header("location: " . $this->framework->getUrl("src/mfa.php", true));
                 return;
             }
@@ -795,6 +793,50 @@ class REDCapPRO extends AbstractExternalModule
         }
     }
 
+    /**
+     * Send an email with a link for the participant to get Authenticator App information / QR code
+     * 
+     * @param mixed $rcpro_participant_id
+     * 
+     * @return mixed
+     */
+    public function sendAuthenticatorAppInfoEmail($rcpro_participant_id)
+    {
+        try {
+
+            $settings          = new ProjectSettings($this);
+            $participantHelper = new ParticipantHelper($this);
+
+            // generate token
+            $token = $participantHelper->createAuthenticatorAppInfoToken($rcpro_participant_id);
+            $to    = $participantHelper->getEmail($rcpro_participant_id);
+
+            // create email
+            $subject = $this->tt("email_authenticator_app_mfa_info_subject");
+            $from    = $settings->getEmailFromAddress();
+            $body    = "<html><body><div>
+            <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
+            <p>" . $this->tt("email_authenticator_app_mfa_info_greeting") . "
+            <br>" . $this->tt("email_authenticator_app_mfa_info_message1") . "<br>
+            <br>" . $this->tt("email_authenticator_app_mfa_info_message2") . "
+            <br>
+            <br>" . $this->tt("email_authenticator_app_mfa_info_message5") . "<a href='" . $this->getUrl("src/authenticator-app-info.php", true) . "&t=${token}'>" . $this->tt("email_authenticator_app_mfa_info_link_text") . "</a>
+            </p><br>";
+            $body .= "<p>" . $this->tt("email_authenticator_app_mfa_info_message4");
+            if ( $this->framework->getProjectId() ) {
+                $study_contact = $this->getContactPerson($subject);
+                if ( isset($study_contact["info"]) ) {
+                    $body .= "<br>" . $study_contact["info"];
+                }
+            }
+            $body .= "</p></div></body></html>";
+
+            return \REDCap::email($to, $from, $subject, $body);
+        } catch ( \Exception $e ) {
+            $this->logError("Error sending Authenticator App information email", $e);
+        }
+    }
+
 
     public function sendAutoEnrollNotificationEmail(string $email, $project_id)
     {
@@ -971,7 +1013,7 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function logError(string $message, \Throwable $e)
     {
-        if (empty($message)) {
+        if ( empty($message) ) {
             $message = 'Error';
         }
         $params = [
@@ -984,7 +1026,7 @@ class REDCapPRO extends AbstractExternalModule
             "module_token"  => $this->getModuleToken()
         ];
         if ( isset($e->rcpro) ) {
-            $params = array_merge($params, ['rcpro' => $e->rcpro]);
+            $params = array_merge($params, [ 'rcpro' => $e->rcpro ]);
         }
         $this->logEvent($message, $params);
     }

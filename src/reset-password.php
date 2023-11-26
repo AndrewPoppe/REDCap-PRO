@@ -107,6 +107,9 @@ if ( $_SERVER["REQUEST_METHOD"] === "POST" ) {
 $ui->ShowParticipantHeader($module->tt("reset_password_title"));
 
 if ( $verified_participant ) {
+    // They have a valid token. Set their Login and MFA verification status to true.
+    $auth->set_login_values($verified_participant);
+    $auth->set_mfa_verification_status(true);
     ?>
     <div style="text-align: center;">
         <p>
@@ -126,7 +129,7 @@ if ( $verified_participant ) {
                 <?= $module->tt("reset_password_password_label") ?>
             </label>
             <input type="password" name="new_password"
-                class="form-control <?php echo (!empty($new_password_err)) ? 'is-invalid' : ''; ?>">
+                class="form-control <?php echo (!empty($new_password_err)) ? 'is-invalid' : ''; ?>" autocomplete="new-password">
             <span class="invalid-feedback">
                 <?php echo $new_password_err; ?>
             </span>
@@ -136,7 +139,7 @@ if ( $verified_participant ) {
                 <?= $module->tt("reset_password_confirm_password_label") ?>
             </label>
             <input type="password" name="confirm_password"
-                class="form-control <?php echo (!empty($confirm_password_err)) ? 'is-invalid' : ''; ?>">
+                class="form-control <?php echo (!empty($confirm_password_err)) ? 'is-invalid' : ''; ?>" autocomplete="new-password">
             <span class="invalid-feedback">
                 <?php echo $confirm_password_err; ?>
             </span>

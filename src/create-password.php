@@ -8,11 +8,6 @@ namespace YaleREDCap\REDCapPRO;
 $auth = new Auth($module->APPTITLE);
 $auth->init();
 
-// UI
-$ui = new UI($module);
-
-$participantHelper = new ParticipantHelper($module);
-
 # Parse query string to grab token.
 parse_str($_SERVER['QUERY_STRING'], $qstring);
 
@@ -26,9 +21,12 @@ if ( !isset($qstring["t"]) && $_SERVER["REQUEST_METHOD"] !== "POST" ) {
 $new_password     = $confirm_password = "";
 $new_password_err = $confirm_password_err = "";
 
+// UI
+$ui = new UI($module);
 
 // Verify password reset token
-$verified_user = $participantHelper->verifyPasswordResetToken($qstring["t"]);
+$participantHelper = new ParticipantHelper($module);
+$verified_participant = $participantHelper->verifyPasswordResetToken($qstring["t"]);
 
 // Processing form data when form is submitted
 if ( $_SERVER["REQUEST_METHOD"] === "POST" ) {
@@ -102,10 +100,13 @@ if ( $_SERVER["REQUEST_METHOD"] === "POST" ) {
 
 $ui->ShowParticipantHeader($module->tt("create_password_title"));
 
-if ( $verified_user ) {
+if ( $verified_participant ) {
+    // They have a valid token. Set their Login and MFA verification status to true.
+    $auth->set_login_values($verified_participant);
+    $auth->set_mfa_verification_status(true);
 
     $module->logEvent("Participant opened create password page", [
-        "rcpro_username" => $verified_user["rcpro_username"]
+        "rcpro_username" => $verified_participant["rcpro_username"]
     ]);
 
     echo "<p>" . $module->tt("create_password_message3") . "</p>";
@@ -115,7 +116,7 @@ if ( $verified_user ) {
         <div class="form-group">
             <span>
                 <?= $module->tt("create_password_username_label") ?><span style="color: #900000; font-weight: bold;">
-                    <?= $verified_user["rcpro_username"]; ?>
+                    <?= $verified_participant["rcpro_username"]; ?>
                 </span>
             </span>
         </div>
@@ -124,7 +125,7 @@ if ( $verified_user ) {
                 <?= $module->tt("create_password_new_label") ?>
             </label>
             <input type="password" name="new_password"
-                class="form-control <?php echo (!empty($new_password_err)) ? 'is-invalid' : ''; ?>">
+                class="form-control <?php echo (!empty($new_password_err)) ? 'is-invalid' : ''; ?>" autocomplete="new-password">
             <span class="invalid-feedback">
                 <?php echo $new_password_err; ?>
             </span>
@@ -134,7 +135,7 @@ if ( $verified_user ) {
                 <?= $module->tt("create_password_confirm_label") ?>
             </label>
             <input type="password" name="confirm_password"
-                class="form-control <?php echo (!empty($confirm_password_err)) ? 'is-invalid' : ''; ?>">
+                class="form-control <?php echo (!empty($confirm_password_err)) ? 'is-invalid' : ''; ?>" autocomplete="new-password">
             <span class="invalid-feedback">
                 <?php echo $confirm_password_err; ?>
             </span>
@@ -143,7 +144,7 @@ if ( $verified_user ) {
             <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
         </div>
         <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
-        <input type="hidden" name="username" value="<?= $verified_user["rcpro_username"] ?>">
+        <input type="hidden" name="username" value="<?= $verified_participant["rcpro_username"] ?>">
     </form>
     </div>
     </body>

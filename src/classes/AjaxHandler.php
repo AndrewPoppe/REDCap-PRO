@@ -18,7 +18,10 @@ class AjaxHandler
         "getStaffCC",
         "importCsvEnroll",
         "importCsvRegister",
-        "searchParticipantByEmail"
+        "searchParticipantByEmail",
+        "sendMfaTokenEmail",
+        "showMFAInfo",
+        "sendMFAInfo"
     ];
     public function __construct(REDCapPRO $module, string $method, array $params, $project_id, $args = null)
     {
@@ -354,6 +357,62 @@ class AjaxHandler
 
         } catch ( \Throwable $e ) {
             $this->module->logError($e->getMessage(), $e);
+        }
+    }
+
+    private function sendMfaTokenEmail()
+    {
+        try {
+            $auth = new Auth($this->module->APPTITLE);
+            $auth->init();
+            $participantHelper = new ParticipantHelper($this->module);
+            $participantEmail  = $participantHelper->getEmail($auth->get_participant_id());
+            $auth->clear_email_mfa_code();
+            $code = $auth->get_email_mfa_code();
+            return $this->module->sendMfaTokenEmail($participantEmail, $code);
+        } catch ( \Throwable $e ) {
+            $this->module->logError($e->getMessage(), $e);
+        }
+    }
+
+    private function showMFAInfo()
+    {
+        try {
+            $auth = new Auth($this->module->APPTITLE);
+            $auth->init();
+            $participantHelper    = new ParticipantHelper($this->module);
+            $rcpro_participant_id = $auth->get_participant_id();
+            $rcpro_username       = $participantHelper->getUserName($rcpro_participant_id);
+            $mfa_secret           = $participantHelper->getMfaSecret($rcpro_participant_id);
+            if ( empty($mfa_secret) ) {
+                $mfa_secret = $auth->create_totp_mfa_secret();
+                $participantHelper->storeMfaSecret($rcpro_participant_id, $mfa_secret);
+            }
+            $otpauth = $auth->create_totp_mfa_otpauth($rcpro_username, $mfa_secret);
+            $url     = $auth->get_totp_mfa_qr_url($otpauth, $this->module);
+
+            return [
+                'mfa_secret' => $mfa_secret,
+                'url'        => $url,
+                'username'   => $rcpro_username
+            ];
+        } catch ( \Throwable $e ) {
+            $this->module->logError('Error showing Authenticator App Info', $e);
+        }
+    }
+
+    private function sendMFAInfo()
+    {
+        try {
+            $auth = new Auth($this->module->APPTITLE);
+            $auth->init();
+            $rcpro_participant_id = $auth->get_participant_id();
+            if ( $rcpro_participant_id == 0 ) {
+                throw new REDCapProException("No participant ID found");
+            }
+            return $this->module->sendAuthenticatorAppInfoEmail($rcpro_participant_id);
+        } catch ( \Throwable $e ) {
+            $this->module->logError('Error sending Authenticator App Info email', $e);
         }
     }
 }

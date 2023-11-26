@@ -51,8 +51,27 @@
             "validation": "integer"
         },
         {
-            "key": "mfa",
-            "name": "<strong>Multi-Factor Authentication</strong>:<br>Should participants be required to use multi-factor authentication (MFA) when logging in? If so, they will be required to enter a code sent to their email address after entering their username and password. This is an additional security measure to prevent unauthorized access.<br><em>Note: this setting enables the MFA option globally, but it still must be enabled in the project settings to take effect</em>",
+            "key": "mfa-descriptive",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(197, 248, 255), rgb(197, 248, 255)); border: 1px solid rgba(37, 168, 133, 0.4); border-radius: 0.375rem;'><strong>Multi-Factor Authentication Settings</strong><p>These settings control the use of multi-factor authentication (MFA). Please take care to understand how MFA may be used before enabling it in the system.</p></div>",
+            "type": "descriptive"
+        },
+        {
+            "key": "mfa-system",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(197, 248, 255), rgb(197, 248, 255)); border: 1px solid rgba(37, 168, 133, 0.4); border-radius: 0.375rem;'><strong>Multi-Factor Authentication</strong>:</div><br>Should participants be required to use multi-factor authentication (MFA) when logging in? If so, they will be required to enter a code after entering their username and password. This is an additional security measure to prevent unauthorized access.<br><em>Note: this setting enables the MFA option globally, but it still must be enabled in the project settings to take effect</em>",
+            "type": "checkbox"
+        },
+        {
+            "key": "mfa-authenticator-app-system",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(197, 248, 255), rgb(197, 248, 255)); border: 1px solid rgba(37, 168, 133, 0.4); border-radius: 0.375rem;'><strong>Multi-Factor Authentication with Authenticator App</strong>:</div><br>Should participants be allowed to use an authenticator app (such as Google Authenticator or Microsoft Authenticator) to generate their MFA code? If not, they will be required to use the code sent to their email address.<br><em>Note: this setting only applies if MFA is enabled globally, but it still must be enabled in the project settings to take effect</em>",
+            "type": "checkbox",
+            "branchingLogic": {
+                "field": "mfa-system",
+                "value": "1"
+            }
+        },
+        {
+            "key": "mfa-require-admin",
+            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(197, 248, 255), rgb(197, 248, 255)); border: 1px solid rgba(37, 168, 133, 0.4); border-radius: 0.375rem;'><strong>Restrict MFA project settings to REDCap administrators</strong>:</div><br>Should only REDCap administrators be able to enable/disable MFA options in project settings? If not, any REDCapPRO manager in the project will be able to enable/disable MFA options in project settings.<br><em>Note: this setting only applies if MFA is enabled globally</em>",
             "type": "checkbox"
         },
         {
@@ -135,7 +154,9 @@
         "src/forgot-username",
         "src/session_check",
         "src/create-account",
-        "src/api"
+        "src/api",
+        "src/generate_qr_code",
+        "src/authenticator-app-info"
     ],
     "no-csrf-pages": [
         "src/api"
@@ -151,6 +172,11 @@
         "importCsvEnroll",
         "importCsvRegister",
         "searchParticipantByEmail"
+    ],
+    "no-auth-ajax-actions": [
+        "sendMfaTokenEmail",
+        "showMFAInfo",
+        "sendMFAInfo"
     ],
     "action-tags": [
         {

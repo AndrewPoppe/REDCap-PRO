@@ -16,17 +16,18 @@ $auth->init();
 // UI Helper
 $ui = new UI($module);
 
-// Check if the user is already logged in, if yes then redirect then to the survey
+// Check if the user is already logged in, if yes then redirect then to the login page (MFA handled there)
 if ( $auth->is_logged_in() ) {
-    $survey_url        = $auth->get_survey_url();
-    $survey_url_active = $auth->is_survey_link_active();
+    // $survey_url        = $auth->get_survey_url();
+    // $survey_url_active = $auth->is_survey_link_active();
 
-    if ( empty($survey_url) || empty($survey_url_active) || $survey_url_active !== TRUE ) {
-        return;
-    }
+    // if ( empty($survey_url) || empty($survey_url_active) || $survey_url_active !== TRUE ) {
+    //     return;
+    // }
 
-    $auth->deactivate_survey_link();
-    header("location: ${survey_url}");
+    // $auth->deactivate_survey_link();
+    // header("location: ${survey_url}");
+    header("location: " . $module->getUrl("src/login.php", true));
     return;
 }
 
