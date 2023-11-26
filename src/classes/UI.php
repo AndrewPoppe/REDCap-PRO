@@ -31,13 +31,25 @@ class UI
                         .wrapper { width: 360px; padding: 20px; }
                         .form-group { margin-top: 20px; }
                         .center { display: flex; justify-content: center; align-items: center; }
-                        img#rcpro-logo { position: relative; left: -125px; }
+                        img#rcpro-logo { position: relative; left: -125px; width: 500px; }
+
+                        @media (max-width: 600px) {
+                            .wrapper { width: 100%; padding: 20px; }
+                            body {
+                              font-size: 1.5rem;
+                            }
+                            img#rcpro-logo {
+                                position: relative;
+                                left: 0;
+                                width: 100%;
+                            }
+                          }
                     </style>
                 </head>
                 <body>
                     <div class="center">
                         <div class="wrapper">
-                            <img id="rcpro-logo" src="' . $this->module->getUrl("images/RCPro_Logo_Alternate.svg") . '" width="500px">
+                            <img id="rcpro-logo" src="' . $this->module->getUrl("images/RCPro_Logo_Alternate.svg") . '" >
                             <hr>
                             <div style="text-align: center;"><h2>' . $title . '</h2></div>';
     }
