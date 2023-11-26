@@ -34,10 +34,10 @@ class UI
                         .center { display: flex; justify-content: center; align-items: center; }
                         img#rcpro-logo { position: relative; left: -125px; width: 500px; }
 
-                        @media (max-width: 600px) {
+                        @media (orientation: portrait) {
                             .wrapper { width: 100%; padding: 20px; }
                             body {
-                              font-size: 1.5rem;
+                              font-size: 36px;
                             }
                             img#rcpro-logo {
                                 position: relative;
