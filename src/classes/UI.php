@@ -34,7 +34,7 @@ class UI
                         .center { display: flex; justify-content: center; align-items: center; }
                         img#rcpro-logo { position: relative; left: -125px; width: 500px; }
 
-                        @media (orientation: portrait) {
+                        @media screen and (max-aspect-ratio: 13/9) {
                             .wrapper { width: 100%; padding: 20px; }
                             body {
                               font-size: 36px;
