@@ -35,24 +35,38 @@ class UI
                         img#rcpro-logo { position: relative; left: -125px; width: 500px; }
 
                         @media screen and (max-aspect-ratio: 13/9) {
-                            .wrapper { width: 100%; padding: 20px; }
-                            body {
-                              font-size: 36px;
+                            .wrapper { 
+                                width: 100%; 
+                                padding: 20px;
+                                font-size: 3rem; 
+                            }
+                            .title {
+                                font-size: 4rem;
+                            }
+                            .btn {
+                                font-size: 3rem;
+                            }
+                            .form-control {
+                                font-size: 3rem;
                             }
                             img#rcpro-logo {
                                 position: relative;
                                 left: 0;
                                 width: 100%;
                             }
+                            // .g-recaptcha { 
+                            //     transform:scale(3);
+                            //     -webkit-transform:scale(3);
+                            // }
                           }
                     </style>
                 </head>
                 <body>
                     <div class="center">
-                        <div class="wrapper">
+                        <div class="wrapper container-fluid">
                             <img id="rcpro-logo" src="' . $this->module->getUrl("images/RCPro_Logo_Alternate.svg") . '" >
                             <hr>
-                            <div style="text-align: center;"><h2>' . $title . '</h2></div>';
+                            <div style="text-align: center;"><h2 class="title">' . $title . '</h2></div>';
     }
 
     public function EndParticipantPage()
