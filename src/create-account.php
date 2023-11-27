@@ -7,6 +7,7 @@ namespace YaleREDCap\REDCapPRO;
 $recaptcha_site_key = $module->framework->getSystemSetting('recaptcha-site-key');
 if ( isset($recaptcha_site_key) ) {
     echo '<script src="https://www.google.com/recaptcha/api.js" async defer></script>';
+    echo '<script type="text/javascript">function onSubmit(token) {document.querySelector("#createAccountForm").submit();}</script>';
 }
 
 // Initialize Authentication
@@ -18,15 +19,6 @@ $ui = new UI($module);
 
 // Check if the user is already logged in, if yes then redirect then to the login page (MFA handled there)
 if ( $auth->is_logged_in() ) {
-    // $survey_url        = $auth->get_survey_url();
-    // $survey_url_active = $auth->is_survey_link_active();
-
-    // if ( empty($survey_url) || empty($survey_url_active) || $survey_url_active !== TRUE ) {
-    //     return;
-    // }
-
-    // $auth->deactivate_survey_link();
-    // header("location: ${survey_url}");
     header("location: " . $module->getUrl("src/login.php", true));
     return;
 }
@@ -149,7 +141,7 @@ $ui->ShowParticipantHeader('Create Account');
     </p>
 </div>
 
-<form action="<?= $module->getUrl("src/create-account.php", true); ?>" method="post">
+<form id="createAccountForm" action="<?= $module->getUrl("src/create-account.php", true); ?>" method="post">
     <div class="form-group">
         <label>
             First name
@@ -180,16 +172,19 @@ $ui->ShowParticipantHeader('Create Account');
             <?= $email_err; ?>
         </span>
     </div>
-    <?php if ( isset($recaptcha_site_key) ) { ?>
-        <!-- Google reCAPTCHA box -->
-        <div class="form-group g-recaptcha <?= !empty($recaptcha_err) ? 'is-invalid' : '' ?>"
-            style="display:flex; justify-content: center;" data-sitekey="<?= $recaptcha_site_key ?>"></div>
-        <span class="invalid-feedback">
-            <?= $recaptcha_err; ?>
-        </span>
-    <?php } ?>
     <div class="form-group d-grid">
-        <input type="submit" class="btn btn-primary" value="Create Account">
+        <?php if ( isset($recaptcha_site_key) ) { ?>
+            <!-- Google reCAPTCHA trigger -->
+            <button class="btn btn-primary g-recaptcha" data-sitekey="<?= $recaptcha_site_key ?>" data-callback="onSubmit" data-action="submit">Create Account</button>
+            <?php if ( !empty($recaptcha_err) ) { ?>
+                <input class="is-invalid" hidden>
+                <span class="invalid-feedback">
+                    <?= $recaptcha_err; ?>
+                </span>
+            <?php } ?>
+        <?php } else { ?>
+            <button type="submit" class="btn btn-primary">Create Account</button>
+        <?php } ?>
     </div>
     <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
 </form>

@@ -54,10 +54,6 @@ class UI
                                 left: 0;
                                 width: 100%;
                             }
-                            // .g-recaptcha { 
-                            //     transform:scale(3);
-                            //     -webkit-transform:scale(3);
-                            // }
                           }
                     </style>
                 </head>
