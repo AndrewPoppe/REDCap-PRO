@@ -40,7 +40,7 @@ class UI
                         <div class="wrapper">
                             <img id="rcpro-logo" src="' . $this->module->getUrl("images/RCPro_Logo_Alternate.svg") . '" width="500px">
                             <hr>
-                            <div style="text-align: center;"><h2>' . $title . '</h2></div>';
+                            <div style="text-align: center;"><h2 class="title">' . $title . '</h2></div>';
     }
 
     public function EndParticipantPage()
