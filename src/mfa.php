@@ -401,6 +401,11 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
         width: 4rem;
     }
 
+    .modal-title {
+        font-size: 3rem;
+        padding: 2rem;
+    }
+
     /* Large Device (non-mobile) */
     @media screen and (min-aspect-ratio: 13/9) {
         .wrapper {
@@ -439,6 +444,11 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
 
         img.authenticator-app-icon {
             width: 2rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            line-height: 1.5;
         }
     }
 
