@@ -382,7 +382,8 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
     }
 
     /* Small Device (mobile) */
-    @media screen and (max-aspect-ratio: 13/9) {
+    /* @media screen and (max-aspect-ratio: 13/9) { */
+    @media screen and (orientation: portrait) {
         .accordion-rcpro button.accordion-button {
             font-size: 2rem;
             padding: 2rem;
@@ -407,7 +408,8 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
     }
 
     /* Large Device (non-mobile) */
-    @media screen and (min-aspect-ratio: 13/9) {
+    /* @media screen and (min-aspect-ratio: 13/9) { */
+    @media screen and (orientation: landscape) {
         .wrapper {
             width: 540px;
         }
