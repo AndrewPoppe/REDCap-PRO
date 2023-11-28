@@ -29,7 +29,7 @@ $rcpro_participant_id = (int) $auth->get_participant_id();
 $participantEmail     = $participantHelper->getEmail($rcpro_participant_id);
 
 // Check if Authenticator App Secret already exists, if applicable
-$showFullAuthenticatorAppInfo = false;
+$showFullAuthenticatorAppInfo = true;
 $mfa_secret                   = $participantHelper->getMfaSecret($rcpro_participant_id);
 if ( empty($mfa_secret) && $settings->mfaAuthenticatorAppEnabled($project_id) ) {
     $showFullAuthenticatorAppInfo = true;
@@ -545,7 +545,7 @@ $module->framework->tt_transferToJavascriptModuleObject();
 <!-- Authenticator App Info Modal -->
 <div class="modal fade" id="authAppInfoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
     aria-labelledby="authAppInfoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-fullscreen-sm-down">
         <div class="modal-content">
             <div class="modal-header bg-rcpro text-light">
                 <h5 class="modal-title" id="authAppInfoLabel">
