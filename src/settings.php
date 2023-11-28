@@ -210,7 +210,7 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
             <?php }
             if ( $showMfa ) {
                 $mfaChecked                 = $settings["mfa"] ? "checked" : "";
-                $mfaAuthenticatorAppChecked = $mfaAuthenticatorAppEnabled ? "checked" : "";
+                $mfaAuthenticatorAppChecked = $settings["mfa-authenticator-app"] ? "checked" : "";
                 ?>
                 <div class="card">
                     <div class="card-header">

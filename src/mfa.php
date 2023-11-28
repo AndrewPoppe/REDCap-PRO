@@ -118,19 +118,17 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
 
 <div id="emailMFAContainer" class="mfaOptionContainer" style="display: <?= $showEmail ? 'block' : 'none' ?>;">
     <div style="text-align: center;">
-        <h4>
-            <div class="row align-items-center">
-                <div class="col-2">
-                    <span class="fa-layers fa-fw fa-2x text-rcpro">
-                        <i class="fa-solid fas fa-envelope"></i>
-                    </span>
-                </div>
-                <div class="col">
-                    <?= $module->framework->tt("mfa_text7") ?>
-                </div>
+        <div class="row align-items-center mfa-option-title">
+            <div class="col-2">
+                <span class="fa-layers fa-fw fa-2x text-rcpro">
+                    <i class="fa-solid fas fa-envelope"></i>
+                </span>
             </div>
-        </h4>
-        <span style="font-size: large;">
+            <div class="col">
+                <?= $module->framework->tt("mfa_text7") ?>
+            </div>
+        </div>
+        <span class="mfa-option-subtitle">
             <?= $resend ? $module->framework->tt("mfa_resend1") : $module->framework->tt("mfa_text1") ?>
             <strong>
                 <?= $participantEmail ?>
@@ -158,9 +156,9 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
         <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
         <input type="hidden" name="emailMfa" value="true">
     </form>
-    <hr>
+    <hr class="<?= $isMobileDevice ? 'rcpro-hr-big' : '' ?>">
     <div style="text-align: center;">
-        <?= $module->framework->tt('mfa_resend2') ?> <a href="<?= $module->getUrl("src/mfa.php?resend=true", true); ?>">
+        <?= $module->framework->tt('mfa_resend2') ?><?= $isMobileDevice ? '<br>' : ' '?><a href="<?= $module->getUrl("src/mfa.php?resend=true", true); ?>">
             <?= $module->framework->tt('mfa_resend3') ?>
         </a>
     </div>
@@ -172,8 +170,7 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
     style="display: <?= $showAuthenticatorApp ? 'block' : 'none' ?>;">
     <?php if ( $mfaAuthenticatorAppEnabled ) { ?>
         <div style="text-align: center;">
-            <h4>
-                <div class="row align-items-center">
+                <div class="row align-items-center mfa-option-title">
                     <div class="col-2">
                         <span class="fa-layers fa-fw fa-2x" style="color: #900000;">
                             <i class="fa-solid fa-mobile-screen" data-fa-transform="grow-4"></i>
@@ -184,8 +181,7 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
                         <?= $module->framework->tt("mfa_text4") ?>
                     </div>
                 </div>
-            </h4>
-            <span style="font-size: large;">
+            <span class="mfa-option-subtitle">
                 <?= $module->framework->tt("mfa_text5") ?>
             </span>
         </div>
@@ -212,9 +208,9 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
             <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
             <input type="hidden" name="authApp" value="true">
         </form>
-        <hr>
+        <hr class="<?= $isMobileDevice ? 'rcpro-hr-big' : '' ?>">
         <div style="text-align: center;">
-            <?= $module->framework->tt('mfa_info25') ?>
+            <?= $module->framework->tt('mfa_info25') ?><?= $isMobileDevice ? '<br>' : ' '?>
             <a href="javascript:;" onclick="window.rcpro.showMFAInfo();return false;">
                 <?= $showFullAuthenticatorAppInfo ? $module->framework->tt('mfa_info1') : $module->framework->tt('mfa_info24') ?>
             </a>
@@ -233,8 +229,8 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
             <?= $module->tt("mfa_text10") ?>
         </p>
     </div>
-    <div class="container" style="border-collapse: collapse;">
-        <div class="row align-items-center p-2 mfa-option" onclick="window.rcpro.chooseAuthenticatorAppMFA();">
+    <div class="container-lg" style="border-collapse: collapse;">
+        <div class="row align-items-center p-3 mfa-option" onclick="window.rcpro.chooseAuthenticatorAppMFA();">
             <div class="col-2">
                 <span class="fa-layers fa-fw fa-2x text-rcpro">
                     <i class="fa-solid fa-mobile-screen" data-fa-transform="grow-4"></i>
@@ -247,13 +243,13 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
                         <?= $module->framework->tt('mfa_text11') ?>
                     </strong>
                     <br>
-                    <span style="font-size: small;">
+                    <span class="method-description">
                         <?= $module->framework->tt('mfa_text13') ?>
                     </span>
                 </span>
             </div>
         </div>
-        <div class="row align-items-center p-2 mfa-option" onclick="window.rcpro.chooseEmailMFA();">
+        <div class="row align-items-center p-3 mfa-option" onclick="window.rcpro.chooseEmailMFA();">
             <div class="col-2">
                 <span class="fa-layers fa-fw fa-2x text-rcpro">
                     <i class="fa-solid fas fa-envelope"></i>
@@ -265,7 +261,7 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
                         <?= $module->framework->tt('mfa_text12') ?>
                     </strong>
                     <br>
-                    <span style="font-size: small;">
+                    <span class="method-description">
                         <?= $module->framework->tt('mfa_text14') ?>
                     </span>
                 </span>
@@ -281,27 +277,29 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
 </div>
 
 <style>
-    .wrapper {
-        width: 540px;
+    .method-description {
+        font-size: 1.75rem;
+        line-height: 0.5;
+    }  
+    
+    div.mfaOptionContainer {
+        margin: 5%;
     }
 
-    img#rcpro-logo {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-        left: 0;
+    .mfa-option-subtitle {
+        font-size: 2rem;
+        margin-bottom: 10%;
     }
 
     .mfa-option {
         cursor: pointer;
         border: 1px solid #e1e1e1;
         border-bottom: none;
+        line-height: 1;
     }
-
     .mfa-option:hover {
         background-color: #f7f6f6;
     }
-
     .mfa-option:last-child {
         border-bottom: 1px solid #e1e1e1;
     }
@@ -318,11 +316,6 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
         text-shadow: 0px 0px 5px
             <?= $module::$COLORS["primary"] ?>
         ;
-    }
-
-    div.mfaOptionContainer {
-        width: 360px;
-        margin: auto;
     }
 
     button.btn-mfa-control {
@@ -383,6 +376,40 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
         -webkit-animation: fa-spin 0.5s infinite linear;
         animation: fa-spin 0.5s infinite linear;
     }
+
+    /* Large Device (non-mobile) */
+    @media screen and (min-aspect-ratio: 13/9) {
+        .wrapper {
+            width: 540px;
+        }
+
+        img#rcpro-logo {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            left: 0;
+        }
+        .method-description {
+            font-size: small;
+        }
+
+        .mfa-option {
+            line-height: 1.5;
+        }
+
+        div.mfaOptionContainer {
+            width: 360px;
+            margin: auto;
+        }
+
+        .mfa-option-title {
+            font-size: 1.5rem;
+        }
+        .mfa-option-subtitle {
+            font-size: large;
+        }
+    }
+
 </style>
 <script src="<?= $module->framework->getUrl('lib/jQuery/jquery-3.7.1.min.js', true) ?>"></script>
 <?php

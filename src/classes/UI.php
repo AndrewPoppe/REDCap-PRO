@@ -54,7 +54,10 @@ class UI
                                 left: 0;
                                 width: 100%;
                             }
-                          }
+                        }
+                        .rcpro-hr-big {
+                            margin: 2rem 0;
+                        }
                     </style>
                 </head>
                 <body>
