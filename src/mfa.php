@@ -286,6 +286,10 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
         margin: 5%;
     }
 
+    .mfa-option-title {
+        font-size: 3rem;
+    }
+
     .mfa-option-subtitle {
         font-size: 2rem;
         margin-bottom: 10%;
@@ -375,6 +379,17 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
     .fast-spin {
         -webkit-animation: fa-spin 0.5s infinite linear;
         animation: fa-spin 0.5s infinite linear;
+    }
+
+    /* Small Device (mobile) */
+    @media screen and (max-aspect-ratio: 13/9) {
+        .accordion-rcpro button.accordion-button {
+            font-size: 2rem;
+            padding: 2rem;
+        }
+        #authAppInfoModal {
+            font-size: 2rem;
+        }
     }
 
     /* Large Device (non-mobile) */
@@ -555,9 +570,9 @@ $module->framework->tt_transferToJavascriptModuleObject();
                     aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <h4><i class="fa-regular fa-circle-exclamation text-rcpro"></i>
+                <span class="mfa-option-title"><i class="fa-regular fa-circle-exclamation text-rcpro"></i>
                     <?= $module->framework->tt('mfa_info22') ?>
-                </h4>
+                </span>
                 <p>
                     <?= $module->framework->tt('mfa_info23') ?>
                 </p>
@@ -620,7 +635,7 @@ $module->framework->tt_transferToJavascriptModuleObject();
                             data-bs-parent="#authAppInfoAccordion">
                             <div class="accordion-body">
                                 <div class="row align-items-center">
-                                    <div class="col-7">
+                                    <div class="col-6 col-lg-7">
                                         <p><strong>
                                                 <?= $module->framework->tt('mfa_info9') ?>
                                             </strong></p>
