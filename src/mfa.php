@@ -545,7 +545,7 @@ $module->framework->tt_transferToJavascriptModuleObject();
 <!-- Authenticator App Info Modal -->
 <div class="modal fade" id="authAppInfoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
     aria-labelledby="authAppInfoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-fullscreen-sm-down">
+    <div class="modal-dialog modal-lg modal-fullscreen-lg-down">
         <div class="modal-content">
             <div class="modal-header bg-rcpro text-light">
                 <h5 class="modal-title" id="authAppInfoLabel">
