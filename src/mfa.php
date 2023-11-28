@@ -387,9 +387,18 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
             font-size: 2rem;
             padding: 2rem;
         }
+
         #authAppInfoModal {
             font-size: 2rem;
         }
+
+        .rcpro-app-info-box {
+            font-size: 1.5rem;
+        }
+    }
+
+    img.authenticator-app-icon {
+        width: 4rem;
     }
 
     /* Large Device (non-mobile) */
@@ -422,6 +431,14 @@ $ui->ShowParticipantHeader($module->framework->tt('mfa_text8'));
         }
         .mfa-option-subtitle {
             font-size: large;
+        }
+        
+        .rcpro-app-info-box {
+            font-size: small;
+        }
+
+        img.authenticator-app-icon {
+            width: 2rem;
         }
     }
 
@@ -597,13 +614,13 @@ $module->framework->tt_transferToJavascriptModuleObject();
                                     <li>
                                         <?= $module->framework->tt('mfa_info5') ?>
                                         <ul>
-                                            <li><img style="width: 2rem;"
+                                            <li><img class="authenticator-app-icon"
                                                     src="<?= $module->framework->getUrl('images/ga.webp', true) ?>">
                                                 <strong>
                                                     <?= $module->framework->tt('mfa_info20') ?>
                                                 </strong>
                                             </li>
-                                            <li><img style="width: 2rem;"
+                                            <li><img class="authenticator-app-icon"
                                                     src="<?= $module->framework->getUrl('images/ma.webp', true) ?>">
                                                 <strong>
                                                     <?= $module->framework->tt('mfa_info21') ?>
@@ -643,7 +660,7 @@ $module->framework->tt_transferToJavascriptModuleObject();
                                             <?= $module->framework->tt('mfa_info10') ?>
                                         </p>
                                         <br>
-                                        <div class="border border-rcpro p-2 rounded" style="font-size:small">
+                                        <div class="border border-rcpro p-2 rounded rcpro-app-info-box">
                                             <i class="fa-solid fas fa-asterisk text-rcpro"></i>
                                             <?= $module->framework->tt('mfa_info11') ?>
                                             <ul>
@@ -664,7 +681,7 @@ $module->framework->tt_transferToJavascriptModuleObject();
                                         </div>
                                     </div>
                                     <div class="col text-center">
-                                        <img id="authenticatorAppQr"><br>
+                                        <img id="authenticatorAppQr" style="width:100%;"><br>
                                         <a id="authenticatorAppUrl" href="" target="_blank" rel="noopener noreferer">
                                             <?= $module->framework->tt('mfa_info19') ?>
                                         </a>
