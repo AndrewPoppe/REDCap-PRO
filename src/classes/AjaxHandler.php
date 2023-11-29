@@ -327,6 +327,13 @@ class AjaxHandler
     private function searchParticipantByEmail()
     {
         try {
+
+            // Check that user has permission to search participants
+            $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+            if ( !$role || $role < 2 ) {
+                return;
+            }
+
             $email = filter_var($this->params['searchTerm'], FILTER_VALIDATE_EMAIL);
             if ( empty($email) ) {
                 return "<font style='color: red;'>Search term is not a valid email address</font>";
