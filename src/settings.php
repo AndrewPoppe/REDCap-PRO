@@ -42,6 +42,7 @@ $allowSelfRegistrationSystem = $module->framework->getSystemSetting("allow-self-
 $showMfa                     = $allowMfaSystem && ($isAdmin || !$module->framework->getSystemSetting("mfa-require-admin"));
 $showApi                     = $allowApiSystem && ($isAdmin || !$module->framework->getSystemSetting("api-require-admin"));
 $showSelfRegistration        = $allowSelfRegistrationSystem && ($isAdmin || !$module->framework->getSystemSetting("self-registration-require-admin"));
+$showTimeoutTimeSetting      = $module->framework->getSystemSetting("allow-project-timeout-time-override");
 
 // Update settings if requested
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
@@ -94,6 +95,15 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             $new_settings["auto-enroll-notification-email"]     = $new_email;
         }
 
+        // Validate Timeout Time
+        if ( $showTimeoutTimeSetting ) {
+            $new_settings["timeout-time"] = (int) $post_settings["timeout-time"];
+            if (  $new_settings["timeout-time"] < 1 ) {
+                $timeout_time_err = "Timeout time must be a positive integer";
+                $any_err          = true;
+            }
+        }
+
         if ( !$any_err ) {
 
             $module->setProjectSettings($new_settings);
@@ -131,7 +141,6 @@ $allowAutoEnrollSystem          = (bool) $module->framework->getSystemSetting("a
 $allowSelfRegistration          = $projectSettings->shouldAllowSelfRegistration($project_id);
 $autoEnrollUponSelfRegistration = $projectSettings->shouldEnrollUponRegistration($project_id);
 $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEmail($project_id);
-
 ?>
 
 <div class="settingsContainer wrapper" style="display: none;">
@@ -202,6 +211,33 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
                                 value="<?= $checked === "checked" ? "true" : "false" ?>" hidden>
                             <span class="invalid-feedback">
                                 <?php echo $prevent_email_login_err; ?>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <br>
+            <?php }
+            if ( $showTimeoutTimeSetting ) {
+                ?>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="fa-stack">
+                            <i class="fas fa-stopwatch fa-2x"></i>
+                        </span>
+                        <nbsp></nbsp>
+                        <strong>Timeout Time</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">
+                            How long should participants be allowed to be inactive before they are automatically logged out?
+                        </div>
+                        <div class="form-group">
+                            <label>Enter the number of minutes of inactivity before participant is logged out</label>
+                            <input type="text" name="timeout-time"
+                                class="form-control <?php echo (!empty($timeout_time_err)) ? 'is-invalid' : ''; ?>"
+                                value="<?php echo \REDCap::escapeHtml($settings["timeout-time"]); ?>">
+                            <span class="invalid-feedback">
+                                <?php echo $timeout_time_err; ?>
                             </span>
                         </div>
                     </div>

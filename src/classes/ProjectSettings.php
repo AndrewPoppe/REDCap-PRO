@@ -20,16 +20,32 @@ class ProjectSettings
             // DEFAULT TO 1 MINUTE IF NOT SET
             $result = 1;
         }
+        if ($result >= $this->getTimeoutMinutes()) {
+            // SET TO 30 SECONDS BEFORE TIMEOUT IF CURRENT SETTING IS BAD
+            $result = $this->getTimeoutMinutes() - 0.5;
+        }
         return $result;
     }
 
     public function getTimeoutMinutes()
     {
-        $result = $this->module->framework->getSystemSetting("timeout-time");
-        if ( !floatval($result) ) {
-            // DEFAULT TO 5 MINUTES IF NOT SET
-            $result = 5;
+        $project_id = $this->module->getProjectId();
+        $default = 5;
+        if ( $project_id ) {
+            $allowProjectOverride = $this->module->framework->getProjectSetting("allow-project-timeout-time-override", $project_id);
+            if ( $allowProjectOverride ) {
+                $result = (float) $this->module->framework->getProjectSetting("timeout-time", $project_id);
+            }
         }
+        
+        if (!$result) {
+            $result = (float) $this->module->framework->getSystemSetting("timeout-time");
+        }
+
+        if ( !$result || $result < 0 ) {
+            $result = $default;
+        }
+
         return $result;
     }
 

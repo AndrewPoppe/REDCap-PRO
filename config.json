@@ -33,6 +33,11 @@
             "validation": "number"
         },
         {
+            "key": "allow-project-timeout-time-override",
+            "name": "<strong>Allow Project-Level Timeout Time Override</strong>:<br>Should there be a project-level timeout time setting? If enabled, the project-level setting will override the system-level setting (default is No)",
+            "type": "checkbox"
+        },
+        {
             "key": "password-length",
             "name": "<strong>Password Length</strong>:<br>Minimum length of password (default is 8 characters)",
             "type": "text",
