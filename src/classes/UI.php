@@ -13,7 +13,16 @@ class UI
 
     public function ShowParticipantHeader(string $title)
     {
-        echo '<!DOCTYPE html>
+        $customLogoFlag = null;
+        
+        try {
+            $customLogoFlag = $this->module->getProjectSetting('custom-logoflag');  // check box in Settings
+        } catch (\Exception $e){
+            ;
+        }
+
+        
+/*        echo '<!DOCTYPE html>
                 <html lang="en">
                 <head>
                     <meta charset="UTF-8">
@@ -41,6 +50,53 @@ class UI
                             <img id="rcpro-logo" src="' . $this->module->getUrl("images/RCPro_Logo_Alternate.svg") . '" width="500px">
                             <hr>
                             <div style="text-align: center;"><h2 class="title">' . $title . '</h2></div>';
+*/
+
+        echo '<!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>REDCapPRO ' . $title . '</title>
+                    <link rel="preconnect" href="https://fonts.googleapis.com">
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+                    <link rel="shortcut icon" href="' . $this->module->getUrl("images/favicon.ico") . '"/>
+                    <link rel="icon" type="image/png" sizes="32x32" href="' . $this->module->getUrl("images/favicon-32x32.png") . '">
+                    <link rel="icon" type="image/png" sizes="16x16" href="' . $this->module->getUrl("images/favicon-16x16.png") . '">
+                    <link rel="stylesheet" href="' . $this->module->getUrl("lib/bootstrap/css/bootstrap.min.css") . '">
+                    <script src="' . $this->module->getUrl("lib/bootstrap/js/bootstrap.bundle.min.js") . '"></script>
+                    <script src="https://kit.fontawesome.com/cf0d92172e.js" crossorigin="anonymous"></script>
+                    <style>
+                        body {  font-family: "Atkinson Hyperlegible", sans-serif; }
+                        .wrapper { width: 360px; padding: 20px; }
+                        .form-group { margin-top: 20px; }
+                        .center { display: flex; justify-content: center; align-items: center; }
+                        img#rcpro-logo { position: relative; left: -125px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="center">
+                        <div class="wrapper">';
+        
+        // here we may change the RC Pro logo image to our custom image for the password change page.
+        //                                	
+        if ($customLogoFlag) {
+            // TODO: pull the name from config setting?
+            $this->module->customLogoImage = 'customlogo.png';  // change to custom image
+            
+            // Custom brand logo image
+            echo '<div class="logocentercustom"><img id="rcpro-logo" src="' . $this->module->getUrl("images/" . $this->module->customLogoImage ) . '" width="600px"></div>';
+            echo '<hr>';
+        
+        } else {
+            // RC Pro logo image
+            echo '<img id="rcpro-logo" src="' . $this->module->getUrl("images/RCPro_Logo_Alternate.svg") . '" width="500px">';
+            echo '<hr>';    		
+        }
+        //
+        //
+        echo '<div style="text-align: center;"><h2>' . $title . '</h2></div>';
+        
     }
 
     public function EndParticipantPage()
