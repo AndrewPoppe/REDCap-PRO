@@ -63,6 +63,10 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         if ( $new_settings["reserved-language-project"] === "English" ) {
             $new_settings["reserved-language-project"] = null;
         }
+        
+        // Custom logo flag
+        $new_settings['custom-logoflag'] = $post_settings['custom-logoflag'] === 'true';
+        $new_settings['custom-logotext'] = $post_settings['custom-logotext'];
 
         // Validate Prevent Email Login
         $new_settings["prevent-email-login"] = $post_settings["prevent-email-login"] === "true";
@@ -465,6 +469,44 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
                 </div>
             </div>
             <br>
+            
+            <?php
+                $checked_custom_logo_flag = $settings['custom-logoflag'] ? 'checked' : '';
+                
+                $customLogoText = \REDCap::escapeHtml($settings['custom-logotext']);
+            ?>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="fa-stack">
+                        <i class="fas fa-image fa-2x"></i>
+                    </span>
+                    <nbsp></nbsp>
+                    <strong>Custom Settings</strong>
+                </div>
+                <div class="card-body">
+                    <div class="card-title">
+                        Custom branding options.
+                    </div>
+                    <div class="form-group">
+                        <label>Use Custom Image for Create Password Page</label>
+                        <div class="form-check">
+                            <hr>
+                            Custom Branding Text for Emails: <input type="text" name="custom-logotext" id="custom-logotext" size="60" value="<?= $customLogoText ?>">
+                            <hr>
+                            <input class="form-check-input <?php echo (!empty($customlogopage_err)) ? 'is-invalid' : ''; ?>" type="checkbox" id="custom-logoflag-check" <?= $checked_custom_logo_flag ?> onclick="(function(){
+                                $('#custom-logoflag').val($('#custom-logoflag-check')[0].checked);
+                            })()">
+                            <label class="form-check-label" style="vertical-align:middle;" for="custom-logoflag-check">Checking this will use the custom logo image for User Pages and Text for Emails.</label>
+                            <input type="text" name="custom-logoflag" id="custom-logoflag" value="<?= $checked_custom_logo_flag === 'checked' ? 'true' : 'false' ?>" hidden>
+                            <br><p><?= $module->getUrl('images/customlogo.png') ?></p>
+                            <br><img width="640" src="<?= $module->getUrl('images/customlogo.png') ?>">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>            
+            
             <div class="form-group">
                 <button type="button" class="btn btn-secondary" value="Cancel" onclick="(function() {
                     window.location.href = '<?= $module->getUrl('src/settings.php') ?>';
