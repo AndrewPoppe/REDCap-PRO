@@ -303,3 +303,15 @@ transform: rotate(360deg);
 .text-muted-more {
     color: #aaa;
 }
+
+.logocenter {
+  margin: auto;
+  width: 25%;
+  border: 3px solid green;
+  padding: 250px;
+}
+
+.logocentercustom {
+  display: flex;
+  justify-content: center;
+}
