@@ -148,6 +148,9 @@ class REDCapPRO extends AbstractExternalModule
     public $LOGO_URL = "https://i.imgur.com/5Xq2Vqt.png";
     public $LOGO_ALTERNATE_URL = "https://i.imgur.com/fu0t8V1.png";
 
+    public $customLogoImage = null; // custom logo image on create password page
+    public $customLogoText  = '';   // custom logo text for branding
+
     //////////////\\\\\\\\\\\\\\       
     /////   REDCAP HOOKS   \\\\\ 
     //////////////\\\\\\\\\\\\\\
@@ -476,6 +479,29 @@ class REDCapPRO extends AbstractExternalModule
         return null;
     }
 
+    public function redcap_module_system_change_version($version, $old_version)
+    {
+        $this->logEvent("Module Version Changed", [
+            "version"     => $version,
+            "old_version" => $old_version,
+            "redcap_user" => $this->safeGetUsername()
+        ]);
+
+        $new_version_number = explode('v', $version)[1];
+        $old_version_number = explode('v', $old_version)[1];
+
+        // If upgrading from a previous version to version 0.4.5,
+        // assume all existing logs are genuine, create module token,
+        // and add the token to all existing logs.
+        $critical_version = "0.4.6";
+        if (
+            version_compare($new_version_number, $critical_version, ">=") &&
+            version_compare($old_version_number, $critical_version, "<")
+        ) {
+            $this->updateLogsWithToken();
+        }
+    }
+
 
     //////////////////\\\\\\\\\\\\\\\\\\\       
     /////   EMAIL-RELATED METHODS   \\\\\ 
@@ -542,7 +568,7 @@ class REDCapPRO extends AbstractExternalModule
         $old_email_clean = \REDCap::escapeHtml($old_email);
         $new_email_clean = \REDCap::escapeHtml($new_email);
         $body            = "<html><body><div>
-        <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
+        " . $this->baseLogoImage() . "
         <p>" . $this->tt("email_update_greeting") . "</p>
         <p>" . $this->tt("email_update_message1") . "<strong> ${username}</strong><br>
             <ul>
@@ -594,7 +620,7 @@ class REDCapPRO extends AbstractExternalModule
             $subject = $this->tt("email_new_participant_subject");
             $from    = $settings->getEmailFromAddress();
             $body    = "<html><body><div>
-            <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
+            " . $this->baseLogoImage() . "
             <p>" . $this->tt("email_new_participant_greeting", [ $fname, $lname ]) . "
             <br>" . $this->tt("email_new_participant_message1") . "
             <br>" . $this->tt("email_new_participant_message2") . " <strong>${username}</strong>
@@ -645,7 +671,7 @@ class REDCapPRO extends AbstractExternalModule
             $subject = $this->tt("email_password_reset_subject");
             $from    = $settings->getEmailFromAddress();
             $body    = "<html><body><div>
-            <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
+            " . $this->baseLogoImage() . "
             <p>" . $this->tt("email_password_reset_greeting") . "
             <br>" . $this->tt("email_password_reset_message1") . "<br>
             <br>" . $this->tt("email_password_reset_message2") . "
@@ -710,7 +736,7 @@ class REDCapPRO extends AbstractExternalModule
         $subject = $this->tt("email_username_subject");
         $from    = $settings->getEmailFromAddress();
         $body    = "<html><body><div>
-        <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
+        " . $this->baseLogoImage() . "
         <p>" . $this->tt("email_username_greeting") . "</p>
         <p>" . $this->tt("email_username_message1") . "<strong> ${username}</strong><br>
         " . $this->tt("email_username_message2") . "</p>
@@ -749,7 +775,7 @@ class REDCapPRO extends AbstractExternalModule
         $subject = $this->tt("mfa_email1");
         $from    = $settings->getEmailFromAddress();
         $body    = "<html><body><div>
-        <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
+        " . $this->baseLogoImage() . "
         <p>" . $this->tt('mfa_email2') . "</p>
         <p>" . $this->tt('mfa_email3') . " <strong> ${token}</strong><br></p>
         <p><em>" . $this->tt('mfa_email4') . "</em></p><br><br>";
@@ -792,7 +818,7 @@ class REDCapPRO extends AbstractExternalModule
             $subject = $this->tt("email_authenticator_app_mfa_info_subject");
             $from    = $settings->getEmailFromAddress();
             $body    = "<html><body><div>
-            <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
+            " . $this->baseLogoImage() . "
             <p>" . $this->tt("email_authenticator_app_mfa_info_greeting") . "
             <br>" . $this->tt("email_authenticator_app_mfa_info_message1") . "<br>
             <br>" . $this->tt("email_authenticator_app_mfa_info_message2") . "
@@ -821,7 +847,7 @@ class REDCapPRO extends AbstractExternalModule
         $subject  = "REDCapPRO Auto-Enrollment";
         $from     = $settings->getEmailFromAddress();
         $body     = "<html><body><div>
-        <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
+        " . $this->baseLogoImage() . "
         <p>This is a notification that a participant has been automatically enrolled in your project.</p>
         <p><strong>Project ID</strong>: " . $project_id . "</p>
         <p><strong>Project Title</strong>: " . $this->framework->getProject($project_id)->getTitle() . "</p>
@@ -1197,4 +1223,36 @@ class REDCapPRO extends AbstractExternalModule
         $_GET['pid'] = $pid;
         return $result;
     }
+    
+    /**
+     *  baseLogoImage - allow custom logo switch to work for email. either use regular image or for custom remove the standard image.
+     */
+    public function baseLogoImage(): string
+    {
+        $image = "<img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>";			
+        //        <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
+        
+        if ($this->getProjectSetting('custom-logoflag')) {  // check box in Settings)
+            // if we are using custom logo branding, the emails, we want to either
+            // have a custom image
+            //    NOTE: we cannot embed a base64 encoded image using REDCap email.  and using the HTML link method also seems to not work well 
+            //          (probably could work, if you put the image out somewhere fully accessible, but then you have that complication).
+            // OR
+            // remove the standard image
+            //   which is the case here, remove the image out of the emails.
+            //
+            // add custom text here instead of image for branding.
+            
+            $this->customLogoText = $this->getProjectSetting('custom-logotext');
+            
+            if ($this->customLogoText) {
+                $image = '<h1>' . $this->customLogoText . '</h1><br>';
+            } else {
+                $image = '<br>';
+            }
+        }
+        
+        return $image;
+    }
+    
 }
