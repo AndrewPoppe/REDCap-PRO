@@ -317,19 +317,19 @@ class REDCapPRO extends AbstractExternalModule
             }
 
             // Log the event in REDCap's logs and the EM logs
-            \REDCap::logEvent(
-                "REDCapPRO Survey Accessed",
-                // action description
-                "REDCapPRO User: " . $auth->get_username() . "\n" .
-                "Instrument: ${instrument}\n",
-                // changes made
-                NULL,
-                // sql
+            \Logging::logEvent(
+                "",
+                "",
+                "OTHER",
                 $record,
-                // record
-                $event_id,
-                // event
-                $project_id // project id
+                "REDCapPRO User: " . $auth->get_username() . "\n" .
+                "Instrument: " . $instrument . "\n",
+                "REDCapPRO Survey Accessed",
+                "",
+                $auth->get_username(),
+                $project_id,
+                true,
+                $event_id
             );
             $this->logEvent("REDCapPRO Survey Accessed", [
                 "rcpro_username"  => $auth->get_username(),
