@@ -10,14 +10,19 @@
         "redcap_module_project_disable",
         "redcap_module_system_enable",
         "redcap_module_system_disable",
-        "redcap_module_system_change_version"
+        "redcap_module_system_change_version",
+        "redcap_survey_complete",
+        "redcap_survey_acknowledgement_page"
     ],
-    "authors": [{
-        "name": "Andrew Poppe",
-        "email": "andrew.poppe@yale.edu",
-        "institution": "Yale Center for Clinical Investigation"
-    }],
-    "system-settings": [{
+    "authors": [
+        {
+            "name": "Andrew Poppe",
+            "email": "andrew.poppe@yale.edu",
+            "institution": "Yale Center for Clinical Investigation"
+        }
+    ],
+    "system-settings": [
+        {
             "key": "email-from-address",
             "name": "<strong>Email From Address</strong>:<br>This will be the <em>From</em> email address for all system emails. This can help if emails are being sent to spam or are not delivered (default is noreply@REDCapPRO.com)",
             "type": "email"
@@ -60,13 +65,15 @@
     ],
     "links": {
         "project": [],
-        "control-center": [{
-            "name": "<strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em>",
-            "key": "redcappro",
-            "icon": "fas fa-fingerprint",
-            "url": "src/cc_projects.php",
-            "show-header-and-footer": true
-        }]
+        "control-center": [
+            {
+                "name": "<strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em>",
+                "key": "redcappro",
+                "icon": "fas fa-fingerprint",
+                "url": "src/cc_projects.php",
+                "show-header-and-footer": true
+            }
+        ]
     },
     "no-auth-pages": [
         "src/login",

@@ -36,7 +36,7 @@ class Auth
         if (isset($redcap_session_id)) {
             \Session::destroy($redcap_session_id);
             \Session::deletecookie("PHPSESSID");
-            session_destroy($redcap_session_id);
+            session_destroy();
         }
 
         // If we already have a session, use it.
@@ -58,6 +58,7 @@ class Auth
         session_start();
 
         $this->set_survey_username($_SESSION["username"]);
+        $this->set_survey_record();
     }
 
     public function createSession()
@@ -192,6 +193,27 @@ class Auth
             session_id($survey_session_id);
             session_start();
             $_SESSION['username'] = $username;
+            session_write_close();
+            session_name(self::$SESSION_NAME);
+            session_id($orig_id);
+            session_start();
+        }
+    }
+
+    public function set_survey_record()
+    {
+        $record = $_COOKIE["record"];
+        if ( !isset($record) ) return;
+
+
+        $orig_id           = session_id();
+        $survey_session_id = $_COOKIE["survey"];
+        if ( isset($survey_session_id) ) {
+            session_write_close();
+            session_name('survey');
+            session_id($survey_session_id);
+            session_start();
+            $_SESSION['record'] = $record;
             session_write_close();
             session_name(self::$SESSION_NAME);
             session_id($orig_id);

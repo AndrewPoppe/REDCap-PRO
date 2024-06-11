@@ -60,9 +60,46 @@ class REDCapPRO extends AbstractExternalModule
     /////   REDCAP HOOKS   \\\\\ 
     //////////////\\\\\\\\\\\\\\
 
+    public function redcap_survey_complete() {
+        // This is to prevent the default REDCap behavior of killing sessions from messing things up.
+        // This should only be a problem when Survey Queue is enabled
+        session_regenerate_id();
+        session_start();
+    }
+
+    public function redcap_survey_acknowledgement_page() {
+        // This is to prevent the default REDCap behavior of killing sessions from messing things up.
+        // This should only be a problem when Survey Queue is enabled
+        if (isset($_COOKIE[$this->APPTITLE . '_SESSID'])) {
+            session_id($_COOKIE[$this->APPTITLE . '_SESSID']);
+            session_start();
+        }
+    }
+
     function redcap_every_page_top($project_id)
     {
-        if (strpos($_SERVER["PHP_SELF"], "surveys") !== false) {
+        // Survey Queue - Treat like a survey to an extent
+        if (isset($_GET['sq']) ) {
+            $hash = $_GET['sq'];
+            $auth = new Auth($this->APPTITLE);
+            $auth->init();
+
+            // Participant is logged in to their account
+            if ( $auth->is_logged_in() ) {
+                return;
+            }
+
+            // Participant is not logged in to their account
+            $auth->set_survey_url(APP_PATH_SURVEY_FULL . "?sq=". $hash);
+            $auth->set_redcap_project_id($project_id);
+            \Session::savecookie($this->APPTITLE . "_survey_url", APP_PATH_SURVEY_FULL . "?sq=". $hash, 0, TRUE);
+            $auth->set_survey_active_state(TRUE);
+            header("location: " . $this->getUrl("src/login.php", true) . "&sq=". $hash);
+            $this->exitAfterHook();
+            return;
+        }
+
+        if ( strpos($_SERVER["PHP_SELF"], "surveys") !== false || isset($_GET['s']) ) {
             return;
         }
         $this::$AUTH->destroySession();
@@ -97,6 +134,9 @@ class REDCapPRO extends AbstractExternalModule
     ) {
 
         // Initialize Authentication
+        if ( isset($record) ) {
+            \Session::savecookie("record", $record, 0, true);
+        }
         self::$AUTH->init();
 
         // Participant is logged in to their account
