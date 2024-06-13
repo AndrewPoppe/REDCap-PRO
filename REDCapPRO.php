@@ -205,7 +205,7 @@ class REDCapPRO extends AbstractExternalModule
             $auth->set_redcap_project_id($project_id);
             \Session::savecookie($this->APPTITLE . "_survey_url", APP_PATH_SURVEY_FULL . "?sq=". $hash, 0, TRUE);
             $auth->set_survey_active_state(TRUE);
-            header("location: " . $this->getUrl("src/login.php", true) . "&sq=". $hash);
+            header("location: " . $this->getUrl("src/login.php?sq=".$hash, true));
             $this->exitAfterHook();
             return;
         }
