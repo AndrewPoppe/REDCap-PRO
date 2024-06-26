@@ -27,23 +27,38 @@ class ProjectSettings
         return $result;
     }
 
+    public function getMaximumTimeoutMinutes() {
+        $system_timeout_time = $this->getSystemTimeoutMinutes();
+        $setting = (float) $this->module->framework->getSystemSetting("timeout-time-maximum"); 
+        return $setting > 0 ? $setting : $system_timeout_time;
+    }
+
+    public function getSystemTimeoutMinutes() {
+        $default = 5;
+        $setting = (float) $this->module->framework->getSystemSetting("timeout-time"); 
+        return $setting > 0 ? $setting : $default;
+    }
+
+    public function getProjectTimeoutMinutes($project_id) {
+        $setting = (float) $this->module->framework->getProjectSetting("timeout-time", $project_id);
+        return $setting > 0 ? $setting : $this->getSystemTimeoutMinutes();
+    }
+
     public function getTimeoutMinutes()
     {
-        $project_id = $this->module->getProjectId();
-        $default = 5;
-        if ( $project_id ) {
+        $project_id = $this->module->framework->getProjectId();
+        $system_timeout_time         = $this->getSystemTimeoutMinutes();
+        $system_timeout_time_maximum = $this->getMaximumTimeoutMinutes();
+        if ( !empty($project_id) ) {
             $allowProjectOverride = $this->module->framework->getProjectSetting("allow-project-timeout-time-override", $project_id);
             if ( $allowProjectOverride ) {
-                $result = (float) $this->module->framework->getProjectSetting("timeout-time", $project_id);
+                $project_timeout_time        = $this->getProjectTimeoutMinutes($project_id);
+                $result = min($project_timeout_time, $system_timeout_time_maximum);
             }
         }
         
-        if (!$result) {
-            $result = (float) $this->module->framework->getSystemSetting("timeout-time");
-        }
-
-        if ( !$result || $result < 0 ) {
-            $result = $default;
+        if (!isset($result) || !$result || $result < 0 ) {
+            $result = $system_timeout_time;
         }
 
         return $result;

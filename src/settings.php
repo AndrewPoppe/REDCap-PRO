@@ -102,6 +102,11 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 $timeout_time_err = "Timeout time must be a positive integer";
                 $any_err          = true;
             }
+            $timeout_maximum = $projectSettings->getMaximumTimeoutMinutes();
+            if ($new_settings["timeout-time"] > $timeout_maximum) {
+                $timeout_time_err = "Timeout time must be no more than " . $timeout_maximum . " minutes";
+                $any_err          = true;
+            }
         }
 
         if ( !$any_err ) {
@@ -240,6 +245,9 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
                                 <?php echo $timeout_time_err; ?>
                             </span>
                         </div>
+                        <p>
+                            The maximum timeout time allowed on this system is <?= \REDCap::escapeHtml($projectSettings->getMaximumTimeoutMinutes()) ?> minutes.
+                        </p>
                     </div>
                 </div>
                 <br>

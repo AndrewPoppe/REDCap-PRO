@@ -38,6 +38,12 @@
             "type": "checkbox"
         },
         {
+            "key": "timeout-time-maximum",
+            "name": "<strong>Maximum Timeout Time</strong>:<br>If the <code>Allow Project-Level Timeout Time Override</code> setting is enabled above, then this value sets the upper-bound on the project-level override. This value has no effect unless that setting is enabled. (default is the same as the system <code>Timeout Time</code> setting)",
+            "type": "text",
+            "validation": "number"
+        },
+        {
             "key": "password-length",
             "name": "<strong>Password Length</strong>:<br>Minimum length of password (default is 8 characters)",
             "type": "text",

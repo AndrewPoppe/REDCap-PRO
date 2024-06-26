@@ -1187,6 +1187,9 @@ class REDCapPRO extends AbstractExternalModule
             if ( isset($settings["timeout-time"]) && $settings["timeout-time"] <= 0 ) {
                 $message = "The timeout time must be a positive number.";
             }
+            if ( isset($settings['timeout-time-maximum']) && ($settings['timeout-time-maximum'] < $settings["timeout-time"])) {
+                $message = "The timeout time maximum must be greater than or equal to the timeout time.";
+            }
             if ( isset($settings["password-length"]) && $settings["password-length"] < 8 ) {
                 $message = "The minimum password length must be a positive integer greater than or equal to 8.";
             }
