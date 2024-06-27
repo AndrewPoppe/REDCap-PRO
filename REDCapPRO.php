@@ -27,6 +27,7 @@ require_once "src/classes/UI.php";
  */
 class REDCapPRO extends AbstractExternalModule
 {
+    const DEFAULT_TIMEOUT_MINUTES = 5;
 
     public $APPTITLE = "REDCapPRO";
     public $AUTH;
@@ -197,6 +198,47 @@ class REDCapPRO extends AbstractExternalModule
 
             // Participant is logged in to their account
             if ( $auth->is_logged_in() ) {
+                // Settings
+                $settings = new ProjectSettings($this);
+
+                // Add inline style
+                echo "<style>
+                    .swal2-timer-progress-bar {
+                        background: #900000 !important;
+                    }
+                    button.swal2-confirm:focus {
+                        box-shadow: 0 0 0 3px rgb(144 0 0 / 50%) !important;
+                    }
+                    body.swal2-shown > [aria-hidden='true'] {
+                        filter: blur(10px);
+                    }
+                    body > * {
+                        transition: 0.1s filter linear;
+                    }
+                </style>";
+
+                // Initialize Javascript module object
+                $this->initializeJavascriptModuleObject();
+
+                // Transfer language translation keys to Javascript object
+                $this->tt_transferToJavascriptModuleObject([
+                    "timeout_message1",
+                    "timeout_message2",
+                    "timeout_button_text"
+                ]);
+
+                // Add script to control logout of form
+                echo "<script src='" . $this->getUrl("src/rcpro_base.js", true) . "'></script>";
+                echo "<script>
+                    window.rcpro.module = " . $this->getJavascriptModuleObjectName() . ";
+                    window.rcpro.logo = '" . $this->getUrl("images/RCPro_Favicon.svg") . "';
+                    window.rcpro.logoutPage = '" . $this->getUrl("src/logout.php", true) . "';
+                    window.rcpro.sessionCheckPage = '" . $this->getUrl("src/session_check.php", true) . "';
+                    window.rcpro.timeout_minutes = " . $settings->getTimeoutMinutes() . ";
+                    window.rcpro.warning_minutes = " . $settings->getTimeoutWarningMinutes() . ";
+                    window.rcpro.initTimeout();
+                    window.rcpro.initSessionCheck();
+                </script>";
                 return;
             }
 
@@ -1187,7 +1229,8 @@ class REDCapPRO extends AbstractExternalModule
             if ( isset($settings["timeout-time"]) && $settings["timeout-time"] <= 0 ) {
                 $message = "The timeout time must be a positive number.";
             }
-            if ( isset($settings['timeout-time-maximum']) && ($settings['timeout-time-maximum'] < $settings["timeout-time"])) {
+            $timeoutTime = $settings["timeout-time"] ?? REDCapPRO::DEFAULT_TIMEOUT_MINUTES; 
+            if ( isset($settings['timeout-time-maximum']) && ($settings['timeout-time-maximum'] < $timeoutTime)) {
                 $message = "The timeout time maximum must be greater than or equal to the timeout time.";
             }
             if ( isset($settings["password-length"]) && $settings["password-length"] < 8 ) {

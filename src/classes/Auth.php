@@ -91,7 +91,7 @@ class Auth
 
     public function is_survey_link_active()
     {
-        return $_SESSION[$this->APPTITLE . "_survey_link_active"];
+        return isset($_SESSION[$this->APPTITLE . "_survey_link_active"]);
     }
 
     // GETS

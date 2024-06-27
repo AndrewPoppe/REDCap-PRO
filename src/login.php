@@ -11,6 +11,13 @@ $auth->init();
 // Login Helper
 $Login = new LoginHelper($module);
 
+// Make sure survey url is set
+if ( !$auth->is_survey_url_set() && isset($_GET['s']) ) {
+    $url = APP_PATH_SURVEY_FULL . "?s=" . filter_input(INPUT_GET, 's', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $auth->set_survey_url($url);
+    $auth->set_survey_active_state(TRUE);
+}
+
 // Check if the user is already logged in, if yes then redirect then to the survey
 if ( $auth->is_logged_in() ) {
     $survey_url        = $auth->get_survey_url();
@@ -21,7 +28,7 @@ if ( $auth->is_logged_in() ) {
     }
 
     $auth->deactivate_survey_link();
-    header("location: ${survey_url}");
+    header("location: " . $survey_url);
     return;
 }
 

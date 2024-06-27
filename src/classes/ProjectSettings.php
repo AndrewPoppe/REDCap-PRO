@@ -34,9 +34,8 @@ class ProjectSettings
     }
 
     public function getSystemTimeoutMinutes() {
-        $default = 5;
-        $setting = (float) $this->module->framework->getSystemSetting("timeout-time"); 
-        return $setting > 0 ? $setting : $default;
+        $setting = (float) $this->module->framework->getSystemSetting("timeout-time");
+        return $setting > 0 ? $setting : REDCapPRO::DEFAULT_TIMEOUT_MINUTES;
     }
 
     public function getProjectTimeoutMinutes($project_id) {
