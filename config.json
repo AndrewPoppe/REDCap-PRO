@@ -138,7 +138,7 @@
     "links": {
         "project": [
             {
-                "name": "<strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em>",
+                "name": "<span style='margin-top:2px;'><strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em></span>",
                 "key": "redcappro",
                 "icon": "images/fingerprint_2.png",
                 "url": "src/home.php",
