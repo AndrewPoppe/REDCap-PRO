@@ -34,7 +34,7 @@
         },
         {
             "key": "allow-project-timeout-time-override",
-            "name": "<strong>Allow Project-Level Timeout Time Override</strong>:<br>Should there be a project-level timeout time setting? If enabled, the project-level setting will override the system-level setting (default is No)",
+            "name": "<strong>Allow Project-Level Timeout Time Override</strong>:<br>If enabled, the participant inactivity timeout duration can be modified at the project-level to be longer or shorter than the system timeout setting. (default is No)",
             "type": "checkbox"
         },
         {
