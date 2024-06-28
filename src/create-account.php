@@ -117,7 +117,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             ?>
             <div style="text-align: center;">
                 <p>
-                    Please check your email for a link to set your password.
+                    Please check your email for a link to set your password. If you already have an account, you will be sent a password reset email.
                 </p>
             </div>
             <?php
