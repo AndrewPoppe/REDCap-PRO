@@ -98,7 +98,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 // Create the account
                 $rcpro_username       = $participantHelper->createParticipant($email, $fname, $lname);
                 $rcpro_participant_id = $participantHelper->getParticipantIdFromUsername($rcpro_username);
-                $module->sendNewParticipantEmail($rcpro_username, $email, $fname, $lname);
+                $module->sendNewParticipantEmail($rcpro_username, $email, $fname, $lname, $auth->get_survey_hash());
             }
 
             // Enroll the user in the project if that setting is enabled
