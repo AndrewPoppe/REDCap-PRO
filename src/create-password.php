@@ -121,7 +121,7 @@ if ( $verified_participant ) {
 
     echo "<p>" . $module->tt("create_password_message3") . "</p>";
     ?>
-    <form action="<?= $module->getUrl("src/create-password.php", true) . "&t=" . urlencode($qstring["t"]) . (isset($surveyHash) ? "&s=$surveyHash" : ""); ?>"
+    <form action="<?= $module->getUrl("src/create-password.php", true) . "&t=" . urlencode($qstring["t"]) . (isset($surveyHash) ? "&s=" . urlencode($surveyHash) : ""); ?>"
         method="post">
         <div class="form-group">
             <span>
