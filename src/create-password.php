@@ -18,8 +18,8 @@ if ( !isset($qstring["t"]) && $_SERVER["REQUEST_METHOD"] !== "POST" ) {
 }
 
 // Get survey hash if included
-if ( isset($_GET['s']) ) {
-    $surveyHash = filter_input(INPUT_GET, 's', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+if ( isset($qstring['s']) ) {
+    $surveyHash = $module->framework->escape(filter_var($qstring['s'], FILTER_SANITIZE_FULL_SPECIAL_CHARS));
     $auth->set_survey_url(APP_PATH_SURVEY_FULL . "?s=$surveyHash");
 }
 
