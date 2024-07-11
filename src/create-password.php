@@ -17,6 +17,12 @@ if ( !isset($qstring["t"]) && $_SERVER["REQUEST_METHOD"] !== "POST" ) {
     return;
 }
 
+// Get survey hash if included
+if ( isset($qstring['s']) ) {
+    $surveyHash = $module->framework->escape(filter_var($qstring['s'], FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+    $auth->set_survey_url(APP_PATH_SURVEY_FULL . "?s=$surveyHash");
+}
+
 // Define variables and initialize with empty values
 $new_password     = $confirm_password = "";
 $new_password_err = $confirm_password_err = "";
@@ -92,7 +98,12 @@ if ( $_SERVER["REQUEST_METHOD"] === "POST" ) {
         $auth->set_login_values($participant);
 
         $ui->ShowParticipantHeader($module->tt("create_password_set"));
-        echo "<div style='text-align:center;'><p>" . $module->tt("ui_close_tab") . "</p></div>";
+        if ( !empty($surveyHash) ) {
+            global $lang;
+            echo "<div style='text-align:center;'><a class='btn btn-primary' role='button' href='" . $auth->get_survey_url() . "'>" . $lang["multilang_690"] . "</button></div>";
+        } else {
+            echo "<div style='text-align:center;'><p>" . $module->tt("ui_close_tab") . "</p></div>";
+        }
         $ui->EndParticipantPage();
         return;
     }
@@ -101,9 +112,8 @@ if ( $_SERVER["REQUEST_METHOD"] === "POST" ) {
 $ui->ShowParticipantHeader($module->tt("create_password_title"));
 
 if ( $verified_participant ) {
-    // They have a valid token. Set their Login and MFA verification status to true.
+    // They have a valid token. Set their Login status to true.
     $auth->set_login_values($verified_participant);
-    $auth->set_mfa_verification_status(true);
 
     $module->logEvent("Participant opened create password page", [
         "rcpro_username" => $verified_participant["rcpro_username"]
@@ -111,7 +121,7 @@ if ( $verified_participant ) {
 
     echo "<p>" . $module->tt("create_password_message3") . "</p>";
     ?>
-    <form action="<?= $module->getUrl("src/create-password.php", true) . "&t=" . urlencode($qstring["t"]); ?>"
+    <form action="<?= $module->getUrl("src/create-password.php", true) . "&t=" . urlencode($qstring["t"]) . (isset($surveyHash) ? "&s=" . urlencode($surveyHash) : ""); ?>"
         method="post">
         <div class="form-group">
             <span>

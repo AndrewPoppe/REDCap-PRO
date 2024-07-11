@@ -101,6 +101,11 @@ class Auth
         return $_SESSION[$this->APPTITLE . "_survey_url"];
     }
 
+    public function get_survey_hash()
+    {
+        return $_SESSION[$this->APPTITLE . "_survey_hash"];
+    }
+
     public function get_participant_id()
     {
         return (int) $_SESSION[$this->APPTITLE . "_participant_id"];
@@ -145,7 +150,25 @@ class Auth
      */
     public function set_survey_url($url)
     {
+        $surveyHash = $this->get_survey_hash_from_url($url);
+        $this->set_survey_hash($surveyHash);
+
         $_SESSION[$this->APPTITLE . "_survey_url"] = $url;
+    }
+
+    private function get_survey_hash_from_url($url) : string
+    {
+        $queryString = parse_url($url, PHP_URL_QUERY);
+        parse_str($queryString, $values);
+        return $values['s'] ?? "";
+    }
+
+    public function set_survey_hash(string $survey_hash)
+    {
+        if ( empty($survey_hash) ) {
+            return;
+        }
+        $_SESSION[$this->APPTITLE . "_survey_hash"] = $survey_hash;
     }
 
     public function set_survey_active_state($state)

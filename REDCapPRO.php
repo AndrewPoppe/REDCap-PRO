@@ -426,12 +426,12 @@ class REDCapPRO extends AbstractExternalModule
             // Participant is not logged into their account
             // Store cookie to return to survey
         } else {
-            $auth->set_survey_url(APP_PATH_SURVEY_FULL . "?s=${survey_hash}");
+            $auth->set_survey_url(APP_PATH_SURVEY_FULL . "?s=$survey_hash");
             $auth->set_redcap_project_id($project_id);
             $auth->set_data_access_group_id($group_id);
-            \Session::savecookie($this->APPTITLE . "_survey_url", APP_PATH_SURVEY_FULL . "?s=${survey_hash}", 0, TRUE);
+            \Session::savecookie($this->APPTITLE . "_survey_url", APP_PATH_SURVEY_FULL . "?s=$survey_hash", 0, TRUE);
             $auth->set_survey_active_state(TRUE);
-            header("location: " . $this->getUrl("src/login.php", true) . "&s=${survey_hash}");
+            header("location: " . $this->getUrl("src/login.php", true) . "&s=$survey_hash");
             $this->exitAfterHook();
             return;
         }
@@ -654,10 +654,11 @@ class REDCapPRO extends AbstractExternalModule
      * @param string $email
      * @param string $fname
      * @param string $lname
+     * @param string $surveyHash
      * 
      * @return bool|NULL
      */
-    public function sendNewParticipantEmail(string $username, string $email, string $fname, string $lname)
+    public function sendNewParticipantEmail(string $username, string $email, string $fname, string $lname, string $surveyHash = "")
     {
         // generate token
         try {
@@ -676,12 +677,12 @@ class REDCapPRO extends AbstractExternalModule
             <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
             <p>" . $this->tt("email_new_participant_greeting", [ $fname, $lname ]) . "
             <br>" . $this->tt("email_new_participant_message1") . "
-            <br>" . $this->tt("email_new_participant_message2") . " <strong>${username}</strong>
+            <br>" . $this->tt("email_new_participant_message2") . " <strong>$username</strong>
             <br>" . $this->tt("email_new_participant_message3") . "</p>
 
             <p>" . $this->tt("email_new_participant_message4") . "
             <br>" . $this->tt("email_new_participant_message5") . " 
-            <a href='" . $this->getUrl("src/create-password.php", true) . "&t=${token}'>" . $this->tt("email_new_participant_link_text") . "</a>
+            <a href='" . $this->getUrl("src/create-password.php", true) . "&t=$token" . (!empty($surveyHash) ? "&s=$surveyHash" : "") . "'>" . $this->tt("email_new_participant_link_text") . "</a>
             <br>" . $this->tt("email_new_participant_message6", $hours_valid) . "</p>
             <br>";
             $body .= "<p>" . $this->tt("email_new_participant_message7");
