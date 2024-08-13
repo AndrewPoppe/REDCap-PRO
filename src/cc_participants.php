@@ -266,7 +266,9 @@ $participants = $participantHelper->getAllParticipants();
         }
 
         $(document).ready(function () {
-
+            var t0 = performance.now();
+            var t1,t2;
+            console.log('start: ',t0);
             // Function for resetting manage-form values
             window.clearForm = function () {
                 $("#toReset").val("");
@@ -287,6 +289,9 @@ $participants = $participantHelper->getAllParticipants();
                 ajax: function (data, callback, settings) {
                     RCPRO_module.ajax('getParticipantsCC', {})
                         .then(response => {
+                            t1 = performance.now();
+                            //console.log('Got data: ', t1);
+                            console.log('Processing: ', t1-t0);
                             callback({ data: response });
                         })
                         .catch(error => {
@@ -416,6 +421,11 @@ $participants = $participantHelper->getAllParticipants();
                 sScrollX: '100%',
                 scrollCollapse: true,
                 pageLength: 100,
+                initComplete: function() {
+                    t2 = performance.now();
+                    console.log('Render: ', t2-t1);
+                    console.log('End: ', t2);
+                }
             });
             $('#participants-form').removeClass('dataTableParentHidden');
             $('#loading-container').hide();

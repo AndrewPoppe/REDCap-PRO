@@ -1137,7 +1137,7 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return string
      */
-    private function getModuleToken()
+    public function getModuleToken()
     {
         $moduleToken = $this->getSystemSetting("module_token");
         if ( !isset($moduleToken) ) {
@@ -1280,5 +1280,51 @@ class REDCapPRO extends AbstractExternalModule
         $result      = $this->framework->getUrl($path, true, true);
         $_GET['pid'] = $pid;
         return $result;
+    }
+
+    /**
+     * To create test logs in the database. Mostly for testing/debugging
+     * @param int $numberToCreate number of logs to create
+     * @return bool success
+     */
+    public function createTestLogs(int $numberToCreate) : bool
+    {
+        $message = "TEST";
+        $projects = [ NULL, 51 ];
+        $redcap_users = [ "test_user", "test" ];
+        $fname        = "Test";
+        $lname        = "Person";
+        $rcpro_participant_ids = [ 1, 2, 3, 4, 5 ];
+        $rcpro_usernames       = [ 'test1', 'test2' ];
+        try {
+            for ( $i = 0; $i < $numberToCreate; $i++ ) {
+                $parameters = [
+                    "project_id"           => $projects[array_rand($projects)],
+                    "pid"                  => $projects[array_rand($projects)],
+                    "redcap_user"          => $redcap_users[array_rand($redcap_users)],
+                    "rcpro_participant_id" => $rcpro_participant_ids[array_rand($rcpro_participant_ids)],
+                    "rcpro_username"       => $rcpro_usernames[array_rand($rcpro_usernames)],
+                    "fname"                => $fname,
+                    "lname"                => $lname
+                ];
+                $this->logEvent($message, $parameters);
+            }
+            return true;
+        } catch (\Throwable $e) {
+            $this->logError("Error Creating Test Logs", $e);
+            return false;
+        }
+    }
+
+    public function removeTestLogs() : bool
+    {
+        try {
+            $token = $this->getModuleToken();
+            $this->framework->removeLogs("module_token = ? AND message = 'TEST'", [ $token ]);
+            return true;
+        } catch (\Throwable $e) {
+            $this->logError('Error Removing Test Logs', $e);
+            return false;
+        }
     }
 }

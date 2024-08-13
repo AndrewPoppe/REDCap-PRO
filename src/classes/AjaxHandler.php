@@ -45,7 +45,144 @@ class AjaxHandler
         }
     }
 
-    private function getLogs() : array
+    private function getLogs()
+    {
+        try {
+            if ( $this->params["cc"] && !$this->module->framework->isSuperUser() ) {
+                throw new REDCapProException("You must be an admin to view Control Center logs");
+            }
+            $start     = (int) $this->params["start"];
+            $length    = (int) $this->params["length"];
+            $limitTerm = ($length < 0) ? "" : " limit " . $start . "," . $length;
+
+            $fastQueryParameters = [];
+            $queryParameters = [ $this->module->getModuleToken() ];
+
+            $generalSearchTerm       = $this->params["search"]["value"] ?? "";
+            $generalSearchText       = "module_token = ?" . ($generalSearchTerm === "" ? "" : " and (");
+            foreach ( $this->params["columns"] as $key => $column ) {
+
+                // Add column to general search if it is searchable
+                if ( $generalSearchTerm !== "" && $column["searchable"] == "true" ) {
+                    if ( array_key_first($this->params["columns"]) !== $key ) {
+                        $generalSearchText .= " or ";
+                    }
+                    $generalSearchText .= db_escape($column["data"]) . " like ?";
+                    array_push($queryParameters, sprintf("%%%s%%", $generalSearchTerm));
+                }
+
+                // // Add any column-specific filtering
+                // $searchVal = $column["search"]["value"];
+                // if ( $searchVal != "" ) {
+                //     $columnSearchText .= " and " . db_escape($column["data"]) . " like ?";
+                //     $searchVal        = $column["search"]["regex"] == "true" ? $searchVal : sprintf("%%%s%%", $searchVal);
+                //     array_push($columnSearchParameters, $searchVal);
+                // }
+            }
+            $generalSearchText .= $generalSearchTerm === "" ? "" : ")";
+
+            // // Timestamp filtering
+            // $timestampFilterText       = "";
+            // $timestampFilterParameters = [];
+            // if ( $this->params["minDate"] != "" ) {
+            //     $timestampFilterText .= " and timestamp >= ?";
+            //     $timestampFilterParameters[] = $this->params["minDate"];
+            // }
+            // if ( $this->params["maxDate"] != "" ) {
+            //     $timestampFilterText .= " and timestamp <= ?";
+            //     $timestampFilterParameters[] = $this->params["maxDate"];
+            // }
+
+            $orderTerm = "";
+            foreach ( $this->params["order"] as $index => $order ) {
+                $column    = db_escape($this->params["columns"][intval($order["column"])]["data"]);
+                $direction = $order["dir"] === "asc" ? "asc" : "desc";
+                if ( $index === 0 ) {
+                    $orderTerm .= " order by ";
+                }
+                $orderTerm .= $column . " " . $direction;
+                if ( $index !== sizeof($this->params["order"]) - 1 ) {
+                    $orderTerm .= ", ";
+                }
+            }
+            // if ( $orderTerm === "" ) {
+            //     $orderTerm = " order by timestamp desc";
+            // }
+
+            //$queryParameters = [ ...$queryParameters, ...$generalSearchParameters ];
+
+            // BUILD A FAST QUERY OF THE LOGS
+            $baseColumns = [
+                "log_id",
+                "timestamp",
+                "ui_id",
+                "ip",
+                "project_id",
+                "record",
+                "message"
+            ];
+
+            $sqlFull = "SELECT ";
+            foreach (REDCapPRO::$logColumnsCC as $key => $column) {
+                if ( in_array( $column, $baseColumns, true) ) {
+                    $sqlFull .= " l." . $column;
+                } else {
+                    $sqlFull .= " MAX(CASE WHEN p.name = '" . $column . "' THEN p.value END) AS $column ";
+                }
+                if ($key !== array_key_last(REDCapPRO::$logColumnsCC)) {
+                    $sqlFull .= ", ";
+                }
+            }
+
+            $sql = " from redcap_external_modules_log l 
+                    left join redcap_external_modules_log_parameters p
+                    ON p.log_id = l.log_id 
+                    left join redcap_external_modules_log_parameters module_token
+                    on module_token.log_id = l.log_id
+                    and module_token.name = 'module_token'
+                    WHERE l.external_module_id = (SELECT external_module_id FROM redcap_external_modules WHERE directory_prefix = ?)
+                    and module_token.value = ? ";
+            array_push($fastQueryParameters, $this->module->framework->getModuleInstance()->PREFIX, $this->module->getModuleToken());
+
+            if ( $generalSearchTerm !== "" ) {
+                $sql .= " and (";
+                foreach ($baseColumns as $baseColumn) {
+                    $sql .= "l.$baseColumn like ? or ";
+                    array_push($fastQueryParameters, "%$generalSearchTerm%");
+                }
+                $sql .= " p.value like ?)";
+                array_push($fastQueryParameters, "%$generalSearchTerm%");
+            }
+
+            $sql .= " group by l.log_id ";
+
+            $queryResult = $this->module->framework->query($sqlFull . $sql . $orderTerm . $limitTerm, $fastQueryParameters);
+            $countResult = $this->module->framework->query("SELECT * " . $sql, $fastQueryParameters)->num_rows;
+
+            // $queryText = "SELECT " . implode(', ', REDCapPRO::$logColumnsCC) . " WHERE " . $generalSearchText . $orderTerm . $limitTerm;
+            // $queryResult = $this->module->queryLogs($queryText, $queryParameters);
+            // $countResult = $this->module->countLogs($generalSearchText, $queryParameters);
+            $totalCountResult = $this->module->countLogs("module_token = ?", [ $this->module->getModuleToken() ]);
+            $logs        = array();
+            while ( $row = $queryResult->fetch_assoc() ) {
+                $logs[] = $row;
+            }
+
+            
+            return [
+                "data"            => $logs,
+                "draw"            => (int) $this->params["draw"],
+                "recordsTotal"    => $totalCountResult,
+                "recordsFiltered" => $countResult//sizeof($logs)// $rowsTotal
+            ];
+
+            // return [ $logs, $rowsTotal ];
+        } catch ( \Throwable $e ) {
+            $this->module->framework->log('Error getting logs', [ "error" => $e->getMessage() ]);
+        }
+    }
+
+    private function getLogsOld() : array
     {
         $logs = [];
         try {
@@ -53,7 +190,47 @@ class AjaxHandler
                 if ( !$this->module->framework->isSuperUser() ) {
                     throw new REDCapProException("You must be an admin to view Control Center logs");
                 }
-                $result = $this->module->selectLogs("SELECT " . implode(', ', REDCapPRO::$logColumnsCC), []);
+
+                $baseColumns = [
+                    "log_id",
+                    "timestamp",
+                    "ui_id",
+                    "ip",
+                    "project_id",
+                    "record",
+                    "message"
+                ];
+
+                $sql = "SELECT ";
+                foreach (REDCapPRO::$logColumnsCC as $key => $column) {
+                    if ( in_array( $column, $baseColumns, true) ) {
+                        $sql .= " l." . $column;
+                    } else {
+                        $sql .= " MAX(CASE WHEN p.name = '" . $column . "' THEN p.value END) AS $column ";
+                    }
+                    if ($key !== array_key_last(REDCapPRO::$logColumnsCC)) {
+                        $sql .= ", ";
+                    }
+                }
+
+                // TODO: Remove hardcoded 'redcap_pro'
+                $sql.= "from redcap_external_modules_log l
+
+                        left join redcap_external_modules_log_parameters p
+                        ON p.log_id = l.log_id
+
+                        left join redcap_external_modules_log_parameters module_token
+                        on module_token.log_id = l.log_id
+                        and module_token.name = 'module_token'
+                        WHERE l.external_module_id = (SELECT external_module_id FROM redcap_external_modules WHERE directory_prefix = 'redcap_pro')
+                        and (module_token.value = ?)
+
+                        group by l.log_id";
+
+                $this->module->log('ok', [ 'sql_thing' => $sql ]);
+                $result = $this->module->query($sql, [$this->module->getModuleToken()]);
+
+                // $result = $this->module->selectLogs("SELECT " . implode(', ', REDCapPRO::$logColumnsCC), []);
 
                 while ( $row = $result->fetch_assoc() ) {
                     $logs[] = $row;

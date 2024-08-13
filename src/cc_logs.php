@@ -52,6 +52,10 @@ $module->initializeJavascriptModuleObject();
 </div>
 <script>
     (function ($, window, document) {
+        var t0 = performance.now();
+        var tHalf,t1,t2;
+        console.log('start: ',t0);
+
         const RCPRO_module = <?= $module->getJavascriptModuleObjectName() ?>;
         const columns = ["<?= implode('", "', REDCapPRO::$logColumnsCC) ?>"];
 
@@ -62,10 +66,27 @@ $module->initializeJavascriptModuleObject();
         $(document).ready(function () {
             let dataTable = $('#RCPRO_TABLE').DataTable({
                 deferRender: true,
+                serverSide: true,
+                processing: true,
+                searchDelay: 1000,
+                order: [[0, 'desc']],
                 ajax: function (data, callback, settings) {
-                    RCPRO_module.ajax('getLogs', { cc: true })
+                    const payload = {
+                        draw: data.draw,
+                        search: data.search,
+                        start: data.start,
+                        length: data.length,
+                        order: data.order,
+                        columns: data.columns,
+                        cc: true
+                    }
+                    tHalf = performance.now();
+                    RCPRO_module.ajax('getLogs', payload)
                         .then(response => {
-                            callback({ data: response });
+                            t1 = performance.now();
+                            //console.log('Got data: ', t1);
+                            console.log('Processing: ', t1-tHalf);
+                            callback(response);
                         })
                         .catch(error => {
                             console.error(error);
@@ -98,24 +119,25 @@ $module->initializeJavascriptModuleObject();
                     });
                 },
                 dom: 'lBfrtip',
-                stateSave: true,
+                stateSave: false,
                 stateSaveCallback: function (settings, data) {
                     localStorage.setItem('DataTables_cclogs_' + settings.sInstance, JSON.stringify(data))
                 },
                 stateLoadCallback: function (settings) {
                     return JSON.parse(localStorage.getItem('DataTables_cclogs_' + settings.sInstance))
                 },
-                colReorder: true,
-                buttons: [{
-                    extend: 'searchPanes',
-                    config: {
-                        cascadePanes: true,
-                    }
+                colReorder: false,
+                buttons: [
+                //     {
+                //     extend: 'searchPanes',
+                //     config: {
+                //         cascadePanes: true,
+                //     }
 
-                },
-                {
-                    extend: 'searchBuilder',
-                },
+                // },
+                // {
+                //     extend: 'searchBuilder',
+                // },
                     'colvis',
                 {
                     text: 'Restore Default',
@@ -147,7 +169,16 @@ $module->initializeJavascriptModuleObject();
                 ],
                 scrollX: true,
                 scrollY: '60vh',
-                scrollCollapse: true
+                scrollCollapse: true,
+                initComplete: function() {
+                    console.log('End: ', performance.now());
+                    
+                    //dataTable.columns.adjust().draw();  
+                },
+                drawCallback: function (settings) {
+                    t2 = performance.now();
+                    console.log('Render: ', t2-t1);
+                }
             });
 
             $('#logs').removeClass('dataTableParentHidden');
@@ -160,7 +191,6 @@ $module->initializeJavascriptModuleObject();
                     $('.dt-button-collection').draggable();
                 }
             });
-            dataTable.columns.adjust().draw();
         });
     }(window.jQuery, window, document));
 </script>
