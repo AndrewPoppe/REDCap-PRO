@@ -299,7 +299,7 @@ class ParticipantHelper
      */
     public function getAllParticipants()
     {
-        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, pw, active WHERE message = 'PARTICIPANT' AND rcpro_username IS NOT NULL AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, pw, active, timestamp, redcap_user WHERE message = 'PARTICIPANT' AND rcpro_username IS NOT NULL AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result       = $this->module->selectLogs($SQL, []);
             $participants = array();
@@ -489,6 +489,44 @@ class ParticipantHelper
             return $projects;
         } catch ( \Exception $e ) {
             $this->module->logError("Error fetching participant's projects", $e);
+        }
+    }
+
+    /**
+     * Fetches all the projects that any participant is enrolled in
+     * 
+     * This includes active and inactive projects
+     * 
+     * @return array array of arrays, each corresponding with a project
+     */
+    public function getAllParticipantProjects()
+    {
+        $SQL1     = "SELECT rcpro_participant_id, rcpro_project_id, active WHERE message = 'LINK' AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $SQL2     = "SELECT log_id, pid WHERE message = 'PROJECT' AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $projects = array();
+        try {
+            $result1 = $this->module->selectLogs($SQL1, [ ]);
+            if ( !$result1 ) {
+                throw new REDCapProException([]);
+            }
+            $result2 = $this->module->selectLogs($SQL2, []);
+            $pids    = [];
+            while ( $row = $result2->fetch_assoc() ) {
+                $pids[$row['log_id']] = $row['pid'];
+            }
+            while ( $row = $result1->fetch_assoc() ) {
+                $rcpro_project_id = $row["rcpro_project_id"];
+                $rcpro_participant_id = $row["rcpro_participant_id"];
+                $redcap_pid = $pids[$rcpro_project_id];
+                $projects[$rcpro_participant_id][] = [
+                    "rcpro_project_id" => $rcpro_project_id,
+                    "active"           => $row["active"],
+                    "redcap_pid"       => $redcap_pid
+                ];
+            }
+            return $projects;
+        } catch ( \Exception $e ) {
+            $this->module->logError("Error fetching projects", $e);
         }
     }
 

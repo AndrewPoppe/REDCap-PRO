@@ -251,6 +251,10 @@ class AjaxHandler
 
     private function getParticipants()
     {
+        // TIMING
+        $lastTime = microtime(true);
+        $times = ["Start" => $lastTime];
+
         $role = $this->module->getUserRole($this->module->safeGetUsername());
         if ( $role < 1 ) {
             throw new REDCapProException("You must be at least a monitor to view this page.");
@@ -264,6 +268,12 @@ class AjaxHandler
         try {
             $participantHelper = new ParticipantHelper($this->module);
             $participantList   = $participantHelper->getProjectParticipants($rcpro_project_id, $rcpro_user_dag);
+
+            // TIMING
+            $now                  = microtime(true);
+            $times["Before Loop"] = $now - $lastTime;
+            $lastTime             = $now;
+
             foreach ( $participantList as $participant ) {
                 $rcpro_participant_id = (int) $participant["log_id"];
                 $link_id              = $projectHelper->getLinkId($rcpro_participant_id, $rcpro_project_id);
@@ -283,6 +293,12 @@ class AjaxHandler
                 }
                 $participants[] = $thisParticipant;
             }
+
+            // TIMING
+            $now                  = microtime(true);
+            $times["After Loop"] = $now - $lastTime;
+            $lastTime             = $now;
+            $this->module->log('times', [ 'times' => json_encode($times) ]);
         } catch ( \Throwable $e ) {
             $this->module->logError('Error fetching participant list', $e);
         } finally {
@@ -297,21 +313,31 @@ class AjaxHandler
         }
         $participantHelper = new ParticipantHelper($this->module);
         $participants      = $participantHelper->getAllParticipants();
+        $allProjects = $participantHelper->getAllParticipantProjects();
         $results           = [];
         foreach ( $participants as $participant ) {
             $participant_clean    = $this->module->escape($participant);
             $rcpro_participant_id = (int) $participant_clean["log_id"];
+            $projects = $allProjects[$rcpro_participant_id] ?? [];
+            $info_clean = [
+                'User_ID'       => $participant_clean['log_id'] ?? "",
+                'Username'      => $participant_clean['rcpro_username'] ?? "",
+                'Registered At' => $participant_clean['timestamp'] ?? "",
+                'Registered By' => $participant_clean['redcap_user'] ?? ""
+            ];
+            $active = !isset($participant_clean["active"]) || $participant_clean["active"] == 1;
+            
             $results[]            = [
                 'log_id'               => $participant_clean["log_id"],
                 'rcpro_participant_id' => $rcpro_participant_id,
-                'projects_array'       => $participantHelper->getParticipantProjects($rcpro_participant_id),
-                'info'                 => $this->module->framework->escape($participantHelper->getParticipantInfo($rcpro_participant_id)),
+                'projects_array'       => $projects,
+                'info'                 => $info_clean,
                 'username'             => $participant_clean["rcpro_username"] ?? "",
                 'password_set'         => $participant_clean["pw_set"] === 'True',
                 'fname'                => $participant_clean["fname"] ?? "",
                 'lname'                => $participant_clean["lname"] ?? "",
                 'email'                => $participant_clean["email"] ?? "",
-                'isActive'             => $participantHelper->isParticipantActive($rcpro_participant_id)
+                'isActive'             => $active
             ];
         }
         return $results;

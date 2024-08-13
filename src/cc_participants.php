@@ -287,6 +287,7 @@ $participants = $participantHelper->getAllParticipants();
                 stateSave: true,
                 deferRender: true,
                 ajax: function (data, callback, settings) {
+                    t0 = performance.now();
                     RCPRO_module.ajax('getParticipantsCC', {})
                         .then(response => {
                             t1 = performance.now();
