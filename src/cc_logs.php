@@ -171,9 +171,27 @@ $module->initializeJavascriptModuleObject();
                 scrollY: '60vh',
                 scrollCollapse: true,
                 initComplete: function() {
+                    this.api()
+                    .columns()
+                    .every(function () {
+                        var column = this;
+                        var title = column.header().textContent;
+        
+                        // Create input element and add event listener
+                        $('<br><input type="text" placeholder="Search ' + title + '" />')
+                            .appendTo($(column.header()))
+                            .on('click', function (e) {
+                                e.stopPropagation();
+                            })
+                            .on('click keyup change clear', function (e) {
+                                if (column.search() !== this.value) {
+                                    column.search(this.value).draw();
+                                }
+                            });
+                    });
                     console.log('End: ', performance.now());
                     
-                    //dataTable.columns.adjust().draw();  
+                    dataTable.columns.adjust().draw();  
                 },
                 drawCallback: function (settings) {
                     t2 = performance.now();

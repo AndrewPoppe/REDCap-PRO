@@ -51,15 +51,28 @@ class AjaxHandler
             if ( $this->params["cc"] && !$this->module->framework->isSuperUser() ) {
                 throw new REDCapProException("You must be an admin to view Control Center logs");
             }
+
+            $baseColumns = [
+                "log_id",
+                "timestamp",
+                "ui_id",
+                "ip",
+                "project_id",
+                "record",
+                "message"
+            ];
+
             $start     = (int) $this->params["start"];
             $length    = (int) $this->params["length"];
             $limitTerm = ($length < 0) ? "" : " limit " . $start . "," . $length;
 
             $fastQueryParameters = [];
             $queryParameters = [ $this->module->getModuleToken() ];
+            $columnSearchParameters = [];
 
             $generalSearchTerm       = $this->params["search"]["value"] ?? "";
             $generalSearchText       = "module_token = ?" . ($generalSearchTerm === "" ? "" : " and (");
+            $columnSearchText  = "";
             foreach ( $this->params["columns"] as $key => $column ) {
 
                 // Add column to general search if it is searchable
@@ -71,13 +84,18 @@ class AjaxHandler
                     array_push($queryParameters, sprintf("%%%s%%", $generalSearchTerm));
                 }
 
-                // // Add any column-specific filtering
-                // $searchVal = $column["search"]["value"];
-                // if ( $searchVal != "" ) {
-                //     $columnSearchText .= " and " . db_escape($column["data"]) . " like ?";
-                //     $searchVal        = $column["search"]["regex"] == "true" ? $searchVal : sprintf("%%%s%%", $searchVal);
-                //     array_push($columnSearchParameters, $searchVal);
-                // }
+                // Add any column-specific filtering
+                $searchVal = $column["search"]["value"];
+                if ( $searchVal != "" ) {
+                    $searchVal        = $column["search"]["regex"] == "true" ? $searchVal : sprintf("%%%s%%", $searchVal);
+                    if (in_array($column["data"], $baseColumns, true)) {
+                        $columnSearchText .= " and " . db_escape($column["data"]) . " like ?";
+                        array_push($columnSearchParameters, $searchVal);
+                    } else {
+                        $columnSearchText .= " and l.log_id in (select log_id from redcap_external_modules_log_parameters where name = ? and value like ?) ";
+                        array_push($columnSearchParameters, $column["data"], $searchVal);    
+                    }
+                }
             }
             $generalSearchText .= $generalSearchTerm === "" ? "" : ")";
 
@@ -112,15 +130,7 @@ class AjaxHandler
             //$queryParameters = [ ...$queryParameters, ...$generalSearchParameters ];
 
             // BUILD A FAST QUERY OF THE LOGS
-            $baseColumns = [
-                "log_id",
-                "timestamp",
-                "ui_id",
-                "ip",
-                "project_id",
-                "record",
-                "message"
-            ];
+            
 
             $sqlFull = "SELECT ";
             foreach (REDCapPRO::$logColumnsCC as $key => $column) {
@@ -150,11 +160,18 @@ class AjaxHandler
                     $sql .= "l.$baseColumn like ? or ";
                     array_push($fastQueryParameters, "%$generalSearchTerm%");
                 }
-                $sql .= " p.value like ?)";
+                $sql .= " l.log_id in (select log_id from redcap_external_modules_log_parameters where value like ?)) ";
                 array_push($fastQueryParameters, "%$generalSearchTerm%");
             }
 
+            if ( $columnSearchText !== "" ) {
+                $sql .= $columnSearchText;
+                array_push($fastQueryParameters, ...$columnSearchParameters);
+            }
+
             $sql .= " group by l.log_id ";
+
+            $this->module->log('ok', [ 'sql' => $sql ]);
 
             $queryResult = $this->module->framework->query($sqlFull . $sql . $orderTerm . $limitTerm, $fastQueryParameters);
             $countResult = $this->module->framework->query("SELECT * " . $sql, $fastQueryParameters)->num_rows;
