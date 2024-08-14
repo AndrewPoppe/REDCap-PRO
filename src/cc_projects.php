@@ -11,6 +11,10 @@ if ( !$module->framework->isSuperUser() ) {
 <!DOCTYPE html>
 <html lang="en">
 <title>REDCapPRO Projects</title>
+<link href="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.css" rel="stylesheet">
+ 
+<script src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.js"></script>
+
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro_cc.php") ?>">
 
 <?php
@@ -49,8 +53,9 @@ $module->initializeJavascriptModuleObject();
         const RCPRO_module = <?= $module->getJavascriptModuleObjectName() ?>;
         $(document).ready(function () {
             let dataTable = $('#RCPRO_TABLE').DataTable({
-                dom: 'lftip',
+                // dom: 'lftip',
                 deferRender: true,
+                processing: true,
                 ajax: function (data, callback, settings) {
                     RCPRO_module.ajax('getProjectsCC', {})
                         .then(response => {

@@ -1028,27 +1028,55 @@ class REDCapPRO extends AbstractExternalModule
     public function getAllUsers()
     {
         $projects = $this->framework->getProjectsWithModuleEnabled();
+        $staff    = $this->getStaff();
+        $allUsers = $this->getAllUserInfo();
         $users    = array();
         foreach ( $projects as $pid ) {
-            $project   = new Project($this, $pid);
-            $staff_arr = $project->getStaff();
-            $all_staff = $staff_arr["allStaff"];
+            $all_staff = $staff[$pid]["allStaff"];
             foreach ( $all_staff as $user ) {
                 if ( isset($users[$user]) ) {
                     array_push($users[$user]['projects'], $pid);
                 } else {
-                    $newUser      = $this->framework->getUser($user);
-                    $newUserArr   = [
-                        "username" => $user,
-                        "email"    => $newUser->getEmail(),
-                        "name"     => $this->getUserFullname($user),
-                        "projects" => [ $pid ]
-                    ];
-                    $users[$user] = $newUserArr;
+                    $newUser      = $allUsers[$user];
+                    $newUser['projects'] = [ $pid ];
+                    $users[$user] = $newUser;
                 }
             }
         }
         return $users;
+    }
+
+    public function getAllUserInfo() {
+        $sql = 'SELECT username, user_email AS email, CONCAT(user_firstname, " ", user_lastname) AS name FROM redcap_user_information';
+        $result = $this->framework->query($sql, []);
+        $userInfo = [];
+        while ($row = $result->fetch_assoc()) {
+            $userInfo[$row['username']] = $row;
+        }
+        return $userInfo;
+    }
+
+    public function getStaff()
+    {
+        try {
+            $sql      = "SELECT * FROM redcap_external_module_settings 
+                WHERE external_module_id = (SELECT external_module_id FROM redcap_external_modules WHERE directory_prefix = ?) 
+                AND `key` in ('managers', 'users', 'monitors')";
+            $result   = $this->framework->query($sql, [ $this->framework->getModuleInstance()->PREFIX ]);
+            $staff    = [];
+            while ($row = $result->fetch_assoc()) {
+                $thisStaff                              = json_decode($row['value']);
+                $staff[$row['project_id']][$row['key']] = $thisStaff;
+                if (!isset($staff[$row['project_id']]['allStaff'])) {
+                    $staff[$row['project_id']]['allStaff'] = [];
+                }
+                $staff[$row['project_id']]['allStaff'] = array_merge($staff[$row['project_id']]['allStaff'], $thisStaff);
+            }
+            
+            return $staff;
+        } catch (\Exception $e) {
+            $this->module->logError("Error getting staff", $e);
+        }
     }
 
     public function safeGetUsername() : string

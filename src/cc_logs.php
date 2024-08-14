@@ -16,11 +16,10 @@ $ui->ShowControlCenterHeader("Logs");
 
 ?>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<link rel="stylesheet" type="text/css"
-    href="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/cr-1.5.4/date-1.1.0/sb-1.1.0/sp-1.3.0/sl-1.3.3/datatables.min.css" />
-<script type="text/javascript"
-    src="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/cr-1.5.4/date-1.1.0/sb-1.1.0/sp-1.3.0/sl-1.3.3/datatables.min.js"
-    defer></script>
+<link href="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.css" rel="stylesheet">
+ 
+<script src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.js"></script>
+
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" defer></script>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro_cc.php") ?>">
 <?php
@@ -118,8 +117,12 @@ $module->initializeJavascriptModuleObject();
                         });
                     });
                 },
-                dom: 'lBfrtip',
-                stateSave: false,
+                //dom: 'lBfrtip',
+                layout: {
+                    topStart: ['pageLength', 'buttons'],
+                    topEnd: 'search'
+                },
+                stateSave: true,
                 stateSaveCallback: function (settings, data) {
                     localStorage.setItem('DataTables_cclogs_' + settings.sInstance, JSON.stringify(data))
                 },
@@ -179,6 +182,7 @@ $module->initializeJavascriptModuleObject();
         
                         // Create input element and add event listener
                         $('<br><input type="text" placeholder="Search ' + title + '" />')
+                            .val(column.search())
                             .appendTo($(column.header()))
                             .on('click', function (e) {
                                 e.stopPropagation();
@@ -191,7 +195,7 @@ $module->initializeJavascriptModuleObject();
                     });
                     console.log('End: ', performance.now());
                     
-                    dataTable.columns.adjust().draw();  
+                    dataTable.columns.adjust();  
                 },
                 drawCallback: function (settings) {
                     t2 = performance.now();
