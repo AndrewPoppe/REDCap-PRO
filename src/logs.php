@@ -20,9 +20,8 @@ $module->initializeJavascriptModuleObject();
 </title>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <link href="https://cdn.datatables.net/v/dt/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.css" rel="stylesheet">
- 
-<script src="https://cdn.datatables.net/v/dt/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.js"></script>
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" defer></script>
+<script src="https://cdn.datatables.net/v/dt/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.js" integrity="sha512-rel6rKMl1P/jzxDBBLAg4+i3r3sbvTfHJlp/BdGU00s7Zn8HHj1Yb4XYDo4sKuM5WVz1ldkqJgx2+gue608VHg==" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/ui/1.14.0/jquery-ui.js" integrity="sha512-cxRn/7O+JWSqvBOGeODaC+v9wr7RFllEwd6SBAub5ZuBPEzBtYZXTx46KNnlzvEfG42CzbwfscbBYZYcgrXKNA==" crossorigin="anonymous" defer></script>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
 
 <div class="manageContainer wrapper log-wrapper" style="display: none;">

@@ -16,11 +16,9 @@ $ui->ShowControlCenterHeader("Logs");
 
 ?>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<link href="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/date-1.5.3/sr-1.4.1/datatables.min.css" rel="stylesheet">
- 
-<script src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/date-1.5.3/sr-1.4.1/datatables.min.js"></script>
-
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" defer></script>
+<link href="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/date-1.5.3/sr-1.4.1/datatables.min.css" rel="stylesheet"> 
+<script src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/date-1.5.3/sr-1.4.1/datatables.min.js" integrity="sha512-Dp027lG1kw+OxJjCYvBw8jT9Buw65dP8HYTtfUQ8DAeBUcYn/urzTlQ8jbWXENZaYnujGvQlgJT21m+GsaCH5w==" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/ui/1.14.0/jquery-ui.js" integrity="sha512-cxRn/7O+JWSqvBOGeODaC+v9wr7RFllEwd6SBAub5ZuBPEzBtYZXTx46KNnlzvEfG42CzbwfscbBYZYcgrXKNA==" crossorigin="anonymous" defer></script>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro_cc.php") ?>">
 <?php
 
