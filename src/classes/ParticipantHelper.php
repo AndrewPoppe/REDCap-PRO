@@ -538,40 +538,6 @@ class ParticipantHelper
      * 
      * @return array|NULL participants enrolled in given study
      */
-    public function getProjectParticipantsOld(string $rcpro_project_id, ?int $dag = NULL)
-    {
-        $SQL    = "SELECT rcpro_participant_id WHERE message = 'LINK' AND rcpro_project_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
-        $PARAMS = [ $rcpro_project_id ];
-        if ( isset($dag) ) {
-            $SQL .= " AND project_dag IS NOT NULL AND project_dag = ?";
-            array_push($PARAMS, strval($dag));
-        }
-        try {
-            $result       = $this->module->selectLogs($SQL, $PARAMS);
-            $participants = array();
-
-            while ( $row = $result->fetch_assoc() ) {
-                $participantSQL        = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, pw WHERE message = 'PARTICIPANT' AND log_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
-                $participantResult     = $this->module->selectLogs($participantSQL, [ $row["rcpro_participant_id"] ]);
-                $participant           = $participantResult->fetch_assoc();
-                $participant["pw_set"] = (!isset($participant["pw"]) || $participant["pw"] === "") ? "False" : "True";
-                unset($participant["pw"]);
-                $participants[$row["rcpro_participant_id"]] = $participant;
-            }
-            return $participants;
-        } catch ( \Exception $e ) {
-            $this->module->logError("Error fetching project participants", $e);
-        }
-    }
-
-    /**
-     * get array of active enrolled participants given a rcpro project id
-     * 
-     * @param string $rcpro_project_id Project ID (not REDCap PID!)
-     * @param int|NULL $dag Data Access Group to filter search by
-     * 
-     * @return array|NULL participants enrolled in given study
-     */
     public function getProjectParticipants(string $rcpro_project_id, ?int $dag = NULL)
     {
         $SQL1    = "SELECT rcpro_participant_id WHERE message = 'LINK' AND rcpro_project_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";

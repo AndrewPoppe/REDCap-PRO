@@ -52,7 +52,6 @@ $module->initializeJavascriptModuleObject();
         const RCPRO_module = <?= $module->getJavascriptModuleObjectName() ?>;
         $(document).ready(function () {
             let dataTable = $('#RCPRO_TABLE').DataTable({
-                // dom: 'lftip',
                 deferRender: true,
                 processing: true,
                 ajax: function (data, callback, settings) {

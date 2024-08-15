@@ -75,7 +75,6 @@ $module->initializeJavascriptModuleObject();
                         maxDate: $('#max').val(),
                         cc: true
                     }
-                    tHalf = performance.now();
                     RCPRO_module.ajax('getLogs', payload)
                         .then(response => {
                             callback(response);

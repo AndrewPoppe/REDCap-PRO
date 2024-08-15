@@ -170,7 +170,7 @@ class CsvEnrollImport
                 $projectHelper = new ProjectHelper($this->module);
                 $result        = $projectHelper->enrollParticipant($rcpro_participant_id, $this->project_id, $dagId, $rcpro_username);
                 if ( !$result || $result === -1 ) {
-                    $this->module->log('Error enrolling participant via CSV', [
+                    $this->module->logEvent('Error enrolling participant via CSV', [
                         'rcpro_username'       => $rcpro_username,
                         'rcpro_participant_id' => $rcpro_participant_id,
                         'project_id'           => $this->project_id,
@@ -183,7 +183,7 @@ class CsvEnrollImport
             $this->module->logEvent('Imported Participants from CSV', [ 'data' => json_encode($this->cleanContents) ]);
         } catch ( \Throwable $e ) {
             $success = false;
-            $this->module->log('Error importing Participants', [ 'error' => $e->getMessage() ]);
+            $this->module->logError('Error importing Participants', $e);
         } finally {
             return $success;
         }

@@ -96,7 +96,6 @@ $module->initializeJavascriptModuleObject();
                         }
                     },
                 ],
-                // dom: 'lBfrtip',
                 stateSave: true,
                 stateSaveCallback: function (settings, data) {
                     localStorage.setItem('DataTables_ccstaff_' + settings.sInstance, JSON.stringify(data))

@@ -182,8 +182,6 @@ class AjaxHandler
 
             $sql .= " group by l.log_id ";
 
-            $this->module->log('ok', [ 'sql' => $sql ]);
-
             $queryResult = $this->module->framework->query($sqlFull . $sql . $orderTerm . $limitTerm, $fastQueryParameters);
             $countResult = $this->module->framework->query("SELECT * " . $sql, $fastQueryParameters)->num_rows;
 
@@ -195,91 +193,19 @@ class AjaxHandler
 
             
             return [
-                "data"            => $logs,
+                "data"            => $this->module->framework->escape($logs),
                 "draw"            => (int) $this->params["draw"],
                 "recordsTotal"    => $totalCountResult,
                 "recordsFiltered" => $countResult
             ];
 
         } catch ( \Throwable $e ) {
-            $this->module->framework->log('Error getting logs', [ "error" => $e->getMessage() ]);
-        }
-    }
-
-    private function getLogsOld() : array
-    {
-        $logs = [];
-        try {
-            if ( $this->params["cc"] ) {
-                if ( !$this->module->framework->isSuperUser() ) {
-                    throw new REDCapProException("You must be an admin to view Control Center logs");
-                }
-
-                $baseColumns = [
-                    "log_id",
-                    "timestamp",
-                    "ui_id",
-                    "ip",
-                    "project_id",
-                    "record",
-                    "message"
-                ];
-
-                $sql = "SELECT ";
-                foreach (REDCapPRO::$logColumnsCC as $key => $column) {
-                    if ( in_array( $column, $baseColumns, true) ) {
-                        $sql .= " l." . $column;
-                    } else {
-                        $sql .= " MAX(CASE WHEN p.name = '" . $column . "' THEN p.value END) AS $column ";
-                    }
-                    if ($key !== array_key_last(REDCapPRO::$logColumnsCC)) {
-                        $sql .= ", ";
-                    }
-                }
-
-                // TODO: Remove hardcoded 'redcap_pro'
-                $sql.= "from redcap_external_modules_log l
-
-                        left join redcap_external_modules_log_parameters p
-                        ON p.log_id = l.log_id
-
-                        left join redcap_external_modules_log_parameters module_token
-                        on module_token.log_id = l.log_id
-                        and module_token.name = 'module_token'
-                        WHERE l.external_module_id = (SELECT external_module_id FROM redcap_external_modules WHERE directory_prefix = 'redcap_pro')
-                        and (module_token.value = ?)
-
-                        group by l.log_id";
-
-                $this->module->log('ok', [ 'sql_thing' => $sql ]);
-                $result = $this->module->query($sql, [$this->module->getModuleToken()]);
-
-                // $result = $this->module->selectLogs("SELECT " . implode(', ', REDCapPRO::$logColumnsCC), []);
-
-                while ( $row = $result->fetch_assoc() ) {
-                    $logs[] = $row;
-                }
-            } else {
-                $result = $this->module->selectLogs("SELECT " . implode(', ', REDCapPRO::$logColumns) . " WHERE project_id = ?", [ $this->project_id ]);
-
-                while ( $row = $result->fetch_assoc() ) {
-                    $logs[] = $row;
-                }
-            }
-        } catch ( \Throwable $e ) {
-            $this->module->logError($e->getMessage(), $e);
-        } finally {
-            return $this->module->escape($logs);
+            $this->module->logError('Error getting logs', $e);
         }
     }
 
     private function getParticipants()
     {
-        // TIMING
-        $lastTime = microtime(true);
-        $times = ["Start" => $lastTime];
-        $startTime = $lastTime;
-
         $role = $this->module->getUserRole($this->module->safeGetUsername());
         if ( $role < 1 ) {
             throw new REDCapProException("You must be at least a monitor to view this page.");
@@ -293,39 +219,12 @@ class AjaxHandler
         try {
             $participantHelper = new ParticipantHelper($this->module);
             $participantList   = $participantHelper->getProjectParticipants($rcpro_project_id, $rcpro_user_dag);
-            // TIMING
-            $now                  = microtime(true);
-            $times["Get Participants"] = $now - $lastTime;
-            $lastTime             = $now;
-
             $links             = $projectHelper->getAllLinks();
-            // TIMING
-            $now                  = microtime(true);
-            $times["Get Links"] = $now - $lastTime;
-            $lastTime             = $now;
 
             foreach ( $participantList as $participant ) {
                 $rcpro_participant_id = (int) $participant["log_id"];
-                //$link_id              = $projectHelper->getLinkId($rcpro_participant_id, $rcpro_project_id);
-                // $link_id              = $links[$rcpro_participant_id][$rcpro_project_id]['link_id'];
-                // // TIMING
-                // $now                  = microtime(true);
-                // $times["Get Link ID"] = $now - $lastTime;
-                // $lastTime             = $now;
-                
-                // $dag_id               = $dagHelper->getParticipantDag($link_id);
                 $dag_id = $links[$rcpro_participant_id][$rcpro_project_id]['dag_id'];
-                // TIMING
-                $now                  = microtime(true);
-                $times["Get DAG ID"] = $now - $lastTime;
-                $lastTime             = $now;
-            
                 $dag_name             = $dagHelper->getDagName($dag_id) ?? "Unassigned";
-                // TIMING
-                $now                  = microtime(true);
-                $times["Get DAG Name"] = $now - $lastTime;
-                $lastTime             = $now;
-            
                 $thisParticipant      = [
                     'username'             => $participant["rcpro_username"] ?? "",
                     'password_set'         => $participant["pw_set"] === 'True',
@@ -340,11 +239,6 @@ class AjaxHandler
                 }
                 $participants[] = $thisParticipant;
             }
-
-            // TIMING
-            $now                  = microtime(true);
-            $times["End"] = $now - $startTime;
-            $this->module->log('times', [ 'times' => json_encode($times, JSON_PRETTY_PRINT) ]);
         } catch ( \Throwable $e ) {
             $this->module->logError('Error fetching participant list', $e);
         } finally {
@@ -507,7 +401,7 @@ class AjaxHandler
                 return;
             }
 
-            $this->module->log("Importing CSV register", [ 'contents' => json_encode($this->params, JSON_PRETTY_PRINT) ]);
+            $this->module->logEvent("Importing CSV register", [ 'contents' => json_encode($this->params, JSON_PRETTY_PRINT) ]);
             $csvString         = $this->params['data'];
             $participantImport = new CsvRegisterImport($this->module, $csvString);
             $participantImport->parseCsvString();
@@ -545,7 +439,7 @@ class AjaxHandler
                 return;
             }
 
-            $this->module->log("Importing CSV enroll", [ 'contents' => json_encode($this->params, JSON_PRETTY_PRINT) ]);
+            $this->module->logEvent("Importing CSV enroll", [ 'contents' => json_encode($this->params, JSON_PRETTY_PRINT) ]);
             $csvString         = $this->params['data'];
             $participantImport = new CsvEnrollImport($this->module, $csvString);
             $participantImport->parseCsvString();

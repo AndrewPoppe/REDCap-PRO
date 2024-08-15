@@ -56,7 +56,7 @@ if ( $isPost ) {
             } else {
                 $thisPreferredMethod = 'authenticator-app';
                 $codeIsCorrect       = $auth->check_totp_mfa_code($code, $mfa_secret);
-                $module->framework->log("Checked Authenticator App MFA Code", [
+                $module->logEvent("Checked Authenticator App MFA Code", [
                     'participant_id' => $rcpro_participant_id,
                     'codeIsCorrect'  => $codeIsCorrect
                 ]);
@@ -83,7 +83,7 @@ if ( $isPost ) {
             $mfa_err = $mfa_err ?? $module->framework->tt("mfa_err1");
         }
     } catch ( \Throwable $e ) {
-        $module->log($e->getMessage());
+        $module->logError('Error checking MFA', $e);
     }
 }
 
