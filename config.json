@@ -207,11 +207,11 @@
             "description": "If @RCPRO-USERNAME is present on the instrument, then when the participant is selected the text field with the @RCPRO-LNAME tag will be populated with the participant's last name"
         }
     ],
-    "framework-version": 12,
+    "framework-version": 15,
     "compatibility": {
         "php-version-min": "7.4.0",
         "php-version-max": "",
-        "redcap-version-min": "13.1.27",
+        "redcap-version-min": "14.0.2",
         "redcap-version-max": ""
     },
     "enable-no-auth-logging": true
