@@ -176,6 +176,23 @@ class ProjectHelper
         }
     }
 
+    public function getAllLinks() {
+        $SQL = "SELECT log_id, rcpro_participant_id, rcpro_project_id, project_dag WHERE message = 'LINK' AND (project_id IS NULL OR project_id IS NOT NULL)";
+        try {
+            $result = $this->module->selectLogs($SQL, []);
+            $links  = [];
+            while ($row = $result->fetch_assoc()) {
+                $links[$row['rcpro_participant_id']][$row['rcpro_project_id']] = [
+                    'log_id' => $row['log_id'],
+                    'dag_id' => $row['project_dag']
+                ];
+            }
+            return $links;
+        } catch ( \Exception $e ) {
+            $this->module->logError("Error fetching links", $e);
+        }
+    }
+
     /**
      * Get the REDCap PID corresponding with a project ID
      * 

@@ -299,7 +299,7 @@ class ParticipantHelper
      */
     public function getAllParticipants()
     {
-        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, pw, active WHERE message = 'PARTICIPANT' AND rcpro_username IS NOT NULL AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $SQL = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, pw, active, timestamp, redcap_user WHERE message = 'PARTICIPANT' AND rcpro_username IS NOT NULL AND (project_id IS NULL OR project_id IS NOT NULL)";
         try {
             $result       = $this->module->selectLogs($SQL, []);
             $participants = array();
@@ -493,6 +493,44 @@ class ParticipantHelper
     }
 
     /**
+     * Fetches all the projects that any participant is enrolled in
+     * 
+     * This includes active and inactive projects
+     * 
+     * @return array array of arrays, each corresponding with a project
+     */
+    public function getAllParticipantProjects()
+    {
+        $SQL1     = "SELECT rcpro_participant_id, rcpro_project_id, active WHERE message = 'LINK' AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $SQL2     = "SELECT log_id, pid WHERE message = 'PROJECT' AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $projects = array();
+        try {
+            $result1 = $this->module->selectLogs($SQL1, [ ]);
+            if ( !$result1 ) {
+                throw new REDCapProException([]);
+            }
+            $result2 = $this->module->selectLogs($SQL2, []);
+            $pids    = [];
+            while ( $row = $result2->fetch_assoc() ) {
+                $pids[$row['log_id']] = $row['pid'];
+            }
+            while ( $row = $result1->fetch_assoc() ) {
+                $rcpro_project_id = $row["rcpro_project_id"];
+                $rcpro_participant_id = $row["rcpro_participant_id"];
+                $redcap_pid = $pids[$rcpro_project_id];
+                $projects[$rcpro_participant_id][] = [
+                    "rcpro_project_id" => $rcpro_project_id,
+                    "active"           => $row["active"],
+                    "redcap_pid"       => $redcap_pid
+                ];
+            }
+            return $projects;
+        } catch ( \Exception $e ) {
+            $this->module->logError("Error fetching projects", $e);
+        }
+    }
+
+    /**
      * get array of active enrolled participants given a rcpro project id
      * 
      * @param string $rcpro_project_id Project ID (not REDCap PID!)
@@ -500,7 +538,7 @@ class ParticipantHelper
      * 
      * @return array|NULL participants enrolled in given study
      */
-    public function getProjectParticipants(string $rcpro_project_id, ?int $dag = NULL)
+    public function getProjectParticipantsOld(string $rcpro_project_id, ?int $dag = NULL)
     {
         $SQL    = "SELECT rcpro_participant_id WHERE message = 'LINK' AND rcpro_project_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
         $PARAMS = [ $rcpro_project_id ];
@@ -520,6 +558,48 @@ class ParticipantHelper
                 unset($participant["pw"]);
                 $participants[$row["rcpro_participant_id"]] = $participant;
             }
+            return $participants;
+        } catch ( \Exception $e ) {
+            $this->module->logError("Error fetching project participants", $e);
+        }
+    }
+
+    /**
+     * get array of active enrolled participants given a rcpro project id
+     * 
+     * @param string $rcpro_project_id Project ID (not REDCap PID!)
+     * @param int|NULL $dag Data Access Group to filter search by
+     * 
+     * @return array|NULL participants enrolled in given study
+     */
+    public function getProjectParticipants(string $rcpro_project_id, ?int $dag = NULL)
+    {
+        $SQL1    = "SELECT rcpro_participant_id WHERE message = 'LINK' AND rcpro_project_id = ? AND active = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $PARAMS1 = [ $rcpro_project_id ];
+        if ( isset($dag) ) {
+            $SQL1 .= " AND project_dag IS NOT NULL AND project_dag = ?";
+            array_push($PARAMS1, strval($dag));
+        }
+
+        $SQL2 = "SELECT log_id, rcpro_username, email, fname, lname, lockout_ts, pw WHERE message = 'PARTICIPANT' AND (project_id IS NULL OR project_id IS NOT NULL)";
+
+        try {
+            $result1       = $this->module->selectLogs($SQL1, $PARAMS1);
+            $result2 = $this->module->selectLogs($SQL2, []);
+
+            $allParticipants = array();
+            while ( $row = $result2->fetch_assoc() ) {
+                $allParticipants[$row['log_id']] = $row;
+            }
+
+            $participants = array();
+            while ( $row = $result1->fetch_assoc() ) {
+                $participant = $allParticipants[$row['rcpro_participant_id']];
+                $participant["pw_set"] = (!isset($participant["pw"]) || $participant["pw"] === "") ? "False" : "True";
+                unset($participant["pw"]);
+                $participants[$row['rcpro_participant_id']] = $participant;
+            }
+
             return $participants;
         } catch ( \Exception $e ) {
             $this->module->logError("Error fetching project participants", $e);

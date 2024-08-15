@@ -164,6 +164,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
             const dt = $('#RCPRO_TABLE').DataTable({
                 deferRender: true,
+                processing: true,
                 ajax: function (data, callback, settings) {
                     RCPRO_module.ajax('getStaff', {})
                         .then(response => {

@@ -1028,27 +1028,55 @@ class REDCapPRO extends AbstractExternalModule
     public function getAllUsers()
     {
         $projects = $this->framework->getProjectsWithModuleEnabled();
+        $staff    = $this->getStaff();
+        $allUsers = $this->getAllUserInfo();
         $users    = array();
         foreach ( $projects as $pid ) {
-            $project   = new Project($this, $pid);
-            $staff_arr = $project->getStaff();
-            $all_staff = $staff_arr["allStaff"];
+            $all_staff = $staff[$pid]["allStaff"];
             foreach ( $all_staff as $user ) {
                 if ( isset($users[$user]) ) {
                     array_push($users[$user]['projects'], $pid);
                 } else {
-                    $newUser      = $this->framework->getUser($user);
-                    $newUserArr   = [
-                        "username" => $user,
-                        "email"    => $newUser->getEmail(),
-                        "name"     => $this->getUserFullname($user),
-                        "projects" => [ $pid ]
-                    ];
-                    $users[$user] = $newUserArr;
+                    $newUser      = $allUsers[$user];
+                    $newUser['projects'] = [ $pid ];
+                    $users[$user] = $newUser;
                 }
             }
         }
         return $users;
+    }
+
+    public function getAllUserInfo() {
+        $sql = 'SELECT username, user_email AS email, CONCAT(user_firstname, " ", user_lastname) AS name FROM redcap_user_information';
+        $result = $this->framework->query($sql, []);
+        $userInfo = [];
+        while ($row = $result->fetch_assoc()) {
+            $userInfo[$row['username']] = $row;
+        }
+        return $userInfo;
+    }
+
+    public function getStaff()
+    {
+        try {
+            $sql      = "SELECT * FROM redcap_external_module_settings 
+                WHERE external_module_id = (SELECT external_module_id FROM redcap_external_modules WHERE directory_prefix = ?) 
+                AND `key` in ('managers', 'users', 'monitors')";
+            $result   = $this->framework->query($sql, [ $this->framework->getModuleInstance()->PREFIX ]);
+            $staff    = [];
+            while ($row = $result->fetch_assoc()) {
+                $thisStaff                              = json_decode($row['value']);
+                $staff[$row['project_id']][$row['key']] = $thisStaff;
+                if (!isset($staff[$row['project_id']]['allStaff'])) {
+                    $staff[$row['project_id']]['allStaff'] = [];
+                }
+                $staff[$row['project_id']]['allStaff'] = array_merge($staff[$row['project_id']]['allStaff'], $thisStaff);
+            }
+            
+            return $staff;
+        } catch (\Exception $e) {
+            $this->module->logError("Error getting staff", $e);
+        }
     }
 
     public function safeGetUsername() : string
@@ -1137,7 +1165,7 @@ class REDCapPRO extends AbstractExternalModule
      * 
      * @return string
      */
-    private function getModuleToken()
+    public function getModuleToken()
     {
         $moduleToken = $this->getSystemSetting("module_token");
         if ( !isset($moduleToken) ) {
@@ -1280,5 +1308,51 @@ class REDCapPRO extends AbstractExternalModule
         $result      = $this->framework->getUrl($path, true, true);
         $_GET['pid'] = $pid;
         return $result;
+    }
+
+    /**
+     * To create test logs in the database. Mostly for testing/debugging
+     * @param int $numberToCreate number of logs to create
+     * @return bool success
+     */
+    public function createTestLogs(int $numberToCreate) : bool
+    {
+        $message = "TEST";
+        $projects = [ NULL, 51 ];
+        $redcap_users = [ "test_user", "test" ];
+        $fname        = "Test";
+        $lname        = "Person";
+        $rcpro_participant_ids = [ 1, 2, 3, 4, 5 ];
+        $rcpro_usernames       = [ 'test1', 'test2' ];
+        try {
+            for ( $i = 0; $i < $numberToCreate; $i++ ) {
+                $parameters = [
+                    "project_id"           => $projects[array_rand($projects)],
+                    "pid"                  => $projects[array_rand($projects)],
+                    "redcap_user"          => $redcap_users[array_rand($redcap_users)],
+                    "rcpro_participant_id" => $rcpro_participant_ids[array_rand($rcpro_participant_ids)],
+                    "rcpro_username"       => $rcpro_usernames[array_rand($rcpro_usernames)],
+                    "fname"                => $fname,
+                    "lname"                => $lname
+                ];
+                $this->logEvent($message, $parameters);
+            }
+            return true;
+        } catch (\Throwable $e) {
+            $this->logError("Error Creating Test Logs", $e);
+            return false;
+        }
+    }
+
+    public function removeTestLogs() : bool
+    {
+        try {
+            $token = $this->getModuleToken();
+            $this->framework->removeLogs("module_token = ? AND message = 'TEST'", [ $token ]);
+            return true;
+        } catch (\Throwable $e) {
+            $this->logError('Error Removing Test Logs', $e);
+            return false;
+        }
     }
 }

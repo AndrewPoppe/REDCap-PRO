@@ -16,12 +16,9 @@ $ui->ShowControlCenterHeader("Logs");
 
 ?>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<link rel="stylesheet" type="text/css"
-    href="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/cr-1.5.4/date-1.1.0/sb-1.1.0/sp-1.3.0/sl-1.3.3/datatables.min.css" />
-<script type="text/javascript"
-    src="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.10.25/b-1.7.1/b-colvis-1.7.1/b-html5-1.7.1/cr-1.5.4/date-1.1.0/sb-1.1.0/sp-1.3.0/sl-1.3.3/datatables.min.js"
-    defer></script>
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" defer></script>
+<link href="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/date-1.5.3/sr-1.4.1/datatables.min.css" rel="stylesheet"> 
+<script src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/date-1.5.3/sr-1.4.1/datatables.min.js" integrity="sha512-Dp027lG1kw+OxJjCYvBw8jT9Buw65dP8HYTtfUQ8DAeBUcYn/urzTlQ8jbWXENZaYnujGvQlgJT21m+GsaCH5w==" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/ui/1.14.0/jquery-ui.js" integrity="sha512-cxRn/7O+JWSqvBOGeODaC+v9wr7RFllEwd6SBAub5ZuBPEzBtYZXTx46KNnlzvEfG42CzbwfscbBYZYcgrXKNA==" crossorigin="anonymous" defer></script>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro_cc.php") ?>">
 <?php
 
@@ -62,10 +59,26 @@ $module->initializeJavascriptModuleObject();
         $(document).ready(function () {
             let dataTable = $('#RCPRO_TABLE').DataTable({
                 deferRender: true,
+                serverSide: true,
+                processing: true,
+                searchDelay: 1000,
+                order: [[0, 'desc']],
                 ajax: function (data, callback, settings) {
-                    RCPRO_module.ajax('getLogs', { cc: true })
+                    const payload = {
+                        draw: data.draw,
+                        search: data.search,
+                        start: data.start,
+                        length: data.length,
+                        order: data.order,
+                        columns: data.columns,
+                        minDate: $('#min').val(),
+                        maxDate: $('#max').val(),
+                        cc: true
+                    }
+                    tHalf = performance.now();
+                    RCPRO_module.ajax('getLogs', payload)
                         .then(response => {
-                            callback({ data: response });
+                            callback(response);
                         })
                         .catch(error => {
                             console.error(error);
@@ -97,7 +110,10 @@ $module->initializeJavascriptModuleObject();
                         });
                     });
                 },
-                dom: 'lBfrtip',
+                layout: {
+                    topStart: ['pageLength', 'buttons'],
+                    topEnd: 'search'
+                },
                 stateSave: true,
                 stateSaveCallback: function (settings, data) {
                     localStorage.setItem('DataTables_cclogs_' + settings.sInstance, JSON.stringify(data))
@@ -105,17 +121,8 @@ $module->initializeJavascriptModuleObject();
                 stateLoadCallback: function (settings) {
                     return JSON.parse(localStorage.getItem('DataTables_cclogs_' + settings.sInstance))
                 },
-                colReorder: true,
-                buttons: [{
-                    extend: 'searchPanes',
-                    config: {
-                        cascadePanes: true,
-                    }
-
-                },
-                {
-                    extend: 'searchBuilder',
-                },
+                colReorder: false,
+                buttons: [
                     'colvis',
                 {
                     text: 'Restore Default',
@@ -147,7 +154,53 @@ $module->initializeJavascriptModuleObject();
                 ],
                 scrollX: true,
                 scrollY: '60vh',
-                scrollCollapse: true
+                scrollCollapse: true,
+                initComplete: function() {
+                    this.api()
+                    .columns()
+                    .every(function () {
+                        var column = this;
+                        var title = column.header().textContent;
+
+                        if (title.toLowerCase() === 'timestamp') {
+                            $('<br><input type="text" class="form-control form-control-sm" style="min-width:140px;" id="min" placeholder="Min timestamp" />')
+                            .val(column.search())
+                            .appendTo($(column.header()))
+                            .on('click', function (e) {
+                                e.stopPropagation();
+                            })
+                            .on('change clear', function (e) {
+                                $('#RCPRO_TABLE').DataTable().search('').draw();
+                            });
+                            $('<input type="text" class="form-control form-control-sm" style="min-width:140px;" id="max" placeholder="Max timestamp" />')
+                            .val(column.search())
+                            .appendTo($(column.header()))
+                            .on('click', function (e) {
+                                e.stopPropagation();
+                            })
+                            .on('change clear', function (e) {
+                                $('#RCPRO_TABLE').DataTable().search('').draw();
+                            });
+                            var minDate = new DateTime('#min');
+                            var maxDate = new DateTime('#max');
+                            return;
+                        }
+        
+                        // Create input element and add event listener
+                        $('<br><input type="text" class="form-control form-control-sm" style="min-width:140px;" placeholder="Search ' + title + '" />')
+                            .val(column.search())
+                            .appendTo($(column.header()))
+                            .on('click', function (e) {
+                                e.stopPropagation();
+                            })
+                            .on('click keyup change clear', function (e) {
+                                if (column.search() !== this.value) {
+                                    column.search(this.value).draw();
+                                }
+                            });
+                    });
+                    dataTable.columns.adjust();  
+                }
             });
 
             $('#logs').removeClass('dataTableParentHidden');
@@ -160,7 +213,6 @@ $module->initializeJavascriptModuleObject();
                     $('.dt-button-collection').draggable();
                 }
             });
-            dataTable.columns.adjust().draw();
         });
     }(window.jQuery, window, document));
 </script>

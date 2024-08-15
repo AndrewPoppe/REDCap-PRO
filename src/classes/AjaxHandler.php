@@ -45,7 +45,168 @@ class AjaxHandler
         }
     }
 
-    private function getLogs() : array
+    private function getLogs()
+    {
+        try {
+            if ( $this->params["cc"] === TRUE && !$this->module->framework->isSuperUser() ) {
+                throw new REDCapProException("You must be an admin to view Control Center logs");
+            }
+
+            $baseColumns = [
+                "log_id",
+                "timestamp",
+                "ui_id",
+                "ip",
+                "project_id",
+                "record",
+                "message"
+            ];
+
+            $start     = (int) $this->params["start"];
+            $length    = (int) $this->params["length"];
+            $limitTerm = ($length < 0) ? "" : " limit " . $start . "," . $length;
+
+            $fastQueryParameters = [];
+            $queryParameters = [ $this->module->getModuleToken() ];
+            $columnSearchParameters = [];
+
+            $generalSearchTerm       = $this->params["search"]["value"] ?? "";
+            $generalSearchText       = "module_token = ?" . ($generalSearchTerm === "" ? "" : " and (");
+            $columnSearchText  = "";
+
+            // Timestamp filtering
+            $timestampFilterText       = "";
+            $timestampFilterParameters = [];
+            if ( $this->params["minDate"] != "" ) {
+                $timestampFilterText .= " and timestamp >= ?";
+                $timestampFilterParameters[] = $this->params["minDate"];
+            }
+            if ( $this->params["maxDate"] != "" ) {
+                $timestampFilterText .= " and timestamp <= ?";
+                $timestampFilterParameters[] = $this->params["maxDate"];
+            }
+
+            // Filtering
+            foreach ( $this->params["columns"] as $key => $column ) {
+
+                // Add column to general search if it is searchable
+                if ( $generalSearchTerm !== "" && $column["searchable"] == "true" ) {
+                    if ( array_key_first($this->params["columns"]) !== $key ) {
+                        $generalSearchText .= " or ";
+                    }
+                    $generalSearchText .= db_escape($column["data"]) . " like ?";
+                    array_push($queryParameters, sprintf("%%%s%%", $generalSearchTerm));
+                }
+
+                // Add any column-specific filtering
+                $searchVal = $column["search"]["value"];
+                if ( $searchVal != "" ) {
+                    $searchVal        = $column["search"]["regex"] == "true" ? $searchVal : sprintf("%%%s%%", $searchVal);
+                    if (in_array($column["data"], $baseColumns, true)) {
+                        $columnSearchText .= " and l." . db_escape($column["data"]) . " like ?";
+                        array_push($columnSearchParameters, $searchVal);
+                    } else {
+                        $columnSearchText .= " and l.log_id in (select distinct log_id from redcap_external_modules_log_parameters where name = ? and value like ?) ";
+                        array_push($columnSearchParameters, $column["data"], $searchVal);    
+                    }
+                }
+            }
+            $generalSearchText .= $generalSearchTerm === "" ? "" : ")";
+
+            $orderTerm = "";
+            foreach ( $this->params["order"] as $index => $order ) {
+                $column    = db_escape($this->params["columns"][intval($order["column"])]["data"]);
+                $direction = $order["dir"] === "asc" ? "asc" : "desc";
+                if ( $index === 0 ) {
+                    $orderTerm .= " order by ";
+                }
+                $orderTerm .= $column . " " . $direction;
+                if ( $index !== sizeof($this->params["order"]) - 1 ) {
+                    $orderTerm .= ", ";
+                }
+            }
+
+            // BUILD A FAST QUERY OF THE LOGS
+            if ($this->params['cc'] === TRUE) {
+                $columns = REDCapPRO::$logColumnsCC;
+                $projectClause = "";
+            } else {
+                $columns = REDCapPRO::$logColumns;
+                $projectClause = " AND l.project_id = ?";
+            }
+
+            $sqlFull = "SELECT ";
+            foreach ($columns as $key => $column) {
+                if ( in_array( $column, $baseColumns, true) ) {
+                    $sqlFull .= " l." . $column;
+                } else {
+                    $sqlFull .= " MAX(CASE WHEN p.name = '" . $column . "' THEN p.value END) AS $column ";
+                }
+                if ($key !== array_key_last($columns)) {
+                    $sqlFull .= ", ";
+                }
+            }
+            
+            $sql = " from redcap_external_modules_log l 
+                    left join redcap_external_modules_log_parameters p
+                    ON p.log_id = l.log_id 
+                    left join redcap_external_modules_log_parameters module_token
+                    on module_token.log_id = l.log_id
+                    and module_token.name = 'module_token'
+                    WHERE l.external_module_id = (SELECT external_module_id FROM redcap_external_modules WHERE directory_prefix = ?)
+                    and module_token.value = ? " . $projectClause;
+            array_push($fastQueryParameters, $this->module->framework->getModuleInstance()->PREFIX, $this->module->getModuleToken());
+            if (!$this->params['cc']) {
+                array_push($fastQueryParameters, $this->project_id);
+            }
+
+            if ( $generalSearchTerm !== "" ) {
+                $sql .= " and (";
+                foreach ($baseColumns as $baseColumn) {
+                    $sql .= "l.$baseColumn like ? or ";
+                    array_push($fastQueryParameters, "%$generalSearchTerm%");
+                }
+                $sql .= " l.log_id in (select log_id from redcap_external_modules_log_parameters where value like ?)) ";
+                array_push($fastQueryParameters, "%$generalSearchTerm%");
+            }
+
+            if ( $columnSearchText !== "" ) {
+                $sql .= $columnSearchText;
+                array_push($fastQueryParameters, ...$columnSearchParameters);
+            }
+
+            if ( $timestampFilterText !== "" ) {
+                $sql .= $timestampFilterText;
+                array_push($fastQueryParameters, ...$timestampFilterParameters);
+            }
+
+            $sql .= " group by l.log_id ";
+
+            $this->module->log('ok', [ 'sql' => $sql ]);
+
+            $queryResult = $this->module->framework->query($sqlFull . $sql . $orderTerm . $limitTerm, $fastQueryParameters);
+            $countResult = $this->module->framework->query("SELECT * " . $sql, $fastQueryParameters)->num_rows;
+
+            $totalCountResult = $this->module->countLogs("module_token = ?", [ $this->module->getModuleToken() ]);
+            $logs        = array();
+            while ( $row = $queryResult->fetch_assoc() ) {
+                $logs[] = $row;
+            }
+
+            
+            return [
+                "data"            => $logs,
+                "draw"            => (int) $this->params["draw"],
+                "recordsTotal"    => $totalCountResult,
+                "recordsFiltered" => $countResult
+            ];
+
+        } catch ( \Throwable $e ) {
+            $this->module->framework->log('Error getting logs', [ "error" => $e->getMessage() ]);
+        }
+    }
+
+    private function getLogsOld() : array
     {
         $logs = [];
         try {
@@ -53,7 +214,47 @@ class AjaxHandler
                 if ( !$this->module->framework->isSuperUser() ) {
                     throw new REDCapProException("You must be an admin to view Control Center logs");
                 }
-                $result = $this->module->selectLogs("SELECT " . implode(', ', REDCapPRO::$logColumnsCC), []);
+
+                $baseColumns = [
+                    "log_id",
+                    "timestamp",
+                    "ui_id",
+                    "ip",
+                    "project_id",
+                    "record",
+                    "message"
+                ];
+
+                $sql = "SELECT ";
+                foreach (REDCapPRO::$logColumnsCC as $key => $column) {
+                    if ( in_array( $column, $baseColumns, true) ) {
+                        $sql .= " l." . $column;
+                    } else {
+                        $sql .= " MAX(CASE WHEN p.name = '" . $column . "' THEN p.value END) AS $column ";
+                    }
+                    if ($key !== array_key_last(REDCapPRO::$logColumnsCC)) {
+                        $sql .= ", ";
+                    }
+                }
+
+                // TODO: Remove hardcoded 'redcap_pro'
+                $sql.= "from redcap_external_modules_log l
+
+                        left join redcap_external_modules_log_parameters p
+                        ON p.log_id = l.log_id
+
+                        left join redcap_external_modules_log_parameters module_token
+                        on module_token.log_id = l.log_id
+                        and module_token.name = 'module_token'
+                        WHERE l.external_module_id = (SELECT external_module_id FROM redcap_external_modules WHERE directory_prefix = 'redcap_pro')
+                        and (module_token.value = ?)
+
+                        group by l.log_id";
+
+                $this->module->log('ok', [ 'sql_thing' => $sql ]);
+                $result = $this->module->query($sql, [$this->module->getModuleToken()]);
+
+                // $result = $this->module->selectLogs("SELECT " . implode(', ', REDCapPRO::$logColumnsCC), []);
 
                 while ( $row = $result->fetch_assoc() ) {
                     $logs[] = $row;
@@ -74,6 +275,11 @@ class AjaxHandler
 
     private function getParticipants()
     {
+        // TIMING
+        $lastTime = microtime(true);
+        $times = ["Start" => $lastTime];
+        $startTime = $lastTime;
+
         $role = $this->module->getUserRole($this->module->safeGetUsername());
         if ( $role < 1 ) {
             throw new REDCapProException("You must be at least a monitor to view this page.");
@@ -87,11 +293,39 @@ class AjaxHandler
         try {
             $participantHelper = new ParticipantHelper($this->module);
             $participantList   = $participantHelper->getProjectParticipants($rcpro_project_id, $rcpro_user_dag);
+            // TIMING
+            $now                  = microtime(true);
+            $times["Get Participants"] = $now - $lastTime;
+            $lastTime             = $now;
+
+            $links             = $projectHelper->getAllLinks();
+            // TIMING
+            $now                  = microtime(true);
+            $times["Get Links"] = $now - $lastTime;
+            $lastTime             = $now;
+
             foreach ( $participantList as $participant ) {
                 $rcpro_participant_id = (int) $participant["log_id"];
-                $link_id              = $projectHelper->getLinkId($rcpro_participant_id, $rcpro_project_id);
-                $dag_id               = $dagHelper->getParticipantDag($link_id);
+                //$link_id              = $projectHelper->getLinkId($rcpro_participant_id, $rcpro_project_id);
+                // $link_id              = $links[$rcpro_participant_id][$rcpro_project_id]['link_id'];
+                // // TIMING
+                // $now                  = microtime(true);
+                // $times["Get Link ID"] = $now - $lastTime;
+                // $lastTime             = $now;
+                
+                // $dag_id               = $dagHelper->getParticipantDag($link_id);
+                $dag_id = $links[$rcpro_participant_id][$rcpro_project_id]['dag_id'];
+                // TIMING
+                $now                  = microtime(true);
+                $times["Get DAG ID"] = $now - $lastTime;
+                $lastTime             = $now;
+            
                 $dag_name             = $dagHelper->getDagName($dag_id) ?? "Unassigned";
+                // TIMING
+                $now                  = microtime(true);
+                $times["Get DAG Name"] = $now - $lastTime;
+                $lastTime             = $now;
+            
                 $thisParticipant      = [
                     'username'             => $participant["rcpro_username"] ?? "",
                     'password_set'         => $participant["pw_set"] === 'True',
@@ -106,6 +340,11 @@ class AjaxHandler
                 }
                 $participants[] = $thisParticipant;
             }
+
+            // TIMING
+            $now                  = microtime(true);
+            $times["End"] = $now - $startTime;
+            $this->module->log('times', [ 'times' => json_encode($times, JSON_PRETTY_PRINT) ]);
         } catch ( \Throwable $e ) {
             $this->module->logError('Error fetching participant list', $e);
         } finally {
@@ -120,21 +359,31 @@ class AjaxHandler
         }
         $participantHelper = new ParticipantHelper($this->module);
         $participants      = $participantHelper->getAllParticipants();
+        $allProjects = $participantHelper->getAllParticipantProjects();
         $results           = [];
         foreach ( $participants as $participant ) {
             $participant_clean    = $this->module->escape($participant);
             $rcpro_participant_id = (int) $participant_clean["log_id"];
+            $projects = $allProjects[$rcpro_participant_id] ?? [];
+            $info_clean = [
+                'User_ID'       => $participant_clean['log_id'] ?? "",
+                'Username'      => $participant_clean['rcpro_username'] ?? "",
+                'Registered At' => $participant_clean['timestamp'] ?? "",
+                'Registered By' => $participant_clean['redcap_user'] ?? ""
+            ];
+            $active = !isset($participant_clean["active"]) || $participant_clean["active"] == 1;
+            
             $results[]            = [
                 'log_id'               => $participant_clean["log_id"],
                 'rcpro_participant_id' => $rcpro_participant_id,
-                'projects_array'       => $participantHelper->getParticipantProjects($rcpro_participant_id),
-                'info'                 => $this->module->framework->escape($participantHelper->getParticipantInfo($rcpro_participant_id)),
+                'projects_array'       => $projects,
+                'info'                 => $info_clean,
                 'username'             => $participant_clean["rcpro_username"] ?? "",
                 'password_set'         => $participant_clean["pw_set"] === 'True',
                 'fname'                => $participant_clean["fname"] ?? "",
                 'lname'                => $participant_clean["lname"] ?? "",
                 'email'                => $participant_clean["email"] ?? "",
-                'isActive'             => $participantHelper->isParticipantActive($rcpro_participant_id)
+                'isActive'             => $active
             ];
         }
         return $results;

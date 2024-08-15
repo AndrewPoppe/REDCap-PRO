@@ -16,6 +16,7 @@ $ui = new UI($module);
 $ui->ShowHeader("Manage");
 echo "<title>" . $module->APPTITLE . " - Manage</title>";
 
+
 // Check for errors
 if ( isset($_GET["error"]) ) {
     ?>
@@ -565,6 +566,7 @@ $module->initializeJavascriptModuleObject();
 
             let datatable = $('#RCPRO_TABLE').DataTable({
                 deferRender: true,
+                processing: true,
                 ajax: function (data, callback, settings) {
                     RCPRO_module.ajax('getParticipants', {})
                         .then(response => {

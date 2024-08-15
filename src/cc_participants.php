@@ -28,6 +28,10 @@ require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $ui = new UI($module);
 $ui->ShowControlCenterHeader("Participants");
 
+?>
+<link href="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.css" rel="stylesheet">
+<script src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.js" integrity="sha512-tQIUNMCB0+K4nlOn4FRg/hco5B1sf4yWGpnj+V2MxRSDSVNPD84yzoWogPL58QRlluuXkjvuDD5bzCUTMi6MDw==" crossorigin="anonymous"></script>
+<?php 
 $participantHelper = new ParticipantHelper($module);
 
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
@@ -266,7 +270,9 @@ $participants = $participantHelper->getAllParticipants();
         }
 
         $(document).ready(function () {
-
+            var t0 = performance.now();
+            var t1,t2;
+            console.log('start: ',t0);
             // Function for resetting manage-form values
             window.clearForm = function () {
                 $("#toReset").val("");
@@ -281,12 +287,21 @@ $participants = $participantHelper->getAllParticipants();
             }
 
             let dataTable = $('#RCPRO_TABLE').DataTable({
-                dom: 'lBfrtip',
+                // dom: 'lBfrtip',
+                // layout: {
+                //     topStart: ['pageLength'],
+                //     topEnd: 'search'
+                // },
                 stateSave: true,
                 deferRender: true,
+                processing: true,
                 ajax: function (data, callback, settings) {
+                    t0 = performance.now();
                     RCPRO_module.ajax('getParticipantsCC', {})
                         .then(response => {
+                            t1 = performance.now();
+                            //console.log('Got data: ', t1);
+                            console.log('Processing: ', t1-t0);
                             callback({ data: response });
                         })
                         .catch(error => {
@@ -416,6 +431,11 @@ $participants = $participantHelper->getAllParticipants();
                 sScrollX: '100%',
                 scrollCollapse: true,
                 pageLength: 100,
+                initComplete: function() {
+                    t2 = performance.now();
+                    console.log('Render: ', t2-t1);
+                    console.log('End: ', t2);
+                }
             });
             $('#participants-form').removeClass('dataTableParentHidden');
             $('#loading-container').hide();
