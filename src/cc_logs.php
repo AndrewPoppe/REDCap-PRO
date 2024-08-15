@@ -165,7 +165,7 @@ $module->initializeJavascriptModuleObject();
                         var title = column.header().textContent;
 
                         if (title.toLowerCase() === 'timestamp') {
-                            $('<br><input type="text" id="min" placeholder="Min timestamp" />')
+                            $('<br><input type="text" class="form-control form-control-sm" style="min-width:140px;" id="min" placeholder="Min timestamp" />')
                             .val(column.search())
                             .appendTo($(column.header()))
                             .on('click', function (e) {
@@ -174,7 +174,7 @@ $module->initializeJavascriptModuleObject();
                             .on('change clear', function (e) {
                                 $('#RCPRO_TABLE').DataTable().search('').draw();
                             });
-                            $('<br><input type="text" id="max" placeholder="Max timestamp" />')
+                            $('<input type="text" class="form-control form-control-sm" style="min-width:140px;" id="max" placeholder="Max timestamp" />')
                             .val(column.search())
                             .appendTo($(column.header()))
                             .on('click', function (e) {
@@ -189,7 +189,7 @@ $module->initializeJavascriptModuleObject();
                         }
         
                         // Create input element and add event listener
-                        $('<br><input type="text" placeholder="Search ' + title + '" />')
+                        $('<br><input type="text" class="form-control form-control-sm" style="min-width:140px;" placeholder="Search ' + title + '" />')
                             .val(column.search())
                             .appendTo($(column.header()))
                             .on('click', function (e) {
