@@ -73,6 +73,20 @@ class AjaxHandler
             $generalSearchTerm       = $this->params["search"]["value"] ?? "";
             $generalSearchText       = "module_token = ?" . ($generalSearchTerm === "" ? "" : " and (");
             $columnSearchText  = "";
+
+            // Timestamp filtering
+            $timestampFilterText       = "";
+            $timestampFilterParameters = [];
+            if ( $this->params["minDate"] != "" ) {
+                $timestampFilterText .= " and timestamp >= ?";
+                $timestampFilterParameters[] = $this->params["minDate"];
+            }
+            if ( $this->params["maxDate"] != "" ) {
+                $timestampFilterText .= " and timestamp <= ?";
+                $timestampFilterParameters[] = $this->params["maxDate"];
+            }
+
+            // Filtering
             foreach ( $this->params["columns"] as $key => $column ) {
 
                 // Add column to general search if it is searchable
@@ -89,27 +103,15 @@ class AjaxHandler
                 if ( $searchVal != "" ) {
                     $searchVal        = $column["search"]["regex"] == "true" ? $searchVal : sprintf("%%%s%%", $searchVal);
                     if (in_array($column["data"], $baseColumns, true)) {
-                        $columnSearchText .= " and " . db_escape($column["data"]) . " like ?";
+                        $columnSearchText .= " and l." . db_escape($column["data"]) . " like ?";
                         array_push($columnSearchParameters, $searchVal);
                     } else {
-                        $columnSearchText .= " and l.log_id in (select log_id from redcap_external_modules_log_parameters where name = ? and value like ?) ";
+                        $columnSearchText .= " and l.log_id in (select distinct log_id from redcap_external_modules_log_parameters where name = ? and value like ?) ";
                         array_push($columnSearchParameters, $column["data"], $searchVal);    
                     }
                 }
             }
             $generalSearchText .= $generalSearchTerm === "" ? "" : ")";
-
-            // // Timestamp filtering
-            // $timestampFilterText       = "";
-            // $timestampFilterParameters = [];
-            // if ( $this->params["minDate"] != "" ) {
-            //     $timestampFilterText .= " and timestamp >= ?";
-            //     $timestampFilterParameters[] = $this->params["minDate"];
-            // }
-            // if ( $this->params["maxDate"] != "" ) {
-            //     $timestampFilterText .= " and timestamp <= ?";
-            //     $timestampFilterParameters[] = $this->params["maxDate"];
-            // }
 
             $orderTerm = "";
             foreach ( $this->params["order"] as $index => $order ) {
@@ -144,20 +146,6 @@ class AjaxHandler
                     $sqlFull .= ", ";
                 }
             }
-
-            // $newSql = "SELECT l.log_id, l.timestamp, l.ui_id, l.ip, l.project_id, l.record, l.message, group_concat(p.name SEPARATOR '||') name, group_concat(p.value SEPARATOR '||') value
-            //            FROM redcap_external_modules_log l
-            //            LEFT JOIN redcap_external_modules_log_parameters p
-            //            ON p.log_id = l.log_id
-            //            LEFT JOIN redcap_external_modules_log_parameters module_token
-            //            ON module_token.log_id = l.log_id
-            //            AND module_token.name = 'module_token'
-            //            WHERE l.external_module_id = (SELECT external_module_id FROM redcap_external_modules WHERE directory_prefix = ?)
-            //            AND module_token.value = ? 
-            //            AND p.name IN ('".implode("','", $columns)."')
-            //            GROUP BY l.log_id";
-
-            
             
             $sql = " from redcap_external_modules_log l 
                     left join redcap_external_modules_log_parameters p
@@ -187,6 +175,11 @@ class AjaxHandler
                 array_push($fastQueryParameters, ...$columnSearchParameters);
             }
 
+            if ( $timestampFilterText !== "" ) {
+                $sql .= $timestampFilterText;
+                array_push($fastQueryParameters, ...$timestampFilterParameters);
+            }
+
             $sql .= " group by l.log_id ";
 
             $this->module->log('ok', [ 'sql' => $sql ]);
@@ -194,9 +187,6 @@ class AjaxHandler
             $queryResult = $this->module->framework->query($sqlFull . $sql . $orderTerm . $limitTerm, $fastQueryParameters);
             $countResult = $this->module->framework->query("SELECT * " . $sql, $fastQueryParameters)->num_rows;
 
-            // $queryText = "SELECT " . implode(', ', $columns) . " WHERE " . $generalSearchText . $orderTerm . $limitTerm;
-            // $queryResult = $this->module->queryLogs($queryText, $queryParameters);
-            // $countResult = $this->module->countLogs($generalSearchText, $queryParameters);
             $totalCountResult = $this->module->countLogs("module_token = ?", [ $this->module->getModuleToken() ]);
             $logs        = array();
             while ( $row = $queryResult->fetch_assoc() ) {
@@ -208,10 +198,9 @@ class AjaxHandler
                 "data"            => $logs,
                 "draw"            => (int) $this->params["draw"],
                 "recordsTotal"    => $totalCountResult,
-                "recordsFiltered" => $countResult//sizeof($logs)// $rowsTotal
+                "recordsFiltered" => $countResult
             ];
 
-            // return [ $logs, $rowsTotal ];
         } catch ( \Throwable $e ) {
             $this->module->framework->log('Error getting logs', [ "error" => $e->getMessage() ]);
         }

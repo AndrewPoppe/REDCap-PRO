@@ -16,9 +16,9 @@ $ui->ShowControlCenterHeader("Logs");
 
 ?>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<link href="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/date-1.5.3/sr-1.4.1/datatables.min.css" rel="stylesheet">
  
-<script src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.js"></script>
+<script src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/date-1.5.3/sr-1.4.1/datatables.min.js"></script>
 
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" defer></script>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro_cc.php") ?>">
@@ -51,10 +51,6 @@ $module->initializeJavascriptModuleObject();
 </div>
 <script>
     (function ($, window, document) {
-        var t0 = performance.now();
-        var tHalf,t1,t2;
-        console.log('start: ',t0);
-
         const RCPRO_module = <?= $module->getJavascriptModuleObjectName() ?>;
         const columns = ["<?= implode('", "', REDCapPRO::$logColumnsCC) ?>"];
 
@@ -77,14 +73,13 @@ $module->initializeJavascriptModuleObject();
                         length: data.length,
                         order: data.order,
                         columns: data.columns,
+                        minDate: $('#min').val(),
+                        maxDate: $('#max').val(),
                         cc: true
                     }
                     tHalf = performance.now();
                     RCPRO_module.ajax('getLogs', payload)
                         .then(response => {
-                            t1 = performance.now();
-                            //console.log('Got data: ', t1);
-                            console.log('Processing: ', t1-tHalf);
                             callback(response);
                         })
                         .catch(error => {
@@ -117,7 +112,6 @@ $module->initializeJavascriptModuleObject();
                         });
                     });
                 },
-                //dom: 'lBfrtip',
                 layout: {
                     topStart: ['pageLength', 'buttons'],
                     topEnd: 'search'
@@ -131,16 +125,6 @@ $module->initializeJavascriptModuleObject();
                 },
                 colReorder: false,
                 buttons: [
-                //     {
-                //     extend: 'searchPanes',
-                //     config: {
-                //         cascadePanes: true,
-                //     }
-
-                // },
-                // {
-                //     extend: 'searchBuilder',
-                // },
                     'colvis',
                 {
                     text: 'Restore Default',
@@ -179,6 +163,30 @@ $module->initializeJavascriptModuleObject();
                     .every(function () {
                         var column = this;
                         var title = column.header().textContent;
+
+                        if (title.toLowerCase() === 'timestamp') {
+                            $('<br><input type="text" id="min" placeholder="Min timestamp" />')
+                            .val(column.search())
+                            .appendTo($(column.header()))
+                            .on('click', function (e) {
+                                e.stopPropagation();
+                            })
+                            .on('change clear', function (e) {
+                                $('#RCPRO_TABLE').DataTable().search('').draw();
+                            });
+                            $('<br><input type="text" id="max" placeholder="Max timestamp" />')
+                            .val(column.search())
+                            .appendTo($(column.header()))
+                            .on('click', function (e) {
+                                e.stopPropagation();
+                            })
+                            .on('change clear', function (e) {
+                                $('#RCPRO_TABLE').DataTable().search('').draw();
+                            });
+                            var minDate = new DateTime('#min');
+                            var maxDate = new DateTime('#max');
+                            return;
+                        }
         
                         // Create input element and add event listener
                         $('<br><input type="text" placeholder="Search ' + title + '" />')
@@ -193,13 +201,7 @@ $module->initializeJavascriptModuleObject();
                                 }
                             });
                     });
-                    console.log('End: ', performance.now());
-                    
                     dataTable.columns.adjust();  
-                },
-                drawCallback: function (settings) {
-                    t2 = performance.now();
-                    console.log('Render: ', t2-t1);
                 }
             });
 

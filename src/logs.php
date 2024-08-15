@@ -108,7 +108,6 @@ $module->initializeJavascriptModuleObject();
                         });
                     });
                 },
-                // dom: 'lBfrtip',
                 layout: {
                     topStart: ['pageLength', 'buttons'],
                     topEnd: 'search'
@@ -122,16 +121,6 @@ $module->initializeJavascriptModuleObject();
                 },
                 colReorder: false,
                 buttons: [
-                //     {
-                //     extend: 'searchPanes',
-                //     config: {
-                //         cascadePanes: true,
-                //     }
-
-                // },
-                // {
-                //     extend: 'searchBuilder',
-                // },
                     'colvis',
                 {
                     text: 'Restore Default',
@@ -164,7 +153,6 @@ $module->initializeJavascriptModuleObject();
                 scrollX: true,
                 scrollY: '50vh',
                 scrollCollapse: true,
-                // pageLength: 100,
                 initComplete: function() {
                     $('#RCPRO_TABLE').DataTable().columns.adjust();  
                 },
@@ -180,7 +168,6 @@ $module->initializeJavascriptModuleObject();
                     $('.dt-button-collection').draggable();
                 }
             });
-            //$('#RCPRO_TABLE').DataTable().columns.adjust().draw();
         });
     }(window.jQuery, window, document));
 </script>
