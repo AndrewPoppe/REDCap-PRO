@@ -122,34 +122,43 @@ $module->initializeJavascriptModuleObject();
                 },
                 colReorder: false,
                 buttons: [
-                    'colvis',
-                {
-                    text: 'Restore Default',
-                    action: function (e, dt, node, config) {
-                        dt.state.clear();
-                        window.location.reload();
-                    }
-                },
-                {
-                    extend: 'csv',
-                    exportOptions: {
-                        columns: ':visible'
+                    {
+                        extend: 'colvis',
+                        className: 'btn btn-primaryrc btn-sm'
                     },
-                    customize: function (csv) {
-                        logExport("csv");
-                        return csv;
-                    }
-                },
-                {
-                    extend: 'excel',
-                    exportOptions: {
-                        columns: ':visible'
+                    'spacer',
+                    {
+                        text: 'Restore Default',
+                        action: function (e, dt, node, config) {
+                            dt.state.clear();
+                            window.location.reload();
+                        },
+                        className: 'btn btn-secondary btn-sm'
                     },
-                    customize: function (excel) {
-                        logExport("excel");
-                        return excel;
+                    'spacer',
+                    {
+                        extend: 'csv',
+                        exportOptions: {
+                            columns: ':visible'
+                        },
+                        customize: function (csv) {
+                            logExport("csv");
+                            return csv;
+                        },
+                        className: 'btn btn-success btn-sm'
+                    },
+                    'spacer',
+                    {
+                        extend: 'excel',
+                        exportOptions: {
+                            columns: ':visible'
+                        },
+                        customize: function (excel) {
+                            logExport("excel");
+                            return excel;
+                        },
+                        className: 'btn btn-success btn-sm'
                     }
-                },
                 ],
                 scrollX: true,
                 scrollY: '60vh',
