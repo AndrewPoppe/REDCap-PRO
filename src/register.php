@@ -100,8 +100,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     }
 
     // Validate DAG
-    $dag_raw = filter_input(INPUT_POST, "dag", FILTER_SANITIZE_STRING);
-    $dag     = $projectHasDags ? \REDCap::escapeHtml(trim($dag_raw)) : null;
+    $dag = filter_var($_POST["dag"], FILTER_VALIDATE_INT);
+    $dag = $dag === false ? null : $dag;
     if ( !in_array($dag, array_keys($project_dags)) ) {
         $dag_err   = "That is not a valid Data Access Group.";
         $any_error = true;

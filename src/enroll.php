@@ -52,7 +52,7 @@ if ( isset($_POST["id"]) && isset($project_id) ) {
 
         $redcap_dag = $dagHelper->getCurrentDag($module->safeGetUsername(), $module->framework->getProjectId());
         $dag        = filter_var($_POST["dag"], FILTER_VALIDATE_INT);
-        $dag        = $dag === 0 ? null : $dag;
+        $dag        = $dag === false ? null : $dag;
         $project_dags = $dagHelper->getProjectDags();
         if ( (!empty($redcap_dag) && $dag !== $redcap_dag) || !in_array($dag, array_keys( $project_dags )) ) {
             $dag = $redcap_dag;

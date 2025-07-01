@@ -279,18 +279,21 @@ class ProjectHelper
      * 
      * @return
      */
-    private function setLinkActiveStatus(int $rcpro_participant_id, int $rcpro_project_id, int $active, $dag = null)
+    private function setLinkActiveStatus(int $rcpro_participant_id, int $rcpro_project_id, int $active, ?int $dag = null)
     {
-        $link_id = $this->getLinkId($rcpro_participant_id, $rcpro_project_id);
-        $SQL1    = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
-        if ( $this->module->countLogsValidated("log_id = ? AND project_dag is not null", [ $link_id ]) > 0 ) {
-            $SQL2 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'project_dag'";
-        } else {
-            $SQL2 = "INSERT INTO redcap_external_modules_log_parameters (value, name, log_id) VALUES (?, 'project_dag', ?)";
-        }
         try {
+            $link_id = $this->getLinkId($rcpro_participant_id, $rcpro_project_id);
+            $SQL1    = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'active'";
             $result1 = $this->module->query($SQL1, [ $active, $link_id ]);
-            $result2 = $this->module->query($SQL2, [ $dag, $link_id ]);
+            if ( $this->module->countLogsValidated("log_id = ? AND project_dag is not null", [ $link_id ]) > 0 ) {
+                $SQL2 = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'project_dag'";
+                $result2 = $this->module->query($SQL2, [ $dag ?? "", $link_id ]);
+            } else if ($dag !== null) {
+                $SQL2 = "INSERT INTO redcap_external_modules_log_parameters (value, name, log_id) VALUES (?, 'project_dag', ?)";
+                $result2 = $this->module->query($SQL2, [ $dag ?? "", $link_id ]);
+            } else {
+                $result2 = TRUE; // No dag to set, so just return true
+            }
             return $result2;
         } catch ( \Exception $e ) {
             $this->module->logError("Error setting link activity", $e);
