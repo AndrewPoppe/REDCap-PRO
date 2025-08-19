@@ -147,7 +147,7 @@ $ui->ShowParticipantHeader('Create Account');
             First name
         </label>
         <input type="text" name="fname" class="form-control <?= (!empty($fname_err)) ? 'is-invalid' : ''; ?>"
-            value="<?= $fname; ?>">
+            value="<?= htmlspecialchars($fname); ?>">
         <span class="invalid-feedback">
             <?= $fname_err; ?>
         </span>
@@ -157,7 +157,7 @@ $ui->ShowParticipantHeader('Create Account');
             Last name
         </label>
         <input type="text" name="lname" class="form-control <?= (!empty($lname_err)) ? 'is-invalid' : ''; ?>"
-            value="<?= $lname; ?>">
+            value="<?= htmlspecialchars($lname); ?>">
         <span class="invalid-feedback">
             <?= $lname_err; ?>
         </span>
