@@ -54,7 +54,7 @@ class LoginHelper
                 $SQL        = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'lockout_ts';";
                 $res        = $this->module->query($SQL, [ $lockout_ts, $rcpro_participant_id ]);
                 $status     = $res ? "Successful" : "Failed";
-                $this->module->logEvent("Login Lockout ${status}", [
+                $this->module->logEvent("Login Lockout {$status}", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_username"       => $rcpro_username
                 ]);

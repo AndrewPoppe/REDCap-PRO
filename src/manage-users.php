@@ -47,7 +47,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             $username = $user->getUsername();
             parse_str($username, $username_temp);
             $username_clean = array_key_first($username_temp);
-            $newRole        = strval($_POST["role_select_${username_clean}"]);
+            $newRole        = strval($_POST["role_select_{$username_clean}"]);
             $oldRole        = strval($module->getUserRole($username));
             if ( isset($newRole) && $newRole !== '' && $newRole !== $oldRole ) {
                 $module->changeUserRole($username, $oldRole, $newRole);

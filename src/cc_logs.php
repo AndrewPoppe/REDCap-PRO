@@ -37,7 +37,7 @@ $module->initializeJavascriptModuleObject();
                 <tr>
                     <?php
                     foreach ( REDCapPRO::$logColumnsCC as $column ) {
-                        echo "<th id='rcpro_${column}' class='dt-center'>" . ucwords(str_replace("_", " ", $column)) . "</th>";
+                        echo "<th id='rcpro_{$column}' class='dt-center'>" . ucwords(str_replace("_", " ", $column)) . "</th>";
                     }
                     ?>
                 </tr>

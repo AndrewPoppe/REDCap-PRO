@@ -122,8 +122,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         }
     } catch ( \Exception $e ) {
         $icon  = "error";
-        $title = "Failed to ${function}.";
-        $module->logError("Error attempting to ${function}", $e);
+        $title = "Failed to {$function}.";
+        $module->logError("Error attempting to {$function}", $e);
     }
 }
 $module->initializeJavascriptModuleObject();

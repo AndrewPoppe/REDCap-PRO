@@ -295,10 +295,10 @@ class AjaxHandler
             $thisProject                = new Project($this->module, $id);
             $projectHelper              = new ProjectHelper($this->module);
             $rcpro_project_id           = $projectHelper->getProjectIdFromPID($thisProject->redcap_pid);
-            $project_rcpro_home         = $this->module->getUrl("src/home.php?pid=${id}");
-            $project_rcpro_manage       = $this->module->getUrl("src/manage.php?pid=${id}");
-            $project_rcpro_manage_users = $this->module->getUrl("src/manage-users.php?pid=${id}");
-            $project_records            = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "DataEntry/record_status_dashboard.php?pid=${id}";
+            $project_rcpro_home         = $this->module->getUrl("src/home.php?pid={$id}");
+            $project_rcpro_manage       = $this->module->getUrl("src/manage.php?pid={$id}");
+            $project_rcpro_manage_users = $this->module->getUrl("src/manage-users.php?pid={$id}");
+            $project_records            = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "DataEntry/record_status_dashboard.php?pid={$id}";
 
             $results[] = [
                 "project_id"                 => $id,
@@ -493,7 +493,7 @@ class AjaxHandler
                 $username             = \REDCap::escapeHtml($row["rcpro_username"]);
                 $id                   = \REDCap::escapeHtml($row["log_id"]);
                 $rcpro_participant_id = $id;
-                $hint .= "<div class='searchResult' onclick='RCPRO.populateSelection(\"${fname}\", \"${lname}\", \"${email}\", \"${id}\", \"${username}\");'><strong>${username}</strong> - ${fname} ${lname} - ${email}</div>";
+                $hint .= "<div class='searchResult' onclick='RCPRO.populateSelection(\"{$fname}\", \"{$lname}\", \"{$email}\", \"{$id}\", \"{$username}\");'><strong>{$username}</strong> - {$fname} {$lname} - {$email}</div>";
             }
 
             if ( $hint === "" ) {

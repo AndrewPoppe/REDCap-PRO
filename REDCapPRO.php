@@ -579,8 +579,8 @@ class REDCapPRO extends AbstractExternalModule
             $body .= $this->tt("email_inquiry_project_id", $this->framework->getProjectId()) . "\n";
             $body .= $this->tt("email_inquiry_project_title", \REDCap::getProjectTitle());
         }
-        $link = "mailto:${email}?subject=" . rawurlencode($subject) . "&body=" . rawurlencode($body);
-        return "<br><strong>Email:</strong> <a href='${link}'>$email</a>";
+        $link = "mailto:{$email}?subject=" . rawurlencode($subject) . "&body=" . rawurlencode($body);
+        return "<br><strong>Email:</strong> <a href='{$link}'>{$email}</a>";
     }
 
     /**
@@ -597,7 +597,7 @@ class REDCapPRO extends AbstractExternalModule
         $name_string  = isset($name) && $name !== "" ? "<strong>" . $this->tt("email_contact_name_string") . "</strong>" . $name : "";
         $email_string = isset($email) && $email !== "" ? $this->createEmailLink($email, $subject) : "";
         $phone_string = isset($phone) && $phone !== "" ? "<br><strong>" . $this->tt("email_contact_phone_string") . "</strong>" . $phone : "";
-        $info         = "${name_string} ${email_string} ${phone_string}";
+        $info         = "{$name_string} {$email_string} {$phone_string}";
 
         return [
             "name"         => $name,
@@ -619,10 +619,10 @@ class REDCapPRO extends AbstractExternalModule
         $new_email_clean = \REDCap::escapeHtml($new_email);
         $body            = "<html><body><div>
         <p>" . $this->tt("email_update_greeting") . "</p>
-        <p>" . $this->tt("email_update_message1") . "<strong> ${username}</strong><br>
+        <p>" . $this->tt("email_update_message1") . "<strong> {$username}</strong><br>
             <ul>
-                <li><strong>" . $this->tt("email_update_old_email") . "</strong> ${old_email_clean}</li>
-                <li><strong>" . $this->tt("email_update_new_email") . "</strong> ${new_email_clean}</li>
+                <li><strong>" . $this->tt("email_update_old_email") . "</strong> {$old_email_clean}</li>
+                <li><strong>" . $this->tt("email_update_new_email") . "</strong> {$new_email_clean}</li>
             </ul>
         </p>";
         $body .= "<p><strong>" . $this->tt("email_update_message2") . "</strong>";
@@ -723,9 +723,9 @@ class REDCapPRO extends AbstractExternalModule
             <p>" . $this->tt("email_password_reset_greeting") . "
             <br>" . $this->tt("email_password_reset_message1") . "<br>
             <br>" . $this->tt("email_password_reset_message2") . "
-            <br>" . $this->tt("email_password_reset_message3") . "<strong>${username_clean}</strong>
+            <br>" . $this->tt("email_password_reset_message3") . "<strong>{$username_clean}</strong>
             <br>
-            <br>" . $this->tt("email_password_reset_message4") . "<a href='" . $this->getUrl("src/reset-password.php", true) . "&t=${token}'>" . $this->tt("email_password_reset_link_text") . "</a>
+            <br>" . $this->tt("email_password_reset_message4") . "<a href='" . $this->getUrl("src/reset-password.php", true) . "&t={$token}'>" . $this->tt("email_password_reset_link_text") . "</a>
             <br><em>" . $this->tt("email_password_reset_message5") . "<a href='" . $this->getUrl("src/forgot-password.php", true) . "'>" . $this->tt("email_password_reset_link_text") . "</a>
             </em></p><br>";
             $body .= "<p>" . $this->tt("email_password_reset_message6");
@@ -749,7 +749,7 @@ class REDCapPRO extends AbstractExternalModule
             // Get all projects to which participant is currently enrolled
             $project_ids = $participantHelper->getEnrolledProjects($rcpro_participant_id);
             foreach ( $project_ids as $project_id ) {
-                $this->logEvent("Password Reset Email - ${status}", [
+                $this->logEvent("Password Reset Email - {$status}", [
                     "rcpro_participant_id"  => $rcpro_participant_id,
                     "rcpro_username"        => $username_clean,
                     "rcpro_email"           => $to,
@@ -785,7 +785,7 @@ class REDCapPRO extends AbstractExternalModule
         $from    = $settings->getEmailFromAddress();
         $body    = "<html><body><div>
         <p>" . $this->tt("email_username_greeting") . "</p>
-        <p>" . $this->tt("email_username_message1") . "<strong> ${username}</strong><br>
+        <p>" . $this->tt("email_username_message1") . "<strong> {$username}</strong><br>
         " . $this->tt("email_username_message2") . "</p>
 
         <p>" . $this->tt("email_username_message3") . "<br><br>";
@@ -823,7 +823,7 @@ class REDCapPRO extends AbstractExternalModule
         $from    = $settings->getEmailFromAddress();
         $body    = "<html><body><div>
         <p>" . $this->tt('mfa_email2') . "</p>
-        <p>" . $this->tt('mfa_email3') . " <strong> ${token}</strong><br></p>
+        <p>" . $this->tt('mfa_email3') . " <strong> {$token}</strong><br></p>
         <p><em>" . $this->tt('mfa_email4') . "</em></p><br><br>";
 
         $body .= '<p>' . $this->tt('mfa_email5') . '</p>';
@@ -868,7 +868,7 @@ class REDCapPRO extends AbstractExternalModule
             <br>" . $this->tt("email_authenticator_app_mfa_info_message1") . "<br>
             <br>" . $this->tt("email_authenticator_app_mfa_info_message2") . "
             <br>
-            <br>" . $this->tt("email_authenticator_app_mfa_info_message5") . "<a href='" . $this->getUrl("src/authenticator-app-info.php", true) . "&t=${token}'>" . $this->tt("email_authenticator_app_mfa_info_link_text") . "</a>
+            <br>" . $this->tt("email_authenticator_app_mfa_info_message5") . "<a href='" . $this->getUrl("src/authenticator-app-info.php", true) . "&t={$token}'>" . $this->tt("email_authenticator_app_mfa_info_link_text") . "</a>
             </p><br>";
             $body .= "<p>" . $this->tt("email_authenticator_app_mfa_info_message4");
             if ( $this->framework->getProjectId() ) {
