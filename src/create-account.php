@@ -67,8 +67,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
     // Check if any fields are empty or invalid
     // Show error message if so
-    $fname = trim(filter_input(INPUT_POST, 'fname', FILTER_SANITIZE_STRING));
-    $lname = trim(filter_input(INPUT_POST, 'lname', FILTER_SANITIZE_STRING));
+    $fname = trim(filter_input(INPUT_POST, 'fname'));
+    $lname = trim(filter_input(INPUT_POST, 'lname'));
     $email = trim(filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL));
 
     if ( empty($fname) ) {

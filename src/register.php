@@ -122,7 +122,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             ]);
 
             // If we are also enrolling the participant, do that now
-            $action = filter_input(INPUT_POST, "action", FILTER_SANITIZE_STRING);
+            $action = filter_input(INPUT_POST, "action");
             if ( $action !== "register" ) {
                 $rcpro_participant_id = $participantHelper->getParticipantIdFromUsername($username);
 
