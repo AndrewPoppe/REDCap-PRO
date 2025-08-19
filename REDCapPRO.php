@@ -146,9 +146,6 @@ class REDCapPRO extends AbstractExternalModule
         "search"
     ];
 
-    public $LOGO_URL = "https://i.imgur.com/5Xq2Vqt.png";
-    public $LOGO_ALTERNATE_URL = "https://i.imgur.com/fu0t8V1.png";
-
     //////////////\\\\\\\\\\\\\\       
     /////   REDCAP HOOKS   \\\\\ 
     //////////////\\\\\\\\\\\\\\
@@ -621,7 +618,6 @@ class REDCapPRO extends AbstractExternalModule
         $old_email_clean = \REDCap::escapeHtml($old_email);
         $new_email_clean = \REDCap::escapeHtml($new_email);
         $body            = "<html><body><div>
-        <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
         <p>" . $this->tt("email_update_greeting") . "</p>
         <p>" . $this->tt("email_update_message1") . "<strong> ${username}</strong><br>
             <ul>
@@ -674,7 +670,6 @@ class REDCapPRO extends AbstractExternalModule
             $subject = $this->tt("email_new_participant_subject");
             $from    = $settings->getEmailFromAddress();
             $body    = "<html><body><div>
-            <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
             <p>" . $this->tt("email_new_participant_greeting", [ $fname, $lname ]) . "
             <br>" . $this->tt("email_new_participant_message1") . "
             <br>" . $this->tt("email_new_participant_message2") . " <strong>$username</strong>
@@ -725,7 +720,6 @@ class REDCapPRO extends AbstractExternalModule
             $subject = $this->tt("email_password_reset_subject");
             $from    = $settings->getEmailFromAddress();
             $body    = "<html><body><div>
-            <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
             <p>" . $this->tt("email_password_reset_greeting") . "
             <br>" . $this->tt("email_password_reset_message1") . "<br>
             <br>" . $this->tt("email_password_reset_message2") . "
@@ -790,7 +784,6 @@ class REDCapPRO extends AbstractExternalModule
         $subject = $this->tt("email_username_subject");
         $from    = $settings->getEmailFromAddress();
         $body    = "<html><body><div>
-        <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
         <p>" . $this->tt("email_username_greeting") . "</p>
         <p>" . $this->tt("email_username_message1") . "<strong> ${username}</strong><br>
         " . $this->tt("email_username_message2") . "</p>
@@ -829,7 +822,6 @@ class REDCapPRO extends AbstractExternalModule
         $subject = $this->tt("mfa_email1");
         $from    = $settings->getEmailFromAddress();
         $body    = "<html><body><div>
-        <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
         <p>" . $this->tt('mfa_email2') . "</p>
         <p>" . $this->tt('mfa_email3') . " <strong> ${token}</strong><br></p>
         <p><em>" . $this->tt('mfa_email4') . "</em></p><br><br>";
@@ -872,7 +864,6 @@ class REDCapPRO extends AbstractExternalModule
             $subject = $this->tt("email_authenticator_app_mfa_info_subject");
             $from    = $settings->getEmailFromAddress();
             $body    = "<html><body><div>
-            <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
             <p>" . $this->tt("email_authenticator_app_mfa_info_greeting") . "
             <br>" . $this->tt("email_authenticator_app_mfa_info_message1") . "<br>
             <br>" . $this->tt("email_authenticator_app_mfa_info_message2") . "
@@ -901,7 +892,6 @@ class REDCapPRO extends AbstractExternalModule
         $subject  = "REDCapPRO Auto-Enrollment";
         $from     = $settings->getEmailFromAddress();
         $body     = "<html><body><div>
-        <img src='" . $this->LOGO_ALTERNATE_URL . "' alt='img' width='500px'><br>
         <p>This is a notification that a participant has been automatically enrolled in your project.</p>
         <p><strong>Project ID</strong>: " . $project_id . "</p>
         <p><strong>Project Title</strong>: " . $this->framework->getProject($project_id)->getTitle() . "</p>
