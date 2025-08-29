@@ -14,7 +14,7 @@ $results = [
 ];
 
 // Check whether there is a current REDCap session (non-survey)
-$phpsessid = $_COOKIE["PHPSESSID"];
+$phpsessid = $auth->get_redcap_session_id();
 if ( isset($phpsessid) ) {
     $results["redcap_session_active"] = \Session::read($phpsessid) != false;
 }

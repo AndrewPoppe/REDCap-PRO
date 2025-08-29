@@ -33,10 +33,11 @@ class Auth
     public function init()
     {
         // To ensure any REDCap user is logged out 
-        $redcap_session_id = $_COOKIE["PHPSESSID"];
+        $redcapSessionCookieName = $this->get_redcap_session_cookie_name();
+        $redcap_session_id = $_COOKIE[$redcapSessionCookieName];
         if ( isset($redcap_session_id) ) {
             \Session::destroy($redcap_session_id);
-            \Session::deletecookie("PHPSESSID");
+            \Session::deletecookie($redcapSessionCookieName);
             session_destroy();
         }
 
@@ -77,6 +78,22 @@ class Auth
     }
 
     // --- THESE DEAL WITH SESSION VALUES --- \\
+
+    // REDCap Session
+
+    public function get_redcap_session_cookie_name($isSurveyPage=false)
+    {
+        if (method_exists(\Session::class, 'getCookieName')) {
+            return \Session::getCookieName($isSurveyPage);
+        } else {
+            return $isSurveyPage ? "survey" : "PHPSESSID";
+        }
+    }
+
+    public function get_redcap_session_id($isSurveyPage=false)
+    {
+        return $_COOKIE[$this->get_redcap_session_cookie_name($isSurveyPage)];
+    }
 
     // TESTS
     public function is_logged_in()
@@ -193,7 +210,7 @@ class Auth
     public function set_survey_username($username)
     {
         $orig_id           = session_id();
-        $survey_session_id = $_COOKIE["survey"];
+        $survey_session_id = $this->get_redcap_session_id(true);
         if ( isset($survey_session_id) ) {
             session_write_close();
             session_name('survey');
@@ -214,7 +231,7 @@ class Auth
 
 
         $orig_id           = session_id();
-        $survey_session_id = $_COOKIE["survey"];
+        $survey_session_id = $this->get_redcap_session_id(true);
         if ( isset($survey_session_id) ) {
             session_write_close();
             session_name('survey');
