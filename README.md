@@ -365,29 +365,4 @@ information about **REDCapPRO** participants. These are described below:
 
 ## Changelog
 
-| Version | Release Date | Description                                                                                                   |
-| ------- | ------------ | ------------------------------------------------------------------------------------------------------------- |
-| 2.6.0   | 2024-08-15   | Feature release - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.6.0)               |
-| 2.5.0   | 2024-06-26   | Feature release - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.5.0)               |
-| 2.4.1   | 2024-06-13   | Critical Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.4.1)              |
-| 2.4.0   | 2023-12-01   | Feature release - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.4.0)               |
-| 2.3.0   | 2023-11-28   | Feature release - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.3.0)               |
-| 2.2.1   | 2023-11-20   | Minor Change and Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.2.1)      |
-| 2.2.0   | 2023-11-19   | Feature release - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.2.0)               |
-| 2.1.3   | 2023-11-10   | Minor Change to UI Text - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.1.3)       |
-| 2.1.2   | 2023-10-30   | Major Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.1.2)                 |
-| 2.1.1   | 2023-10-27   | Minor Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.1.1)                 |
-| 2.1.0   | 2023-10-10   | Feature release - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.1.0)               |
-| 2.0.1   | 2023-10-09   | Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.0.1)                       |
-| 2.0.0   | 2023-10-09   | Major release - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/2.0.0)                 |
-| 1.0.1   | 2022-04-01   | Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/1.0.1)                       |
-| 1.0.0   | 2022-03-31   | Change and bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/1.0.0)            |
-| 0.5.0   | 2022-03-30   | Bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.5.0)                       |
-| 0.4.9   | 2022-03-24   | Minor bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.9)                 |
-| 0.4.8   | 2022-02-23   | Minor bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.8)                 |
-| 0.4.7   | 2022-01-04   | Minor bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.7)                 |
-| 0.4.6   | 2021-12-14   | Minor bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.6)                 |
-| 0.4.5   | 2021-12-12   | Medium security fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.5)           |
-| 0.4.4   | 2021-11-15   | Improvement - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.4)                   |
-| 0.4.3   | 2021-11-12   | Improvement and minor bug fix - [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases/tag/0.4.3) |
-| 0.4.2   | 2021-11-04   | Initial release                                                                                               |
+See the [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases) for a complete list of changes.

@@ -443,6 +443,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             }
             selectedDag = result.value;
             $('input[name="dag"]').val(selectedDag);
+        } else if (projectHasDags && userDag !== '') {
+            $('input[name="dag"]').val(userDag);
         }
         $('form.register-form').submit();
     }
