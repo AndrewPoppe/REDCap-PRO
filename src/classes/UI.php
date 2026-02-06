@@ -11,6 +11,27 @@ class UI
         $this->module = $module;
     }
 
+    private function showLanguageOptions()
+    {
+        
+        $language = new Language($this->module);
+        $languageList = $language->getLanguages(true);
+        $response = '';
+        if (count($languageList) > 0) {
+            $this->module->initializeJavascriptModuleObject();
+            $response .= '<div style="position: absolute; top: 10px; left: calc(50% + 300px);">
+                <select class="form-select" id="languageSelect" aria-label="Language select">';
+            foreach ($languageList as $lang_item) {
+                $isSelected = $language->getCurrentLanguage() === $lang_item['code'] ? 'selected' : '';
+                $response .= '<option value="' . $lang_item['code'] . '" ' . $isSelected . '>' . $lang_item['code'] . '</option>';
+            }
+                $response .= '</select>
+                </div>';
+            
+        }
+        return $response;
+    }
+
     public function ShowParticipantHeader(string $title)
     {
         echo '<!DOCTYPE html>
@@ -36,16 +57,34 @@ class UI
                     </style>
                 </head>
                 <body>
+                    ' . $this->showLanguageOptions() . '
                     <div class="center">
                         <div class="wrapper">
                             <img id="rcpro-logo" src="' . $this->module->getUrl("images/RCPro_Logo_Alternate.svg") . '" width="500px">
                             <hr>
+                            
                             <div style="text-align: center;"><h2 class="title">' . $title . '</h2></div>';
     }
 
     public function EndParticipantPage()
     {
+        echo '<script>
+                    const rcpro_module = ' . $this->module->getJavascriptModuleObjectName() . ';
+                    document.addEventListener("DOMContentLoaded", (event) => {
+                    document.getElementById("languageSelect").addEventListener("change", function() {
+                        const selectedLang = this.value;
+                        console.log("Selected language: " + selectedLang);
+                        rcpro_module.ajax("chooseLanguage", {languageCode: selectedLang})
+                        .then(function(response) {
+                            if (response.ok) {
+                                location.reload();
+                            }
+                        });
+                    });
+                    });
+                </script>';
         echo '</div></div></body></html>';
+        
     }
 
     public function ShowHeader(string $page)
