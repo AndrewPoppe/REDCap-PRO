@@ -151,6 +151,8 @@ $allowAutoEnrollSystem          = (bool) $module->framework->getSystemSetting("a
 $allowSelfRegistration          = $projectSettings->shouldAllowSelfRegistration($project_id);
 $autoEnrollUponSelfRegistration = $projectSettings->shouldEnrollUponRegistration($project_id);
 $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEmail($project_id);
+
+$module->initializeJavascriptModuleObject();
 ?>
 
 <div class="settingsContainer wrapper" style="display: none;">
@@ -189,13 +191,20 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
                     </div>
                     <div class="card-title">Set the languages that participants can choose from.</div>
                     <div class="form-group">
-                        <?php foreach ($languageList as $lang_code => $lang_item) {
-                            $checked = $lang_item["active"] ? "checked" : "";
+                        <?php 
+                        $defaultLanguage = $settings["reserved-language-project"] ?? "English";
+                        foreach ($languageList as $lang_code => $lang_item) {
+                            if ($lang_item["active"] || $lang_item["code"] === $defaultLanguage) {
+                                $checked = "checked";
+                            } else {
+                                $checked = "";
+                            }
+                            $disabled = $lang_item["code"] === $defaultLanguage ? "disabled" : "";
                             ?>
                             
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" name="languageChoice_<?= $lang_item["code"] ?>" id="check<?= $lang_item["code"] ?>">
-                            <label class="form-check-label" for="check<?= $lang_item["code"] ?>">
+                            <input class="form-check-input languageChoiceActivityCheckbox" type="checkbox" value="" name="languageChoice_<?= $lang_item["code"] ?>" id="languageChoiceActivity_<?= $lang_item["code"] ?>" <?= $checked ?> <?= $disabled ?>>
+                            <label class="form-check-label" for="languageChoiceActivity_<?= $lang_item["code"] ?>">
                                 <?= $lang_item["code"] ?>
                             </label>
                         </div>
@@ -506,6 +515,7 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
 </div>
 <script>
     (function ($, window, document) {
+        window.rcpro_module = <?= $module->getJavascriptModuleObjectName() ?>;
         $(document).ready(function () {
             let form = document.querySelector('#settings-form');
             form.addEventListener('change', function () {
@@ -528,6 +538,23 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
                 $('#mfa-authenticator-app').attr('disabled', !mfaChecked);
                 $('#mfa-authenticator-app-title').toggleClass('text-muted-more', !mfaChecked);
             <?php } ?>
+            $('.languageChoiceActivityCheckbox').change(function() {
+                const languageCode = this.name.replace('languageChoice_', '');
+                const active = this.checked;
+                window.rcpro_module.ajax("setLanguageActiveStatus", { languageCode, active })
+                .then(response => {
+                    console.log(response);
+                })
+                .catch(error => {
+                    console.error(error);
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "There was a problem updating the language status. Please try again.",
+                        showConfirmButton: false
+                    });
+                });
+            });
         });
     })(window.jQuery, window, document);
 </script>

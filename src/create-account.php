@@ -14,6 +14,10 @@ if ( isset($recaptcha_site_key) ) {
 $auth = new Auth($module->APPTITLE);
 $auth->init();
 
+// Language Helper
+$language = new Language($module);
+$language->handleLanguageChangeRequest();
+
 // UI Helper
 $ui = new UI($module);
 

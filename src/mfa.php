@@ -10,6 +10,10 @@ $auth->init();
 
 $project_id = (int) $module->framework->getProject()->getProjectId();
 
+// Language Helper
+$language = new Language($module);
+$language->handleLanguageChangeRequest();
+
 // Check if user is logged in
 if ( !$auth->is_logged_in() ) {
     header("location: " . $module->getUrl("src/login.php", true));

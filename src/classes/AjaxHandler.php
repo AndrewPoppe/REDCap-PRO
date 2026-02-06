@@ -9,7 +9,6 @@ class AjaxHandler
     private $project_id;
     public $args;
     private $methods = [
-        "chooseLanguage",
         "exportLogs",
         "getLogs",
         "getParticipants",
@@ -22,7 +21,8 @@ class AjaxHandler
         "searchParticipantByEmail",
         "sendMfaTokenEmail",
         "showMFAInfo",
-        "sendMFAInfo"
+        "sendMFAInfo",
+        "setLanguageActiveStatus"
     ];
     public function __construct(REDCapPRO $module, string $method, array $params, $project_id, $args = null)
     {
@@ -46,14 +46,14 @@ class AjaxHandler
         }
     }
 
-    private function chooseLanguage()
+    private function setLanguageActiveStatus()
     {
         $languageCode = $this->params['languageCode'] ?? null;
         if ( empty($languageCode) ) {
             throw new REDCapProException("No language code provided");
         }
         $language = new Language($this->module);
-        $language->storeLanguageChoice($languageCode);
+        $language->setLanguageActiveStatus($languageCode, $this->params['active']);
         return [ 'status' => 'ok' ];
     }
 
