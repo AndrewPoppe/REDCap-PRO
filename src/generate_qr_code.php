@@ -12,6 +12,10 @@ if (!$auth->is_logged_in()) {
     exit;
 }
 
+// Language Helper
+$language = new Language($module);
+$language->handleLanguageChangeRequest();
+
 // Get OTPAUTH URI
 $otpauth_encoded = filter_input(INPUT_GET, 'otpauth', FILTER_SANITIZE_ENCODED);
 $otpauth = urldecode($otpauth_encoded);
