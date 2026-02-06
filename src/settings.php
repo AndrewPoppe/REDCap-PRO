@@ -33,6 +33,8 @@ if ( isset($_GET["error"]) ) {
 // Get possible languages
 $projectSettings = new ProjectSettings($module);
 $languageList    = $projectSettings->getLanguageFiles();
+$languages = new Language($module);
+$languageList = $languages->getLanguages(false, true);
 
 // Should these settings shown / updated?
 $isAdmin                     = $module->framework->getUser()->isSuperUser();
@@ -185,20 +187,20 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
                     <span class="fa-stack">
                         <i class="fas fa-globe fa-2x"></i>
                     </span>
-                    <nbsp></nbsp><strong>Language</strong>
+                    <nbsp></nbsp><strong>Languages and Translation</strong>
                 </div>
                 <div class="card-body">
-                    <div class="card-title">Set the language that participant-facing text will be displayed in.</div>
+                    <div class="card-title">Set the default language that participant-facing text will be displayed in.</div>
                     <div class="form-group">
                         <select class="form-select <?php echo (!empty($lang_err)) ? 'is-invalid' : ''; ?>"
                             name="reserved-language-project" aria-label="language select">
                             <?php
-                            foreach ( $languageList as $lang_item => $file ) {
+                            foreach ( $languageList as $lang_code => $lang_item ) {
                                 $selected_lang = $settings["reserved-language-project"];
-                                $selected      = ($lang_item === $selected_lang) || (!isset($selected_lang) && $lang_item === "English") ? "selected" : "";
+                                $selected      = ($lang_code === $selected_lang) || (!isset($selected_lang) && $lang_code === "English") ? "selected" : "";
                                 ?>
-                                <option value="<?= $lang_item ?>" <?= $selected ?>>
-                                    <?= $lang_item ?>
+                                <option value="<?= $lang_code ?>" <?= $selected ?>>
+                                    <?= $lang_code ?>
                                 </option>
                                 <?php
                             }
@@ -207,6 +209,21 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
                         <span class="invalid-feedback">
                             <?php echo $lang_err; ?>
                         </span>
+                    </div>
+                    <div class="card-title">Set the languages that participants can choose from.</div>
+                    <div class="form-group">
+                        <?php foreach ($languageList as $lang_code => $lang_item) {
+                            $checked = $lang_item["active"] ? "checked" : "";
+                            ?>
+                            
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" name="languageChoice_<?= $lang_item["code"] ?>" id="check<?= $lang_item["code"] ?>">
+                            <label class="form-check-label" for="check<?= $lang_item["code"] ?>">
+                                <?= $lang_item["code"] ?>
+                            </label>
+                        </div>
+
+                        <?php } ?>
                     </div>
                 </div>
             </div>

@@ -214,6 +214,7 @@
         "searchParticipantByEmail"
     ],
     "no-auth-ajax-actions": [
+        "chooseLanguage",
         "sendMfaTokenEmail",
         "showMFAInfo",
         "sendMFAInfo"
