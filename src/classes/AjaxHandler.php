@@ -10,6 +10,7 @@ class AjaxHandler
     public $args;
     private $methods = [
         "exportLogs",
+        "getLanguage",
         "getLogs",
         "getParticipants",
         "getParticipantsCC",
@@ -22,6 +23,7 @@ class AjaxHandler
         "sendMfaTokenEmail",
         "showMFAInfo",
         "sendMFAInfo",
+        "setLanguage",
         "setLanguageActiveStatus"
     ];
     public function __construct(REDCapPRO $module, string $method, array $params, $project_id, $args = null)
@@ -46,15 +48,72 @@ class AjaxHandler
         }
     }
 
+    private function getLanguage()
+    {
+        try {
+            $languageCode = $this->params['languageCode'] ?? null;
+            if ( empty($languageCode) ) {
+                throw new REDCapProException("No language code provided");
+            }
+            $language = new Language($this->module);
+
+            if ($languageCode === "English") {
+                return $this->module->escape($language->getEnglishStrings());
+            }
+
+            $languages = $language->getLanguages(false);
+            if (!isset($languages[$languageCode])) {
+                throw new REDCapProException("Language not found");
+            }
+            $thisLanguage = $languages[$languageCode];
+            $thisLanguage['strings'] = $language->getLanguageStrings($languageCode);
+            $thisLanguage['EnglishStrings'] = $this->module->escape($language->getEnglishStrings());
+            return $thisLanguage;
+        } catch ( \Throwable $e ) {
+            $this->module->logError($e->getMessage(), $e);
+            return $this->module->escape($e->getMessage() ?? 'Error');
+        }
+    }
+
+    private function setLanguage()
+    {
+        try {
+            $languageCode     = $this->params['code'];
+            $languageStrings  = $this->params['strings'];
+            if ( empty($languageCode) ) {
+                throw new REDCapProException("No language code provided");
+            }
+            if ( empty($languageStrings) || !is_array($languageStrings) ) {
+                throw new REDCapProException("No language strings provided or invalid format");
+            }
+            $language = new Language($this->module);
+            $builtInLanguages = $language->getBuiltInLanguages();
+            if (isset($builtInLanguages[$languageCode])) {
+                throw new REDCapProException("Cannot overwrite built-in language: " . $languageCode);
+            }
+            $language->setLanguageActiveStatus($languageCode, false);
+            $language->setLanguageStrings($languageCode, $languageStrings);
+            return [ 'status' => 'ok' ];
+        } catch ( \Throwable $e ) {
+            $this->module->logError($e->getMessage(), $e);
+            return $this->module->escape($e->getMessage() ?? 'Error');
+        }
+    }
+
     private function setLanguageActiveStatus()
     {
-        $languageCode = $this->params['languageCode'] ?? null;
-        if ( empty($languageCode) ) {
-            throw new REDCapProException("No language code provided");
+        try {
+            $languageCode = $this->params['languageCode'] ?? null;
+            if ( empty($languageCode) ) {
+                throw new REDCapProException("No language code provided");
+            }
+            $language = new Language($this->module);
+            $language->setLanguageActiveStatus($languageCode, $this->params['active']);
+            return [ 'status' => 'ok' ];
+        } catch ( \Throwable $e ) {
+            $this->module->logError($e->getMessage(), $e);
+            return $this->module->escape($e->getMessage() ?? 'Error');
         }
-        $language = new Language($this->module);
-        $language->setLanguageActiveStatus($languageCode, $this->params['active']);
-        return [ 'status' => 'ok' ];
     }
 
     private function getLogs()

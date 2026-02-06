@@ -38,11 +38,19 @@ class Language {
                 return $lang['active'] === true || $lang['code'] === $defaultLanguage;
             });
         }
-
+        if (empty($languages)) {
+            $languages = [
+                'English' => [
+                    'code' => 'English',
+                    'active' => true,
+                    'built_in' => true
+                ]
+            ];
+        }
         return $languages; 
     }
 
-    private function getBuiltInLanguages(): array
+    public function getBuiltInLanguages(): array
     {
         $langs = array();
         $path  = $this->module->framework->getModulePath() . DS . "lang" . DS;
@@ -56,6 +64,28 @@ class Language {
             }
         }
         return $langs;
+    }
+
+    public function getEnglishStrings(): array
+    {
+        try {
+            $builtInLanguages = $this->getBuiltInLanguages();
+            if (!array_key_exists('English', $builtInLanguages)) {
+                throw new \Exception("English language file not found in built-in languages.");
+            }
+            $file_path = $builtInLanguages['English'];
+            if (!file_exists($file_path)) {
+                throw new \Exception("English language file does not exist at path: " . $file_path);
+            }
+            $lang_strings = parse_ini_file($file_path, true);
+            if (!is_array($lang_strings)) {
+                throw new \Exception("English language file did not return an array of strings: " . $file_path);
+            }
+            return $lang_strings;
+        } catch ( \Exception $e ) {
+            $this->module->log("Error loading English language strings: " . $e->getMessage());
+            return [];
+        }
     }
 
     public function getCurrentLanguage(): ?string
@@ -105,9 +135,8 @@ class Language {
         return $lang_strings;
     }
 
-    private function getLanguageStrings(string $lang_code): array
+    public function getLanguageStrings(string $lang_code): array
     {
-
         $settingName = self::LANGUAGE_PREFIX . $lang_code;
         $languageJSON = $this->module->framework->getProjectSetting($settingName, $this->project_id);
         return json_decode($languageJSON ?? '[]', true);
@@ -136,6 +165,9 @@ class Language {
     {
         global $lang;
         foreach ($lang_strings as $key => $value) {
+            if (empty($value)) {
+                continue;
+            }
             $em_key = \ExternalModules\ExternalModules::constructLanguageKey($this->module->PREFIX, $key);
             $lang[$em_key] = $value;
         }
@@ -143,6 +175,7 @@ class Language {
 
     public function handleLanguageChangeRequest() : void
     {
+        $defaultLanguage = $this->module->framework->getProjectSetting('reserved-language-project', $this->project_id) ?? 'English';
         $currentLanguage   = $this->getCurrentLanguage();
         $requestedLanguage = urldecode($_GET['language']) ?? null;
         if ( isset($requestedLanguage) && array_key_exists($requestedLanguage, $this->getLanguages(true, true)) ) {
@@ -150,10 +183,10 @@ class Language {
             $currentLanguage = $requestedLanguage;
         }
         try {
-            $this->selectLanguage($currentLanguage);
+            $this->selectLanguage($currentLanguage ?? $defaultLanguage);
         } catch (\Exception $e) {
             $this->module->log("Error selecting language: " . $e->getMessage());
-            $this->selectLanguage($this->module->framework->getProjectSetting('reserved-language-project', $this->project_id));
+            $this->selectLanguage($defaultLanguage);
         }
     }
     
