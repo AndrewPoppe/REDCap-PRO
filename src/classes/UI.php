@@ -81,6 +81,27 @@ class UI
         return $response;
     }
 
+    private function showLanguageOptions()
+    {
+        
+        $language = new Language($this->module);
+        $languageList = $language->getLanguages(true);
+        $response = '';
+        if (count($languageList) > 0) {
+            $this->module->initializeJavascriptModuleObject();
+            $response .= '<div style="position: absolute; top: 10px; left: calc(50% + 300px);">
+                <select class="form-select" id="languageSelect" aria-label="Language select">';
+            foreach ($languageList as $lang_item) {
+                $isSelected = $language->getCurrentLanguage() === $lang_item['code'] ? 'selected' : '';
+                $response .= '<option value="' . $lang_item['code'] . '" ' . $isSelected . '>' . $lang_item['code'] . '</option>';
+            }
+                $response .= '</select>
+                </div>';
+            
+        }
+        return $response;
+    }
+
     public function ShowParticipantHeader(string $title)
     {
         $customLogoEnabled = (bool) $this->module->framework->getSystemSetting('allow-custom-logo-system');
