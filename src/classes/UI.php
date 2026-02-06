@@ -87,8 +87,7 @@ class UI
         $language = new Language($this->module);
         $languageList = $language->getLanguages(true);
         $response = '';
-        if (count($languageList) > 0) {
-            $this->module->initializeJavascriptModuleObject();
+        if (count($languageList) > 1) {
             $response .= '<div style="position: absolute; top: 10px; left: calc(50% + 300px);">
                 <select class="form-select" id="languageSelect" aria-label="Language select">';
             foreach ($languageList as $lang_item) {
@@ -96,7 +95,18 @@ class UI
                 $response .= '<option value="' . $lang_item['code'] . '" ' . $isSelected . '>' . $lang_item['code'] . '</option>';
             }
                 $response .= '</select>
-                </div>';
+                </div>
+                <script>
+                    document.addEventListener("DOMContentLoaded", (event) => {
+                        document.getElementById("languageSelect").addEventListener("change", function() {
+                            const selectedLang = this.value;
+                            console.log("Selected language: " + selectedLang);
+                            const url = new URL(window.location.href);
+                            url.searchParams.set("language", selectedLang);
+                            window.location.href = url.toString();
+                        });
+                    });
+                </script>';
             
         }
         return $response;
