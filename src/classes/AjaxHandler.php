@@ -9,6 +9,7 @@ class AjaxHandler
     private $project_id;
     public $args;
     private $methods = [
+        "chooseLanguage",
         "exportLogs",
         "getLogs",
         "getParticipants",
@@ -43,6 +44,17 @@ class AjaxHandler
             $this->module->logError($e->getMessage() ?? 'Error', $e);
             return $this->module->escape($e->getMessage() ?? 'Error');
         }
+    }
+
+    private function chooseLanguage()
+    {
+        $languageCode = $this->params['languageCode'] ?? null;
+        if ( empty($languageCode) ) {
+            throw new REDCapProException("No language code provided");
+        }
+        $language = new Language($this->module);
+        $language->storeLanguageChoice($languageCode);
+        return [ 'status' => 'ok' ];
     }
 
     private function getLogs()
