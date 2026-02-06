@@ -211,10 +211,10 @@
         "getStaffCC",
         "importCsvEnroll",
         "importCsvRegister",
-        "searchParticipantByEmail"
+        "searchParticipantByEmail",
+        "setLanguageActiveStatus"
     ],
     "no-auth-ajax-actions": [
-        "chooseLanguage",
         "sendMfaTokenEmail",
         "showMFAInfo",
         "sendMFAInfo"

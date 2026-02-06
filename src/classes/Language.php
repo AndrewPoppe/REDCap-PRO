@@ -14,11 +14,7 @@ class Language {
     {
         $languagesJSON = $this->module->framework->getProjectSetting('languages', $this->project_id) ?? '[]';
         $languages = json_decode($languagesJSON, true);
-        if ($activeOnly) {
-            $languages = array_filter($languages, function ($lang) {
-                return $lang['active'] === true;
-            });
-        }
+        
         
         $builtInLanguages = $this->getBuiltInLanguages();
         foreach ($builtInLanguages as $lang_code => $file_path) {
@@ -33,6 +29,14 @@ class Language {
                 }
                 $languages[$lang_code] = $thisLang;
             }
+        }
+
+        $defaultLanguage = $this->module->framework->getProjectSetting('reserved-language-project', $this->project_id);
+
+        if ($activeOnly) {
+            $languages = array_filter($languages, function ($lang) use ($defaultLanguage) {
+                return $lang['active'] === true || $lang['code'] === $defaultLanguage;
+            });
         }
 
         return $languages; 
@@ -56,9 +60,12 @@ class Language {
 
     public function getCurrentLanguage(): ?string
     {
-        // $currentLanguage = $this->module->framework->getProjectSetting('reserved-language-project', $this->project_id);
-        // return $currentLanguage;
-        return 'English';
+        $newLanguage = urldecode($_GET['language'] ?? '');
+        if ($newLanguage !== '' && array_key_exists($newLanguage, $this->getLanguages(true, true))) {
+            return $newLanguage;
+        }
+        $defaultLanguage = $this->module->framework->getProjectSetting('reserved-language-project', $this->project_id);
+        return $_COOKIE[$this->module->APPTITLE . "_language"] ?? $defaultLanguage;
     }
 
     public function storeLanguageChoice(string $lang_code): void
@@ -68,12 +75,39 @@ class Language {
 
     public function selectLanguage(string $lang_code): void
     {
-        $lang_strings = $this->getLanguageStrings($lang_code);
+        $languages = $this->getLanguages(true);
+        if ( !array_key_exists($lang_code, $languages) ) {
+            throw new \Exception("Language code not found or not active: " . $lang_code);
+        }
+        if (isset($languages[$lang_code]['built_in']) && $languages[$lang_code]['built_in'] === true) {
+            $lang_strings = $this->getBuiltInLanguageStrings($languages[$lang_code]);
+        } else {
+            $lang_strings = $this->getLanguageStrings($lang_code);
+        }
         $this->replaceLanguageStrings($lang_strings);
+    }
+    
+    private function getBuiltInLanguageStrings(array $language): array 
+    {
+        $builtInLanguages = $this->getBuiltInLanguages();
+        if (!array_key_exists($language['code'], $builtInLanguages)) {
+            throw new \Exception("Built-in language code not found: " . $language['code']);
+        }
+        $file_path = $builtInLanguages[$language['code']];
+        $this->module->log("Loading built-in language file for language code " . $language['code'] . " from path: " . $file_path);
+        if (!file_exists($file_path)) {
+            throw new \Exception("Language file does not exist at path: " . $file_path);
+        }
+        $lang_strings = parse_ini_file($file_path);
+        if (!is_array($lang_strings)) {
+            throw new \Exception("Language file did not return an array of strings: " . $file_path);
+        }
+        return $lang_strings;
     }
 
     private function getLanguageStrings(string $lang_code): array
     {
+
         $settingName = self::LANGUAGE_PREFIX . $lang_code;
         $languageJSON = $this->module->framework->getProjectSetting($settingName, $this->project_id);
         return json_decode($languageJSON ?? '[]', true);
@@ -104,6 +138,22 @@ class Language {
         foreach ($lang_strings as $key => $value) {
             $em_key = \ExternalModules\ExternalModules::constructLanguageKey($this->module->PREFIX, $key);
             $lang[$em_key] = $value;
+        }
+    }
+
+    public function handleLanguageChangeRequest() : void
+    {
+        $currentLanguage   = $this->getCurrentLanguage();
+        $requestedLanguage = urldecode($_GET['language']) ?? null;
+        if ( isset($requestedLanguage) && array_key_exists($requestedLanguage, $this->getLanguages(true, true)) ) {
+            $this->storeLanguageChoice($requestedLanguage);
+            $currentLanguage = $requestedLanguage;
+        }
+        try {
+            $this->selectLanguage($currentLanguage);
+        } catch (\Exception $e) {
+            $this->module->log("Error selecting language: " . $e->getMessage());
+            $this->selectLanguage($this->module->framework->getProjectSetting('reserved-language-project', $this->project_id));
         }
     }
     

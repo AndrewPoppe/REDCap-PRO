@@ -42,6 +42,10 @@ $settings = new ProjectSettings($module);
 // Participant Helper
 $participantHelper = new ParticipantHelper($module);
 
+// Language Helper
+$language = new Language($module);
+$language->handleLanguageChangeRequest();
+
 // Processing form data when form is submitted
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
