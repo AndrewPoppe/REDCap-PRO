@@ -203,6 +203,7 @@
     ],
     "auth-ajax-actions": [
         "exportLogs",
+        "getLanguage",
         "getLogs",
         "getParticipants",
         "getParticipantsCC",
@@ -212,6 +213,7 @@
         "importCsvEnroll",
         "importCsvRegister",
         "searchParticipantByEmail",
+        "setLanguage",
         "setLanguageActiveStatus"
     ],
     "no-auth-ajax-actions": [

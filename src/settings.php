@@ -213,27 +213,40 @@ $module->initializeJavascriptModuleObject();
                         </span>
                     </div>
                     <div class="card-title">Set the languages that participants can choose from.</div>
-                    <div class="form-group">
-                        <?php 
-                        $defaultLanguage = $settings["reserved-language-project"] ?? "English";
-                        foreach ($languageList as $lang_code => $lang_item) {
-                            if ($lang_item["active"] || $lang_item["code"] === $defaultLanguage) {
-                                $checked = "checked";
-                            } else {
-                                $checked = "";
-                            }
-                            $disabled = $lang_item["code"] === $defaultLanguage ? "disabled" : "";
-                            ?>
-                            
-                        <div class="form-check">
-                            <input class="form-check-input languageChoiceActivityCheckbox" type="checkbox" value="" name="languageChoice_<?= $lang_item["code"] ?>" id="languageChoiceActivity_<?= $lang_item["code"] ?>" <?= $checked ?> <?= $disabled ?>>
-                            <label class="form-check-label" for="languageChoiceActivity_<?= $lang_item["code"] ?>">
-                                <?= $lang_item["code"] ?>
-                            </label>
-                        </div>
 
-                        <?php } ?>
-                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col"></th>
+                                <th scope="col">Active</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($languageList as $lang_code => $lang_item) { 
+                                $defaultLanguage = $settings["reserved-language-project"] ?? "English";
+                                if ($lang_item["active"] || $lang_item["code"] === $defaultLanguage) {
+                                    $active = "checked";
+                                } else {
+                                    $active = "";
+                                }
+                                $activeDisabled = $lang_item["code"] === $defaultLanguage ? "disabled" : "";
+                                $builtIn = $lang_item["built_in"];
+                                ?>
+                            
+                                <tr>
+                                    <th scope="row"><?= $lang_item["code"] ?></th>
+                                    <td><div class="form-check form-switch">
+  <input class="form-check-input languageChoiceActivityCheckbox" name="languageChoice_<?= $lang_item["code"] ?>" type="checkbox" role="switch" id="switchCheckDefault" <?= $active ?> <?= $activeDisabled ?>></div></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm text-secondary edit-language-btn" data-lang-code="<?= $lang_item["code"] ?>"><i class="fas fa-pencil"></i></button>
+                                        <button type="button" class="btn btn-sm text-danger delete-language-btn" data-lang-code="<?= $lang_item["code"] ?>"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn btn-sm btn-success" id="add-language-btn"><i class="fas fa-plus"></i> Add Language</button>
                 </div>
             </div>
             <br>
@@ -578,6 +591,36 @@ $module->initializeJavascriptModuleObject();
         </form>
     </div>
 </div>
+<div class="modal" id="editLanguageModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="editLanguageLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="editLanguageLabel">Edit Language</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal" id="createLanguageModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="createLanguageLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="createLanguageLabel">Create Language</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
     (function ($, window, document) {
         window.rcpro_module = <?= $module->getJavascriptModuleObjectName() ?>;
@@ -633,6 +676,117 @@ $module->initializeJavascriptModuleObject();
                         icon: "error",
                         title: "Error",
                         text: "There was a problem updating the language status. Please try again.",
+                        showConfirmButton: false
+                    });
+                });
+            });
+
+            $('#add-language-btn').click(function() {
+                window.rcpro_module.ajax("getLanguage", { languageCode: "English" })
+                .then(response => {
+                    console.log(response);
+                    let modalBody = '<div>';
+                    modalBody += `<div class="form-group">
+                        <label for="new-language-code" class="form-label"><h3>Language Code</h3></label>
+                        <input type="text" class="form-control" id="new-language-code" name="new-language-code" placeholder="e.g. Spanish">
+                    </div><form id="create-language-form">`;
+                    for (const [key, value] of Object.entries(response)) {
+                        modalBody += `<div class="card mb-3">
+                            <div class="card-body bg-light">
+                                <h3 class="card-title">${key}</h3>`;
+                        for (const [langKey, langValue] of Object.entries(value)) {
+                             modalBody += `
+                             <label for="${langKey}" class="form-label mt-3 text-danger">${langKey}</label>
+                             <div class="form-inline"><span><strong>Default text:</strong></span>&nbsp;<span>${langValue}</span></div>
+                             <input type="text" class="form-control mb-2" id="${langKey}" name="${langKey}" value="">`;
+                        }
+                        modalBody += `</div></div>`;
+                    }
+                    modalBody += '</form></div>';
+                    $('#createLanguageModal .modal-body').html(modalBody);
+                
+                $('#createLanguageModal .btn-primary').off('click').on('click', function() {
+                    const languageCode = $('#new-language-code').val().trim();
+                    if (languageCode === "") {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "Language code cannot be empty.",
+                            showConfirmButton: false
+                        });
+                        return;
+                    }
+                    const languageStrings = $('#create-language-form').serializeObject();
+                
+                    window.rcpro_module.ajax("setLanguage", { code: languageCode, strings: languageStrings })
+                    .then(() => {
+                        $('#createLanguageModal').modal('hide');
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "There was a problem creating the language. Please try again.",
+                            showConfirmButton: false
+                        });
+                    });
+                });
+                    $('#createLanguageModal').modal('show');
+                });
+            });
+
+            $('.edit-language-btn').click(function() {
+                const languageCode = this.dataset.langCode;
+                window.rcpro_module.ajax("getLanguage", { languageCode })
+                .then(response => {
+                    console.log(response);
+                    const languageStrings = response.strings;
+                    const englishStrings = response.EnglishStrings;
+                    let modalBody = '<form id="edit-language-form">';
+                    for (const [key, value] of Object.entries(englishStrings)) {
+                        modalBody += `<div class="card mb-3">
+                            <div class="card-body bg-light">
+                                <h3 class="card-title">${key}</h3>`;
+                        for (const [langKey, langValue] of Object.entries(value)) {
+                             modalBody += `
+                             <label for="${langKey}" class="form-label mt-3 text-danger">${langKey}</label>
+                             <div class="form-inline"><span><strong>Default text:</strong></span>&nbsp;<span>${langValue}</span></div>
+                             <input type="text" class="form-control mb-2" id="${langKey}" name="${langKey}" value="${languageStrings[langKey] || ""}">`;
+                        }
+                        modalBody += `</div></div>`;
+                    }
+                    modalBody += '</form>';
+                    $('#editLanguageModal .modal-body').html(modalBody);
+                    // $('#editLanguageModal .btn-primary').off('click').on('click', function() {
+                    //     const formData = $('#edit-language-form').serializeArray();
+                    //     const updatedStrings = {};
+                    //     formData.forEach(item => {
+                    //         updatedStrings[item.name] = item.value;
+                    //     });
+                    //     const languageCode = response.code;
+                    //     window.rcpro_module.ajax("setLanguage", { language: { code: languageCode, strings: updatedStrings } })
+                    //     .then(() => {
+                    //         $('#editLanguageModal').modal('hide');
+                    //     })
+                    //     .catch(error => {
+                    //         console.error(error);
+                    //         Swal.fire({
+                    //             icon: "error",
+                    //             title: "Error",
+                    //             text: "There was a problem saving the language. Please try again.",
+                    //             showConfirmButton: false
+                    //         });
+                    //     });
+                    // });
+                    $('#editLanguageModal').modal('show');
+                })
+                .catch(error => {
+                    console.error(error);
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "There was a problem loading the language. Please try again.",
                         showConfirmButton: false
                     });
                 });
