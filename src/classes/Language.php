@@ -15,7 +15,6 @@ class Language {
         $languagesJSON = $this->module->framework->getProjectSetting('languages', $this->project_id) ?? '[]';
         $languages = json_decode($languagesJSON, true);
         
-        
         $builtInLanguages = $this->getBuiltInLanguages();
         foreach ($builtInLanguages as $lang_code => $file_path) {
             if (!isset($languages[$lang_code])) {
@@ -31,8 +30,7 @@ class Language {
             }
         }
 
-        $defaultLanguage = $this->module->framework->getProjectSetting('reserved-language-project', $this->project_id);
-
+        $defaultLanguage = $this->module->framework->getProjectSetting('reserved-language-project', $this->project_id) ?? 'English';
         if ($activeOnly) {
             $languages = array_filter($languages, function ($lang) use ($defaultLanguage) {
                 return $lang['active'] === true || $lang['code'] === $defaultLanguage;
@@ -188,6 +186,21 @@ class Language {
             $this->module->log("Error selecting language: " . $e->getMessage());
             $this->selectLanguage($defaultLanguage);
         }
+    }
+
+    public function deleteLanguage(string $lang_code): void
+    {
+        $languages = $this->getLanguages(false);
+        if (!array_key_exists($lang_code, $languages)) {
+            throw new \Exception("Language code not found: " . $lang_code);
+        }
+        if (isset($languages[$lang_code]['built_in']) && $languages[$lang_code]['built_in'] === true) {
+            throw new \Exception("Cannot delete built-in language: " . $lang_code);
+        }
+        unset($languages[$lang_code]);
+        $this->module->framework->setProjectSetting('languages', json_encode($languages), $this->project_id);
+        $languageStringsSettingName = self::LANGUAGE_PREFIX . $lang_code;
+        $this->module->framework->setProjectSetting($languageStringsSettingName, null, $this->project_id);
     }
     
 }

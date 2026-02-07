@@ -9,6 +9,7 @@ class AjaxHandler
     private $project_id;
     public $args;
     private $methods = [
+        "deleteLanguage",
         "exportLogs",
         "getLanguage",
         "getLogs",
@@ -51,6 +52,11 @@ class AjaxHandler
     private function getLanguage()
     {
         try {
+            $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+            if ( $role < 3 ) {
+                throw new REDCapProException("You must be a manager or admin to edit languages");
+            }
+
             $languageCode = $this->params['languageCode'] ?? null;
             if ( empty($languageCode) ) {
                 throw new REDCapProException("No language code provided");
@@ -78,6 +84,10 @@ class AjaxHandler
     private function setLanguage()
     {
         try {
+            $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+            if ( $role < 3 ) {
+                throw new REDCapProException("You must be a manager or admin to edit languages");
+            }
             $languageCode     = $this->params['code'];
             $languageStrings  = $this->params['strings'];
             if ( empty($languageCode) ) {
@@ -103,12 +113,40 @@ class AjaxHandler
     private function setLanguageActiveStatus()
     {
         try {
+            $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+            if ( $role < 3 ) {
+                throw new REDCapProException("You must be a manager or admin to edit languages");
+            }
             $languageCode = $this->params['languageCode'] ?? null;
             if ( empty($languageCode) ) {
                 throw new REDCapProException("No language code provided");
             }
             $language = new Language($this->module);
             $language->setLanguageActiveStatus($languageCode, $this->params['active']);
+            return [ 'status' => 'ok' ];
+        } catch ( \Throwable $e ) {
+            $this->module->logError($e->getMessage(), $e);
+            return $this->module->escape($e->getMessage() ?? 'Error');
+        }
+    }
+
+    private function deleteLanguage()
+    {
+        try {
+            $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+            if ( $role < 3 ) {
+                throw new REDCapProException("You must be a manager or admin to delete languages");
+            }
+            $languageCode = $this->params['languageCode'] ?? null;
+            if ( empty($languageCode) ) {
+                throw new REDCapProException("No language code provided");
+            }
+            $language = new Language($this->module);
+            $builtInLanguages = $language->getBuiltInLanguages();
+            if (isset($builtInLanguages[$languageCode])) {
+                throw new REDCapProException("Cannot delete built-in language: " . $languageCode);
+            }
+            $language->deleteLanguage($languageCode);
             return [ 'status' => 'ok' ];
         } catch ( \Throwable $e ) {
             $this->module->logError($e->getMessage(), $e);

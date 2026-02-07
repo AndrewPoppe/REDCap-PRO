@@ -173,6 +173,7 @@
         "src/api"
     ],
     "auth-ajax-actions": [
+        "deleteLanguage",
         "exportLogs",
         "getLanguage",
         "getLogs",
