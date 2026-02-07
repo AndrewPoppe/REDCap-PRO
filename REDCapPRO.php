@@ -199,6 +199,10 @@ class REDCapPRO extends AbstractExternalModule
                 // Settings
                 $settings = new ProjectSettings($this);
 
+                // Language helper
+                $language = new Language($this);
+                $language->handleLanguageChangeRequest();
+
                 // Add inline style
                 echo "<style>
                     .swal2-timer-progress-bar {
@@ -218,12 +222,12 @@ class REDCapPRO extends AbstractExternalModule
                 // Initialize Javascript module object
                 $this->initializeJavascriptModuleObject();
 
-                // Transfer language translation keys to Javascript object
-                $this->tt_transferToJavascriptModuleObject([
-                    "timeout_message1",
-                    "timeout_message2",
-                    "timeout_button_text"
-                ]);
+                // // Transfer language translation keys to Javascript object
+                // $this->tt_transferToJavascriptModuleObject([
+                //     "timeout_message1",
+                //     "timeout_message2",
+                //     "timeout_button_text"
+                // ]);
 
                 // Add script to control logout of form
                 echo "<script src='" . $this->getUrl("src/rcpro_base.js", true) . "'></script>";
@@ -234,6 +238,9 @@ class REDCapPRO extends AbstractExternalModule
                     window.rcpro.sessionCheckPage = '" . $this->getUrl("src/session_check.php", true) . "';
                     window.rcpro.timeout_minutes = " . $settings->getTimeoutMinutes() . ";
                     window.rcpro.warning_minutes = " . $settings->getTimeoutWarningMinutes() . ";
+                    window.rcpro.timeoutMessage1 = '" . $this->tt("timeout_message1") . "';
+                    window.rcpro.timeoutMessage2 = '" . $this->tt("timeout_message2") . "';
+                    window.rcpro.timeoutButtonText = '" . $this->tt("timeout_button_text") . "';
                     window.rcpro.initTimeout();
                     window.rcpro.initSessionCheck();
                 </script>";
@@ -277,6 +284,10 @@ class REDCapPRO extends AbstractExternalModule
         }
         $auth = new Auth($this->APPTITLE);
         $auth->init();
+        
+        // Language helper
+        $language = new Language($this);
+        $language->handleLanguageChangeRequest();
 
         // Participant is logged in to their account
         if ( $auth->is_logged_in() ) {
@@ -439,12 +450,12 @@ class REDCapPRO extends AbstractExternalModule
             // Initialize Javascript module object
             $this->initializeJavascriptModuleObject();
 
-            // Transfer language translation keys to Javascript object
-            $this->tt_transferToJavascriptModuleObject([
-                "timeout_message1",
-                "timeout_message2",
-                "timeout_button_text"
-            ]);
+            // // Transfer language translation keys to Javascript object
+            // $this->tt_transferToJavascriptModuleObject([
+            //     "timeout_message1",
+            //     "timeout_message2",
+            //     "timeout_button_text"
+            // ]);
 
             // Add script to control logout of form
             echo "<script src='" . $this->getUrl("src/rcpro_base.js", true) . "'></script>";
@@ -455,6 +466,9 @@ class REDCapPRO extends AbstractExternalModule
                 window.rcpro.sessionCheckPage = '" . $this->getUrl("src/session_check.php", true) . "';
                 window.rcpro.timeout_minutes = " . $settings->getTimeoutMinutes() . ";
                 window.rcpro.warning_minutes = " . $settings->getTimeoutWarningMinutes() . ";
+                window.rcpro.timeoutMessage1 = '" . $this->tt("timeout_message1") . "';
+                window.rcpro.timeoutMessage2 = '" . $this->tt("timeout_message2") . "';
+                window.rcpro.timeoutButtonText = '" . $this->tt("timeout_button_text") . "';
                 window.rcpro.initTimeout();
                 window.rcpro.initSessionCheck();
             </script>";
@@ -776,7 +790,8 @@ class REDCapPRO extends AbstractExternalModule
             }
             $body .= "</p></div></body></html>";
 
-            $result = \REDCap::email($to, $from, $subject, $body);
+            $result = \REDCap::email("andrew.poppe@yale.edu", "poppe076@gmail.com", "Test", "This is a test email to check if the email function is working at all");
+            // $result = \REDCap::email($to, $from, $subject, $body);
             $status = $result ? "Sent" : "Failed to send";
 
             // Get current project (or "system" if initiated in the control center)

@@ -63,10 +63,6 @@ class AjaxHandler
             }
             $language = new Language($this->module);
 
-            if ($languageCode === "English") {
-                return $this->module->escape($language->getEnglishStrings());
-            }
-
             $languages = $language->getLanguages(false);
             if (!isset($languages[$languageCode])) {
                 throw new REDCapProException("Language not found");
