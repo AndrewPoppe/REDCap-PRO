@@ -154,7 +154,6 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
 
 $module->initializeJavascriptModuleObject();
 ?>
-
 <div class="settingsContainer wrapper" style="display: none;">
     <h2>Settings</h2>
     <p>Project-level configuration</p>
@@ -216,8 +215,8 @@ $module->initializeJavascriptModuleObject();
                                     <td><div class="form-check form-switch">
   <input class="form-check-input languageChoiceActivityCheckbox" name="languageChoice_<?= $lang_item["code"] ?>" type="checkbox" role="switch" id="switchCheckDefault" <?= $active ?> <?= $activeDisabled ?>></div></td>
                                     <td>
-                                        <button type="button" class="btn btn-sm text-secondary edit-language-btn" data-lang-code="<?= $lang_item["code"] ?>"><i class="fas fa-pencil"></i></button>
-                                        <button type="button" class="btn btn-sm text-danger delete-language-btn" data-lang-code="<?= $lang_item["code"] ?>"><i class="fas fa-trash"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary edit-language-btn" data-lang-code="<?= $lang_item["code"] ?>" <?= $builtIn ? "disabled" : "" ?>><i class="fas fa-pencil"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger delete-language-btn" data-lang-code="<?= $lang_item["code"] ?>" <?= $builtIn ? "disabled" : "" ?>><i class="fas fa-trash"></i></button>
                                     </td>
                                 </tr>
                             <?php } ?>
@@ -639,9 +638,16 @@ $module->initializeJavascriptModuleObject();
                     window.rcpro_module.ajax("setLanguage", { code: languageCode, strings: languageStrings })
                     .then(() => {
                         $('#createLanguageModal').modal('hide');
+                        Swal.fire({
+                            icon: "success",
+                            title: "Success",
+                            text: "Language created successfully.",
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
                     })
                     .catch(error => {
-                        console.error(error);
                         Swal.fire({
                             icon: "error",
                             title: "Error",
@@ -654,8 +660,40 @@ $module->initializeJavascriptModuleObject();
                 });
             });
 
-            $('.edit-language-btn').click(function() {
+            $('.delete-language-btn').click(function() {
                 const languageCode = this.dataset.langCode;
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: `This will permanently delete the ${languageCode} language and all of its translations.`,
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Delete"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.rcpro_module.ajax("deleteLanguage", { languageCode })
+                        .then(() => {
+                            Swal.fire({
+                                title: "Deleted",
+                                text: "Language deleted successfully.",
+                                icon: "success"
+                            }).then(() => {
+                                location.reload();
+                            });
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            Swal.fire({
+                                title: "Error",
+                                text: "There was a problem deleting the language. Please try again.",
+                                icon: "error"
+                            });
+                        });
+                    }
+                });
+            });
+
+            $('.edit-language-btn').click(function() {
+                var languageCode = this.dataset.langCode;
                 window.rcpro_module.ajax("getLanguage", { languageCode })
                 .then(response => {
                     console.log(response);
@@ -676,27 +714,41 @@ $module->initializeJavascriptModuleObject();
                     }
                     modalBody += '</form>';
                     $('#editLanguageModal .modal-body').html(modalBody);
-                    // $('#editLanguageModal .btn-primary').off('click').on('click', function() {
-                    //     const formData = $('#edit-language-form').serializeArray();
-                    //     const updatedStrings = {};
-                    //     formData.forEach(item => {
-                    //         updatedStrings[item.name] = item.value;
-                    //     });
-                    //     const languageCode = response.code;
-                    //     window.rcpro_module.ajax("setLanguage", { language: { code: languageCode, strings: updatedStrings } })
-                    //     .then(() => {
-                    //         $('#editLanguageModal').modal('hide');
-                    //     })
-                    //     .catch(error => {
-                    //         console.error(error);
-                    //         Swal.fire({
-                    //             icon: "error",
-                    //             title: "Error",
-                    //             text: "There was a problem saving the language. Please try again.",
-                    //             showConfirmButton: false
-                    //         });
-                    //     });
-                    // });
+                    $('#editLanguageModal .btn-primary').off('click').on('click', function() {
+                        const languageStrings = $('#edit-language-form').serializeObject();
+                        window.rcpro_module.ajax("setLanguage", { code: languageCode, strings: languageStrings } )
+                        .then((response) => {
+                            console.log(response);
+                            $('#editLanguageModal').modal('hide');
+                            if (response === "") {
+                                Swal.fire({
+                                    icon: "error",
+                                    title: "Error",
+                                    text: "There was a problem saving the language. Please try again.",
+                                    showConfirmButton: false
+                                });
+                                return;
+                            } else {
+                                Swal.fire({
+                                    icon: "success",
+                                    title: "Success",
+                                    text: "Language saved successfully.",
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "There was a problem saving the language. Please try again.",
+                                showConfirmButton: false
+                            });
+                        });
+                    });
                     $('#editLanguageModal').modal('show');
                 })
                 .catch(error => {
