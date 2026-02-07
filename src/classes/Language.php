@@ -107,22 +107,18 @@ class Language {
         if ( !array_key_exists($lang_code, $languages) ) {
             throw new \Exception("Language code not found or not active: " . $lang_code);
         }
-        if (isset($languages[$lang_code]['built_in']) && $languages[$lang_code]['built_in'] === true) {
-            $lang_strings = $this->getBuiltInLanguageStrings($languages[$lang_code]);
-        } else {
-            $lang_strings = $this->getLanguageStrings($lang_code);
-        }
+        $lang_strings = $this->getLanguageStrings($lang_code);
         $this->replaceLanguageStrings($lang_strings);
     }
     
-    private function getBuiltInLanguageStrings(array $language): array 
+    private function getBuiltInLanguageStrings(string $lang_code): array
     {
         $builtInLanguages = $this->getBuiltInLanguages();
-        if (!array_key_exists($language['code'], $builtInLanguages)) {
-            throw new \Exception("Built-in language code not found: " . $language['code']);
+        if (!array_key_exists($lang_code, $builtInLanguages)) {
+            throw new \Exception("Built-in language code not found: " . $lang_code);
         }
-        $file_path = $builtInLanguages[$language['code']];
-        $this->module->log("Loading built-in language file for language code " . $language['code'] . " from path: " . $file_path);
+        $file_path = $builtInLanguages[$lang_code];
+        $this->module->log("Loading built-in language file for language code " . $lang_code . " from path: " . $file_path);
         if (!file_exists($file_path)) {
             throw new \Exception("Language file does not exist at path: " . $file_path);
         }
@@ -133,8 +129,19 @@ class Language {
         return $lang_strings;
     }
 
+    private function isBuiltInLanguage(string $lang_code): bool
+    {
+        $builtInLanguages = $this->getBuiltInLanguages();
+        return array_key_exists($lang_code, $builtInLanguages);
+    }
+
     public function getLanguageStrings(string $lang_code): array
     {
+
+        if ($this->isBuiltInLanguage($lang_code)) {
+            return $this->getBuiltInLanguageStrings($lang_code);
+        }
+
         $settingName = self::LANGUAGE_PREFIX . $lang_code;
         $languageJSON = $this->module->framework->getProjectSetting($settingName, $this->project_id);
         return json_decode($languageJSON ?? '[]', true);

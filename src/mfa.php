@@ -396,6 +396,10 @@ $module->framework->tt_transferToJavascriptModuleObject();
 <script>
 
     window.rcpro = <?= $module->framework->getJavascriptModuleObjectName() ?>;
+    window.mfa_messaging1 = "<?= $module->framework->tt('mfa_messaging1') ?>";
+    window.mfa_messaging2 = "<?= $module->framework->tt('mfa_messaging2') ?>";
+    window.mfa_messaging3 = "<?= $module->framework->tt('mfa_messaging3') ?>";
+    window.mfa_messaging4 = "<?= $module->framework->tt('mfa_messaging4') ?>";
 
     window.rcpro.chooseAuthenticatorAppMFA = function () {
         $('.is-invalid').removeClass('is-invalid');
@@ -411,7 +415,7 @@ $module->framework->tt_transferToJavascriptModuleObject();
                 window.rcpro.hideEmailLoading();
                 if (!result) {
                     // Error sending email
-                    window.rcpro.showToast('error', window.rcpro.tt('mfa_messaging1'));
+                    window.rcpro.showToast('error', window.mfa_messaging1);
                     return;
                 }
                 $('#mfaChoiceContainer').hide();
@@ -433,14 +437,14 @@ $module->framework->tt_transferToJavascriptModuleObject();
                     window.rcpro.toasts.loading.hide();
                     if (!result) {
                         // Error showing MFA info
-                        window.rcpro.showToast('error', window.rcpro.tt('mfa_messaging2'));
+                        window.rcpro.showToast('error', window.mfa_messaging2);
                         return;
                     }
                     window.rcpro.showModal(result);
                 })
                 .catch(function (error) {
                     // Error showing MFA info
-                    window.rcpro.showToast('error', window.rcpro.tt('mfa_messaging2'));
+                    window.rcpro.showToast('error', window.mfa_messaging2);
                 });
         <?php } else { ?>
             window.rcpro.toasts.loading.show();
@@ -448,15 +452,15 @@ $module->framework->tt_transferToJavascriptModuleObject();
                 .then(function (result) {
                     if (!result) {
                         // Error sending Authenticator info
-                        window.rcpro.showToast('error', window.rcpro.tt('mfa_messaging3'));
+                        window.rcpro.showToast('error', window.mfa_messaging3);
                         return;
                     }
                     // Sent email with Authenticator info
-                    window.rcpro.showToast('success', window.rcpro.tt('mfa_messaging4'));
+                    window.rcpro.showToast('success', window.mfa_messaging4);
                 })
                 .catch(function (error) {
                     // Error sending Authenticator info
-                    window.rcpro.showToast('error', window.rcpro.tt('mfa_messaging3'));
+                    window.rcpro.showToast('error', window.mfa_messaging3);
                 });
         <?php } ?>
     }
