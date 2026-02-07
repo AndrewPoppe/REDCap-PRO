@@ -62,22 +62,22 @@ rcpro.logoutWarning = function () {
     return Swal.fire({
         imageUrl: rcpro.logo,
         imageWidth: '150px',
-        html: `<strong>${rcpro.module.timeout_message1}</strong><br>${rcpro.module.timeout_message2}`,
-        confirmButtonText: rcpro.module.timeout_button_text,
+        html: `<strong>${rcpro.timeout_message1.replace("{SECONDS}", rcpro.timeout_minutes * 60)}</strong><br>${rcpro.timeout_message2}`,
+        confirmButtonText: rcpro.timeout_button_text,
         confirmButtonColor: "#900000",
         allowEnterKey: false,
-        onOpen: () => {
+        didOpen: () => {
             timerInterval = setInterval(() => {
                 const content = Swal.getHtmlContainer()
                 if (content) {
                     let remaining = (rcpro.timeout_minutes * 60) - rcpro.seconds;
                     let rDate = new Date(remaining * 1000);
                     let formatted = `${rDate.getMinutes()}:${String(rDate.getSeconds()).padStart(2, 0)}`;
-                    content.innerHTML = `<strong>${rcpro.module.timeout_message1}</strong><br>${rcpro.module.timeout_message2.replace("{remaining}", formatted)}`;
+                    content.innerHTML = `<strong>${rcpro.timeout_message1.replace("{SECONDS}", formatted)}</strong><br>${rcpro.timeout_message2}`;
                 }
             }, 100)
         },
-        onClose: () => {
+        didClose: () => {
             rcpro.warningOpen = false;
             clearInterval(timerInterval)
         }

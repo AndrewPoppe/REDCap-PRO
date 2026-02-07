@@ -206,7 +206,7 @@ class REDCapPRO extends AbstractExternalModule
                 // Add inline style
                 echo "<style>
                     .swal2-timer-progress-bar {
-                        background: #900000 !important;
+                        background: " . $this::$COLORS["primary"] . " !important;
                     }
                     button.swal2-confirm:focus {
                         box-shadow: 0 0 0 3px rgb(144 0 0 / 50%) !important;
@@ -216,6 +216,11 @@ class REDCapPRO extends AbstractExternalModule
                     }
                     body > * {
                         transition: 0.1s filter linear;
+                    }
+                    .swal2-styled.swal2-confirm {
+                        background-color: " . $this::$COLORS["primary"] . " !important;
+                        border-color: " . $this::$COLORS["primary"] . " !important;
+                        color: white !important;
                     }
                 </style>";
 
@@ -238,7 +243,7 @@ class REDCapPRO extends AbstractExternalModule
                     window.rcpro.sessionCheckPage = '" . $this->getUrl("src/session_check.php", true) . "';
                     window.rcpro.timeout_minutes = " . $settings->getTimeoutMinutes() . ";
                     window.rcpro.warning_minutes = " . $settings->getTimeoutWarningMinutes() . ";
-                    window.rcpro.timeout_message1 = '" . $this->tt("timeout_message1") . "';
+                    window.rcpro.timeout_message1 = '" . $this->tt("timeout_message1", ['{SECONDS}']) . "';
                     window.rcpro.timeout_message2 = '" . $this->tt("timeout_message2") . "';
                     window.rcpro.timeout_button_text = '" . $this->tt("timeout_button_text") . "';
                     window.rcpro.initTimeout();
@@ -396,7 +401,7 @@ class REDCapPRO extends AbstractExternalModule
             // Add inline style
             echo "<style>
                 .swal2-timer-progress-bar {
-                    background: #900000 !important;
+                    background: " . $this::$COLORS["primary"] . " !important;
                 }
                 button.swal2-confirm:focus {
                     box-shadow: 0 0 0 3px rgb(144 0 0 / 50%) !important;
@@ -406,6 +411,11 @@ class REDCapPRO extends AbstractExternalModule
                 }
                 body > * {
                     transition: 0.1s filter linear;
+                }
+                .swal2-styled.swal2-confirm {
+                    background-color: " . $this::$COLORS["primary"] . " !important;
+                    border-color: " . $this::$COLORS["primary"] . " !important;
+                    color: white !important;
                 }
             </style>";
 
@@ -428,7 +438,7 @@ class REDCapPRO extends AbstractExternalModule
                 window.rcpro.sessionCheckPage = '" . $this->getUrl("src/session_check.php", true) . "';
                 window.rcpro.timeout_minutes = " . $settings->getTimeoutMinutes() . ";
                 window.rcpro.warning_minutes = " . $settings->getTimeoutWarningMinutes() . ";
-                window.rcpro.timeout_message1 = '" . $this->tt("timeout_message1") . "';
+                window.rcpro.timeout_message1 = '" . $this->tt("timeout_message1", ['{SECONDS}']) . "';
                 window.rcpro.timeout_message2 = '" . $this->tt("timeout_message2") . "';
                 window.rcpro.timeout_button_text = '" . $this->tt("timeout_button_text") . "';
                 window.rcpro.initTimeout();
