@@ -238,9 +238,9 @@ class REDCapPRO extends AbstractExternalModule
                     window.rcpro.sessionCheckPage = '" . $this->getUrl("src/session_check.php", true) . "';
                     window.rcpro.timeout_minutes = " . $settings->getTimeoutMinutes() . ";
                     window.rcpro.warning_minutes = " . $settings->getTimeoutWarningMinutes() . ";
-                    window.rcpro.timeoutMessage1 = '" . $this->tt("timeout_message1") . "';
-                    window.rcpro.timeoutMessage2 = '" . $this->tt("timeout_message2") . "';
-                    window.rcpro.timeoutButtonText = '" . $this->tt("timeout_button_text") . "';
+                    window.rcpro.timeout_message1 = '" . $this->tt("timeout_message1") . "';
+                    window.rcpro.timeout_message2 = '" . $this->tt("timeout_message2") . "';
+                    window.rcpro.timeout_button_text = '" . $this->tt("timeout_button_text") . "';
                     window.rcpro.initTimeout();
                     window.rcpro.initSessionCheck();
                 </script>";
@@ -466,9 +466,9 @@ class REDCapPRO extends AbstractExternalModule
                 window.rcpro.sessionCheckPage = '" . $this->getUrl("src/session_check.php", true) . "';
                 window.rcpro.timeout_minutes = " . $settings->getTimeoutMinutes() . ";
                 window.rcpro.warning_minutes = " . $settings->getTimeoutWarningMinutes() . ";
-                window.rcpro.timeoutMessage1 = '" . $this->tt("timeout_message1") . "';
-                window.rcpro.timeoutMessage2 = '" . $this->tt("timeout_message2") . "';
-                window.rcpro.timeoutButtonText = '" . $this->tt("timeout_button_text") . "';
+                window.rcpro.timeout_message1 = '" . $this->tt("timeout_message1") . "';
+                window.rcpro.timeout_message2 = '" . $this->tt("timeout_message2") . "';
+                window.rcpro.timeout_button_text = '" . $this->tt("timeout_button_text") . "';
                 window.rcpro.initTimeout();
                 window.rcpro.initSessionCheck();
             </script>";
