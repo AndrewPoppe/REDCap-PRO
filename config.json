@@ -203,6 +203,7 @@
     ],
     "auth-ajax-actions": [
         "deleteLanguage",
+        "downloadLanguageFile",
         "exportLogs",
         "getLanguage",
         "getLogs",
