@@ -195,7 +195,7 @@ $module->initializeJavascriptModuleObject();
                             <tr>
                                 <th scope="col"></th>
                                 <th scope="col">Active</th>
-                                <th scope="col">Actions</th>
+                                <th class="text-center" scope="col">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -208,6 +208,8 @@ $module->initializeJavascriptModuleObject();
                                 }
                                 $activeDisabled = $lang_item["code"] === $defaultLanguage ? "disabled" : "";
                                 $builtIn = $lang_item["built_in"];
+                                $editTooltip = $lang_item["built_in"] ? "Built-in languages cannot be edited. You can copy this language to create a custom version that can be edited." : "Edit language";
+                                $deleteTooltip = $lang_item["built_in"] ? "Built-in languages cannot be deleted." : "Delete language";
                                 ?>
                             
                                 <tr>
@@ -215,15 +217,45 @@ $module->initializeJavascriptModuleObject();
                                     <td><div class="form-check form-switch">
   <input class="form-check-input languageChoiceActivityCheckbox" name="languageChoice_<?= $lang_item["code"] ?>" type="checkbox" role="switch" id="switchCheckDefault" <?= $active ?> <?= $activeDisabled ?>></div></td>
                                     <td>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary edit-language-btn" data-lang-code="<?= $lang_item["code"] ?>" <?= $builtIn ? "disabled" : "" ?>><i class="fas fa-pencil"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary copy-language-btn" data-lang-code="<?= $lang_item["code"] ?>" data-lang-builtIn=<?= $builtIn ? "true" : "false" ?>><i class="fas fa-copy"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger delete-language-btn" data-lang-code="<?= $lang_item["code"] ?>" <?= $builtIn ? "disabled" : "" ?>><i class="fas fa-trash"></i></button>
+                                        <div class="btn-toolbar justify-content-center" role="toolbar" aria-label="Language actions">
+                                            
+                                            <div data-bs-toggle="tooltip" data-bs-title="<?=$editTooltip?>">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary edit-language-btn me-1" data-lang-code="<?= $lang_item["code"] ?>" <?= $builtIn ? "disabled" : "" ?>>
+                                                    <i class="fas fa-pencil"></i>
+                                                </button>
+                                            </div>
+                                            <div data-bs-toggle="tooltip" data-bs-title="Copy language">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary copy-language-btn me-1" data-lang-code="<?= $lang_item["code"] ?>" data-lang-builtIn=<?= $builtIn ? "true" : "false" ?>>
+                                                    <i class="fas fa-copy"></i>
+                                                </button>
+                                            </div>
+                                            <div class="dropdown me-1" data-bs-toggle="tooltip" data-bs-title="Download language file" >
+                                                <button type="button" class="btn btn-sm btn-outline-secondary btn-toggle" data-bs-toggle="dropdown" aria-expanded="false" >
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item download-language-btn" href="#" data-lang-code="<?= $lang_item["code"] ?>" data-format="json">.json format</a></li>
+                                                    <li><a class="dropdown-item download-language-btn" href="#" data-lang-code="<?= $lang_item["code"] ?>" data-format="ini">.ini format</a></li>
+                                                </ul>
+                                            </div>
+                                            <div data-bs-toggle="tooltip" data-bs-title="<?=$deleteTooltip?>">
+                                                <button type="button" class="btn btn-sm btn-outline-danger delete-language-btn" data-lang-code="<?= $lang_item["code"] ?>" <?= $builtIn ? "disabled" : "" ?>>
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php } ?>
                         </tbody>
                     </table>
-                    <button type="button" class="btn btn-sm btn-success" id="add-language-btn"><i class="fas fa-plus"></i> Add Language</button>
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-sm btn-success btn-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="add-language-btn">Add Language <i class="fas fa-caret-down"></i></button>
+                        <ul class="dropdown-menu" >
+                            <li><a class="dropdown-item" href="#" id="add-language-from-file-btn"><i class="fas fa-file-import"></i> From File</a></li>
+                            <li><a class="dropdown-item" href="#" id="add-language-manually-btn"><i class="fas fa-keyboard"></i> Manual Entry</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
             <br>
@@ -526,26 +558,11 @@ $module->initializeJavascriptModuleObject();
         </form>
     </div>
 </div>
-<div class="modal" id="editLanguageModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="editLanguageLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="editLanguageLabel">Edit Language</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary">Submit</button>
-            </div>
-        </div>
-    </div>
-</div>
 <div class="modal" id="createLanguageModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="createLanguageLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="createLanguageLabel">Create Language</h1>
+                <h1 class="modal-title fs-5" id="createLanguageLabel"></h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body"></div>
@@ -559,7 +576,42 @@ $module->initializeJavascriptModuleObject();
 <script>
     (function ($, window, document) {
         window.rcpro_module = <?= $module->getJavascriptModuleObjectName() ?>;
+        rcpro_module.download = function(data, filename, type) {
+            const file = new Blob([data], {type: type});
+            const a = document.createElement("a")
+            const url = URL.createObjectURL(file);
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(function() {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);  
+            }, 0); 
+        }
+        rcpro_module.parseINIString = function(data) {
+            const regex = {
+                section: /^\s*\[\s*([^\]]*)\s*\]\s*$/,
+                param: /^\s*([\w\.\-\_]+)\s*=\s*(.*?)\s*$/,
+                comment: /^\s*;.*$/
+            };
+            const value = {};
+            const lines = data.split(/\r\n|\r|\n/);
+            for (let i = 0; i < lines.length; i++) {
+                if (
+                    regex.comment.test(lines[i]) || 
+                    regex.section.test(lines[i])) {
+                    continue;
+                } else if (regex.param.test(lines[i])) {
+                    const match = lines[i].match(regex.param);
+                    value[match[1]] = match[2];
+                } 
+            }
+            return value;
+        }
         $(document).ready(function () {
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, {container: '#parent'}))
             let form = document.querySelector('#settings-form');
             form.addEventListener('change', function () {
                 $('#rcpro-submit-button').attr("disabled", null);
@@ -599,30 +651,102 @@ $module->initializeJavascriptModuleObject();
                 });
             });
 
-            $('#add-language-btn').click(function() {
-                window.rcpro_module.ajax("getLanguage", { languageCode: "English" })
-                .then(response => {
-                    console.log(response);
-                    let modalBody = '<div>';
-                    modalBody += `<div class="form-group">
-                        <label for="new-language-code" class="form-label"><h3>Language Code</h3></label>
-                        <input type="text" class="form-control" id="new-language-code" name="new-language-code" placeholder="e.g. Spanish">
-                    </div><form id="create-language-form">`;
-                    for (const [key, value] of Object.entries(response.EnglishStrings)) {
-                        modalBody += `<div class="card mb-3">
-                            <div class="card-body bg-light">
-                                <h3 class="card-title">${key}</h3>`;
-                        for (const [langKey, langValue] of Object.entries(value)) {
-                             modalBody += `
-                             <label for="${langKey}" class="form-label mt-3 text-danger">${langKey}</label>
-                             <div class="form-inline"><span><strong>Default text:</strong></span>&nbsp;<span style="user-select: all;">${langValue}</span></div>
-                             <input type="text" class="form-control mb-2" id="${langKey}" name="${langKey}" value="">`;
+            $('#add-language-from-file-btn').click(function() {
+                Swal.fire({
+                    title: "Upload Language File",
+                    html: `
+                        <div>
+                            <span>Language files can be either .json or .ini files. Here are examples of each format:</span>
+                            <br><br>
+                            <ul class="text-left">
+                                <li><strong>JSON format: </strong><a href="#" onclick="rcpro_module.downloadEnglishJson();return false;" id="download-english-json">REDCapPRO-English.json</a></span></li>
+                                <li><strong>INI format: </strong><a href="#" onclick="rcpro_module.downloadEnglishIni();return false;" id="download-english-ini">REDCapPRO-English.ini</a></span></li>
+                            </ul>
+                        </div>
+                        <input type="file" id="language-file-input" class="form-control" accept=".json,.ini">
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: "Upload",
+                    preConfirm: async () => {
+                        const fileInput = document.getElementById('language-file-input');
+                        if (fileInput.files.length === 0) {
+                            Swal.showValidationMessage("Please select a file to upload.");
+                            return;
                         }
-                        modalBody += `</div></div>`;
+                        const file = fileInput.files[0];
+                        return new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = function(event) {
+                                try {
+                                    if (/\.ini$/i.test(file.name)) {
+                                        const iniString = event.target.result;
+                                        const languageData = rcpro_module.parseINIString(iniString);
+                                        resolve(languageData);
+                                    } else if (/\.json$/i.test(file.name)) {
+                                        const jsonString = event.target.result;
+                                        const languageData = JSON.parse(jsonString);
+                                        resolve(languageData);
+                                    } else {
+                                        reject("Unsupported file type. Please upload a .json or .ini file.");
+                                        return;
+                                    }
+                                } catch (e) {
+                                    reject("Invalid file. " + e.message);
+                                }
+                            };
+                            reader.onerror = function() {
+                                reject("There was an error reading the file.");
+                            };
+                            reader.readAsText(file);
+                        });
                     }
-                    modalBody += '</form></div>';
-                    $('#createLanguageModal .modal-body').html(modalBody);
-                
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const strings = result.value;
+                        window.rcpro_module.ajax("getLanguage", { languageCode: "English" })
+                        .then(response => {
+                            const englishStrings = response.EnglishStrings;
+                            window.rcpro_module.openAddLanguageModal(strings, englishStrings, true);
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "There was a problem loading the language template. Please try again.",
+                                showConfirmButton: false
+                            });
+                        });
+                    }
+                });
+            });
+
+            window.rcpro_module.openAddLanguageModal = function(strings, EnglishStrings, createNew = true, languageCode = "") {
+            
+                let modalBody = '<div>';
+                modalBody += ``;
+                if (createNew) {
+                    modalBody += `<div class="form-group">
+                    <label for="new-language-code" class="form-label"><h3>Language Code</h3></label>
+                    <input type="text" class="form-control" id="new-language-code" name="new-language-code" placeholder="e.g. Spanish" value="${languageCode}">
+                    </div>`;
+                }
+                modalBody += `<form id="create-language-form">`;
+                for (const [key, value] of Object.entries(EnglishStrings)) {
+                    modalBody += `<div class="card mb-3">
+                        <div class="card-body bg-light">
+                            <h3 class="card-title">${key}</h3>`;
+                    for (const [langKey, langValue] of Object.entries(value)) {
+                            modalBody += `
+                            <label for="${langKey}" class="form-label mt-3 text-danger">${langKey}</label>
+                            <div class="form-inline"><span><strong>Default text:</strong></span>&nbsp;<span style="user-select: all;">${langValue}</span></div>
+                            <input type="text" class="form-control mb-2" id="${langKey}" name="${langKey}" value="${strings[langKey] || ""}">`;
+                    }
+                    modalBody += `</div></div>`;
+                }
+                modalBody += '</form></div>';
+                $('#createLanguageModal .modal-body').html(modalBody);
+            
                 $('#createLanguageModal .btn-primary').off('click').on('click', function() {
                     const languageCode = $('#new-language-code').val().trim();
                     if (languageCode === "") {
@@ -657,7 +781,24 @@ $module->initializeJavascriptModuleObject();
                         });
                     });
                 });
-                    $('#createLanguageModal').modal('show');
+                $('#createLanguageModal #createLanguageLabel').text(createNew ? "Create Language" : "Edit Language");
+                $('#createLanguageModal').modal('show');
+            };
+
+            $('#add-language-manually-btn').click(function() {
+                window.rcpro_module.ajax("getLanguage", { languageCode: "English" })
+                .then(response => {
+                    const EnglishStrings = response.EnglishStrings;
+                    window.rcpro_module.openAddLanguageModal({}, EnglishStrings, true);
+                })
+                .catch(error => {
+                    console.error(error);
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "There was a problem loading the language template. Please try again.",
+                        showConfirmButton: false
+                    });
                 });
             });
 
@@ -665,10 +806,11 @@ $module->initializeJavascriptModuleObject();
                 const languageCode = this.dataset.langCode;
                 Swal.fire({
                     title: "Are you sure?",
-                    text: `This will permanently delete the ${languageCode} language and all of its translations.`,
-                    icon: "warning",
+                    html: `This will permanently delete the <strong>${languageCode}</strong> language and all of its translations.`,
                     showCancelButton: true,
-                    confirmButtonText: "Delete"
+                    focusConfirm: false,
+                    focusCancel: true,
+                    confirmButtonText: "Delete",
                 }).then((result) => {
                     if (result.isConfirmed) {
                         window.rcpro_module.ajax("deleteLanguage", { languageCode })
@@ -676,7 +818,7 @@ $module->initializeJavascriptModuleObject();
                             Swal.fire({
                                 title: "Deleted",
                                 text: "Language deleted successfully.",
-                                icon: "success"
+                                icon: "success",
                             }).then(() => {
                                 location.reload();
                             });
@@ -700,57 +842,7 @@ $module->initializeJavascriptModuleObject();
                     console.log(response);
                     const languageStrings = response.strings;
                     const englishStrings = response.EnglishStrings;
-                    let modalBody = '<form id="edit-language-form">';
-                    for (const [key, value] of Object.entries(englishStrings)) {
-                        modalBody += `<div class="card mb-3">
-                            <div class="card-body bg-light">
-                                <h3 class="card-title">${key}</h3>`;
-                        for (const [langKey, langValue] of Object.entries(value)) {
-                             modalBody += `
-                             <label for="${langKey}" class="form-label mt-3 text-danger">${langKey}</label>
-                             <div class="form-inline"><span><strong>Default text:</strong></span>&nbsp;<span style="user-select: all;">${langValue}</span></div>
-                             <input type="text" class="form-control mb-2" id="${langKey}" name="${langKey}" value="${languageStrings[langKey] || ""}">`;
-                        }
-                        modalBody += `</div></div>`;
-                    }
-                    modalBody += '</form>';
-                    $('#editLanguageModal .modal-body').html(modalBody);
-                    $('#editLanguageModal .btn-primary').off('click').on('click', function() {
-                        const languageStrings = $('#edit-language-form').serializeObject();
-                        window.rcpro_module.ajax("setLanguage", { code: languageCode, strings: languageStrings } )
-                        .then((response) => {
-                            console.log(response);
-                            $('#editLanguageModal').modal('hide');
-                            if (response === "") {
-                                Swal.fire({
-                                    icon: "error",
-                                    title: "Error",
-                                    text: "There was a problem saving the language. Please try again.",
-                                    showConfirmButton: false
-                                });
-                                return;
-                            } else {
-                                Swal.fire({
-                                    icon: "success",
-                                    title: "Success",
-                                    text: "Language saved successfully.",
-                                    showConfirmButton: false
-                                }).then(() => {
-                                    location.reload();
-                                });
-                            }
-                        })
-                        .catch(error => {
-                            console.error(error);
-                            Swal.fire({
-                                icon: "error",
-                                title: "Error",
-                                text: "There was a problem saving the language. Please try again.",
-                                showConfirmButton: false
-                            });
-                        });
-                    });
-                    $('#editLanguageModal').modal('show');
+                    window.rcpro_module.openAddLanguageModal(languageStrings, englishStrings, false);
                 })
                 .catch(error => {
                     console.error(error);
@@ -770,70 +862,112 @@ $module->initializeJavascriptModuleObject();
                     console.log(response);
                     const languageStrings = response.strings;
                     const englishStrings = response.EnglishStrings;
-                    let modalBody = `<div class="form-group">
-                        <label for="new-language-code" class="form-label"><h3>Language Code</h3></label>
-                        <input type="text" class="form-control" id="new-language-code" name="new-language-code" value="${languageCode}-copy">
-                    </div><form id="copy-language-form">`;
-                    for (const [key, value] of Object.entries(englishStrings)) {
-                        modalBody += `<div class="card mb-3">
-                            <div class="card-body bg-light">
-                                <h3 class="card-title">${key}</h3>`;
-                        for (const [langKey, langValue] of Object.entries(value)) {
-                             modalBody += `
-                             <label for="${langKey}" class="form-label mt-3 text-danger">${langKey}</label>
-                             <div class="form-inline"><span><strong>Default text:</strong></span>&nbsp;<span style="user-select: all;">${langValue}</span></div>
-                             <input type="text" class="form-control mb-2" id="${langKey}" name="${langKey}" value="${languageStrings[langKey] || ""}">`;
-                        }
-                        modalBody += `</div></div>`;
-                    }
-                    modalBody += '</form>';
-                    $('#createLanguageModal .modal-body').html(modalBody);
-                    $('#createLanguageModal .btn-primary').off('click').on('click', function() {
-                        const newLanguageCode = $('#new-language-code').val().trim();
-                        if (newLanguageCode === "") {
-                            Swal.fire({
-                                icon: "error",
-                                title: "Error",
-                                text: "Language code cannot be empty.",
-                                showConfirmButton: false
-                            });
-                            return;
-                        }
-                        const languageStrings = $('#copy-language-form').serializeObject();
-                        window.rcpro_module.ajax("setLanguage", { code: newLanguageCode, strings: languageStrings })
-                        .then(() => {   
-                            $('#createLanguageModal').modal('hide');
-                            Swal.fire({
-                                icon: "success",
-                                title: "Success",
-                                text: "Language copied successfully.",
-                                showConfirmButton: false
-                            }).then(() => {
-                                location.reload();
-                            });
-                        })
-                        .catch(error => {
-                            console.error(error);
-                            Swal.fire({
-                                icon: "error",
-                                title: "Error",
-                                text: "There was a problem creating the language. Please try again.",
-                                showConfirmButton: false
-                            });
-                        });
-                    });
-                    $('#createLanguageModal').modal('show');
+                    const newLanguageCode = languageCode + " Copy";
+                    window.rcpro_module.openAddLanguageModal(languageStrings, englishStrings, true, newLanguageCode);
                 })
                 .catch(error => {
                     console.error(error);
                     Swal.fire({
                         icon: "error",
                         title: "Error",
-                        text: "There was a problem loading the language. Please try again.",
+                        text: "There was a problem copying the language. Please try again.",
                         showConfirmButton: false
                     });
                 });
             });
+
+            $('.download-language-btn').click(function() {
+                const languageCode = this.dataset.langCode;
+                const format = this.dataset.format;
+                if (!languageCode || !format) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "Language code or format not specified.",
+                        showConfirmButton: false
+                    });
+                    return;
+                }
+                window.rcpro_module.ajax("downloadLanguageFile", { languageCode, format })
+                .then(response => {
+                    if (response.status === "error" || response.error) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "There was a problem downloading the file. Please try again. Error: " + response.error,
+                            showConfirmButton: false
+                        })
+                        return;
+                    }
+                    const extension = format === "json" ? "json" : "ini";
+                    const type = format === "json" ? "application/json" : "application/ini";
+                    const filename = `REDCapPRO-${languageCode}.${extension}`;
+                    rcpro_module.download(response.fileContents, filename, type);
+                })
+                .catch(error => {
+                    console.error(error);
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "There was a problem downloading the language file. Please try again.",
+                        showConfirmButton: false
+                    });
+                });
+            });
+
+            rcpro_module.downloadEnglishJson = function () {
+                console.log("Downloading English JSON file");
+                rcpro_module.ajax("downloadLanguageFile", { languageCode: "English", format: "json" })
+                .then(response => {
+                    console.log(response);
+                    if (response.status === "error" || response.error) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "There was a problem downloading the file. Please try again. Error: " + response.error,
+                            showConfirmButton: false
+                        })
+                        return;
+                    }
+                    rcpro_module.download(response.fileContents, "REDCapPRO-English.json", "application/json");
+                })
+                .catch(error => {
+                    console.error(error);
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "There was a problem downloading the file. Please try again.",
+                        showConfirmButton: false
+                    });
+                });
+            };
+
+            rcpro_module.downloadEnglishIni = function () {
+                console.log("Downloading English INI file");
+                rcpro_module.ajax("downloadLanguageFile", { languageCode: "English", format: "ini" })
+                .then(response => {
+                    console.log(response);
+                    if (response.status === "error" || response.error) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "There was a problem downloading the file. Please try again. Error: " + response.error,
+                            showConfirmButton: false
+                        })
+                        return;
+                    }
+                    rcpro_module.download(response.fileContents, "REDCapPRO-English.ini", "application/ini");
+                })
+                .catch(error => {
+                    console.error(error);
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "There was a problem downloading the file. Please try again.",
+                        showConfirmButton: false
+                    });
+                });
+            };
         });
     })(window.jQuery, window, document);
 </script>
