@@ -19,21 +19,29 @@ class UI
         $response = '';
         if (count($languageList) > 1) {
             $response .= '<div style="position: absolute; top: 10px; left: calc(50% + 300px);">
-                <select class="form-select" id="languageSelect" aria-label="Language select">';
+                <div class="dropdown" data-bs-toggle="tooltip" data-bs-title="' . $this->module->framework->tt("ui_language_selection_label") . '">
+                <button type="button" class="btn text-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-solid fa-language fa-2x"></i>
+                </button>
+                <ul class="dropdown-menu" id="languageDropdownMenu">
+                ';
             foreach ($languageList as $lang_item) {
-                $isSelected = $language->getCurrentLanguage() === $lang_item['code'] ? 'selected' : '';
-                $response .= '<option value="' . $lang_item['code'] . '" ' . $isSelected . '>' . $lang_item['code'] . '</option>';
+                $response .= '<li class="dropdown-item"><a href="" class="languageSelect" value="' . $lang_item['code'] . '">' . $lang_item['code'] . '</a></li>';
             }
-                $response .= '</select>
-                </div>
+                $response .= '</ul></div></div>
                 <script>
                     document.addEventListener("DOMContentLoaded", (event) => {
-                        document.getElementById("languageSelect").addEventListener("change", function() {
-                            const selectedLang = this.value;
-                            console.log("Selected language: " + selectedLang);
+                        document.querySelectorAll(".languageSelect").forEach(item => {
+                            selectedLang = item.getAttribute("value");
                             const url = new URL(window.location.href);
                             url.searchParams.set("language", selectedLang);
-                            window.location.href = url.toString();
+                            item.href = url.toString();
+                        });
+                        const tooltipTriggerList = [].slice.call(document.querySelectorAll(`[data-bs-toggle="tooltip"]`));
+                        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                                trigger: "hover"
+                            });
                         });
                     });
                 </script>';
