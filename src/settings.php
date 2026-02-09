@@ -748,7 +748,9 @@ $module->initializeJavascriptModuleObject();
                 $('#createLanguageModal .modal-body').html(modalBody);
             
                 $('#createLanguageModal .btn-primary').off('click').on('click', function() {
-                    const languageCode = $('#new-language-code').val().trim();
+                    if (createNew) {
+                        languageCode = $('#new-language-code').val().trim();
+                    } 
                     if (languageCode === "") {
                         Swal.fire({
                             icon: "error",
@@ -842,7 +844,7 @@ $module->initializeJavascriptModuleObject();
                     console.log(response);
                     const languageStrings = response.strings;
                     const englishStrings = response.EnglishStrings;
-                    window.rcpro_module.openAddLanguageModal(languageStrings, englishStrings, false);
+                    window.rcpro_module.openAddLanguageModal(languageStrings, englishStrings, false, languageCode);
                 })
                 .catch(error => {
                     console.error(error);
