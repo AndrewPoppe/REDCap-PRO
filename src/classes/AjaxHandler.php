@@ -98,7 +98,7 @@ class AjaxHandler
             if (isset($builtInLanguages[$languageCode])) {
                 throw new REDCapProException("Cannot overwrite built-in language: " . $languageCode);
             }
-            $language->setLanguageActiveStatus($languageCode, false);
+            // $language->setLanguageActiveStatus($languageCode, false);
             $language->setLanguageStrings($languageCode, $languageStrings);
             return [ 'status' => 'ok' ];
         } catch ( \Throwable $e ) {
