@@ -99,13 +99,41 @@ class UI
                 $response .= '<li class="dropdown-item"><a href="" class="languageSelect" value="' . $lang_item['code'] . '">' . $lang_item['code'] . '</a></li>';
             }
                 $response .= '</ul></div></div>
+                <div class="modal" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                        <div class="modal-content" style="background-color: transparent; border: none;">
+                            <div class="modal-body text-center">
+                                <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color:' . $this->module::$COLORS["primary"] . ';" !important;">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <script>
+                    function showLoadingModal() {
+                        const loadingModal = new bootstrap.Modal(document.getElementById(`loadingModal`), {
+                            backdrop: `static`,
+                            keyboard: false
+                        });
+                        loadingModal.show();
+                        }
+                    function hideLoadingModal() {
+                        const loadingModalElement = document.getElementById(`loadingModal`);
+                        const loadingModalInstance = bootstrap.Modal.getInstance(loadingModalElement);
+                        if (loadingModalInstance) {
+                            loadingModalInstance.hide();
+                        }
+                    }
                     document.addEventListener("DOMContentLoaded", (event) => {
                         document.querySelectorAll(".languageSelect").forEach(item => {
                             selectedLang = item.getAttribute("value");
                             const url = new URL(window.location.href);
                             url.searchParams.set("language", selectedLang);
                             item.href = url.toString();
+                            item.addEventListener("click", (e) => {
+                                showLoadingModal();
+                            });
                         });
                         const tooltipTriggerList = [].slice.call(document.querySelectorAll(`[data-bs-toggle="tooltip"]`));
                         const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
