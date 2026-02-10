@@ -234,8 +234,8 @@ $module->initializeJavascriptModuleObject();
                                                     <i class="fas fa-download"></i>
                                                 </button>
                                                 <ul class="dropdown-menu">
-                                                    <li><a class="dropdown-item download-language-btn" href="#" data-lang-code="<?= $lang_item["code"] ?>" data-format="json">.json format</a></li>
-                                                    <li><a class="dropdown-item download-language-btn" href="#" data-lang-code="<?= $lang_item["code"] ?>" data-format="ini">.ini format</a></li>
+                                                    <li><a class="dropdown-item download-language-btn" href="#" data-lang-code="<?= $lang_item["code"] ?>" data-format="json"><i class="fa-light fa-file-brackets-curly"></i> .json format</a></li>
+                                                    <li><a class="dropdown-item download-language-btn" href="#" data-lang-code="<?= $lang_item["code"] ?>" data-format="ini"><i class="fa-light fa-file-lines"></i> .ini format</a></li>
                                                 </ul>
                                             </div>
                                             <div data-bs-toggle="tooltip" data-bs-title="<?=$deleteTooltip?>">
