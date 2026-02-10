@@ -638,9 +638,35 @@ $module->initializeJavascriptModuleObject();
         </div>
     </div>
 </div>
+<div class='modal' id='loadingModal' tabindex='-1' aria-labelledby='loadingModalLabel' aria-hidden='true' data-bs-backdrop='static' data-bs-keyboard='false'>
+    <div class='modal-dialog modal-dialog-centered modal-sm'>
+        <div class='modal-content'>
+            <div class='modal-body text-center'>
+                <div class='spinner-border' role='status' style='width: 3rem; height: 3rem; color:<?= $module::$COLORS['primary'] ?> !important;'>
+                    <span class='visually-hidden'>Loading...</span>
+                </div>
+                <h5 class="mt-3 text-body"><?= $module->framework->tt('mfa_messaging5') ?></h5>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
     (function ($, window, document) {
         window.rcpro_module = <?= $module->getJavascriptModuleObjectName() ?>;
+        function showLoadingModal() {
+            const loadingModal = new bootstrap.Modal(document.getElementById(`loadingModal`), {
+                backdrop: `static`,
+                keyboard: false
+            });
+            loadingModal.show();
+            }
+        function hideLoadingModal() {
+            const loadingModalElement = document.getElementById(`loadingModal`);
+            const loadingModalInstance = bootstrap.Modal.getInstance(loadingModalElement);
+            if (loadingModalInstance) {
+                loadingModalInstance.hide();
+            }
+        }
         rcpro_module.download = function(data, filename, type) {
             const file = new Blob([data], {type: type});
             const a = document.createElement("a")
@@ -783,14 +809,17 @@ $module->initializeJavascriptModuleObject();
                         });
                     }
                 }).then((result) => {
+                    showLoadingModal();
                     if (result.isConfirmed) {
                         const strings = result.value;
                         window.rcpro_module.ajax("getLanguage", { languageCode: "English" })
                         .then(response => {
+                            hideLoadingModal();
                             const englishStrings = response.EnglishStrings;
                             window.rcpro_module.openAddLanguageModal(strings, englishStrings, true);
                         })
                         .catch(error => {
+                            hideLoadingModal();
                             console.error(error);
                             Swal.fire({
                                 icon: "error",
@@ -843,9 +872,11 @@ $module->initializeJavascriptModuleObject();
                         return;
                     }
                     const languageStrings = $('#create-language-form').serializeObject();
-                
+
+                    showLoadingModal();
                     window.rcpro_module.ajax("setLanguage", { code: languageCode, strings: languageStrings })
                     .then(() => {
+                        hideLoadingModal();
                         $('#createLanguageModal').modal('hide');
                         Swal.fire({
                             icon: "success",
@@ -857,6 +888,7 @@ $module->initializeJavascriptModuleObject();
                         });
                     })
                     .catch(error => {
+                        hideLoadingModal();
                         Swal.fire({
                             icon: "error",
                             title: "Error",
@@ -870,12 +902,15 @@ $module->initializeJavascriptModuleObject();
             };
 
             $('#add-language-manually-btn').click(function() {
+                showLoadingModal();
                 window.rcpro_module.ajax("getLanguage", { languageCode: "English" })
                 .then(response => {
+                    hideLoadingModal();
                     const EnglishStrings = response.EnglishStrings;
                     window.rcpro_module.openAddLanguageModal({}, EnglishStrings, true);
                 })
                 .catch(error => {
+                    hideLoadingModal();
                     console.error(error);
                     Swal.fire({
                         icon: "error",
@@ -897,8 +932,10 @@ $module->initializeJavascriptModuleObject();
                     confirmButtonText: "Delete",
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        showLoadingModal();
                         window.rcpro_module.ajax("deleteLanguage", { languageCode })
                         .then(() => {
+                            hideLoadingModal();
                             Swal.fire({
                                 title: "Deleted",
                                 text: "Language deleted successfully.",
@@ -908,6 +945,7 @@ $module->initializeJavascriptModuleObject();
                             });
                         })
                         .catch(error => {
+                            hideLoadingModal();
                             console.error(error);
                             Swal.fire({
                                 title: "Error",
@@ -921,14 +959,17 @@ $module->initializeJavascriptModuleObject();
 
             $('.edit-language-btn').click(function() {
                 var languageCode = this.dataset.langCode;
+                showLoadingModal();
                 window.rcpro_module.ajax("getLanguage", { languageCode })
                 .then(response => {
+                    hideLoadingModal();
                     console.log(response);
                     const languageStrings = response.strings;
                     const englishStrings = response.EnglishStrings;
                     window.rcpro_module.openAddLanguageModal(languageStrings, englishStrings, false, languageCode);
                 })
                 .catch(error => {
+                    hideLoadingModal();
                     console.error(error);
                     Swal.fire({
                         icon: "error",
@@ -941,8 +982,10 @@ $module->initializeJavascriptModuleObject();
 
             $('.copy-language-btn').click(function() {
                 var languageCode = this.dataset.langCode;
+                showLoadingModal();
                 window.rcpro_module.ajax("getLanguage", { languageCode })
                 .then(response => {
+                    hideLoadingModal();
                     console.log(response);
                     const languageStrings = response.strings;
                     const englishStrings = response.EnglishStrings;
@@ -950,6 +993,7 @@ $module->initializeJavascriptModuleObject();
                     window.rcpro_module.openAddLanguageModal(languageStrings, englishStrings, true, newLanguageCode);
                 })
                 .catch(error => {
+                    hideLoadingModal();
                     console.error(error);
                     Swal.fire({
                         icon: "error",
@@ -972,8 +1016,10 @@ $module->initializeJavascriptModuleObject();
                     });
                     return;
                 }
+                showLoadingModal();
                 window.rcpro_module.ajax("downloadLanguageFile", { languageCode, format })
                 .then(response => {
+                    hideLoadingModal();
                     if (response.status === "error" || response.error) {
                         Swal.fire({
                             icon: "error",
@@ -990,6 +1036,7 @@ $module->initializeJavascriptModuleObject();
                 })
                 .catch(error => {
                     console.error(error);
+                    hideLoadingModal();
                     Swal.fire({
                         icon: "error",
                         title: "Error",
@@ -1001,8 +1048,10 @@ $module->initializeJavascriptModuleObject();
 
             rcpro_module.downloadEnglishJson = function () {
                 console.log("Downloading English JSON file");
+                showLoadingModal();
                 rcpro_module.ajax("downloadLanguageFile", { languageCode: "English", format: "json" })
                 .then(response => {
+                    hideLoadingModal();
                     console.log(response);
                     if (response.status === "error" || response.error) {
                         Swal.fire({
@@ -1017,6 +1066,7 @@ $module->initializeJavascriptModuleObject();
                 })
                 .catch(error => {
                     console.error(error);
+                    hideLoadingModal();
                     Swal.fire({
                         icon: "error",
                         title: "Error",
@@ -1028,8 +1078,10 @@ $module->initializeJavascriptModuleObject();
 
             rcpro_module.downloadEnglishIni = function () {
                 console.log("Downloading English INI file");
+                showLoadingModal();
                 rcpro_module.ajax("downloadLanguageFile", { languageCode: "English", format: "ini" })
                 .then(response => {
+                    hideLoadingModal();
                     console.log(response);
                     if (response.status === "error" || response.error) {
                         Swal.fire({
@@ -1043,6 +1095,7 @@ $module->initializeJavascriptModuleObject();
                     rcpro_module.download(response.fileContents, "REDCapPRO-English.ini", "application/ini");
                 })
                 .catch(error => {
+                    hideLoadingModal();
                     console.error(error);
                     Swal.fire({
                         icon: "error",
