@@ -93,7 +93,7 @@ class UI
                     <link rel="icon" type="image/png" sizes="16x16" href="' . $this->module->getUrl("images/favicon-16x16.png") . '">
                     <link rel="stylesheet" href="' . $this->module->getUrl("lib/bootstrap/css/bootstrap.min.css") . '">
                     <script src="' . $this->module->getUrl("lib/bootstrap/js/bootstrap.bundle.min.js") . '"></script>
-                    <script src="https://kit.fontawesome.com/cf0d92172e.js" crossorigin="anonymous"></script>
+                    <script src="https://kit.fontawesome.com/f60568a59c.js" crossorigin="anonymous"></script>
                     <style>
                         body {  font-family: "Atkinson Hyperlegible", sans-serif; }
                         .wrapper { width: 360px; padding: 20px; }
@@ -149,6 +149,7 @@ class UI
         <link rel='shortcut icon' href='" . $this->module->getUrl('images/favicon.ico') . "'/>
         <link rel='icon' type='image/png' sizes='32x32' href='" . $this->module->getUrl('images/favicon-32x32.png') . "'>
         <link rel='icon' type='image/png' sizes='16x16' href='" . $this->module->getUrl('images/favicon-16x16.png') . "'>
+        <script src='https://kit.fontawesome.com/f60568a59c.js' crossorigin='anonymous'></script>
         <div>
             <img src='" . $this->module->getUrl("images/RCPro_Logo.svg") . "' width='395px'>
             <br>
