@@ -6,26 +6,29 @@ class UI
 {
 
     public REDCapPRO $module;
+    private $language;
+    private $languageList;
+    private $currentLanguage;
     function __construct($module)
     {
         $this->module = $module;
+        $this->language = new Language($this->module);
+        $this->languageList = $this->language->getLanguages(true);
+        $this->currentLanguage = $this->language->getCurrentLanguage();
     }
 
     private function showLanguageOptions()
     {
-        
-        $language = new Language($this->module);
-        $languageList = $language->getLanguages(true);
         $response = '';
-        if (count($languageList) > 1) {
-            $response .= '<div style="position: absolute; top: 10px; left: calc(50% + 300px);">
+        if (count($this->languageList) > 1) {
+            $response .= '<div class="">
                 <div class="dropdown" data-bs-toggle="tooltip" data-bs-title="' . $this->module->framework->tt("ui_language_selection_label") . '">
-                <button type="button" class="btn text-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fa-solid fa-language fa-2x"></i>
+                <button type="button" class="btn btn-lg text-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-solid fa-language"></i>
                 </button>
                 <ul class="dropdown-menu" id="languageDropdownMenu">
                 ';
-            foreach ($languageList as $lang_item) {
+            foreach ($this->languageList as $lang_item) {
                 $response .= '<li class="dropdown-item"><a href="" class="languageSelect" value="' . $lang_item['code'] . '">' . $lang_item['code'] . '</a></li>';
             }
                 $response .= '</ul></div></div>
@@ -80,8 +83,12 @@ class UI
 
     public function ShowParticipantHeader(string $title)
     {
+        $dir = $this->languageList[$this->currentLanguage]['direction'] ?? 'ltr';
+        $bootstrapCSS = $dir === 'rtl' ? 
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.rtl.min.css" integrity="sha384-CfCrinSRH2IR6a4e6fy2q6ioOX7O6Mtm1L9vRvFZ1trBncWmMePhzvafv7oIcWiW" crossorigin="anonymous">' : 
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">';
         echo '<!DOCTYPE html>
-                <html lang="en">
+                <html lang="ar" dir="' . $dir . '">
                 <head>
                     <meta charset="UTF-8">
                     <title>REDCapPRO ' . $title . '</title>
@@ -91,22 +98,29 @@ class UI
                     <link rel="shortcut icon" href="' . $this->module->getUrl("images/favicon.ico") . '"/>
                     <link rel="icon" type="image/png" sizes="32x32" href="' . $this->module->getUrl("images/favicon-32x32.png") . '">
                     <link rel="icon" type="image/png" sizes="16x16" href="' . $this->module->getUrl("images/favicon-16x16.png") . '">
-                    <link rel="stylesheet" href="' . $this->module->getUrl("lib/bootstrap/css/bootstrap.min.css") . '">
-                    <script src="' . $this->module->getUrl("lib/bootstrap/js/bootstrap.bundle.min.js") . '"></script>
+                    '. $bootstrapCSS . '
+                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
                     <script src="https://kit.fontawesome.com/f60568a59c.js" crossorigin="anonymous"></script>
                     <style>
                         body {  font-family: "Atkinson Hyperlegible", sans-serif; }
-                        .wrapper { width: 360px; padding: 20px; }
+                        .wrapper { width: 360px; }
                         .form-group { margin-top: 20px; }
                         .center { display: flex; justify-content: center; align-items: center; }
-                        img#rcpro-logo { position: relative; left: -125px; }
+                        
                     </style>
                 </head>
                 <body>
-                    ' . $this->showLanguageOptions() . '
-                    <div class="center">
-                        <div class="wrapper">
-                            <img id="rcpro-logo" src="' . $this->module->getUrl("images/RCPro_Logo_Alternate.svg") . '" width="500px">
+                    <div class="center flex-column p-3">
+                        <div id="rcpro-header" class="row d-flex align-items-start justify-content-center">
+                            <div style="width: 100px;"></div>
+                            <div style="width: 500px;">
+                                <img id="rcpro-logo" src="' . $this->module->getUrl("images/RCPro_Logo_Alternate.svg") . '">
+                            </div>
+                            <div style="width: 100px;">
+                                ' . $this->showLanguageOptions() . '
+                            </div>
+                        </div>                        
+                        <div class="wrapper px-3">
                             <hr>
                             
                             <div style="text-align: center;"><h2 class="title">' . $title . '</h2></div>';

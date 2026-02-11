@@ -21,7 +21,8 @@ class Language {
                 $thisLang = [
                     'code' => $lang_code,
                     'active' => false,
-                    'built_in' => true
+                    'built_in' => true,
+                    'direction' => 'ltr'
                 ];
                 if ($setBuiltin) { 
                     $this->setLanguageActiveStatus($lang_code, false);
@@ -41,7 +42,8 @@ class Language {
                 'English' => [
                     'code' => 'English',
                     'active' => true,
-                    'built_in' => true
+                    'built_in' => true,
+                    'direction' => 'ltr'
                 ]
             ];
         }
@@ -156,13 +158,16 @@ class Language {
         $this->module->framework->setProjectSetting('languages', json_encode($languages), $this->project_id);
     }
 
-    public function setLanguageStrings(string $lang_code, array $lang_strings): void
+    public function setLanguageStrings(string $lang_code, array $lang_strings, string|null $direction): void
     {
         $languageStringsSettingName = self::LANGUAGE_PREFIX . $lang_code;
         $this->module->framework->setProjectSetting($languageStringsSettingName, json_encode($lang_strings), $this->project_id);
         $languages = $this->getLanguages(false);
         $languages[$lang_code] = $languages[$lang_code] ?? [];
         $languages[$lang_code]['code'] = $lang_code;
+        if (!empty($direction)) {
+            $languages[$lang_code]['direction'] = $direction;
+        }
         $this->module->framework->setProjectSetting('languages', json_encode($languages), $this->project_id);
     }
 
