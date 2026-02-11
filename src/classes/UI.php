@@ -83,19 +83,16 @@ class UI
 
     private function showLanguageOptions()
     {
-        
-        $language = new Language($this->module);
-        $languageList = $language->getLanguages(true);
         $response = '';
-        if (count($languageList) > 1) {
-            $response .= '<div style="position: absolute; top: 10px; left: calc(50% + 300px);">
+        if (count($this->languageList) > 1) {
+            $response .= '<div class="">
                 <div class="dropdown" data-bs-toggle="tooltip" data-bs-title="' . $this->module->framework->tt("ui_language_selection_label") . '">
-                <button type="button" class="btn text-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fa-solid fa-language fa-2x"></i>
+                <button type="button" class="btn btn-lg text-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-solid fa-language"></i>
                 </button>
                 <ul class="dropdown-menu" id="languageDropdownMenu">
                 ';
-            foreach ($languageList as $lang_item) {
+            foreach ($this->languageList as $lang_item) {
                 $response .= '<li class="dropdown-item"><a href="" class="languageSelect" value="' . $lang_item['code'] . '">' . $lang_item['code'] . '</a></li>';
             }
                 $response .= '</ul></div></div>
