@@ -93,13 +93,14 @@ class AjaxHandler
             if ( empty($languageStrings) || !is_array($languageStrings) ) {
                 throw new REDCapProException("No language strings provided or invalid format");
             }
+            $direction = $this->params['direction'] ?? 'ltr';
             $language = new Language($this->module);
             $builtInLanguages = $language->getBuiltInLanguages();
             if (isset($builtInLanguages[$languageCode])) {
                 throw new REDCapProException("Cannot overwrite built-in language: " . $languageCode);
             }
             // $language->setLanguageActiveStatus($languageCode, false);
-            $language->setLanguageStrings($languageCode, $languageStrings);
+            $language->setLanguageStrings($languageCode, $languageStrings, $direction);
             return [ 'status' => 'ok' ];
         } catch ( \Throwable $e ) {
             $this->module->logError($e->getMessage(), $e);
