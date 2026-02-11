@@ -237,8 +237,14 @@ $module->initializeJavascriptModuleObject();
                             
                                 <tr>
                                     <th scope="row"><?= $lang_item["code"] ?></th>
-                                    <td><div class="form-check form-switch">
-  <input class="form-check-input languageChoiceActivityCheckbox" name="languageChoice_<?= $lang_item["code"] ?>" type="checkbox" role="switch" id="switchCheckDefault" <?= $active ?> <?= $activeDisabled ?>></div></td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input languageChoiceActivityCheckbox" 
+                                                name="languageChoice_<?= $lang_item["code"] ?>" 
+                                                type="checkbox" role="switch" 
+                                                id="switchCheckDefault" <?= $active ?> <?= $activeDisabled ?>>
+                                        </div>
+                                    </td>
                                     <td>
                                         <div class="btn-toolbar justify-content-center" role="toolbar" aria-label="Language actions">
                                             
@@ -815,8 +821,11 @@ $module->initializeJavascriptModuleObject();
                         window.rcpro_module.ajax("getLanguage", { languageCode: "English" })
                         .then(response => {
                             hideLoadingModal();
-                            const englishStrings = response.EnglishStrings;
-                            window.rcpro_module.openAddLanguageModal(strings, englishStrings, true);
+                            window.rcpro_module.openAddLanguageModal({
+                                strings: strings, 
+                                EnglishStrings: response.EnglishStrings, 
+                                createNew: true,
+                            });
                         })
                         .catch(error => {
                             hideLoadingModal();
@@ -832,26 +841,55 @@ $module->initializeJavascriptModuleObject();
                 });
             });
 
-            window.rcpro_module.openAddLanguageModal = function(strings, EnglishStrings, createNew = true, languageCode = "") {
+
+            /**
+             * @typedef {Object} AddLanguageOptions
+             * @property {Object} strings - The language strings for the language being added/edited. This is an object where the keys are the string identifiers and the values are the translated strings. When creating a new language, this will be an empty object. When editing an existing language, this will be the current strings for that language.
+             * @property {Object} EnglishStrings - The English language strings.
+             * @property {boolean} createNew - Whether this is creating a new language or editing an existing one
+             * @property {string} languageCode - The code for the language being edited. This is only used when editing an existing language
+             * @property {'ltr' | 'rtl'} languageDirection - The text direction for the language being added/edited. This is either "ltr" for left-to-right languages or "rtl" for right-to-left languages.
+             */
+
+            /**
+             * @param {AddLanguageOptions} options 
+             */
+            window.rcpro_module.openAddLanguageModal = function(options) {
+
+                console.log(options);
             
-                let modalBody = '<div>';
-                modalBody += ``;
-                if (createNew) {
-                    modalBody += `<div class="form-group">
-                    <label for="new-language-code" class="form-label"><h3>Language Code</h3></label>
-                    <input type="text" class="form-control" id="new-language-code" name="new-language-code" placeholder="e.g. Spanish" value="${languageCode}">
-                    </div>`;
-                }
-                modalBody += `<form id="create-language-form">`;
-                for (const [key, value] of Object.entries(EnglishStrings)) {
+                let modalBody = `<div>
+                <h3>Language Settings</h3>
+                <div class="card mb-3">
+                    <div class="card-body bg-warning-subtle">
+                        <div class="mb-3">
+                            <label for="new-language-code" class="form-label"><h4>Language Code</h4></label>
+                            <input type="text" class="form-control" id="new-language-code" name="new-language-code" placeholder="e.g. Spanish" value="${options.languageCode ?? ""}" ${!options.createNew ? "disabled" : ""}>
+                        </div>                  
+                        <div class="mb-3">
+                            <label for="language-direction-select" class="form-label"><h4>Text Direction</h4></label>
+                            <select class="form-select" id="language-direction-select" name="language-direction">
+                                <option value="ltr" ${options.languageDirection !== "rtl" ? "selected" : ""}>Left-to-Right</option>
+                                <option value="rtl" ${options.languageDirection === "rtl" ? "selected" : ""}>Right-to-Left</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <h3>Translations</h3>
+                <input type="search" class="form-control mb-3" id="translation-filter" placeholder="Filter strings...">
+                <form id="create-language-form">`;
+                for (const [key, value] of Object.entries(options?.EnglishStrings || {})) {
                     modalBody += `<div class="card mb-3">
                         <div class="card-body bg-light">
-                            <h3 class="card-title">${key}</h3>`;
+                            <h4 class="card-title">${key}</h4>`;
                     for (const [langKey, langValue] of Object.entries(value)) {
                             modalBody += `
-                            <label for="${langKey}" class="form-label mt-3 text-danger">${langKey}</label>
-                            <div class="form-inline"><span><strong>Default text:</strong></span>&nbsp;<span style="user-select: all;">${langValue}</span></div>
-                            <input type="text" class="form-control mb-2" id="${langKey}" name="${langKey}" value="${strings[langKey] || ""}">`;
+                            <div class="translation-entry">
+                                <label for="${langKey}" class="form-label mt-3 text-danger">${langKey}</label>
+                                <div class="form-inline"><span><strong>Default text:</strong></span>&nbsp;<span style="user-select: all;">${langValue}</span></div>
+                                <input type="text" class="form-control mb-2" id="${langKey}" name="${langKey}" value="${options?.strings?.[langKey] || ""}">
+                            </div>`;
                     }
                     modalBody += `</div></div>`;
                 }
@@ -859,10 +897,10 @@ $module->initializeJavascriptModuleObject();
                 $('#createLanguageModal .modal-body').html(modalBody);
             
                 $('#createLanguageModal .btn-primary').off('click').on('click', function() {
-                    if (createNew) {
-                        languageCode = $('#new-language-code').val().trim();
+                    if (options.createNew) {
+                        options.languageCode = $('#new-language-code').val().trim();
                     } 
-                    if (languageCode === "") {
+                    if (options.languageCode === "") {
                         Swal.fire({
                             icon: "error",
                             title: "Error",
@@ -871,10 +909,11 @@ $module->initializeJavascriptModuleObject();
                         });
                         return;
                     }
+                    const languageDirection = $('#language-direction-select').val();
                     const languageStrings = $('#create-language-form').serializeObject();
 
                     showLoadingModal();
-                    window.rcpro_module.ajax("setLanguage", { code: languageCode, strings: languageStrings })
+                    window.rcpro_module.ajax("setLanguage", { code: options.languageCode, strings: languageStrings, direction: languageDirection })
                     .then(() => {
                         hideLoadingModal();
                         $('#createLanguageModal').modal('hide');
@@ -897,7 +936,36 @@ $module->initializeJavascriptModuleObject();
                         });
                     });
                 });
-                $('#createLanguageModal #createLanguageLabel').text(createNew ? "Create Language" : "Edit Language");
+                $('#createLanguageModal #createLanguageLabel').text(options.createNew ? "Create Language" : "Edit Language");
+                $("#translation-filter").on("keyup", function() {
+                    $('#createLanguageModal .modal-content').toggleClass('bg-danger-subtle', $(this).val().trim() !== "");
+                    const filterValue = $(this).val().toLowerCase();
+                    if (filterValue === "") {
+                        $("#create-language-form .card").show();
+                        $("#create-language-form .translation-entry").show();
+                        return;
+                    }
+                    $("#create-language-form .card").filter(function() {
+                        let anyFound = false;
+                        let showAll = false;
+                        if ($(this).find('.card-title').text().toLowerCase().indexOf(filterValue) > -1) {
+                            anyFound = true;
+                            showAll = true;
+                        }
+                        $(this).find('.translation-entry').each(function() {
+                            let entryMatches = false;
+                            if ($(this).text().toLowerCase().indexOf(filterValue) > -1) {
+                                anyFound = true;
+                                entryMatches = true;
+                            } else if ($(this).find('input').val().toLowerCase().indexOf(filterValue) > -1) {
+                                anyFound = true;
+                                entryMatches = true;
+                            }
+                            $(this).toggle(entryMatches || showAll);
+                        });
+                        $(this).toggle(anyFound);
+                    });
+                });
                 $('#createLanguageModal').modal('show');
             };
 
@@ -907,7 +975,7 @@ $module->initializeJavascriptModuleObject();
                 .then(response => {
                     hideLoadingModal();
                     const EnglishStrings = response.EnglishStrings;
-                    window.rcpro_module.openAddLanguageModal({}, EnglishStrings, true);
+                    window.rcpro_module.openAddLanguageModal({strings: {}, EnglishStrings, createNew: true});
                 })
                 .catch(error => {
                     hideLoadingModal();
@@ -966,7 +1034,14 @@ $module->initializeJavascriptModuleObject();
                     console.log(response);
                     const languageStrings = response.strings;
                     const englishStrings = response.EnglishStrings;
-                    window.rcpro_module.openAddLanguageModal(languageStrings, englishStrings, false, languageCode);
+                    const languageDirection = response.direction || "ltr";
+                    window.rcpro_module.openAddLanguageModal({
+                        strings: languageStrings, 
+                        EnglishStrings: englishStrings, 
+                        createNew: false, 
+                        languageCode,
+                        languageDirection
+                    });
                 })
                 .catch(error => {
                     hideLoadingModal();
@@ -989,8 +1064,15 @@ $module->initializeJavascriptModuleObject();
                     console.log(response);
                     const languageStrings = response.strings;
                     const englishStrings = response.EnglishStrings;
+                    const languageDirection = response.direction || "ltr";
                     const newLanguageCode = languageCode + " Copy";
-                    window.rcpro_module.openAddLanguageModal(languageStrings, englishStrings, true, newLanguageCode);
+                    window.rcpro_module.openAddLanguageModal({
+                        strings: languageStrings, 
+                        EnglishStrings: englishStrings, 
+                        createNew: true, 
+                        languageCode: newLanguageCode, 
+                        languageDirection
+                    });
                 })
                 .catch(error => {
                     hideLoadingModal();
