@@ -48,7 +48,8 @@ class REDCapPRO extends AbstractExternalModule
         "darkGrey"          => "#6c757d",
         "blue"              => "#000090",
         "green"             => "#009000",
-        "ban"               => "tomato"
+        "ban"               => "tomato",
+        "highlight"         => "#ffff66"
     ];
 
     static $logColumnsCC = [

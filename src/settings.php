@@ -14,8 +14,8 @@ require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $ui = new UI($module);
 $ui->ShowHeader("Settings");
 echo "<title>" . $module->APPTITLE . " - Settings</title>
-<link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>";
-
+<link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>;
+<script src='" . $module->getUrl('lib/jQuery/jquery.highlight.js') . "'></script>";
 // Check for errors
 if ( isset($_GET["error"]) ) {
     ?>
@@ -779,7 +779,7 @@ $module->initializeJavascriptModuleObject();
                 let modalBody = `<div>
                 <h3>Language Settings</h3>
                 <div class="card mb-3">
-                    <div class="card-body bg-warning-subtle">
+                    <div class="card-body bg-light">
                         <div class="mb-3">
                             <label for="new-language-code" class="form-label"><h4>Language Code</h4></label>
                             <input type="text" class="form-control" id="new-language-code" name="new-language-code" placeholder="e.g. Spanish" value="${options.languageCode ?? ""}" ${!options.createNew ? "disabled" : ""}>
@@ -794,8 +794,9 @@ $module->initializeJavascriptModuleObject();
                     </div>
                 </div>
                 <hr>
+                <div id="translation-section">
                 <h3>Translations</h3>
-                <input type="search" class="form-control mb-3" id="translation-filter" placeholder="Filter strings...">
+                <input type="search" incremental="true" class="form-control mb-3" id="translation-filter" placeholder="Filter strings...">
                 <form id="create-language-form">`;
                 for (const [key, value] of Object.entries(options?.EnglishStrings || {})) {
                     modalBody += `<div class="card mb-3">
@@ -811,7 +812,7 @@ $module->initializeJavascriptModuleObject();
                     }
                     modalBody += `</div></div>`;
                 }
-                modalBody += '</form></div>';
+                modalBody += '</form></div></div>';
                 $('#createLanguageModal .modal-body').html(modalBody);
             
                 $('#createLanguageModal .btn-primary').off('click').on('click', function() {
@@ -855,9 +856,10 @@ $module->initializeJavascriptModuleObject();
                     });
                 });
                 $('#createLanguageModal #createLanguageLabel').text(options.createNew ? "Create Language" : "Edit Language");
-                $("#translation-filter").on("keyup", function() {
-                    $('#createLanguageModal .modal-content').toggleClass('bg-danger-subtle', $(this).val().trim() !== "");
-                    const filterValue = $(this).val().toLowerCase();
+                $("#translation-filter").on("input", function() {
+                    $("#create-language-form").unhighlight();
+                    $('#create-language-form .card').toggleClass('glowing-border', $(this).val().trim() !== "");
+                    const filterValue = $(this).val().trim().toLowerCase();
                     if (filterValue === "") {
                         $("#create-language-form .card").show();
                         $("#create-language-form .translation-entry").show();
@@ -883,6 +885,9 @@ $module->initializeJavascriptModuleObject();
                         });
                         $(this).toggle(anyFound);
                     });
+                    if (filterValue !== "") {
+                        $("#create-language-form").highlight(filterValue);
+                    }
                 });
                 $('#createLanguageModal').modal('show');
             };
@@ -1108,6 +1113,13 @@ $module->initializeJavascriptModuleObject();
         });
     })(window.jQuery, window, document);
 </script>
-
+<style>
+    .highlight {
+        background-color: <?= $module::$COLORS['highlight'] ?> !important;
+    }
+    .glowing-border {
+        box-shadow: 0 0 10px var(--bs-danger);
+    }
+</style>
 <?php
 include_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
