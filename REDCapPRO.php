@@ -298,9 +298,13 @@ class REDCapPRO extends AbstractExternalModule
             $projectHelper    = new ProjectHelper($this);
             $rcpro_project_id = $projectHelper->getProjectIdFromPID($project_id);
 
+            // Is auto-register and auto-enroll set?
+            $autoEnrollAllowed = $settings->shouldAllowSelfRegistration($project_id) && $settings->shouldEnrollUponRegistration($project_id);
+
             // Determine whether participant is enrolled in the study.
             $rcpro_participant_id = $auth->get_participant_id();
-            if ( !$participantHelper->enrolledInProject($rcpro_participant_id, $rcpro_project_id) ) {
+            $participantIsEnrolled = $participantHelper->enrolledInProject($rcpro_participant_id, $rcpro_project_id);
+            if ( !$participantIsEnrolled && !$autoEnrollAllowed ) {
                 $this->logEvent("Participant not enrolled", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_project_id"     => $rcpro_project_id,
@@ -323,6 +327,40 @@ class REDCapPRO extends AbstractExternalModule
                 $this->exitAfterHook();
                 return;
             }
+
+            // Enroll participant if auto-enroll is set and participant is not already enrolled
+            if ( !$participantIsEnrolled ) {
+                try {
+                    $participantUsername = $participantHelper->getUserName($rcpro_participant_id);
+                    $projectHelper->enrollParticipant($rcpro_participant_id, $project_id, $group_id, $participantUsername);
+                } catch (\Throwable $e) {
+                    $this->logEvent("Auto-enrollment failed", [
+                        "rcpro_participant_id" => $rcpro_participant_id,
+                        "rcpro_project_id"     => $rcpro_project_id,
+                        "instrument"           => $instrument,
+                        "event"                => $event_id,
+                        "group_id"             => $group_id,
+                        "survey_hash"          => $survey_hash,
+                        "response_id"          => $response_id,
+                        "repeat_instance"      => $repeat_instance,
+                        "error_code"           => $e->getCode(),
+                        "error_message"        => $e->getMessage()
+                    ]);
+                    $ui->ShowParticipantHeader($this->tt("enrollment_failed_title"));
+                    echo "<p style='text-align:center;'>" . $this->tt("enrollment_failed_message1") . "<br>";
+                    $study_contact = $this->getContactPerson($this->tt("wrong_dag_subject"));
+                    echo $this->tt("not_enrolled_message2");
+                    if ( isset($study_contact["info"]) ) {
+                        echo "<br>" . $study_contact["info"];
+                    }
+                    echo "</p>";
+                    $ui->EndParticipantPage();
+                    $this->exitAfterHook();
+                    return;
+                }
+             }
+
+
 
             // Determine whether participant is in the appropriate DAG
             if ( isset($group_id) ) {
