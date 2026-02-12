@@ -299,6 +299,10 @@ class AjaxHandler
             $project_rcpro_manage       = $this->module->getUrl("src/manage.php?pid={$id}");
             $project_rcpro_manage_users = $this->module->getUrl("src/manage-users.php?pid={$id}");
             $project_records            = APP_PATH_WEBROOT_FULL . APP_PATH_WEBROOT . "DataEntry/record_status_dashboard.php?pid={$id}";
+            $allStaff                     = $thisProject->staff["allStaff"] ?? [];
+            $allStaffClean = array_filter($allStaff, function($user) {
+                return $user !== "";
+            });
 
             $results[] = [
                 "project_id"                 => $id,
@@ -310,7 +314,7 @@ class AjaxHandler
                 "title"                      => $thisProject->info["app_title"] ?? "",
                 "status"                     => $thisProject->getStatus(),
                 "participant_count"          => $thisProject->getParticipantCount($rcpro_project_id),
-                "staff_count"                => count($thisProject->staff["allStaff"]),
+                "staff_count"                => count($allStaffClean),
                 "record_count"               => $thisProject->getRecordCount()
             ];
         }
