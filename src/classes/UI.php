@@ -171,42 +171,42 @@ class UI
                 <li class='nav-item'>
                     <a class='nav-link " . ($page === "Home" ? "active" : "") . "' aria-current='page' href='" . $this->module->getUrl("src/home.php") . "'>
                     <i class='fas fa-home'></i>
-                    Home</a>
+                    " . $this->module->tt("project_home_title") . "</a>
                 </li>";
         if ( $role >= 1 ) {
             $header .= "<li class='nav-item'>
                             <a class='nav-link " . ($page === "Manage" ? "active" : "") . "' href='" . $this->module->getUrl("src/manage.php") . "'>
                             <i class='fas fa-users-cog'></i>
-                            Manage Participants</a>
+                            " . $this->module->tt("project_manage_participants_title") . "</a>
                         </li>";
         }
         if ( $role >= 2 ) {
             $header .= "<li class='nav-item'>
                             <a class='nav-link " . ($page === "Enroll" ? "active" : "") . "' href='" . $this->module->getUrl("src/enroll.php") . "'>
                             <i class='fas fa-user-check'></i>
-                            Enroll</a>
+                            " . $this->module->tt("project_enroll_title") . "</a>
                         </li>
                         <li class='nav-item'>
                             <a class='nav-link " . ($page === "Register" ? "active" : "") . "' href='" . $this->module->getUrl("src/register.php") . "'>
                             <i class='fas fa-id-card'></i>
-                            Register</a>
+                            " . $this->module->tt("project_register_title") . "</a>
                         </li>";
         }
         if ( $role > 2 ) {
             $header .= "<li class='nav-item'>
                             <a class='nav-link " . ($page === "Users" ? "active" : "") . "' href='" . $this->module->getUrl("src/manage-users.php") . "'>
                             <i class='fas fa-users'></i>
-                            Study Staff</a>
+                            " . $this->module->tt("project_study_staff_title") . "</a>
                         </li>
                         <li class='nav-item'>
                             <a class='nav-link " . ($page === "Settings" ? "active" : "") . "' href='" . $this->module->getUrl("src/settings.php") . "'>
                             <i class='fas fa-cog'></i>
-                            Settings</a>
+                            " . $this->module->tt("project_settings_title") . "</a>
                         </li>
                         <li class='nav-item'>
                             <a class='nav-link " . ($page === "Logs" ? "active" : "") . "' href='" . $this->module->getUrl("src/logs.php") . "'>
                             <i class='fas fa-list'></i>
-                            Logs</a>
+                            " . $this->module->tt("project_logs_title") . "</a>
                         </li>";
         }
         $header .= "</ul></nav>
