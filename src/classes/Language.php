@@ -3,7 +3,7 @@ namespace YaleREDCap\REDCapPRO;
 
 class Language {
     const LANGUAGE_PREFIX = 'language_strings_';
-    public int $project_id;
+    public ?int $project_id;
     public function __construct(
         private REDCapPRO $module
     ) {
@@ -12,6 +12,9 @@ class Language {
 
     public function getLanguages(bool $activeOnly, bool $setBuiltin = false): array
     {
+        if (empty($this->project_id)) {
+            return [];
+        }
         $languagesJSON = $this->module->framework->getProjectSetting('languages', $this->project_id) ?? '[]';
         $languages = json_decode($languagesJSON, true);
         
@@ -83,13 +86,16 @@ class Language {
             }
             return $lang_strings;
         } catch ( \Exception $e ) {
-            $this->module->log("Error loading English language strings: " . $e->getMessage());
+            $this->module->framework->log("Error loading English language strings: " . $e->getMessage());
             return [];
         }
     }
 
     public function getCurrentLanguage(): ?string
     {
+        if (empty($this->project_id)) {
+            return null;
+        }
         $newLanguage = urldecode($_GET['language'] ?? '');
         if ($newLanguage !== '' && array_key_exists($newLanguage, $this->getLanguages(true, true))) {
             return $newLanguage;
@@ -120,7 +126,7 @@ class Language {
             throw new \Exception("Built-in language code not found: " . $lang_code);
         }
         $file_path = $builtInLanguages[$lang_code];
-        $this->module->log("Loading built-in language file for language code " . $lang_code . " from path: " . $file_path);
+        $this->module->framework->log("Loading built-in language file for language code " . $lang_code . " from path: " . $file_path);
         if (!file_exists($file_path)) {
             throw new \Exception("Language file does not exist at path: " . $file_path);
         }
@@ -139,7 +145,9 @@ class Language {
 
     public function getLanguageStrings(string $lang_code): array
     {
-
+        if (empty($this->project_id)) {
+            return [];
+        }
         if ($this->isBuiltInLanguage($lang_code)) {
             return $this->getBuiltInLanguageStrings($lang_code);
         }
@@ -151,6 +159,9 @@ class Language {
 
     public function setLanguageActiveStatus(string $lang_code, bool $active): void
     {
+        if (empty($this->project_id)) {
+            return;
+        }
         $languages = $this->getLanguages(false);
         $languages[$lang_code] = $languages[$lang_code] ?? [];
         $languages[$lang_code]['code'] = $lang_code;
@@ -160,6 +171,9 @@ class Language {
 
     public function setLanguageStrings(string $lang_code, array $lang_strings, string|null $direction): void
     {
+        if (empty($this->project_id)) {
+            return;
+        }
         $languageStringsSettingName = self::LANGUAGE_PREFIX . $lang_code;
         $this->module->framework->setProjectSetting($languageStringsSettingName, json_encode($lang_strings), $this->project_id);
         $languages = $this->getLanguages(false);
@@ -185,6 +199,9 @@ class Language {
 
     public function handleLanguageChangeRequest() : void
     {
+        if (empty($this->project_id)) {
+            return;
+        }
         $defaultLanguage = $this->module->framework->getProjectSetting('reserved-language-project', $this->project_id) ?? 'English';
         $currentLanguage   = $this->getCurrentLanguage();
         $requestedLanguage = urldecode($_GET['language']) ?? null;
@@ -195,7 +212,7 @@ class Language {
         try {
             $this->selectLanguage($currentLanguage ?? $defaultLanguage);
         } catch (\Exception $e) {
-            $this->module->log("Error selecting language: " . $e->getMessage());
+            $this->module->framework->log("Error selecting language: " . $e->getMessage());
             $this->selectLanguage($defaultLanguage);
         }
     }
