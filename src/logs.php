@@ -16,7 +16,7 @@ $module->initializeJavascriptModuleObject();
 ?>
 
 <title>
-    <?= $module->APPTITLE ?> - Enroll
+    <?= $module->APPTITLE ?>
 </title>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <link href="https://cdn.datatables.net/v/dt/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.css" rel="stylesheet">
@@ -25,14 +25,14 @@ $module->initializeJavascriptModuleObject();
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
 
 <div class="manageContainer wrapper log-wrapper" style="display: none;">
-    <h2>Project Logs</h2>
-    <p>This shows logs initiated from this project only.</p>
+    <h2><?= $module->tt("project_logs_page_title") ?></h2>
+    <p><?= $module->tt("project_logs_page_subtitle") ?></p>
     <div id="loading-container" class="loader-container">
         <div id="loading" class="loader"></div>
     </div>
     <div id="logs" class="dataTableParentHidden rcpro-form">
         <table class="rcpro-datatable compact hover" id="RCPRO_TABLE" style="width:100%;">
-            <caption>REDCapPRO Study Logs</caption>
+            <caption><?= $module->tt("project_logs_caption") ?></caption>
             <thead>
                 <tr>
                     <?php
@@ -122,7 +122,7 @@ $module->initializeJavascriptModuleObject();
                 buttons: [
                     'colvis',
                 {
-                    text: 'Restore Default',
+                    text: '<?= $module->tt("project_logs_restore_default") ?>',
                     action: function (e, dt, node, config) {
                         dt.state.clear();
                         window.location.reload();

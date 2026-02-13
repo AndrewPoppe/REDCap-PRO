@@ -17,15 +17,17 @@ class Language {
         }
         $languagesJSON = $this->module->framework->getProjectSetting('languages', $this->project_id) ?? '[]';
         $languages = json_decode($languagesJSON, true);
-        
         $builtInLanguages = $this->getBuiltInLanguages();
+        $builtInLanguageCodes = array_keys($builtInLanguages);
+        $languages = array_filter($languages, function ($lang) use ($builtInLanguageCodes) {
+            return $lang['built_in'] !== true || in_array($lang['code'], $builtInLanguageCodes, true);
+        });
         foreach ($builtInLanguages as $lang_code => $file_path) {
             if (!isset($languages[$lang_code])) {
                 $thisLang = [
                     'code' => $lang_code,
                     'active' => false,
-                    'built_in' => true,
-                    'direction' => 'ltr'
+                    'built_in' => true
                 ];
                 if ($setBuiltin) { 
                     $this->setLanguageActiveStatus($lang_code, false);
@@ -53,7 +55,20 @@ class Language {
         return $languages; 
     }
 
-    public function getBuiltInLanguages(): array
+    public function getActiveCustomSystemLanguages(): array
+    {
+
+        $systemLanguages = $this->module->framework->getSubSettings('add-language', null) ?? [];
+        $activeCustomSystemLanguages = [];
+        foreach ($systemLanguages as $lang) {
+            if (!empty($lang['language-active'])) {
+                $activeCustomSystemLanguages[$lang['language-code']] = $lang['language-file'];
+            }
+        }
+        return $activeCustomSystemLanguages;
+    }
+
+    public function getBuiltInLanguages(bool $includeCustomSystemLanguages = true): array
     {
         $langs = array();
         $path  = $this->module->framework->getModulePath() . DS . "lang" . DS;
@@ -66,13 +81,17 @@ class Language {
                 }
             }
         }
+        if ($includeCustomSystemLanguages) {
+            $customSystemLanguages = $this->getActiveCustomSystemLanguages();
+            $langs = array_merge($langs, $customSystemLanguages);
+        }
         return $langs;
     }
 
     public function getEnglishStrings(): array
     {
         try {
-            $builtInLanguages = $this->getBuiltInLanguages();
+            $builtInLanguages = $this->getBuiltInLanguages(false);
             if (!array_key_exists('English', $builtInLanguages)) {
                 throw new \Exception("English language file not found in built-in languages.");
             }
@@ -113,28 +132,52 @@ class Language {
     {
         $languages = $this->getLanguages(true);
         if ( !array_key_exists($lang_code, $languages) ) {
-            throw new \Exception("Language code not found or not active: " . $lang_code);
+            $lang_code = $this->getDefaultSystemLanguage();
+            // throw new \Exception("Language code not found or not active: " . $lang_code);
         }
         $lang_strings = $this->getLanguageStrings($lang_code);
         $this->replaceLanguageStrings($lang_strings);
     }
+
+    private function parseIniFileFromEdocId($edocId, $processSections = false)
+    {
+        try {
+            [$mimeType, $filename, $fileContent] = \REDCap::getFile($edocId);
+            $result = parse_ini_string($fileContent, $processSections);
+            return $result;
+        } catch ( \Throwable $e ) {
+            $this->logError("Error parsing INI file from edoc ID", $e);
+            return false;
+        }
+    }
     
     private function getBuiltInLanguageStrings(string $lang_code): array
     {
-        $builtInLanguages = $this->getBuiltInLanguages();
-        if (!array_key_exists($lang_code, $builtInLanguages)) {
-            throw new \Exception("Built-in language code not found: " . $lang_code);
+        $builtInLanguages = $this->getBuiltInLanguages(false);
+        $isBuiltIn = array_key_exists($lang_code, $builtInLanguages);
+        if ($isBuiltIn) {
+            $file_path = $builtInLanguages[$lang_code];
+            $this->module->framework->log("Loading built-in language file for language code " . $lang_code . " from path: " . $file_path);
+            if (!file_exists($file_path)) {
+                throw new \Exception("Language file does not exist at path: " . $file_path);
+            }
+            $lang_strings = parse_ini_file($file_path);
+            if (!is_array($lang_strings)) {
+                throw new \Exception("Language file did not return an array of strings: " . $file_path);
+            }
+            return $lang_strings;
         }
-        $file_path = $builtInLanguages[$lang_code];
-        $this->module->framework->log("Loading built-in language file for language code " . $lang_code . " from path: " . $file_path);
-        if (!file_exists($file_path)) {
-            throw new \Exception("Language file does not exist at path: " . $file_path);
+        $customLanguages = $this->getActiveCustomSystemLanguages();
+        if (array_key_exists($lang_code, $customLanguages)) {
+            $file_path = $customLanguages[$lang_code];
+            $this->module->framework->log("Loading custom system language file for language code " . $this->module->escape($lang_code) );
+            $lang_strings = $this->parseIniFileFromEdocId($file_path);
+            if (empty($lang_strings)) {
+                throw new \Exception("Custom system language file did not return an array of strings");
+            }
+            return $lang_strings;
         }
-        $lang_strings = parse_ini_file($file_path);
-        if (!is_array($lang_strings)) {
-            throw new \Exception("Language file did not return an array of strings: " . $file_path);
-        }
-        return $lang_strings;
+        return [];
     }
 
     private function isBuiltInLanguage(string $lang_code): bool
@@ -197,6 +240,16 @@ class Language {
         }
     }
 
+    public function getDefaultSystemLanguage() : string
+    {
+        $defaultSetting = $this->module->framework->getSystemSetting('reserved-language-system') ?? 'English';
+        $builtInLanguages = $this->getBuiltInLanguages();
+        if (array_key_exists($defaultSetting, $builtInLanguages)) {
+            return $defaultSetting;
+        }
+        return 'English';
+    }
+
     public function handleLanguageChangeRequest() : void
     {
         if (empty($this->project_id)) {
@@ -213,7 +266,8 @@ class Language {
             $this->selectLanguage($currentLanguage ?? $defaultLanguage);
         } catch (\Exception $e) {
             $this->module->framework->log("Error selecting language: " . $e->getMessage());
-            $this->selectLanguage($defaultLanguage);
+            $defaultSystemLanguage = $this->getDefaultSystemLanguage();
+            $this->selectLanguage($defaultSystemLanguage);
         }
     }
 

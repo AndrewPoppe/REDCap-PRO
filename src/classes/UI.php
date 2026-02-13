@@ -166,7 +166,7 @@ class UI
             }
         }
         echo '<!DOCTYPE html>
-                <html lang="ar" dir="' . $dir . '">
+                <html lang="en" dir="' . $dir . '">
                 <head>
                     <meta charset="UTF-8">
                     <title>REDCapPRO ' . $title . '</title>

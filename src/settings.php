@@ -14,7 +14,7 @@ require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $ui = new UI($module);
 $ui->ShowHeader("Settings");
 echo "<title>" . $module->APPTITLE . " - Settings</title>
-<link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>;
+<link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>
 <script src='" . $module->getUrl('lib/jQuery/jquery.highlight.js') . "'></script>";
 // Check for errors
 if ( isset($_GET["error"]) ) {
@@ -623,7 +623,7 @@ $module->tt_transferToJavascriptModuleObject();
 </div>
 <div class="modal" id="createLanguageModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="createLanguageLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
+        <div class="modal-content h-100">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="createLanguageLabel"></h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -850,46 +850,77 @@ $module->tt_transferToJavascriptModuleObject();
             window.rcpro_module.openAddLanguageModal = function(options) {
 
                 console.log(options);
+                const allStringSections = Object.keys(options.EnglishStrings);
+                const majorSections = Set.from(allStringSections.map(key => key.split(' - ')[0]).filter(section => section !== "Control Center Pages"));
+                const sections = {};
+                majorSections.forEach(major => {
+                    sections[major] = allStringSections.filter(key => key.split(' - ')[0] === major);
+                });
+                window.things = {
+                    allStringSections,
+                    majorSections,
+                    sections
+                }
             
                 let modalBody = `<div>
-                <h3><?= $module->tt("project_settings_language_settings_title") ?></h3>
-                <div class="card mb-3">
-                    <div class="card-body bg-light">
-                        <div class="mb-3">
-                            <label for="new-language-code" class="form-label"><h4><?= $module->tt("project_settings_language_code") ?></h4></label>
-                            <input type="text" class="form-control" id="new-language-code" name="new-language-code" placeholder="<?= $module->tt("project_settings_language_code_placeholder") ?>" value="${options.languageCode ?? ""}" ${!options.createNew ? "disabled" : ""}>
-                        </div>                  
-                        <div class="mb-3">
-                            <label for="language-direction-select" class="form-label"><h4><?= $module->tt("project_settings_language_direction") ?></h4></label>
-                            <select class="form-select" id="language-direction-select" name="language-direction">
-                                <option value="ltr" ${options.languageDirection !== "rtl" ? "selected" : ""}><?= $module->tt("project_settings_language_direction_ltr") ?></option>
-                                <option value="rtl" ${options.languageDirection === "rtl" ? "selected" : ""}><?= $module->tt("project_settings_language_direction_rtl") ?></option>
-                            </select>
+                <ul class="nav nav-tabs" id="languageTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-body active" id="language-settings-tab" data-bs-toggle="tab" data-bs-target="#language-settings-tab-pane" type="button" role="tab" aria-controls="language-settings-tab-pane" aria-selected="true"><i class="fa-solid fa-gears"></i> <?= $module->tt("project_settings_title") ?></button>
+                    </li>`;
+                    majorSections.forEach(major => {
+                        const majorLabel = major.replaceAll(' ', '-');
+                        modalBody += `<li class="nav-item" role="presentation">
+                            <button class="nav-link text-primary" id="${majorLabel}-tab" data-bs-toggle="tab" data-bs-target="#${majorLabel}-tab-pane" type="button" role="tab" aria-controls="${majorLabel}-tab-pane" aria-selected="false"><i class="fa-solid fa-language"></i> ${major}</button>
+                        </li>`;
+                    });
+                modalBody += `</ul>
+                <form id="create-language-form">
+                <div class="tab-content" id="languageTabContent">
+                    <div class="tab-pane show active" id="language-settings-tab-pane" role="tabpanel" aria-labelledby="language-settings-tab" tabindex="0">
+                        <div class="container mt-4">
+                            <h3><?= $module->tt("project_settings_language_settings_title") ?></h3>
+                            <div class="mt-3">
+                                <div class="mb-3">
+                                    <label for="new-language-code" class="form-label"><h4><?= $module->tt("project_settings_language_code") ?></h4></label>
+                                    <input type="text" class="form-control" id="new-language-code" placeholder="<?= $module->tt("project_settings_language_code_placeholder") ?>" value="${options.languageCode ?? ""}" ${!options.createNew ? "disabled" : ""}>
+                                </div>                  
+                                <div class="mb-3">
+                                    <label for="language-direction-select" class="form-label"><h4><?= $module->tt("project_settings_language_direction") ?></h4></label>
+                                    <select class="form-select" id="language-direction-select">
+                                        <option value="ltr" ${options.languageDirection !== "rtl" ? "selected" : ""}><?= $module->tt("project_settings_language_direction_ltr") ?></option>
+                                        <option value="rtl" ${options.languageDirection === "rtl" ? "selected" : ""}><?= $module->tt("project_settings_language_direction_rtl") ?></option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <hr>
-                <div id="translation-section">
-                <h3><?= $module->tt("project_settings_language_translations") ?></h3>
-                <input type="search" incremental="true" class="form-control mb-3" id="translation-filter" placeholder="<?= $module->tt("project_settings_language_search_placeholder") ?>">
-                <form id="create-language-form">`;
-                for (const [key, value] of Object.entries(options?.EnglishStrings || {})) {
-                    modalBody += `<div class="card mb-3">
+                    </div>`;
+                majorSections.forEach(major => {
+                    const majorLabel = major.replaceAll(' ', '-');
+                    modalBody += `<div class="tab-pane" id="${majorLabel}-tab-pane" role="tabpanel" aria-labelledby="${majorLabel}-tab" tabindex="0">
+                    <div class="container mt-4">
+                    <h3><?= $module->tt("project_settings_language_translations") ?> - ${major}</h3>
+                    <input type="search" incremental="true" class="form-control mb-3 translation-filter" placeholder="<?= $module->tt("project_settings_language_search_placeholder") ?>">
+                    <div class="translation-section">
+                    `;
+                    sections[major].forEach(minorSection => {
+                        modalBody += `<div class="card mb-3">
                         <div class="card-header">
-                            <h4 class="card-title">${key}</h4>
+                            <h4 class="card-title">${minorSection.replace(/^.*?- /, '')}</h4>
                         </div>
                         <div class="card-body">`;
-                    for (const [langKey, langValue] of Object.entries(value)) {
+                        for (const [langKey, langValue] of Object.entries(options.EnglishStrings[minorSection] || {})) {
                             modalBody += `
                             <div class="translation-entry">
                                 <label for="${langKey}" class="form-label mt-3 text-danger">${langKey}</label>
                                 <div class="form-inline"><span><strong><?= $module->tt("project_settings_language_default_text") ?></strong></span>&nbsp;<span style="user-select: all;">${langValue}</span></div>
                                 <input type="text" class="form-control mb-2" id="${langKey}" name="${langKey}" value="${options?.strings?.[langKey] || ""}">
                             </div>`;
-                    }
-                    modalBody += `</div></div>`;
-                }
-                modalBody += '</form></div></div>';
+                        }
+                        modalBody += `</div></div>`;
+                    });
+                    modalBody += '</div></div></div></form>';
+                });
+
                 $('#createLanguageModal .modal-body').html(modalBody);
             
                 $('#createLanguageModal .btn-primary').off('click').on('click', function() {
@@ -932,17 +963,18 @@ $module->tt_transferToJavascriptModuleObject();
                         });
                     });
                 });
-                $('#createLanguageModal #createLanguageLabel').text(options.createNew ? "<?= $module->tt("project_settings_language_create_language") ?>" : "<?= $module->tt("project_settings_language_edit_language") ?>");
-                $("#translation-filter").on("input", function() {
-                    $("#create-language-form").unhighlight();
-                    $('#create-language-form .card').toggleClass('glowing-border', $(this).val().trim() !== "");
+                $('#createLanguageModal #createLanguageLabel').text(options.createNew ? "<?= $module->tt("project_settings_create_language") ?>" : "<?= $module->tt("project_settings_edit_language") ?>");
+                $(".translation-filter").on("input", function() {
+                    const translationSection = $(this).siblings('.translation-section').first();
+                    translationSection.unhighlight();
+                    translationSection.find('.card').toggleClass('glowing-border', $(this).val().trim() !== "");
                     const filterValue = $(this).val().trim().toLowerCase();
                     if (filterValue === "") {
-                        $("#create-language-form .card").show();
-                        $("#create-language-form .translation-entry").show();
+                        translationSection.find('.card').show();
+                        translationSection.find('.translation-entry').show();
                         return;
                     }
-                    $("#create-language-form .card").filter(function() {
+                    translationSection.find('.card').filter(function() {
                         let anyFound = false;
                         let showAll = false;
                         if ($(this).find('.card-title').text().toLowerCase().indexOf(filterValue) > -1) {
@@ -963,7 +995,7 @@ $module->tt_transferToJavascriptModuleObject();
                         $(this).toggle(anyFound);
                     });
                     if (filterValue !== "") {
-                        $("#create-language-form").highlight(filterValue);
+                        translationSection.highlight(filterValue);
                     }
                 });
                 $('#createLanguageModal').modal('show');
