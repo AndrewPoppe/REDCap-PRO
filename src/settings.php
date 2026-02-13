@@ -22,8 +22,8 @@ if ( isset($_GET["error"]) ) {
     <script>
         Swal.fire({
             icon: "error",
-            title: "Error",
-            text: "There was a problem. Please try again.",
+            title: "<?= $module->tt("project_error") ?>",
+            text: "<?= $module->tt("project_error_general") ?>",
             showConfirmButton: false
         });
     </script>
@@ -59,7 +59,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         // Validate Language
         $new_settings["reserved-language-project"] = \REDCap::escapeHtml($post_settings["reserved-language-project"]);
         if ( !in_array($new_settings["reserved-language-project"], array_keys($languageList), true) ) {
-            $lang_err = "Invalid language selected";
+            $lang_err = $module->tt("project_settings_lang_err");
             $any_err  = true;
         }
         if ( $new_settings["reserved-language-project"] === "English" ) {
@@ -74,7 +74,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         $new_settings["pc-email"] = \REDCap::escapeHtml($post_settings["pc-email"]);
         $new_settings["pc-phone"] = \REDCap::escapeHtml($post_settings["pc-phone"]);
         if ( $new_settings["pc-email"] !== "" && !filter_var($new_settings["pc-email"], FILTER_VALIDATE_EMAIL) ) {
-            $email_err = "Invalid email format";
+            $email_err = $module->tt("project_settings_email_err");
             $any_err   = true;
         }
 
@@ -104,12 +104,12 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 $new_settings["timeout-time"] = $projectSettings->getSystemTimeoutMinutes();
             }
             if (  $new_settings["timeout-time"] < 1 ) {
-                $timeout_time_err = "Timeout time must be a positive integer";
+                $timeout_time_err = $module->tt("project_settings_time_err1");
                 $any_err          = true;
             }
             $timeout_maximum = $projectSettings->getMaximumTimeoutMinutes();
             if ($new_settings["timeout-time"] > $timeout_maximum) {
-                $timeout_time_err = "Timeout time must be no more than " . $timeout_maximum . " minutes";
+                $timeout_time_err = $module->tt("project_settings_time_err2", [$timeout_maximum]);
                 $any_err          = true;
             }
         }
@@ -121,7 +121,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             <script>
                 Swal.fire({
                     icon: "success",
-                    title: "Settings Saved",
+                    title: "<?= $module->tt("project_settings_saved") ?>",
                     showConfirmButton: false
                 });
             </script>
@@ -132,7 +132,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         <script>
             Swal.fire({
                 icon: "error",
-                title: "Error",
+                title: "<?= $module->tt("project_error") ?>",
                 text: "<?= $e->getMessage(); ?>",
                 showConfirmButton: false
             });
@@ -155,8 +155,8 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
 $module->initializeJavascriptModuleObject();
 ?>
 <div class="settingsContainer wrapper" style="display: none;">
-    <h2>Settings</h2>
-    <p>Project-level configuration</p>
+    <h2><?= $module->tt("project_settings_page_title") ?></h2>
+    <p><?= $module->tt("project_settings_subtitle") ?></p>
     <div id="parent">
         <form class="rcpro-form" id="settings-form" action="<?= $module->getUrl("src/settings.php"); ?>" method="POST"
             enctype="multipart/form-data" target="_self">
@@ -165,10 +165,10 @@ $module->initializeJavascriptModuleObject();
                     <span class="fa-stack">
                         <i class="fas fa-globe fa-2x"></i>
                     </span>
-                    <nbsp></nbsp><strong>Languages and Translation</strong>
+                    <nbsp></nbsp><strong><?= $module->tt("project_settings_languages_and_translation") ?></strong>
                 </div>
                 <div class="card-body">
-                    <div class="card-title">Set the default language that participant-facing text will be displayed in.</div>
+                    <div class="card-title"><?= $module->tt("project_settings_languages_and_translation_desc") ?></div>
                     <div class="form-group">
                         <select class="form-select <?php echo (!empty($lang_err)) ? 'is-invalid' : ''; ?>"
                             name="reserved-language-project" aria-label="language select">
@@ -188,14 +188,14 @@ $module->initializeJavascriptModuleObject();
                             <?php echo $lang_err; ?>
                         </span>
                     </div>
-                    <div class="card-title">Set the languages that participants can choose from.</div>
+                    <div class="card-title"><?= $module->tt("project_settings_languages_and_translation_info") ?></div>
 
                     <table class="table">
                         <thead>
                             <tr>
                                 <th scope="col"></th>
-                                <th scope="col">Active</th>
-                                <th class="text-center" scope="col">Actions</th>
+                                <th scope="col"><?= $module->tt("project_active") ?></th>
+                                <th class="text-center" scope="col"><?= $module->tt("project_actions") ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -208,8 +208,8 @@ $module->initializeJavascriptModuleObject();
                                 }
                                 $activeDisabled = $lang_item["code"] === $defaultLanguage ? "disabled" : "";
                                 $builtIn = $lang_item["built_in"];
-                                $editTooltip = $lang_item["built_in"] ? "Built-in languages cannot be edited. You can copy this language to create a custom version that can be edited." : "Edit language";
-                                $deleteTooltip = $lang_item["built_in"] ? "Built-in languages cannot be deleted." : "Delete language";
+                                $editTooltip = $module->tt($lang_item["built_in"] ? "project_settings_lang_edit_builtin" : "project_settings_lang_edit");
+                                $deleteTooltip = $module->tt($lang_item["built_in"] ? "project_settings_lang_delete_builtin" : "project_settings_lang_delete");
                                 ?>
                             
                                 <tr>
@@ -223,25 +223,25 @@ $module->initializeJavascriptModuleObject();
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="btn-toolbar justify-content-center" role="toolbar" aria-label="Language actions">
+                                        <div class="btn-toolbar justify-content-center" role="toolbar" aria-label="<?= $module->tt("project_settings_lang_actions") ?>">
                                             
                                             <div data-bs-toggle="tooltip" data-bs-title="<?=$editTooltip?>">
                                                 <button type="button" class="btn btn-sm btn-outline-secondary edit-language-btn me-1" data-lang-code="<?= $lang_item["code"] ?>" <?= $builtIn ? "disabled" : "" ?>>
                                                     <i class="fas fa-pencil"></i>
                                                 </button>
                                             </div>
-                                            <div data-bs-toggle="tooltip" data-bs-title="Copy language">
+                                            <div data-bs-toggle="tooltip" data-bs-title="<?=$module->tt("project_settings_lang_copy")?>">
                                                 <button type="button" class="btn btn-sm btn-outline-secondary copy-language-btn me-1" data-lang-code="<?= $lang_item["code"] ?>" data-lang-builtIn=<?= $builtIn ? "true" : "false" ?>>
                                                     <i class="fas fa-copy"></i>
                                                 </button>
                                             </div>
-                                            <div class="dropdown me-1" data-bs-toggle="tooltip" data-bs-title="Download language file" >
+                                            <div class="dropdown me-1" data-bs-toggle="tooltip" data-bs-title="<?=$module->tt("project_settings_lang_download")?>" >
                                                 <button type="button" class="btn btn-sm btn-outline-secondary btn-toggle" data-bs-toggle="dropdown" aria-expanded="false" >
                                                     <i class="fas fa-download"></i>
                                                 </button>
                                                 <ul class="dropdown-menu">
-                                                    <li><a class="dropdown-item download-language-btn" href="#" data-lang-code="<?= $lang_item["code"] ?>" data-format="json"><i class="fa-light fa-file-brackets-curly"></i> .json format</a></li>
-                                                    <li><a class="dropdown-item download-language-btn" href="#" data-lang-code="<?= $lang_item["code"] ?>" data-format="ini"><i class="fa-light fa-file-lines"></i> .ini format</a></li>
+                                                    <li><a class="dropdown-item download-language-btn" href="#" data-lang-code="<?= $lang_item["code"] ?>" data-format="json"><i class="fa-light fa-file-brackets-curly"></i> <?= $module->tt("project_settings_lang_json_format") ?></a></li>
+                                                    <li><a class="dropdown-item download-language-btn" href="#" data-lang-code="<?= $lang_item["code"] ?>" data-format="ini"><i class="fa-light fa-file-lines"></i> <?= $module->tt("project_settings_lang_ini_format") ?></a></li>
                                                 </ul>
                                             </div>
                                             <div data-bs-toggle="tooltip" data-bs-title="<?=$deleteTooltip?>">
@@ -256,10 +256,10 @@ $module->initializeJavascriptModuleObject();
                         </tbody>
                     </table>
                     <div class="dropdown">
-                        <button type="button" class="btn btn-sm btn-success btn-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="add-language-btn">Add Language <i class="fas fa-caret-down"></i></button>
+                        <button type="button" class="btn btn-sm btn-success btn-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="add-language-btn"><?= $module->tt('project_settings_lang_add')?> <i class="fas fa-caret-down"></i></button>
                         <ul class="dropdown-menu" >
-                            <li><a class="dropdown-item" href="#" id="add-language-from-file-btn"><i class="fas fa-file-import"></i> From File</a></li>
-                            <li><a class="dropdown-item" href="#" id="add-language-manually-btn"><i class="fas fa-keyboard"></i> Manual Entry</a></li>
+                            <li><a class="dropdown-item" href="#" id="add-language-from-file-btn"><i class="fas fa-file-import"></i> <?= $module->tt('project_settings_lang_from_file')?></a></li>
+                            <li><a class="dropdown-item" href="#" id="add-language-manually-btn"><i class="fas fa-keyboard"></i> <?= $module->tt('project_settings_lang_manual_entry')?></a></li>
                         </ul>
                     </div>
                 </div>
