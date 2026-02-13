@@ -11,6 +11,44 @@
     ],
     "system-settings": [
         {
+            "key": "add-language",
+            "name": "<strong>Add a new language file</strong>:<br>This should be the .ini language file that you want to add, which must be formatted similar to this module's English.ini file. You can download a language file <a href='https://raw.githubusercontent.com/AndrewPoppe/REDCap-PRO/refs/heads/master/lang/English.ini'  target='_blank' rel='noreferrer noopen'>here</a>",
+            "type": "sub_settings",
+            "sub_settings": [
+                {
+                    "key": "language-code",
+                    "name": "<strong>Language Name</strong>:<br>This is the name of the language as it will appear in the dropdown selector for participants to choose their language (e.g. Spanish, French, etc.)",
+                    "type": "text"
+                },
+                {
+                    "key": "language-file",
+                    "name": "<strong>Language File</strong>",
+                    "type": "file"
+                },
+                {
+                    "key": "language-direction",
+                    "name": "<strong>Text Direction</strong>:<br>Specify the text direction for this language",
+                    "type": "dropdown",
+                    "choices": [
+                        {
+                            "value": "ltr",
+                            "name": "Left-to-Right (LTR)"
+                        },
+                        {
+                            "value": "rtl",
+                            "name": "Right-to-Left (RTL)"
+                        }
+                    ]
+                },
+                {
+                    "key": "language-active",
+                    "name": "<strong>Active</strong>:<br>Should this language be active and available to use",
+                    "type": "checkbox"
+                }
+            ],
+            "repeatable": true
+        },
+        {
             "key": "email-from-address",
             "name": "<strong>Email From Address</strong>:<br>This will be the <em>From</em> email address for all system emails. This can help if emails are being sent to spam or are not delivered (default is noreply@REDCapPRO.com)",
             "type": "email"

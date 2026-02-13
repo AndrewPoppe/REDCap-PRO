@@ -616,6 +616,27 @@ class REDCapPRO extends AbstractExternalModule
         return null;
     }
 
+    public function redcap_module_configuration_settings($project_id, $settings)
+    {
+        if (!empty($project_id)) {
+            return $settings;
+        }
+
+        $customLanguages = $this->getSubSettings("add-language");
+        foreach($settings as &$setting) {
+            if ( $setting["key"] === "reserved-language-system" ) {
+                foreach ($customLanguages as $language) {
+                    $setting["choices"][] = [
+                        "value" => $language["language-code"],
+                        "name" => $language["language-code"]
+                    ];
+                }
+            }
+        }
+
+        return $settings;
+    }
+
 
     //////////////////\\\\\\\\\\\\\\\\\\\       
     /////   EMAIL-RELATED METHODS   \\\\\ 
@@ -1289,6 +1310,57 @@ class REDCapPRO extends AbstractExternalModule
         return $this->countLogs($whereClauseValidated, $params);
     }
 
+    public function validateIniFileFromEdocId($edocId, $processSections = false)
+    {
+        try {
+            [$mimeType, $filename, $fileContent] = \REDCap::getFile($edocId);
+            $result = parse_ini_string($fileContent, $processSections);
+            return !empty($result);
+        } catch ( \Throwable $e ) {
+            $this->logError("Error parsing INI file from edoc ID: {$edocId}", $e);
+            return false;
+        }
+    }
+
+    private function validateCustomLanguageSettings($settings)
+    {
+        $language = new Language($this);
+        $builtInLanguages = $language->getBuiltInLanguages(false);
+        $this->log('languages', ['langs' => json_encode($builtInLanguages)]);
+        $existingCustomLanguages   = [];
+        $customLanguageEntries = $settings["add-language"];
+        $customLanguageCodes   = $settings["language-code"];
+        $customLanguageFiles   = $settings["language-file"];
+        $customLanguageDirections = $settings["language-direction"];
+        $customLanguageActiveFlags = $settings["language-active-flag"];
+        foreach ( $customLanguageEntries as $index => $entry ) {
+            $thisCode = $customLanguageCodes[$index];
+            $thisFile = $customLanguageFiles[$index];
+            $thisDirection = $customLanguageDirections[$index];
+            $thisActive = $customLanguageActiveFlags[$index];
+            if (empty($thisCode)) {
+                continue;
+            }
+            if (in_array($thisCode, array_keys($builtInLanguages))) {
+                return "Custom language code {".$this->escape($thisCode)."} cannot be the same as a built-in REDCap language code.";
+            }
+            if (in_array($thisCode, $existingCustomLanguages)) {
+                return "Duplicate custom language code: {".$this->escape($thisCode)."}.";
+            }
+            if (empty($thisFile) && $thisActive) {
+                return "Each active custom language must have a language file. Please deactivate if you wish to delete the file.";
+            }
+            if ( !empty($thisFile) && !$this->validateIniFileFromEdocId($thisFile) ) {
+                return "Language file for language {".$this->escape($thisCode)."} is not a valid INI file.";
+            }
+            if ( empty($thisDirection) ) {
+                return "Language direction must be specified.";
+            }
+            $existingCustomLanguages[] = $thisCode;
+        }
+        return null;
+    }
+
     /**
      * Make sure settings meet certain conditions.
      * 
@@ -1306,7 +1378,7 @@ class REDCapPRO extends AbstractExternalModule
 
         // System settings
         // Enforce limits on setting values
-        if ( !$this->getProjectId() ) {
+        if ( empty($this->getProjectId()) ) {
             if ( isset($settings["warning-time"]) && $settings["warning-time"] <= 0 ) {
                 $message = "The warning time must be a positive number.";
             }
@@ -1334,6 +1406,12 @@ class REDCapPRO extends AbstractExternalModule
             if ( isset($secret_key) && empty($site_key) ) {
                 $message = "You must enter a site key if you enter a secret key.";
             }
+
+            $customLanguageMessage = $this->validateCustomLanguageSettings($settings);
+            if ($customLanguageMessage !== null) {
+                $message = $customLanguageMessage;
+            }
+
         }
 
         // Log configuration save attempt

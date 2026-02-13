@@ -174,7 +174,7 @@ class AjaxHandler
             } else {
                 $iniString = "";
                 foreach ($strings as $key => $value) {
-                    $iniString .= "$key = $value\n";
+                    $iniString .= "$key = \"$value\"" . PHP_EOL;
                 }
                 return ["fileContents" => $iniString];  
             }

@@ -88,7 +88,7 @@ class UI
         '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.rtl.min.css" integrity="sha384-CfCrinSRH2IR6a4e6fy2q6ioOX7O6Mtm1L9vRvFZ1trBncWmMePhzvafv7oIcWiW" crossorigin="anonymous">' : 
         '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">';
         echo '<!DOCTYPE html>
-                <html lang="ar" dir="' . $dir . '">
+                <html lang="en" dir="' . $dir . '">
                 <head>
                     <meta charset="UTF-8">
                     <title>REDCapPRO ' . $title . '</title>
