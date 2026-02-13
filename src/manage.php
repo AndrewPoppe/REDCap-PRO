@@ -420,11 +420,12 @@ $module->tt_transferToJavascriptModuleObject();
                             let row = table.rows( { selected: true } );
                             if (row[0].length) {
                                 let dataset = $(row.nodes()[0]).data();
+                                const title = window.RCPRO_module.tt(`project_manage_participants_confirm_disenroll`, [dataset.fname, dataset.lname]);
                                 Swal.fire({
                                     icon: "warning",
                                     iconColor: "<?= $module::$COLORS["primary"] ?>",
-                                    title: window.RCPRO_module.tt("project_manage_participants_confirm_disenroll", [dataset.fname, dataset.lname]),
-                                    confirmButtonText: "<?= $module->tt("project_manage_participants_disenroll") ?>",
+                                    title: title,
+                                    confirmButtonText: "<?= $module->tt("project_disenroll") ?>",
                                     allowEnterKey: false,
                                     showCancelButton: true,
                                     cancelButtonText: "<?= $module->tt("project_cancel") ?>",
