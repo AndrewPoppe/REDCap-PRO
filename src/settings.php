@@ -153,6 +153,7 @@ $autoEnrollUponSelfRegistration = $projectSettings->shouldEnrollUponRegistration
 $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEmail($project_id);
 
 $module->initializeJavascriptModuleObject();
+$module->tt_transferToJavascriptModuleObject();
 ?>
 <div class="settingsContainer wrapper" style="display: none;">
     <h2><?= $module->tt("project_settings_page_title") ?></h2>
@@ -276,12 +277,11 @@ $module->initializeJavascriptModuleObject();
                             <i class="fas fa-ban fa-stack-2x" style="color: <?= $module::$COLORS["ban"] ?>"></i>
                         </span>
                         <nbsp></nbsp>
-                        <strong>Prevent Email Login</strong>
+                        <strong><?= $module->tt("project_settings_prevent_email_login"); ?></strong>
                     </div>
                     <div class="card-body">
                         <div class="card-title">
-                            Should participants be prevented from using their email address to log in to the system.<br>
-
+                            <?= $module->tt("project_settings_prevent_email_login_desc"); ?><br>
                         </div>
                         <div class="form-check">
                             <input
@@ -290,8 +290,7 @@ $module->initializeJavascriptModuleObject();
                                 $('#prevent-email-login').val($('#prevent-email-login-check').get(0).checked);
                             })()">
                             <label class="form-check-label" style="vertical-align:middle;"
-                                for="prevent-email-login-check">Checking this will require that they login using their
-                                participant username only.</label>
+                                for="prevent-email-login-check"><?= $module->tt("project_settings_prevent_email_login_label"); ?></label>
                             <input type="text" name="prevent-email-login" id="prevent-email-login"
                                 value="<?= $checked === "checked" ? "true" : "false" ?>" hidden>
                             <span class="invalid-feedback">
@@ -310,14 +309,14 @@ $module->initializeJavascriptModuleObject();
                             <i class="fas fa-stopwatch fa-2x"></i>
                         </span>
                         <nbsp></nbsp>
-                        <strong>Timeout Time</strong>
+                        <strong><?= $module->tt("project_settings_timeout_time"); ?></strong>
                     </div>
                     <div class="card-body">
                         <div class="card-title">
-                            How long should participants be allowed to be inactive before they are automatically logged out?
+                            <?= $module->tt("project_settings_timeout_time_desc"); ?>
                         </div>
                         <div class="form-group">
-                            <label>Enter the number of minutes of inactivity before participant is logged out</label>
+                            <label><?= $module->tt("project_settings_timeout_time_label"); ?></label>
                             <input type="text" name="timeout-time"
                                 class="form-control <?php echo (!empty($timeout_time_err)) ? 'is-invalid' : ''; ?>"
                                 value="<?php echo \REDCap::escapeHtml($projectSettings->getProjectTimeoutMinutes($project_id)); ?>">
@@ -325,9 +324,15 @@ $module->initializeJavascriptModuleObject();
                                 <?php echo $timeout_time_err; ?>
                             </span>
                         </div>
-                        <p><span>Leave this value blank to set to the system default of <strong><?= \REDCap::escapeHtml($projectSettings->getSystemTimeoutMinutes())?> minutes.</strong></span>
-                        <br>
-                        <span>The maximum timeout time allowed on this system is <strong><?= \REDCap::escapeHtml($projectSettings->getMaximumTimeoutMinutes()) ?> minutes.</strong></span></p>
+                        <p>
+                            <span>
+                                <?= $module->tt("project_settings_timeout_time_default_info", \REDCap::escapeHtml($projectSettings->getSystemTimeoutMinutes())) ?>
+                            </span>
+                            <br>
+                            <span>
+                                <?= $module->tt("project_settings_timeout_time_max_info", \REDCap::escapeHtml($projectSettings->getMaximumTimeoutMinutes())) ?>
+                            </span>
+                        </p>
                     </div>
                 </div>
                 <br>
@@ -342,16 +347,12 @@ $module->initializeJavascriptModuleObject();
                             <i class="fas fa-id-badge fa-2x"></i>
                         </span>
                         <nbsp></nbsp>
-                        <strong>Multifactor Authentication</strong>
+                        <strong><?= $module->tt("project_settings_mfa"); ?></strong>
                     </div>
                     <div class="card-body">
                         <div class="card-title">
-                            <strong>Should participants be required to use multi-factor authentication (MFA) when logging
-                                in?</strong><br>
-                            <em>If so, they will be required to enter a code sent to their email address after entering
-                                their
-                                username and password.<br>This is an additional security measure to prevent unauthorized
-                                access.</em>
+                            <strong><?= $module->tt("project_settings_mfa_desc"); ?></strong><br>
+                            <em><?= $module->tt("project_settings_mfa_desc2"); ?></em>
                             <br>
                         </div>
                         <div class="form-check">
@@ -364,8 +365,7 @@ $module->initializeJavascriptModuleObject();
                                     $('#mfa-authenticator-app-title').toggleClass('text-muted-more', !checked);
                                 <?php } ?>
                             })()">
-                            <label class="form-check-label" style="vertical-align:middle;" for="mfa-check">Checking this
-                                will require MFA.</label>
+                            <label class="form-check-label" style="vertical-align:middle;" for="mfa-check"><?= $module->tt("project_settings_mfa_label"); ?></label>
                             <input type="text" name="mfa" id="mfa"
                                 value="<?= $mfaChecked === "checked" ? "true" : "false" ?>" hidden>
                             <span class="invalid-feedback">
@@ -375,16 +375,13 @@ $module->initializeJavascriptModuleObject();
                         <?php if ( $allowMfaAuthenticatorApp ) { ?>
                             <br><br>
                             <div class="card-title" id="mfa-authenticator-app-title">
-                                <strong>Should an authenticator app such as Google Authenticator or Microsoft Authenticator be
-                                    allowed for MFA?</strong><br>
-                                <em>Checking this option will allow participants to use an authenticator app to generate their
-                                    MFA code.</em>
+                                <strong><?= $module->tt("project_settings_mfa_authenticator_app_desc"); ?></strong><br>
+                                <em><?= $module->tt("project_settings_mfa_authenticator_app_desc2"); ?></em>
                             </div>
                             <div class="form-check" id="auto-enroll-settings">
                                 <input class="form-check-input" name="mfa-authenticator-app" type="checkbox"
                                     id="mfa-authenticator-app" <?= $mfaAuthenticatorAppChecked ?>>
-                                <label class="form-check-label" style="vertical-align:middle;" for="mfa-authenticator-app">Allow
-                                    MFA Authenticator App</label>
+                                <label class="form-check-label" style="vertical-align:middle;" for="mfa-authenticator-app"><?= $module->tt("project_settings_mfa_authenticator_app_label"); ?></label>
                             </div>
                         <?php } ?>
                     </div>
@@ -400,23 +397,21 @@ $module->initializeJavascriptModuleObject();
                             <i class="fas fa-laptop-code fa-2x"></i>
                         </span>
                         <nbsp></nbsp>
-                        <strong>API</strong>
+                        <strong><?= $module->tt("project_settings_api"); ?></strong>
                     </div>
                     <div class="card-body">
                         <div class="card-title">
-                            Should users be allowed to use the API to register and enroll participants?<br>
-                            If so, they will be able to use their REDCap API tokens to register and enroll participants in
-                            this project.<br>
+                            <strong><?= $module->tt("project_settings_api_desc"); ?></strong><br>
+                            <em><?= $module->tt("project_settings_api_desc2"); ?></em><br>
                             <a href="https://github.com/AndrewPoppe/REDCap-PRO#api" target="_blank"
-                                rel="noopener noreferrer">More information</a>
+                                rel="noopener noreferrer"><?= $module->tt("project_settings_more_information"); ?></a>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input <?php echo (!empty($api_err)) ? 'is-invalid' : ''; ?>"
                                 type="checkbox" id="api-check" <?= $apiChecked ?> onclick="(function(){
                                 $('#api').val($('#api-check').get(0).checked);
                             })()">
-                            <label class="form-check-label" style="vertical-align:middle;" for="api-check">Checking this
-                                will allow users to use the API.</label>
+                            <label class="form-check-label" style="vertical-align:middle;" for="api-check"><?= $module->tt("project_settings_api_label"); ?></label>
                             <input type="text" name="api" id="api"
                                 value="<?= $apiChecked === "checked" ? "true" : "false" ?>" hidden>
                             <span class="invalid-feedback">
@@ -424,8 +419,7 @@ $module->initializeJavascriptModuleObject();
                             </span>
                         </div>
                         <p>
-                            The API URL for this system is
-                            <code><?= $module->getProjectlessUrl("src/api.php", true, true) ?></code>
+                            <?= $module->tt("project_settings_api_info", $module->getProjectlessUrl("src/api.php", true, true)) ?>
                         </p>
                     </div>
                 </div>
@@ -442,13 +436,12 @@ $module->initializeJavascriptModuleObject();
                             <i class="fas fa-pen-to-square fa-stack-2x"></i>
                         </span>
                         <nbsp></nbsp>
-                        <strong>Participant Self-Registration</strong>
+                        <strong><?= $module->tt("project_settings_self_registration"); ?></strong>
                     </div>
                     <div class="card-body">
                         <div class="card-title">
-                            <strong>Should participants be allowed to create their own accounts?</strong><br>
-                            <em>Checking this option will allow participants to register themselves
-                                if they do not already have an account.</em>
+                            <strong><?= $module->tt("project_settings_self_registration_desc"); ?></strong><br>
+                            <em><?= $module->tt("project_settings_self_registration_desc2"); ?></em>
                         </div>
                         <div class="form-check">
                             <input
@@ -468,7 +461,7 @@ $module->initializeJavascriptModuleObject();
                                     <?php } ?>
                             })()">
                             <label class="form-check-label" style="vertical-align:middle;"
-                                for="allow-self-registration-form-check">Allow Participant Self-Registration</label>
+                                for="allow-self-registration-form-check"><?= $module->tt("project_settings_self_registration_label"); ?></label>
                             <span class="invalid-feedback">
                                 <?php echo $self_registration_err; ?>
                             </span>
@@ -476,9 +469,8 @@ $module->initializeJavascriptModuleObject();
                         <?php if ( $allowAutoEnrollSystem ) { ?>
                             <br><br>
                             <div class="card-title" id="auto-enroll-settings-title">
-                                <strong>Should participants be automatically enrolled when they self-register?</strong><br>
-                                <em>Checking this option will automatically enroll a participant in your study when they
-                                    self-register.</em>
+                                <strong><?= $module->tt("project_settings_auto_enrollment_desc"); ?></strong><br>
+                                <em><?= $module->tt("project_settings_auto_enrollment_desc2"); ?></em>
                             </div>
                             <div class="form-check" id="auto-enroll-settings">
                                 <input class="form-check-input <?php echo (!empty($auto_enroll_err)) ? 'is-invalid' : ''; ?>"
@@ -490,15 +482,14 @@ $module->initializeJavascriptModuleObject();
                                     $('#auto-enroll-notification-email-label').toggleClass('text-muted-more', !isChecked);
                             })()">
                                 <label class="form-check-label" style="vertical-align:middle;"
-                                    for="auto-enroll-upon-self-registration">Auto-Enroll Upon Self-Registration</label>
+                                    for="auto-enroll-upon-self-registration"><?= $module->tt("project_settings_auto_enrollment_label"); ?></label>
                                 <span class="invalid-feedback">
                                     <?php echo $auto_enroll_err; ?>
                                 </span>
                             </div>
                             <br>
                             <div class="form-group">
-                                <label id="auto-enroll-notification-email-label">Email address to notify when new participants
-                                    are auto-enrolled</label>
+                                <label id="auto-enroll-notification-email-label"><?= $module->tt("project_settings_auto_enrollment_email"); ?></label>
                                 <input type="email" name="auto-enroll-notification-email" id="auto-enroll-notification-email"
                                     class="form-control <?= (!empty($auto_enroll_notification_err) ? 'is-invalid' : '') ?>"
                                     value="<?= $autoEnrollNotificationEmail ?>">
@@ -517,14 +508,14 @@ $module->initializeJavascriptModuleObject();
                         <i class="fas fa-address-card fa-2x"></i>
                     </span>
                     <nbsp></nbsp>
-                    <strong>Primary Contact Person</strong>
+                    <strong><?= $module->tt("project_settings_primary_contact"); ?></strong>
                 </div>
                 <div class="card-body">
                     <div class="card-title">
-                        This is who participants should contact when they have questions.
+                        <?= $module->tt("project_settings_primary_contact_desc"); ?>
                     </div>
                     <div class="form-group">
-                        <label>Name</label>
+                        <label><?= $module->tt("project_name"); ?></label>
                         <input type="text" name="pc-name"
                             class="form-control <?php echo (!empty($name_err)) ? 'is-invalid' : ''; ?>"
                             value="<?php echo \REDCap::escapeHtml($settings["pc-name"]); ?>">
@@ -533,7 +524,7 @@ $module->initializeJavascriptModuleObject();
                         </span>
                     </div>
                     <div class="form-group">
-                        <label>Email</label>
+                        <label><?= $module->tt("project_email"); ?></label>
                         <input type="email" name="pc-email"
                             class="form-control <?php echo (!empty($email_err)) ? 'is-invalid' : ''; ?>"
                             value="<?php echo \REDCap::escapeHtml($settings["pc-email"]); ?>">
@@ -542,7 +533,7 @@ $module->initializeJavascriptModuleObject();
                         </span>
                     </div>
                     <div class="form-group">
-                        <label>Phone</label>
+                        <label><?= $module->tt("project_phone"); ?></label>
                         <input type="tel" name="pc-phone"
                             class="form-control <?php echo (!empty($phone_err)) ? 'is-invalid' : ''; ?>"
                             value="<?php echo \REDCap::escapeHtml($settings["pc-phone"]); ?>">
@@ -556,9 +547,10 @@ $module->initializeJavascriptModuleObject();
             <div class="form-group">
                 <button type="button" class="btn btn-secondary" value="Cancel" onclick="(function() {
                     window.location.href = '<?= $module->getUrl('src/settings.php') ?>';
-                    })()">Cancel</button>
-                <button type="submit" id="rcpro-submit-button" class="btn btn-rcpro" value="Submit" disabled>Save
-                    Settings</button>
+                    })()"><?= $module->tt("project_cancel"); ?></button>
+                <button type="submit" id="rcpro-submit-button" class="btn btn-rcpro" value="Submit" disabled>
+                    <?= $module->tt("project_save_settings"); ?>
+                </button>
             </div>
             <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
         </form>
@@ -573,8 +565,8 @@ $module->initializeJavascriptModuleObject();
             </div>
             <div class="modal-body"></div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary">Submit</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= $module->tt("project_cancel"); ?></button>
+                <button type="button" class="btn btn-primary"><?= $module->tt("project_submit"); ?></button>
             </div>
         </div>
     </div>
@@ -584,9 +576,9 @@ $module->initializeJavascriptModuleObject();
         <div class='modal-content'>
             <div class='modal-body text-center'>
                 <div class='spinner-border' role='status' style='width: 3rem; height: 3rem; color:<?= $module::$COLORS['primary'] ?> !important;'>
-                    <span class='visually-hidden'>Loading...</span>
+                    <span class='visually-hidden'><?= $module->tt("project_loading"); ?></span>
                 </div>
-                <h5 class="mt-3 text-body"><?= $module->framework->tt('mfa_messaging5') ?></h5>
+                <h5 class="mt-3 text-body"><?= $module->tt('project_please_wait') ?></h5>
             </div>
         </div>
     </div>
@@ -676,8 +668,8 @@ $module->initializeJavascriptModuleObject();
                     console.error(error);
                     Swal.fire({
                         icon: "error",
-                        title: "Error",
-                        text: "There was a problem updating the language status. Please try again.",
+                        title: "<?= $module->tt("project_error") ?>",
+                        text: "<?= $module->tt("project_settings_language_update_error") ?>",
                         showConfirmButton: false
                     });
                 });
@@ -685,24 +677,25 @@ $module->initializeJavascriptModuleObject();
 
             $('#add-language-from-file-btn').click(function() {
                 Swal.fire({
-                    title: "Upload Language File",
+                    title: "<?= $module->tt("project_settings_upload_language_file") ?>",
                     html: `
                         <div>
-                            <span>Language files can be either .json or .ini files. Here are examples of each format:</span>
+                            <span><?= $module->tt("project_settings_upload_language_file_desc") ?></span>
                             <br><br>
                             <ul class="text-left">
-                                <li><strong>JSON format: </strong><a href="#" onclick="rcpro_module.downloadEnglishJson();return false;" id="download-english-json">REDCapPRO-English.json</a></span></li>
-                                <li><strong>INI format: </strong><a href="#" onclick="rcpro_module.downloadEnglishIni();return false;" id="download-english-ini">REDCapPRO-English.ini</a></span></li>
+                                <li><strong><?= $module->tt("project_settings_json_format_label") ?> </strong><a href="#" onclick="rcpro_module.downloadEnglishJson();return false;" id="download-english-json">REDCapPRO-English.json</a></span></li>
+                                <li><strong><?= $module->tt("project_settings_ini_format_label") ?> </strong><a href="#" onclick="rcpro_module.downloadEnglishIni();return false;" id="download-english-ini">REDCapPRO-English.ini</a></span></li>
                             </ul>
                         </div>
                         <input type="file" id="language-file-input" class="form-control" accept=".json,.ini">
                     `,
                     showCancelButton: true,
-                    confirmButtonText: "Upload",
+                    confirmButtonText: "<?= $module->tt("project_submit") ?>",
+                    cancelButtonText: "<?= $module->tt("project_cancel") ?>",
                     preConfirm: async () => {
                         const fileInput = document.getElementById('language-file-input');
                         if (fileInput.files.length === 0) {
-                            Swal.showValidationMessage("Please select a file to upload.");
+                            Swal.showValidationMessage("<?= $module->tt("project_settings_language_upload_error1") ?>");
                             return;
                         }
                         const file = fileInput.files[0];
@@ -719,22 +712,22 @@ $module->initializeJavascriptModuleObject();
                                         const languageData = JSON.parse(jsonString);
                                         resolve(languageData);
                                     } else {
-                                        reject("Unsupported file type. Please upload a .json or .ini file.");
+                                        reject("<?= $module->tt("project_settings_language_upload_error2") ?>");
                                         return;
                                     }
                                 } catch (e) {
-                                    reject("Invalid file. " + e.message);
+                                    reject("<?= $module->tt("project_settings_language_upload_error3") ?> " + e.message);
                                 }
                             };
                             reader.onerror = function() {
-                                reject("There was an error reading the file.");
+                                reject("<?= $module->tt("project_settings_language_upload_error4") ?>");
                             };
                             reader.readAsText(file);
                         });
                     }
                 }).then((result) => {
-                    showLoadingModal();
                     if (result.isConfirmed) {
+                        showLoadingModal();
                         const strings = result.value;
                         window.rcpro_module.ajax("getLanguage", { languageCode: "English" })
                         .then(response => {
@@ -750,8 +743,8 @@ $module->initializeJavascriptModuleObject();
                             console.error(error);
                             Swal.fire({
                                 icon: "error",
-                                title: "Error",
-                                text: "There was a problem loading the language template. Please try again.",
+                                title: "<?= $module->tt("project_error") ?>",
+                                text: "<?= $module->tt("project_settings_language_upload_error5") ?>",
                                 showConfirmButton: false
                             });
                         });
@@ -777,36 +770,38 @@ $module->initializeJavascriptModuleObject();
                 console.log(options);
             
                 let modalBody = `<div>
-                <h3>Language Settings</h3>
+                <h3><?= $module->tt("project_settings_language_settings_title") ?></h3>
                 <div class="card mb-3">
                     <div class="card-body bg-light">
                         <div class="mb-3">
-                            <label for="new-language-code" class="form-label"><h4>Language Code</h4></label>
-                            <input type="text" class="form-control" id="new-language-code" name="new-language-code" placeholder="e.g. Spanish" value="${options.languageCode ?? ""}" ${!options.createNew ? "disabled" : ""}>
+                            <label for="new-language-code" class="form-label"><h4><?= $module->tt("project_settings_language_code") ?></h4></label>
+                            <input type="text" class="form-control" id="new-language-code" name="new-language-code" placeholder="<?= $module->tt("project_settings_language_code_placeholder") ?>" value="${options.languageCode ?? ""}" ${!options.createNew ? "disabled" : ""}>
                         </div>                  
                         <div class="mb-3">
-                            <label for="language-direction-select" class="form-label"><h4>Text Direction</h4></label>
+                            <label for="language-direction-select" class="form-label"><h4><?= $module->tt("project_settings_language_direction") ?></h4></label>
                             <select class="form-select" id="language-direction-select" name="language-direction">
-                                <option value="ltr" ${options.languageDirection !== "rtl" ? "selected" : ""}>Left-to-Right</option>
-                                <option value="rtl" ${options.languageDirection === "rtl" ? "selected" : ""}>Right-to-Left</option>
+                                <option value="ltr" ${options.languageDirection !== "rtl" ? "selected" : ""}><?= $module->tt("project_settings_language_direction_ltr") ?></option>
+                                <option value="rtl" ${options.languageDirection === "rtl" ? "selected" : ""}><?= $module->tt("project_settings_language_direction_rtl") ?></option>
                             </select>
                         </div>
                     </div>
                 </div>
                 <hr>
                 <div id="translation-section">
-                <h3>Translations</h3>
-                <input type="search" incremental="true" class="form-control mb-3" id="translation-filter" placeholder="Filter strings...">
+                <h3><?= $module->tt("project_settings_language_translations") ?></h3>
+                <input type="search" incremental="true" class="form-control mb-3" id="translation-filter" placeholder="<?= $module->tt("project_settings_language_search_placeholder") ?>">
                 <form id="create-language-form">`;
                 for (const [key, value] of Object.entries(options?.EnglishStrings || {})) {
                     modalBody += `<div class="card mb-3">
-                        <div class="card-body bg-light">
-                            <h4 class="card-title">${key}</h4>`;
+                        <div class="card-header">
+                            <h4 class="card-title">${key}</h4>
+                        </div>
+                        <div class="card-body">`;
                     for (const [langKey, langValue] of Object.entries(value)) {
                             modalBody += `
                             <div class="translation-entry">
                                 <label for="${langKey}" class="form-label mt-3 text-danger">${langKey}</label>
-                                <div class="form-inline"><span><strong>Default text:</strong></span>&nbsp;<span style="user-select: all;">${langValue}</span></div>
+                                <div class="form-inline"><span><strong><?= $module->tt("project_settings_language_default_text") ?></strong></span>&nbsp;<span style="user-select: all;">${langValue}</span></div>
                                 <input type="text" class="form-control mb-2" id="${langKey}" name="${langKey}" value="${options?.strings?.[langKey] || ""}">
                             </div>`;
                     }
@@ -822,8 +817,8 @@ $module->initializeJavascriptModuleObject();
                     if (options.languageCode === "") {
                         Swal.fire({
                             icon: "error",
-                            title: "Error",
-                            text: "Language code cannot be empty.",
+                            title: "<?= $module->tt("project_error") ?>",
+                            text: "<?= $module->tt("project_settings_language_code_required") ?>",
                             showConfirmButton: false
                         });
                         return;
@@ -838,8 +833,8 @@ $module->initializeJavascriptModuleObject();
                         $('#createLanguageModal').modal('hide');
                         Swal.fire({
                             icon: "success",
-                            title: "Success",
-                            text: "Language created successfully.",
+                            title: "<?= $module->tt("project_success") ?>",
+                            text: "<?= $module->tt("project_settings_language_created_success") ?>",
                             showConfirmButton: false
                         }).then(() => {
                             location.reload();
@@ -849,13 +844,13 @@ $module->initializeJavascriptModuleObject();
                         hideLoadingModal();
                         Swal.fire({
                             icon: "error",
-                            title: "Error",
-                            text: "There was a problem creating the language. Please try again.",
+                            title: "<?= $module->tt("project_error") ?>",
+                            text: "<?= $module->tt("project_settings_language_created_error") ?>",
                             showConfirmButton: false
                         });
                     });
                 });
-                $('#createLanguageModal #createLanguageLabel').text(options.createNew ? "Create Language" : "Edit Language");
+                $('#createLanguageModal #createLanguageLabel').text(options.createNew ? "<?= $module->tt("project_settings_language_create_language") ?>" : "<?= $module->tt("project_settings_language_edit_language") ?>");
                 $("#translation-filter").on("input", function() {
                     $("#create-language-form").unhighlight();
                     $('#create-language-form .card').toggleClass('glowing-border', $(this).val().trim() !== "");
@@ -905,8 +900,8 @@ $module->initializeJavascriptModuleObject();
                     console.error(error);
                     Swal.fire({
                         icon: "error",
-                        title: "Error",
-                        text: "There was a problem loading the language template. Please try again.",
+                        title: "<?= $module->tt("project_error") ?>",
+                        text: "<?= $module->tt("project_settings_language_load_error") ?>",
                         showConfirmButton: false
                     });
                 });
@@ -915,12 +910,13 @@ $module->initializeJavascriptModuleObject();
             $('.delete-language-btn').click(function() {
                 const languageCode = this.dataset.langCode;
                 Swal.fire({
-                    title: "Are you sure?",
-                    html: `This will permanently delete the <strong>${languageCode}</strong> language and all of its translations.`,
+                    title: "<?= $module->tt("project_are_you_sure") ?>",
+                    html: window.rcpro_module.tt("project_settings_delete_warning", languageCode),
                     showCancelButton: true,
                     focusConfirm: false,
                     focusCancel: true,
-                    confirmButtonText: "Delete",
+                    confirmButtonText: "<?= $module->tt("project_delete") ?>",
+                    cancelButtonText: "<?= $module->tt("project_cancel") ?>"
                 }).then((result) => {
                     if (result.isConfirmed) {
                         showLoadingModal();
@@ -928,8 +924,8 @@ $module->initializeJavascriptModuleObject();
                         .then(() => {
                             hideLoadingModal();
                             Swal.fire({
-                                title: "Deleted",
-                                text: "Language deleted successfully.",
+                                title: "<?= $module->tt("project_deleted") ?>",
+                                text: "<?= $module->tt("project_settings_delete_language_success") ?>",
                                 icon: "success",
                             }).then(() => {
                                 location.reload();
@@ -939,8 +935,8 @@ $module->initializeJavascriptModuleObject();
                             hideLoadingModal();
                             console.error(error);
                             Swal.fire({
-                                title: "Error",
-                                text: "There was a problem deleting the language. Please try again.",
+                                title: "<?= $module->tt("project_error") ?>",
+                                text: "<?= $module->tt("project_settings_delete_language_error") ?>",
                                 icon: "error"
                             });
                         });
@@ -971,8 +967,8 @@ $module->initializeJavascriptModuleObject();
                     console.error(error);
                     Swal.fire({
                         icon: "error",
-                        title: "Error",
-                        text: "There was a problem loading the language. Please try again.",
+                        title: "<?= $module->tt("project_error") ?>",
+                        text: "<?= $module->tt("project_settings_language_loading_error") ?>",
                         showConfirmButton: false
                     });
                 });
@@ -988,7 +984,7 @@ $module->initializeJavascriptModuleObject();
                     const languageStrings = response.strings;
                     const englishStrings = response.EnglishStrings;
                     const languageDirection = response.direction || "ltr";
-                    const newLanguageCode = languageCode + " Copy";
+                    const newLanguageCode = languageCode + " <?= $module->tt("project_copy") ?>";
                     window.rcpro_module.openAddLanguageModal({
                         strings: languageStrings, 
                         EnglishStrings: englishStrings, 
@@ -1002,8 +998,8 @@ $module->initializeJavascriptModuleObject();
                     console.error(error);
                     Swal.fire({
                         icon: "error",
-                        title: "Error",
-                        text: "There was a problem copying the language. Please try again.",
+                        title: "<?= $module->tt("project_error") ?>",
+                        text: "<?= $module->tt("project_settings_language_copy_error") ?>",
                         showConfirmButton: false
                     });
                 });
@@ -1015,8 +1011,8 @@ $module->initializeJavascriptModuleObject();
                 if (!languageCode || !format) {
                     Swal.fire({
                         icon: "error",
-                        title: "Error",
-                        text: "Language code or format not specified.",
+                        title: "<?= $module->tt("project_error") ?>",
+                        text: "<?= $module->tt("project_settings_missing_language_code") ?>",
                         showConfirmButton: false
                     });
                     return;
@@ -1028,8 +1024,8 @@ $module->initializeJavascriptModuleObject();
                     if (response.status === "error" || response.error) {
                         Swal.fire({
                             icon: "error",
-                            title: "Error",
-                            text: "There was a problem downloading the file. Please try again. Error: " + response.error,
+                            title: "<?= $module->tt("project_error") ?>",
+                            text: "<?= $module->tt("project_settings_language_download_error") ?> " + response.error,
                             showConfirmButton: false
                         })
                         return;
@@ -1044,15 +1040,14 @@ $module->initializeJavascriptModuleObject();
                     hideLoadingModal();
                     Swal.fire({
                         icon: "error",
-                        title: "Error",
-                        text: "There was a problem downloading the language file. Please try again.",
+                        title: "<?= $module->tt("project_error") ?>",
+                        text: "<?= $module->tt("project_settings_language_download_error_general") ?>",
                         showConfirmButton: false
                     });
                 });
             });
 
             rcpro_module.downloadEnglishJson = function () {
-                console.log("Downloading English JSON file");
                 showLoadingModal();
                 rcpro_module.ajax("downloadLanguageFile", { languageCode: "English", format: "json" })
                 .then(response => {
@@ -1061,8 +1056,8 @@ $module->initializeJavascriptModuleObject();
                     if (response.status === "error" || response.error) {
                         Swal.fire({
                             icon: "error",
-                            title: "Error",
-                            text: "There was a problem downloading the file. Please try again. Error: " + response.error,
+                            title: "<?= $module->tt("project_error") ?>",
+                            text: "<?= $module->tt("project_settings_language_download_error") ?> " + response.error,
                             showConfirmButton: false
                         })
                         return;
@@ -1074,8 +1069,8 @@ $module->initializeJavascriptModuleObject();
                     hideLoadingModal();
                     Swal.fire({
                         icon: "error",
-                        title: "Error",
-                        text: "There was a problem downloading the file. Please try again.",
+                        title: "<?= $module->tt("project_error") ?>",
+                        text: "<?= $module->tt("project_settings_language_download_error_general") ?>",
                         showConfirmButton: false
                     });
                 });
@@ -1091,8 +1086,8 @@ $module->initializeJavascriptModuleObject();
                     if (response.status === "error" || response.error) {
                         Swal.fire({
                             icon: "error",
-                            title: "Error",
-                            text: "There was a problem downloading the file. Please try again. Error: " + response.error,
+                            title: "<?= $module->tt("project_error") ?>",
+                            text: "<?= $module->tt("project_settings_language_download_error") ?> " + response.error,
                             showConfirmButton: false
                         })
                         return;
@@ -1104,8 +1099,8 @@ $module->initializeJavascriptModuleObject();
                     console.error(error);
                     Swal.fire({
                         icon: "error",
-                        title: "Error",
-                        text: "There was a problem downloading the file. Please try again.",
+                        title: "<?= $module->tt("project_error") ?>",
+                        text: "<?= $module->tt("project_settings_language_download_error_general") ?>",
                         showConfirmButton: false
                     });
                 });
