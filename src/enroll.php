@@ -324,7 +324,7 @@ $module->initializeJavascriptModuleObject();
         if (!window.csv_file_contents || window.csv_file_contents === "") {
             return;
         }
-        Swal.fire({ title: '<?= $module->tt("project_enroll_please_wait") ?>', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
+        Swal.fire({ title: '<?= $module->tt("project_please_wait") ?>', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
         RCPRO.ajax('importCsvEnroll', { data: window.csv_file_contents, confirm: true })
             .then((response) => {
                 Swal.close();
@@ -354,7 +354,7 @@ $module->initializeJavascriptModuleObject();
     }
 
     RCPRO.handleFiles = function () {
-        Swal.fire({ title: '<?= $module->tt("project_enroll_please_wait") ?>', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
+        Swal.fire({ title: '<?= $module->tt("project_please_wait") ?>', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
         if (this.files.length !== 1) {
             return;
         }

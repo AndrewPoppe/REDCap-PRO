@@ -15,6 +15,7 @@ $ui = new UI($module);
 $ui->ShowHeader("Register");
 echo "<title>" . $module->APPTITLE . " - " . $module->tt("project_register_title") . "</title>";
 $module->initializeJavascriptModuleObject();
+$module->tt_transferToJavascriptModuleObject();
 
 // Check for errors
 if ( isset($_GET["error"]) ) {
@@ -333,7 +334,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             if (!window.csv_file_contents || window.csv_file_contents === "") {
                 return;
             }
-            Swal.fire({ title: 'Please wait...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
+            Swal.fire({ title: "<?= $module->tt('project_please_wait') ?>", allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
             RCPRO.ajax('importCsvRegister', { data: window.csv_file_contents, confirm: true })
                 .then((response) => {
                     Swal.close();
@@ -341,8 +342,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                     if (result.status != 'error') {
                         Swal.fire({
                             icon: 'success',
-                            html: 'Successfully registered participants',
-                            confirmButtonText: 'OK',
+                            html: "<?= $module->tt('project_register_success') ?>",
+                            confirmButtonText: "<?= $module->tt('project_ok') ?>",
                             customClass: {
                                 confirmButton: 'btn btn-primary',
                             },
@@ -351,7 +352,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                     } else {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Error',
+                            title: "<?= $module->tt("project_error") ?>",
                             html: result.message,
                             showConfirmButton: false
                         });
@@ -363,7 +364,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         }
 
         RCPRO.handleFiles = function () {
-            Swal.fire({ title: 'Please wait...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
+            Swal.fire({ title: "<?= $module->tt('project_please_wait') ?>", allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
             if (this.files.length !== 1) {
                 return;
             }
@@ -386,7 +387,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                         } else {
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Error',
+                                title: "<?= $module->tt("project_error") ?>",
                                 html: result.message,
                                 showConfirmButton: false
                             });
@@ -404,7 +405,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     <?php if ( $dag_err ) { ?>
         Swal.fire({
             icon: "error",
-            title: "Error",
+            title: "<?= $module->tt("project_error") ?>",
             text: "<?= $dag_err ?>",
             showConfirmButton: false
         });
@@ -414,7 +415,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         if (projectHasDags && userDag === '') {
             let selectedDag = userDag;
             const result = await Swal.fire({
-                title: "Select a Data Access Group",
+                title: "<?= $module->tt("project_register_select_dag") ?>",
                 input: 'select',
                 inputOptions: projectDags,
                 inputValue: '',
