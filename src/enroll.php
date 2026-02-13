@@ -77,7 +77,7 @@ $module->initializeJavascriptModuleObject();
 ?>
 
 <div class="wrapper enroll-wrapper" hidden>
-    <h2><?= $module->tt("project_enroll_title") ?></h2>
+    <h2><?= $module->tt("project_enroll_page_title") ?></h2>
     <p><?= $module->tt("project_enroll_instructions1") ?></p>
     <p><em><?= $module->tt("project_enroll_instructions2") ?></em></p>
     <button id="importCsv" class="btn btn-xs btn-success mb-2" onclick="$('#csvFile').click();"><?= $module->tt("project_import_csv") ?></button>

@@ -175,7 +175,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
 
 <div class="wrapper" hidden>
-    <h2><?= $module->tt("project_register_title") ?></h2>
+    <h2><?= $module->tt("project_register_page_title") ?></h2>
     <p><?= $module->tt("project_register_instructions1") ?></p>
     <p><em><?= $module->tt("project_register_instructions2") ?></em></p>
 

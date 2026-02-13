@@ -310,7 +310,7 @@ $module->tt_transferToJavascriptModuleObject();
 <?php } ?>
 
 <div class="manageContainer wrapper">
-    <h2><?= $module->tt("project_manage_participants_title") ?></h2>
+    <h2><?= $module->tt("project_manage_participants_page_title") ?></h2>
     <p><?= $module->tt("project_manage_participants_subtitle") ?></p>
     <div id="loading-container" class="loader-container">
         <div id="loading" class="loader"></div>
