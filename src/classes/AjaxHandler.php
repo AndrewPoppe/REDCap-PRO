@@ -46,7 +46,7 @@ class AjaxHandler
             return $this->{$this->method}();
         } catch ( \Throwable $e ) {
             $this->module->logError($e->getMessage() ?? 'Error', $e);
-            return $this->module->escape($e->getMessage() ?? 'Error');
+            return $this->module->escape($e->rcpro ?? 'Error');
         }
     }
 
@@ -74,7 +74,7 @@ class AjaxHandler
             return $thisLanguage;
         } catch ( \Throwable $e ) {
             $this->module->logError($e->getMessage(), $e);
-            return $this->module->escape($e->getMessage() ?? 'Error');
+            return $this->module->escape($e->rcpro ?? 'Error');
         }
     }
 
@@ -104,7 +104,7 @@ class AjaxHandler
             return [ 'status' => 'ok' ];
         } catch ( \Throwable $e ) {
             $this->module->logError($e->getMessage(), $e);
-            return $this->module->escape($e->getMessage() ?? 'Error');
+            return ['error' => $this->module->escape($e->rcpro ?? 'Error')];
         }
     }
 
@@ -124,7 +124,7 @@ class AjaxHandler
             return [ 'status' => 'ok' ];
         } catch ( \Throwable $e ) {
             $this->module->logError($e->getMessage(), $e);
-            return $this->module->escape($e->getMessage() ?? 'Error');
+            return $this->module->escape($e->rcpro ?? 'Error');
         }
     }
 
@@ -148,7 +148,7 @@ class AjaxHandler
             return [ 'status' => 'ok' ];
         } catch ( \Throwable $e ) {
             $this->module->logError($e->getMessage(), $e);
-            return $this->module->escape($e->getMessage() ?? 'Error');
+            return $this->module->escape($e->rcpro ?? 'Error');
         }
     }
 
@@ -183,7 +183,7 @@ class AjaxHandler
             $this->module->logError($e->getMessage(), $e);
              echo json_encode([
                 'status' => 'error',
-                'message' => $e->getMessage() ?? 'Error'
+                'message' => $e->rcpro ?? 'Error'
              ]);
         }
     }

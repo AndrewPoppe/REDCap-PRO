@@ -861,8 +861,11 @@ $module->tt_transferToJavascriptModuleObject();
 
                     showLoadingModal();
                     window.rcpro_module.ajax("setLanguage", { code: options.languageCode, strings: languageStrings, direction: languageDirection })
-                    .then(() => {
+                    .then((response) => {
                         hideLoadingModal();
+                        if (response.error) {
+                            throw new Error(response.error);
+                        }
                         $('#createLanguageModal').modal('hide');
                         Swal.fire({
                             icon: "success",
@@ -878,7 +881,7 @@ $module->tt_transferToJavascriptModuleObject();
                         Swal.fire({
                             icon: "error",
                             title: "<?= $module->tt("project_error") ?>",
-                            text: "<?= $module->tt("project_settings_language_created_error") ?>",
+                            text: error.message || error,
                             showConfirmButton: false
                         });
                     });
