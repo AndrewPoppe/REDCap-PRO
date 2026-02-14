@@ -9,6 +9,8 @@ if ( $role < 3 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 $module->includeFont();
+$language = new Language($module);
+$language->handleLanguageChangeRequest();   
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $ui = new UI($module);
@@ -868,7 +870,7 @@ $module->tt_transferToJavascriptModuleObject();
                             text: "<?= $module->tt("project_settings_language_created_success") ?>",
                             showConfirmButton: false
                         }).then(() => {
-                            location.reload();
+                            window.location.replace(window.location.href.replace(/\#.*/,''));
                         });
                     })
                     .catch(error => {
@@ -960,7 +962,7 @@ $module->tt_transferToJavascriptModuleObject();
                                 text: "<?= $module->tt("project_settings_delete_language_success") ?>",
                                 icon: "success",
                             }).then(() => {
-                                location.reload();
+                                window.location.replace(window.location.href.replace(/\#.*/,''));
                             });
                         })
                         .catch(error => {
