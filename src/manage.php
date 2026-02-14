@@ -9,6 +9,8 @@ if ( $role === 0 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 $module->includeFont();
+$language = new Language($module);
+$language->handleLanguageChangeRequest();   
 
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';

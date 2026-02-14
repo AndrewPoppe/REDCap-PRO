@@ -128,12 +128,45 @@ class Language {
         \Session::savecookie($this->module->APPTITLE . "_language", $lang_code, 0, TRUE);
     }
 
-    public function selectLanguage(string $lang_code): void
+    /**
+     * This replaces strings in the following order: 
+     * 1. system default language
+     * 2. project default language
+     * 3. project selected language
+     * 
+     * So if a string is defined in the project selected language, then it will be used
+     * If not, but it is defined in the project default language, then that will be used
+     * If it is not defined in either of those, then the system default language will be used
+     * If it is not defined in any of those, then the English built-in language will be used (which should have all strings defined)
+     * @param string $lang_code
+     * @return void
+     */
+    public function selectProjectLanguage(string $lang_code, $project_id): void
     {
-        $languages = $this->getLanguages(true);
+        if (empty($this->project_id)) {
+            throw new REDCapProException("Project ID is not set. Cannot select project language.");
+        }
+        $systemDefaultLanguage = $this->getDefaultSystemLanguage();
+        $projectDefaultLanguage = $this->getDefaultProjectLanguage($project_id);
+        $selectedLanguage = $lang_code;
+
+        try {
+            $this->selectLanguage($systemDefaultLanguage, false);
+            $this->selectLanguage($projectDefaultLanguage, false);
+            $this->selectLanguage($selectedLanguage);
+        } catch ( \Exception $e ) {
+            $this->module->logError("Error selecting project language", $e);
+        }
+
+    }
+
+    public function selectLanguage(string $lang_code, bool $projectActiveOnly = true): void
+    {
+        $this->module->framework->log("Selecting language: " . $lang_code);
+        $languages = $this->getLanguages($projectActiveOnly);
         if ( !array_key_exists($lang_code, $languages) ) {
-            $lang_code = $this->getDefaultSystemLanguage();
-            // throw new \Exception("Language code not found or not active: " . $lang_code);
+            // $lang_code = $this->getDefaultSystemLanguage();
+            throw new \Exception("Language code not found or not active: " . $lang_code);
         }
         $lang_strings = $this->getLanguageStrings($lang_code);
         $this->replaceLanguageStrings($lang_strings);
@@ -250,20 +283,29 @@ class Language {
         return 'English';
     }
 
+    public function getDefaultProjectLanguage($project_id) : string
+    {
+        $defaultSetting = $this->module->framework->getProjectSetting('reserved-language-project', $project_id);
+        $languages = $this->getLanguages(true);
+        if (array_key_exists($defaultSetting, $languages)) {
+            return $defaultSetting;
+        }
+        return $this->getDefaultSystemLanguage();
+    }
+
     public function handleLanguageChangeRequest() : void
     {
         if (empty($this->project_id)) {
             return;
         }
-        $defaultLanguage = $this->module->framework->getProjectSetting('reserved-language-project', $this->project_id) ?? 'English';
-        $currentLanguage   = $this->getCurrentLanguage();
-        $requestedLanguage = urldecode($_GET['language']) ?? null;
-        if ( isset($requestedLanguage) && array_key_exists($requestedLanguage, $this->getLanguages(true, true)) ) {
-            $this->storeLanguageChoice($requestedLanguage);
-            $currentLanguage = $requestedLanguage;
-        }
         try {
-            $this->selectLanguage($currentLanguage ?? $defaultLanguage);
+            $currentLanguage   = $this->getCurrentLanguage();
+            $requestedLanguage = urldecode($_GET['language']) ?? null;
+            if ( isset($requestedLanguage) && array_key_exists($requestedLanguage, $this->getLanguages(true, true)) ) {
+                $this->storeLanguageChoice($requestedLanguage);
+                $currentLanguage = $requestedLanguage;
+            }    
+            $this->selectProjectLanguage($currentLanguage, $this->project_id);
         } catch (\Exception $e) {
             $this->module->framework->log("Error selecting language: " . $e->getMessage());
             $defaultSystemLanguage = $this->getDefaultSystemLanguage();

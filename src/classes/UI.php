@@ -238,7 +238,10 @@ class UI
         <link rel='icon' type='image/png' sizes='16x16' href='" . $this->module->getUrl('images/favicon-16x16.png') . "'>
         <script src='https://kit.fontawesome.com/f60568a59c.js' crossorigin='anonymous'></script>
         <div>
-            <img src='" . $this->module->getUrl("images/RCPro_Logo.svg") . "' width='395px'>
+            <div class='flex-row d-flex align-items-center'>
+            <img class='me-3' src='" . $this->module->getUrl("images/RCPro_Logo.svg") . "' width='395px'>
+            " . $this->showLanguageOptions() . "
+            </div>
             <br>
             <nav style='margin-top:20px;'><ul class='nav nav-tabs rcpro-nav'>
                 <li class='nav-item'>

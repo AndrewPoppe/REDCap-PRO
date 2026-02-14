@@ -9,6 +9,8 @@ if ( $role < 2 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 $module->includeFont();
+$language = new Language($module);
+$language->handleLanguageChangeRequest();
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $ui = new UI($module);
@@ -236,7 +238,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 </div>
                 <div class="modal-body">
                     <p><?= $module->tt("project_register_import_instructions1") ?></p>
-                    <p><?= $module->tt("project_register_import_instructions2", ["importTemplate"]) ?></p>
+                    <p></p><a id="importTemplate"><?= $module->tt("project_register_import_instructions2") ?></a></p>
                     <table class="table table-bordered table-sm">
                         <caption><?= $module->tt("project_register_import_instructions_caption") ?></caption>
                         <thead class="thead-dark table-dark">

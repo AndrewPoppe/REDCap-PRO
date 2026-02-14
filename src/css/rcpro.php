@@ -309,3 +309,7 @@ transform: rotate(360deg);
     border-color: <?= $module::$COLORS["primary"] ?> !important;
     color: white !important;
 }
+
+div#center {
+    min-width: 75% !important;
+}

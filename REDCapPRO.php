@@ -1326,13 +1326,12 @@ class REDCapPRO extends AbstractExternalModule
     {
         $language = new Language($this);
         $builtInLanguages = $language->getBuiltInLanguages(false);
-        $this->log('languages', ['langs' => json_encode($builtInLanguages)]);
         $existingCustomLanguages   = [];
         $customLanguageEntries = $settings["add-language"];
         $customLanguageCodes   = $settings["language-code"];
         $customLanguageFiles   = $settings["language-file"];
         $customLanguageDirections = $settings["language-direction"];
-        $customLanguageActiveFlags = $settings["language-active-flag"];
+        $customLanguageActiveFlags = $settings["language-active"];
         foreach ( $customLanguageEntries as $index => $entry ) {
             $thisCode = $customLanguageCodes[$index];
             $thisFile = $customLanguageFiles[$index];

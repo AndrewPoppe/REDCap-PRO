@@ -5,6 +5,8 @@ namespace YaleREDCap\REDCapPRO;
 
 $role = $module->getUserRole($module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 $module->includeFont();
+$language = new Language($module);
+$language->handleLanguageChangeRequest();   
 echo "<title>" . $module->APPTITLE . " - " . $module->tt("project_home_title") . "</title>";
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $ui = new UI($module);
