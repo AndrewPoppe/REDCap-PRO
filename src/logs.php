@@ -15,6 +15,7 @@ require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $ui = new UI($module);
 $ui->ShowHeader("Logs");
 $module->initializeJavascriptModuleObject();
+$module->tt_transferToJavascriptModuleObject();
 ?>
 
 <title>
@@ -157,6 +158,36 @@ $module->initializeJavascriptModuleObject();
                 initComplete: function() {
                     $('#RCPRO_TABLE').DataTable().columns.adjust();  
                 },
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: RCPRO_module.tt('project_dt_search_placeholder'),
+                    infoFiltered: " - " + RCPRO_module.tt('project_dt_info_filtered', '_MAX_'),
+                    emptyTable: RCPRO_module.tt('project_dt_empty_table'),
+                    info: RCPRO_module.tt('project_dt_info', { start: '_START_', end: '_END_', total: '_TOTAL_' }),
+                    infoEmpty: RCPRO_module.tt('project_dt_info_empty'),
+                    lengthMenu: RCPRO_module.tt('project_dt_length_menu', '_MENU_'),
+                    loadingRecords: RCPRO_module.tt('project_dt_loading_records'),
+                    zeroRecords: RCPRO_module.tt('project_dt_zero_records'),
+                    decimal: RCPRO_module.tt('project_dt_decimal'),
+                    thousands: RCPRO_module.tt('project_dt_thousands'),
+                    select: {
+                        rows: {
+                            _: RCPRO_module.tt('project_dt_select_rows_other'),
+                            0: RCPRO_module.tt('project_dt_select_rows_zero'),
+                            1: RCPRO_module.tt('project_dt_select_rows_one')
+                        }
+                    },
+                    paginate: {
+                        first: RCPRO_module.tt('project_dt_paginate_first'),
+                        last: RCPRO_module.tt('project_dt_paginate_last'),
+                        next: RCPRO_module.tt('project_dt_paginate_next'),
+                        previous: RCPRO_module.tt('project_dt_paginate_previous')
+                    },
+                    aria: {
+                        sortAscending: RCPRO_module.tt('project_dt_aria_sort_ascending'),
+                        sortDescending: RCPRO_module.tt('project_dt_aria_sort_descending')
+                    }
+                } 
             });
 
             $('#logs').removeClass('dataTableParentHidden');
