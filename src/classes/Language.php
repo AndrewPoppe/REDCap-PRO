@@ -123,6 +123,16 @@ class Language {
         return $_COOKIE[$this->module->APPTITLE . "_language"] ?? $defaultLanguage;
     }
 
+    public function getCurrentLanguageDirection(): string
+    {
+        $currentLanguage = $this->getCurrentLanguage();
+        $languages = $this->getLanguages(false);
+        if (array_key_exists($currentLanguage, $languages) && array_key_exists('direction', $languages[$currentLanguage])) {
+            return $languages[$currentLanguage]['direction'];
+        }
+        return 'ltr';
+    }
+
     public function storeLanguageChoice(string $lang_code): void
     {
         \Session::savecookie($this->module->APPTITLE . "_language", $lang_code, 0, TRUE);

@@ -9,19 +9,21 @@ class UI
     private $language;
     private $languageList;
     private $currentLanguage;
+    private $languageDirection;
     function __construct($module)
     {
         $this->module = $module;
         $this->language = new Language($this->module);
         $this->languageList = $this->language->getLanguages(true);
         $this->currentLanguage = $this->language->getCurrentLanguage();
+        $this->languageDirection = $this->language->getCurrentLanguageDirection();
     }
 
     private function showLanguageOptions()
     {
         $response = '';
         if (count($this->languageList) > 1) {
-            $response .= '<div class="">
+            $response .= '<div class="langOptions">
                 <div class="dropdown" data-bs-toggle="tooltip" data-bs-title="' . $this->module->framework->tt("ui_language_selection_label") . '">
                 <button type="button" class="btn btn-lg text-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fa-solid fa-language"></i>
@@ -68,12 +70,17 @@ class UI
                                 showLoadingModal();
                             });
                         });
-                        const tooltipTriggerList = [].slice.call(document.querySelectorAll(`[data-bs-toggle="tooltip"]`));
-                        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                            return new bootstrap.Tooltip(tooltipTriggerEl, {
-                                trigger: "hover"
+                        setTimeout(() => {
+                            
+                            const tooltipTriggerList = [].slice.call(document.querySelectorAll(`.langOptions [data-bs-toggle="tooltip"]`));
+                            const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                                return new bootstrap.Tooltip(tooltipTriggerEl, {
+                                    container: ".wrapper",
+                                    trigger: "hover"
+                                });
                             });
-                        });
+
+                        }, 10);
                     });
                 </script>';
             
@@ -166,7 +173,7 @@ class UI
             }
         }
         echo '<!DOCTYPE html>
-                <html lang="en" dir="' . $dir . '">
+                <html lang="en">
                 <head>
                     <meta charset="UTF-8">
                     <title>REDCapPRO ' . $title . '</title>
@@ -186,7 +193,7 @@ class UI
                         .center { display: flex; justify-content: center; align-items: center; }
                     </style>
                 </head>
-                <body>
+                <body dir="' . $this->languageDirection . '">
                     <div class="center flex-column p-3">
                         <div id="rcpro-header" class="row d-flex align-items-start justify-content-center">
                             <div style="width: 500px;">
@@ -209,6 +216,9 @@ class UI
     public function ShowHeader(string $page)
     {
         $role   = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+        $bootstrapCSS = $this->languageDirection === 'rtl' ? 
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.rtl.min.css" integrity="sha384-CfCrinSRH2IR6a4e6fy2q6ioOX7O6Mtm1L9vRvFZ1trBncWmMePhzvafv7oIcWiW" crossorigin="anonymous">' : 
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">';
         $header = "
         <style>
             .rcpro-nav a {
@@ -237,6 +247,9 @@ class UI
         <link rel='icon' type='image/png' sizes='32x32' href='" . $this->module->getUrl('images/favicon-32x32.png') . "'>
         <link rel='icon' type='image/png' sizes='16x16' href='" . $this->module->getUrl('images/favicon-16x16.png') . "'>
         <script src='https://kit.fontawesome.com/f60568a59c.js' crossorigin='anonymous'></script>
+        <script>
+            document.body.dir = '" . $this->languageDirection . "';
+        </script>
         <div>
             <div class='flex-row d-flex align-items-center'>
             <img class='me-3' src='" . $this->module->getUrl("images/RCPro_Logo.svg") . "' width='395px'>
