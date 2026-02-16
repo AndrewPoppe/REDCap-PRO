@@ -309,9 +309,9 @@ class Language {
             return;
         }
         try {
-            $currentLanguage   = $this->getCurrentLanguage();
+            $currentLanguage   = $this->getCurrentLanguage() ?? $this->getDefaultProjectLanguage($this->project_id);
             $requestedLanguage = urldecode($_GET['language']) ?? null;
-            if ( isset($requestedLanguage) && array_key_exists($requestedLanguage, $this->getLanguages(true, true)) ) {
+            if ( isset($requestedLanguage) && !empty($requestedLanguage) && array_key_exists($requestedLanguage, $this->getLanguages(true, true)) ) {
                 $this->storeLanguageChoice($requestedLanguage);
                 $currentLanguage = $requestedLanguage;
             }    
