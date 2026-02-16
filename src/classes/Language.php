@@ -36,7 +36,9 @@ class Language {
             }
         }
 
-        $defaultLanguage = $this->module->framework->getProjectSetting('reserved-language-project', $this->project_id) ?? 'English';
+        $projectLanguageSetting = $this->module->framework->getProjectSetting('reserved-language-project', $this->project_id);
+        $systemLanguageSetting = $this->module->framework->getSystemSetting('reserved-language-system');
+        $defaultLanguage = $projectLanguageSetting ?? $systemLanguageSetting ?? 'English';
         if ($activeOnly) {
             $languages = array_filter($languages, function ($lang) use ($defaultLanguage) {
                 return $lang['active'] === true || $lang['code'] === $defaultLanguage;
@@ -113,14 +115,20 @@ class Language {
     public function getCurrentLanguage(): ?string
     {
         if (empty($this->project_id)) {
-            return null;
+            return $this->getDefaultSystemLanguage();
         }
-        $newLanguage = urldecode($_GET['language'] ?? '');
-        if ($newLanguage !== '' && array_key_exists($newLanguage, $this->getLanguages(true, true))) {
+        $languages = $this->getLanguages(true, true);
+        $newLanguage = urldecode($_GET['language']);
+        if (!empty($newLanguage) && array_key_exists($newLanguage, $languages)) {
             return $newLanguage;
         }
-        $defaultLanguage = $this->module->framework->getProjectSetting('reserved-language-project', $this->project_id);
-        return $_COOKIE[$this->module->APPTITLE . "_language"] ?? $defaultLanguage;
+        // $defaultLanguage = $this->module->framework->getProjectSetting('reserved-language-project', $this->project_id);
+        $savedLanguage = $_COOKIE[$this->module->APPTITLE . "_language"];
+        if (!empty($savedLanguage) && array_key_exists($savedLanguage, $languages)) {
+            return $savedLanguage;
+        }
+        $defaultLanguage = $this->getDefaultProjectLanguage($this->project_id);
+        return $defaultLanguage;
     }
 
     public function getCurrentLanguageDirection(): string
@@ -176,7 +184,8 @@ class Language {
         $languages = $this->getLanguages($projectActiveOnly);
         if ( !array_key_exists($lang_code, $languages) ) {
             // $lang_code = $this->getDefaultSystemLanguage();
-            throw new \Exception("Language code not found or not active: " . $lang_code);
+            $this->module->logError("Language code not found or not active: " . $lang_code, new \REDCapProException($this->module));
+            return;
         }
         $lang_strings = $this->getLanguageStrings($lang_code);
         $this->replaceLanguageStrings($lang_strings);
@@ -295,7 +304,14 @@ class Language {
 
     public function getDefaultProjectLanguage($project_id) : string
     {
+        if (empty($project_id)) {
+             $project_id = $this->project_id;
+        }
         $defaultSetting = $this->module->framework->getProjectSetting('reserved-language-project', $project_id);
+        if (empty($defaultSetting)) {
+            return $this->getDefaultSystemLanguage();
+        }
+        
         $languages = $this->getLanguages(true);
         if (array_key_exists($defaultSetting, $languages)) {
             return $defaultSetting;
@@ -309,7 +325,7 @@ class Language {
             return;
         }
         try {
-            $currentLanguage   = $this->getCurrentLanguage() ?? $this->getDefaultProjectLanguage($this->project_id);
+            $currentLanguage   = $this->getCurrentLanguage();
             $requestedLanguage = urldecode($_GET['language']) ?? null;
             if ( isset($requestedLanguage) && !empty($requestedLanguage) && array_key_exists($requestedLanguage, $this->getLanguages(true, true)) ) {
                 $this->storeLanguageChoice($requestedLanguage);

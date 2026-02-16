@@ -9,34 +9,17 @@ if ( $role < 3 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 $module->includeFont();
-$language = new Language($module);
-$language->handleLanguageChangeRequest();   
+$language = new Language($module);   
 
-require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-$ui = new UI($module);
-$ui->ShowHeader("Settings");
-echo "<title>" . $module->APPTITLE . " - Settings</title>
-<link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>
-<script src='" . $module->getUrl('lib/jQuery/jquery.highlight.js') . "'></script>";
-// Check for errors
-if ( isset($_GET["error"]) ) {
-    ?>
-    <script>
-        Swal.fire({
-            icon: "error",
-            title: "<?= $module->tt("project_error") ?>",
-            text: "<?= $module->tt("project_error_general") ?>",
-            showConfirmButton: false
-        });
-    </script>
-    <?php
-}
+
+
 
 // Get possible languages
 $projectSettings = new ProjectSettings($module);
 $languageList    = $projectSettings->getLanguageFiles();
 $languages = new Language($module);
 $languageList = $languages->getLanguages(false, true);
+$defaultSystemLanguage = $languages->getDefaultSystemLanguage();
 
 // Should these settings shown / updated?
 $isAdmin                     = $module->framework->getUser()->isSuperUser();
@@ -64,7 +47,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             $lang_err = $module->tt("project_settings_lang_err");
             $any_err  = true;
         }
-        if ( $new_settings["reserved-language-project"] === "English" ) {
+        if ( $new_settings["reserved-language-project"] === $defaultSystemLanguage ) {
             $new_settings["reserved-language-project"] = null;
         }
 
@@ -142,6 +125,27 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         <?php
     }
 }
+require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+// Do this after setting new settings in case language was changed
+$language->handleLanguageChangeRequest();
+$ui = new UI($module);
+$ui->ShowHeader("Settings");
+echo "<title>" . $module->APPTITLE . " - Settings</title>
+<link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>
+<script src='" . $module->getUrl('lib/jQuery/jquery.highlight.js') . "'></script>";
+// Check for errors
+if ( isset($_GET["error"]) ) {
+    ?>
+    <script>
+        Swal.fire({
+            icon: "error",
+            title: "<?= $module->tt("project_error") ?>",
+            text: "<?= $module->tt("project_error_general") ?>",
+            showConfirmButton: false
+        });
+    </script>
+    <?php
+}
 
 // Get current project settings
 $settings                       = $module->framework->getProjectSettings();
@@ -178,7 +182,7 @@ $module->tt_transferToJavascriptModuleObject();
                             <?php
                             foreach ( $languageList as $lang_code => $lang_item ) {
                                 $selected_lang = $settings["reserved-language-project"];
-                                $selected      = ($lang_code === $selected_lang) || (!isset($selected_lang) && $lang_code === "English") ? "selected" : "";
+                                $selected      = ($lang_code === $selected_lang) || (!isset($selected_lang) && $lang_code === $defaultSystemLanguage) ? "selected" : "";
                                 ?>
                                 <option value="<?= $lang_code ?>" <?= $selected ?>>
                                     <?= $lang_code ?>
@@ -203,7 +207,7 @@ $module->tt_transferToJavascriptModuleObject();
                         </thead>
                         <tbody>
                             <?php foreach ($languageList as $lang_code => $lang_item) { 
-                                $defaultLanguage = $settings["reserved-language-project"] ?? "English";
+                                $defaultLanguage = $settings["reserved-language-project"] ?? $defaultSystemLanguage;
                                 if ($lang_item["active"] || $lang_item["code"] === $defaultLanguage) {
                                     $active = "checked";
                                 } else {
