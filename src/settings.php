@@ -197,7 +197,7 @@ $module->tt_transferToJavascriptModuleObject();
                         <thead>
                             <tr>
                                 <th scope="col"></th>
-                                <th scope="col"><?= $module->tt("project_active") ?></th>
+                                <th class="text-center" scope="col"><?= $module->tt("project_active") ?></th>
                                 <th class="text-center" scope="col"><?= $module->tt("project_actions") ?></th>
                             </tr>
                         </thead>
@@ -217,9 +217,9 @@ $module->tt_transferToJavascriptModuleObject();
                             
                                 <tr>
                                     <th scope="row"><?= $lang_item["code"] ?></th>
-                                    <td>
+                                    <td class="d-flex justify-content-center align-items-center">
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input languageChoiceActivityCheckbox" 
+                                            <input role="button" class="form-check-input languageChoiceActivityCheckbox" 
                                                 name="languageChoice_<?= $lang_item["code"] ?>" 
                                                 type="checkbox" role="switch" 
                                                 id="switchCheckDefault" <?= $active ?> <?= $activeDisabled ?>>

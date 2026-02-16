@@ -142,9 +142,6 @@ class UI
     public function ShowHeader(string $page)
     {
         $role   = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
-        $bootstrapCSS = $this->languageDirection === 'rtl' ? 
-        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.rtl.min.css" integrity="sha384-CfCrinSRH2IR6a4e6fy2q6ioOX7O6Mtm1L9vRvFZ1trBncWmMePhzvafv7oIcWiW" crossorigin="anonymous">' : 
-        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">';
         $header = "
         <style>
             .rcpro-nav a {
@@ -261,31 +258,31 @@ class UI
         <div>
             <img src='" . $this->module->getUrl("images/RCPro_Logo.svg") . "' width='500px'>
             <br>
-            <nav style='margin-top:20px;'><ul class='nav nav-tabs rcpro-nav'>
+            <nav style='margin-top:20px;'><ul class='nav nav-tabs rcpro-nav border-bottom'>
                 <li class='nav-item'>
                     <a class='nav-link " . ($page === "Projects" ? "active" : "") . "' aria-current='page' href='" . $this->module->getUrl("src/cc_projects.php") . "'>
                     <i class='fas fa-briefcase'></i>
-                    Projects</a>
+                    " . $this->module->tt("cc_projects") . "</a>
                 </li>
                 <li class='nav-item'>
                     <a class='nav-link " . ($page === "Participants" ? "active" : "") . "' href='" . $this->module->getUrl("src/cc_participants.php") . "'>
                     <i class='fas fa-users-cog'></i>
-                    Participants</a>
+                    " . $this->module->tt("cc_participants") . "</a>
                 </li>
                 <li class='nav-item'>
                     <a class='nav-link " . ($page === "Staff" ? "active" : "") . "' href='" . $this->module->getUrl("src/cc_staff.php") . "'>
                     <i class='fas fa-users'></i>
-                    Staff</a>
+                    " . $this->module->tt("cc_staff") . "</a>
                 </li>
                 <li class='nav-item'>
                     <a class='nav-link " . ($page === "Logs" ? "active" : "") . "' href='" . $this->module->getUrl("src/cc_logs.php") . "'>
                     <i class='fas fa-list'></i>
-                    Logs</a>
+                    " . $this->module->tt("cc_logs") . "</a>
                 </li>
         ";
 
         $header .= "</ul></nav>
-        </div><hr style='margin-top:0px;'>";
+        </div><hr class='border-0 mt-0'>";
         echo $header;
     }
 }
