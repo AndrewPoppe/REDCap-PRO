@@ -9,6 +9,8 @@ if ( !$module->framework->isSuperUser() ) {
 }
 echo '<!DOCTYPE html><html lang="en">';
 $module->includeFont();
+$language = new Language($module);
+$language->handleSystemLanguageChangeRequest();
 
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $ui = new UI($module);

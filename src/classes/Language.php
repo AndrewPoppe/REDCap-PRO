@@ -13,7 +13,7 @@ class Language {
     public function getLanguages(bool $activeOnly, bool $setBuiltin = false): array
     {
         if (empty($this->project_id)) {
-            return [];
+            return $this->getBuiltInLanguages();
         }
         $languagesJSON = $this->module->framework->getProjectSetting('languages', $this->project_id) ?? '[]';
         $languages = json_decode($languagesJSON, true);
@@ -75,6 +75,15 @@ class Language {
         return $activeCustomSystemLanguages;
     }
 
+    public function getCustomSystemLanguage(string $lang_code): ?array
+    {
+        $systemLanguages = $this->module->framework->getSubSettings('add-language', null) ?? [];
+        $result = array_filter($systemLanguages, function ($lang) use ($lang_code) {
+            return $lang['language-code'] === $lang_code;
+        });
+        return !empty($result) ? reset($result) : null;
+    }
+
     public function getBuiltInLanguages(bool $includeCustomSystemLanguages = true): array
     {
         $langs = array();
@@ -128,7 +137,7 @@ class Language {
             return $newLanguage;
         }
         // $defaultLanguage = $this->module->framework->getProjectSetting('reserved-language-project', $this->project_id);
-        $savedLanguage = $_COOKIE[$this->module->APPTITLE . "_language"];
+        $savedLanguage = $_COOKIE[$this->module->APPTITLE . "_language" . "_" . $this->project_id];
         if (!empty($savedLanguage) && array_key_exists($savedLanguage, $languages)) {
             return $savedLanguage;
         }
@@ -136,19 +145,36 @@ class Language {
         return $defaultLanguage;
     }
 
+    public function getCustomBuiltinLanguageDirection(string $lang_code): string | null
+    {
+        $language = $this->getCustomSystemLanguage($lang_code);
+        if (is_array($language) && array_key_exists('language-direction', $language)) {
+            $direction = $language['language-direction'];
+            if (in_array($direction, ['ltr', 'rtl'], true)) {
+                return $direction;
+            }
+        }
+        return 'ltr';
+    }
+
     public function getCurrentLanguageDirection(): string
     {
         $currentLanguage = $this->getCurrentLanguage();
         $languages = $this->getLanguages(false);
-        if (array_key_exists($currentLanguage, $languages) && array_key_exists('direction', $languages[$currentLanguage])) {
-            return $languages[$currentLanguage]['direction'];
+        $thisLanguage = $languages[$currentLanguage];
+        if (!is_array($thisLanguage) || $thisLanguage['built_in'] === true) {
+            return $this->getCustomBuiltinLanguageDirection($currentLanguage)   ;
+        }
+        if (array_key_exists('direction', $thisLanguage)) {
+            return $thisLanguage['direction'];
         }
         return 'ltr';
     }
 
     public function storeLanguageChoice(string $lang_code): void
     {
-        \Session::savecookie($this->module->APPTITLE . "_language", $lang_code, 0, TRUE);
+        $cookie = $this->module->APPTITLE . "_language" . (empty($this->project_id) ? "" : "_" . $this->project_id);
+        \Session::savecookie($cookie, $lang_code, 0, TRUE);
     }
 
     /**
@@ -183,9 +209,20 @@ class Language {
 
     }
 
+    public function selectSystemLanguage(string $lang_code): void
+    {
+        try {
+            $systemDefaultLanguage = $this->getDefaultSystemLanguage();
+            $selectedLanguage = $lang_code;
+            $this->selectLanguage($systemDefaultLanguage, false);
+            $this->selectLanguage($selectedLanguage);
+        } catch ( \Exception $e ) {
+            $this->module->logError("Error selecting system language", $e);
+        }
+    }
+
     public function selectLanguage(string $lang_code, bool $projectActiveOnly = true): void
     {
-        $this->module->framework->log("Selecting language: " . $lang_code);
         $languages = $this->getLanguages($projectActiveOnly);
         if ( !array_key_exists($lang_code, $languages) ) {
             // $lang_code = $this->getDefaultSystemLanguage();
@@ -245,11 +282,12 @@ class Language {
 
     public function getLanguageStrings(string $lang_code): array
     {
+        $builtInLanguageStrings = $this->getBuiltInLanguageStrings($lang_code);
         if (empty($this->project_id)) {
-            return [];
+            return  $builtInLanguageStrings ?? [];
         }
         if ($this->isBuiltInLanguage($lang_code)) {
-            return $this->getBuiltInLanguageStrings($lang_code);
+            return $builtInLanguageStrings ?? [];
         }
 
         $settingName = self::LANGUAGE_PREFIX . $lang_code;
@@ -341,6 +379,27 @@ class Language {
             $this->module->framework->log("Error selecting language: " . $e->getMessage());
             $defaultSystemLanguage = $this->getDefaultSystemLanguage();
             $this->selectLanguage($defaultSystemLanguage);
+        }
+    }
+
+    public function handleSystemLanguageChangeRequest() : void
+    {
+        if (!empty($this->project_id)) {
+            return;
+        }
+        try {
+            $currentLanguage   = $this->getCurrentLanguage();
+            $requestedLanguage = urldecode($_GET['language']) ?? null;
+            $builtInLanguages = $this->getBuiltInLanguages();
+            if ( isset($requestedLanguage) && !empty($requestedLanguage) && array_key_exists($requestedLanguage, $builtInLanguages) ) {
+                $this->storeLanguageChoice($requestedLanguage);
+                $currentLanguage = $requestedLanguage;
+            }    
+            $this->selectSystemLanguage($currentLanguage);
+        } catch (\Exception $e) {
+            $this->module->framework->log("Error selecting language: " . $e->getMessage());
+            $defaultSystemLanguage = $this->getDefaultSystemLanguage();
+            $this->selectSystemLanguage($defaultSystemLanguage);
         }
     }
 
