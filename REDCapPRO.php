@@ -626,6 +626,9 @@ class REDCapPRO extends AbstractExternalModule
         foreach($settings as &$setting) {
             if ( $setting["key"] === "reserved-language-system" ) {
                 foreach ($customLanguages as $language) {
+                    if (empty($language["language-code"]) ) {
+                        continue;
+                    }
                     $setting["choices"][] = [
                         "value" => $language["language-code"],
                         "name" => $language["language-code"]

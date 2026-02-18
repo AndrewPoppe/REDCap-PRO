@@ -64,7 +64,12 @@ class Language {
         $activeCustomSystemLanguages = [];
         foreach ($systemLanguages as $lang) {
             if (!empty($lang['language-active'])) {
-                $activeCustomSystemLanguages[$lang['language-code']] = $lang['language-file'];
+                $langCode = $lang['language-code'];
+                $langFile = $lang['language-file'];
+                if (empty($langCode) || empty($langFile)) {
+                    continue;
+                }
+                $activeCustomSystemLanguages[$langCode] = $langFile;
             }
         }
         return $activeCustomSystemLanguages;
