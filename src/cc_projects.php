@@ -15,6 +15,8 @@ if ( !$module->framework->isSuperUser() ) {
 
 <?php
 $module->includeFont();
+$language = new Language($module);
+$language->handleSystemLanguageChangeRequest();
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $ui = new UI($module);
 $ui->ShowControlCenterHeader("Projects");

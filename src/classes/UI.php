@@ -255,6 +255,9 @@ class UI
         <link rel='shortcut icon' href='" . $this->module->getUrl('images/favicon.ico') . "'/>
         <link rel='icon' type='image/png' sizes='32x32' href='" . $this->module->getUrl('images/favicon-32x32.png') . "'>
         <link rel='icon' type='image/png' sizes='16x16' href='" . $this->module->getUrl('images/favicon-16x16.png') . "'>
+        <script>
+            document.body.dir = '" . $this->languageDirection . "';
+        </script>
         <div>
             <img src='" . $this->module->getUrl("images/RCPro_Logo.svg") . "' width='500px'>
             <br>

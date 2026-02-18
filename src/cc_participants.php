@@ -9,6 +9,8 @@ if ( !$module->framework->isSuperUser() ) {
 }
 echo '<!DOCTYPE html><html lang="en">';
 $module->includeFont();
+$language = new Language($module);
+$language->handleSystemLanguageChangeRequest();
 
 // Check for errors
 if ( isset($_GET["error"]) ) {
