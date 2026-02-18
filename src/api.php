@@ -14,17 +14,17 @@ try {
     } elseif ( $action == "enroll" ) {
         $apiHandler = new APIParticipantEnroll($module, $_POST);
     } else {
-        throw new \Error("Invalid API action");
+        throw new \Error($module->tt("api_error1"));
     }
 
     $projectSettings = new ProjectSettings($module);
     if ( !$projectSettings->apiEnabled($apiHandler->project->getProjectId()) ) {
-        throw new \Error("API is not enabled for this project");
+        throw new \Error($module->tt("api_error2"));
     }
 
     if ( !$apiHandler->valid ) {
         echo json_encode($apiHandler->errorMessages, JSON_PRETTY_PRINT);
-        throw new \Error("Invalid API payload");
+        throw new \Error($module->tt("api_error3"));
     }
 } catch ( \Throwable $e ) {
     $module->logError("Error using API", $e);
@@ -37,7 +37,7 @@ try {
 // Only allow Normal Users and above to use the API
 if ( ((int) $apiHandler->getRole()) < 2 ) {
     echo json_encode([
-        "error" => "You do not have permission to use the REDCapPRO API",
+        "error" => $module->tt("api_error4"),
     ], JSON_PRETTY_PRINT);
     return;
 }
