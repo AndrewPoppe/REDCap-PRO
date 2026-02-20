@@ -302,7 +302,7 @@ $participants = $participantHelper->getAllParticipants();
                 },
                 columns: [
                     {
-                        title: '<?= $module->tt("cc_participants_table_uid") ?>',
+                        title: `<?= $module->tt("cc_participants_table_uid") ?>`,
                         className: "dt-center rcpro_participant_link",
                         data: 'rcpro_participant_id',
                         createdCell: function (td, cellData, rowData, row, col) {
@@ -325,12 +325,12 @@ $participants = $participantHelper->getAllParticipants();
                         }
                     },
                     {
-                        title: '<?= $module->tt("cc_participants_table_username") ?>',
+                        title: `<?= $module->tt("cc_participants_table_username") ?>`,
                         className: "dt-center",
                         data: 'username'
                     },
                     {
-                        title: '<?= $module->tt("cc_participants_table_active") ?>',
+                        title: `<?= $module->tt("cc_participants_table_active") ?>`,
                         className: "dt-center",
                         data: function (row, type, set, meta) {
                             if (type === 'display') {
@@ -344,7 +344,7 @@ $participants = $participantHelper->getAllParticipants();
                         }
                     },
                     {
-                        title: '<?= $module->tt("cc_participants_table_pw_set") ?>',
+                        title: `<?= $module->tt("cc_participants_table_pw_set") ?>`,
                         className: "dt-center",
                         data: function (row, type, set, meta) {
                             if (type === 'display') {
@@ -358,21 +358,21 @@ $participants = $participantHelper->getAllParticipants();
                         }
                     },
                     {
-                        title: '<?= $module->tt("cc_participants_table_fname") ?>',
+                        title: `<?= $module->tt("cc_participants_table_fname") ?>`,
                         className: "dt-center",
                         data: 'fname'
                     },
                     {
-                        title: '<?= $module->tt("cc_participants_table_lname") ?>',
+                        title: `<?= $module->tt("cc_participants_table_lname") ?>`,
                         className: "dt-center",
                         data: 'lname'
                     },
                     {
-                        title: '<?= $module->tt("cc_participants_table_email") ?>',
+                        title: `<?= $module->tt("cc_participants_table_email") ?>`,
                         data: 'email'
                     },
                     {
-                        title: '<?= $module->tt("cc_participants_table_projects") ?>',
+                        title: `<?= $module->tt("cc_participants_table_projects") ?>`,
                         className: "dt-center",
                         data: function (row, type, set, meta) {
                             if (type === 'display') {
@@ -392,7 +392,7 @@ $participants = $participantHelper->getAllParticipants();
                         }
                     },
                     {
-                        title: '<?= $module->tt("cc_participants_table_actions") ?>',
+                        title: `<?= $module->tt("cc_participants_table_actions") ?>`,
                         className: "dt-center",
                         data: function (row, type, set, meta) {
                             if (type === 'display') {

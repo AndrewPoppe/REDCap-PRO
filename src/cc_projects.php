@@ -66,7 +66,7 @@ $module->tt_transferToJavascriptModuleObject();
                 },
                 columns: [
                     {
-                        title: '<?= $module->tt("cc_projects_table_project_id") ?>',
+                        title: `<?= $module->tt("cc_projects_table_project_id") ?>`,
                         className: "dt-center rcpro_participant_link",
                         data: function (row, type, set, meta) {
                             if (type === 'display') {
@@ -77,21 +77,21 @@ $module->tt_transferToJavascriptModuleObject();
                         }
                     },
                     {
-                        title: '<?= $module->tt("cc_projects_table_redcap_pid") ?>',
+                        title: `<?= $module->tt("cc_projects_table_redcap_pid") ?>`,
                         className: "dt-center",
                         data: 'project_id'
                     },
                     {
-                        title: '<?= $module->tt("cc_title") ?>',
+                        title: `<?= $module->tt("cc_title") ?>`,
                         data: 'title'
                     },
                     {
-                        title: '<?= $module->tt("cc_status") ?>',
+                        title: `<?= $module->tt("cc_status") ?>`,
                         className: "dt-center",
                         data: 'status'
                     },
                     {
-                        title: '<?= $module->tt("cc_projects_table_n_participants") ?>',
+                        title: `<?= $module->tt("cc_projects_table_n_participants") ?>`,
                         className: "dt-center rcpro_participant_link",
                         data: function (row, type, set, meta) {
                             if (type === 'display') {
@@ -102,7 +102,7 @@ $module->tt_transferToJavascriptModuleObject();
                         }
                     },
                     {
-                        title: '<?= $module->tt("cc_projects_table_n_staff_members") ?>',
+                        title: `<?= $module->tt("cc_projects_table_n_staff_members") ?>`,
                         className: "dt-center rcpro_participant_link",
                         data: function (row, type, set, meta) {
                             if (type === 'display') {
@@ -113,7 +113,7 @@ $module->tt_transferToJavascriptModuleObject();
                         }
                     },
                     {
-                        title: '<?= $module->tt("cc_projects_table_n_records") ?>',
+                        title: `<?= $module->tt("cc_projects_table_n_records") ?>`,
                         className: "dt-center rcpro_participant_link",
                         data: function (row, type, set, meta) {
                             if (type === 'display') {
