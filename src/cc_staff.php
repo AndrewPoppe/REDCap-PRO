@@ -63,7 +63,7 @@ $module->tt_transferToJavascriptModuleObject();
                 },
                 columns: [
                     {
-                        title: '<?= $module->tt("cc_staff_table_username") ?>',
+                        title: `<?= $module->tt("cc_staff_table_username") ?>`,
                         className: "rcpro_user_link",
                         data: 'username',
                         createdCell: function (td, cellData, rowData, row, col) {
@@ -73,16 +73,16 @@ $module->tt_transferToJavascriptModuleObject();
                         }
                     },
                     {
-                        title: '<?= $module->tt("cc_staff_table_name") ?>',
+                        title: `<?= $module->tt("cc_staff_table_name") ?>`,
                         className: "dt-center",
                         data: 'name'
                     },
                     {
-                        title: '<?= $module->tt("cc_staff_table_email") ?>',
+                        title: `<?= $module->tt("cc_staff_table_email") ?>`,
                         data: 'email'
                     },
                     {
-                        title: '<?= $module->tt("cc_staff_table_projects") ?>',
+                        title: `<?= $module->tt("cc_staff_table_projects") ?>`,
                         className: "dt-center",
                         data: function (row, type, set, meta) {
                             if (type === 'display') {
