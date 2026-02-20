@@ -30,8 +30,9 @@ class UI
                 </button>
                 <ul class="dropdown-menu" id="languageDropdownMenu">
                 ';
-            foreach ($this->languageList as $lang_item) {
-                $response .= '<li class="dropdown-item"><a href="" class="languageSelect" value="' . $lang_item['code'] . '">' . $lang_item['code'] . '</a></li>';
+            foreach ($this->languageList as $lang_key => $lang_item) {
+                $langCode  = $lang_item['code'] ?? $lang_key;
+                $response .= '<li class="dropdown-item"><a href="" class="languageSelect" value="' . $langCode . '">' . $langCode . '</a></li>';
             }
                 $response .= '</ul></div></div>
                 <div class="modal" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -333,7 +334,10 @@ class UI
             document.body.dir = '" . $this->languageDirection . "';
         </script>
         <div>
-            <img src='" . $this->module->getUrl("images/RCPro_Logo.svg") . "' width='500px'>
+            <div class='flex-row d-flex align-items-center'>
+            <img class='me-3' src='" . $this->module->getUrl("images/RCPro_Logo.svg") . "' width='395px'>
+            " . $this->showLanguageOptions() . "
+            </div>
             <br>
             <nav style='margin-top:20px;'><ul class='nav nav-tabs rcpro-nav border-bottom'>
                 <li class='nav-item'>
