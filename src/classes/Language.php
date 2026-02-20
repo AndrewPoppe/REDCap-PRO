@@ -126,18 +126,36 @@ class Language {
         }
     }
 
+    public function getCurrentLanguageSystem(): string
+    {
+        $languages = $this->getBuiltInLanguages();
+        $defaultSystemLanguage = $this->getDefaultSystemLanguage();
+        $savedLanguage = $this->getSavedLanguage();
+        $requestedLanguage = $this->getRequestedLanguage();
+        if ( !empty($requestedLanguage) && array_key_exists($requestedLanguage, $languages) ) {
+            $this->module->log('Using requested system language: ' . $requestedLanguage);
+            return $requestedLanguage;
+        }
+        if (!empty($savedLanguage) && array_key_exists($savedLanguage, $languages)) {
+            $this->module->log('Using saved system language: ' . $savedLanguage);
+            return $savedLanguage;
+        }
+        $this->module->log('Using default system language: ' . $defaultSystemLanguage);
+        return $defaultSystemLanguage;
+    }
+
     public function getCurrentLanguage(): ?string
     {
         if (empty($this->project_id)) {
-            return $this->getDefaultSystemLanguage();
+            return $this->getCurrentLanguageSystem();
         }
         $languages = $this->getLanguages(true, true);
-        $newLanguage = urldecode($_GET['language']);
+        $newLanguage = $this->getRequestedLanguage();
         if (!empty($newLanguage) && array_key_exists($newLanguage, $languages)) {
             return $newLanguage;
         }
         // $defaultLanguage = $this->module->framework->getProjectSetting('reserved-language-project', $this->project_id);
-        $savedLanguage = $_COOKIE[$this->module->APPTITLE . "_language" . "_" . $this->project_id];
+        $savedLanguage = $this->getSavedLanguage();
         if (!empty($savedLanguage) && array_key_exists($savedLanguage, $languages)) {
             return $savedLanguage;
         }
@@ -362,6 +380,21 @@ class Language {
         return $this->getDefaultSystemLanguage();
     }
 
+    private function getRequestedLanguage(): string
+    {
+        return urldecode($_GET['language']) ?? '';
+    }
+    
+    private function getSavedLanguage(): string
+    {
+        if (empty($this->project_id)) {
+            $cookieName = $this->module->APPTITLE . "_language";
+        } else {
+            $cookieName = $this->module->APPTITLE . "_language" . "_" . $this->project_id;
+        }
+        return $_COOKIE[$cookieName] ?? '';
+    }
+
     public function handleLanguageChangeRequest() : void
     {
         if (empty($this->project_id)) {
@@ -369,7 +402,7 @@ class Language {
         }
         try {
             $currentLanguage   = $this->getCurrentLanguage();
-            $requestedLanguage = urldecode($_GET['language']) ?? null;
+            $requestedLanguage = $this->getRequestedLanguage();
             if ( isset($requestedLanguage) && !empty($requestedLanguage) && array_key_exists($requestedLanguage, $this->getLanguages(true, true)) ) {
                 $this->storeLanguageChoice($requestedLanguage);
                 $currentLanguage = $requestedLanguage;
@@ -388,13 +421,14 @@ class Language {
             return;
         }
         try {
-            $currentLanguage   = $this->getCurrentLanguage();
-            $requestedLanguage = urldecode($_GET['language']) ?? null;
+            $currentLanguage   = $this->getCurrentLanguageSystem();
+            $requestedLanguage = $this->getRequestedLanguage();
             $builtInLanguages = $this->getBuiltInLanguages();
             if ( isset($requestedLanguage) && !empty($requestedLanguage) && array_key_exists($requestedLanguage, $builtInLanguages) ) {
-                $this->storeLanguageChoice($requestedLanguage);
                 $currentLanguage = $requestedLanguage;
-            }    
+            }
+            $this->module->log("Current system language: " . $currentLanguage);   
+            $this->storeLanguageChoice($currentLanguage);     
             $this->selectSystemLanguage($currentLanguage);
         } catch (\Exception $e) {
             $this->module->framework->log("Error selecting language: " . $e->getMessage());
