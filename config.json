@@ -13,49 +13,10 @@
     ],
     "system-settings": [
         {
-            "key": "add-language",
-            "name": "add_language",
+            "key": "general-settings-descriptive",
+            "name": "general_settings_descriptive",
             "tt_name": true,
-            "type": "sub_settings",
-            "sub_settings": [
-                {
-                    "key": "language-code",
-                    "name": "language_code",
-                    "tt_name": true,
-                    "type": "text"
-                },
-                {
-                    "key": "language-file",
-                    "name": "language_file",
-                    "tt_name": true,
-                    "type": "file"
-                },
-                {
-                    "key": "language-direction",
-                    "name": "language_direction",
-                    "tt_name": true,
-                    "type": "dropdown",
-                    "choices": [
-                        {
-                            "value": "ltr",
-                            "name": "ltr",
-                            "tt_name": true
-                        },
-                        {
-                            "value": "rtl",
-                            "name": "rtl",
-                            "tt_name": true
-                        }
-                    ]
-                },
-                {
-                    "key": "language-active",
-                    "name": "language_active",
-                    "tt_name": true,
-                    "type": "checkbox"
-                }
-            ],
-            "repeatable": true
+            "type": "descriptive"
         },
         {
             "key": "email-from-address",
@@ -116,6 +77,57 @@
             "tt_name": true,
             "type": "text",
             "validation": "integer"
+        },
+        {
+            "key": "language-settings-descriptive",
+            "name": "language_settings_descriptive",
+            "tt_name": true,
+            "type": "descriptive"
+        },
+        {
+            "key": "add-language",
+            "name": "add_language",
+            "tt_name": true,
+            "type": "sub_settings",
+            "sub_settings": [
+                {
+                    "key": "language-code",
+                    "name": "language_code",
+                    "tt_name": true,
+                    "type": "text"
+                },
+                {
+                    "key": "language-file",
+                    "name": "language_file",
+                    "tt_name": true,
+                    "type": "file"
+                },
+                {
+                    "key": "language-direction",
+                    "name": "language_direction",
+                    "tt_name": true,
+                    "type": "dropdown",
+                    "choices": [
+                        {
+                            "value": "ltr",
+                            "name": "ltr",
+                            "tt_name": true
+                        },
+                        {
+                            "value": "rtl",
+                            "name": "rtl",
+                            "tt_name": true
+                        }
+                    ]
+                },
+                {
+                    "key": "language-active",
+                    "name": "language_active",
+                    "tt_name": true,
+                    "type": "checkbox"
+                }
+            ],
+            "repeatable": true
         },
         {
             "key": "mfa-descriptive",
