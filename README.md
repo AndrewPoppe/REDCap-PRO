@@ -14,6 +14,7 @@
   - [EM Settings](#em-settings)
     - [System Settings](#system-settings)
     - [Project Settings](#project-settings)
+    - [Custom Header Logo](#custom-header-logo)
     - [Translation](#translation)
   - [REDCapPRO Project Menu](#redcappro-project-menu)
     - [Home Tab](#home-tab)
@@ -128,12 +129,34 @@ These are settings/configuration options accessible in the normal External Modul
 | **Allow Auto-Enroll Upon Self-Registration**                                       | Checkbox | Allow participants to enroll themselves in a project when they register. If checked, the participant will be automatically enrolled in the REDCapPRO project when they self-register                                                                   |       Unchecked       |
 | **reCaptcha Site Key**                                                             |   Text   | The site key for the reCaptcha v3 service. This is used to prevent bots from registering. *Note: You **cannot** use the same site key as the one utilized by REDCap on surveys, because that site key is a v2 key.*                                    |        (blank)        |
 | **reCaptcha Secret Key**                                                           |   Text   | The secret key for the reCaptcha v3 service. This is used to prevent bots from registering. *Note: You **cannot** use the same secret key as the one utilized by REDCap on surveys, because that secret key is a v2 key.*                              |        (blank)        |
+| **System Header Logo Image**                                                       |   File   | Upload an image file to use as the default logo on all participant-facing pages. Accepted formats: JPG, PNG, GIF, SVG, WebP. Maximum size: 2 MB.                                                                                                       |        (blank)        |
+| **Use System Logo**                                                                | Checkbox | Display the uploaded system logo on participant-facing pages. Uncheck to revert to the original default REDCapPRO logo without removing the uploaded file. Only shown when a system logo file has been uploaded.                                       |       Unchecked       |
+| **Allow Custom Project Logos**                                                     | Checkbox | Allow project administrators to upload a custom logo that appears in participant-facing page headers. If disabled, all projects display the system logo (or the original default if no system logo is set). See [Custom Header Logo](#custom-header-logo). |       Unchecked       |
 | **Enable the API**                                                                 | Checkbox | Enable the API for this system. This allows you to register and enroll participants using the [API](#api).                                                                                                                                             |       Unchecked       |
 | **Restrict API project settings to REDCap administrators**                         | Checkbox | If checked, only REDCap administrators will be able to access the API settings in the project. If unchecked, any REDCapPRO manager will be able to access the API settings.                                                                            |       Unchecked       |
 
 ### Project Settings
 
 Project configuration is done within the project's **REDCapPRO** menu. 
+
+### Custom Header Logo
+
+**REDCapPRO** supports custom branding by allowing a logo image to be displayed in the header of all participant-facing pages (login, password reset, etc.). The logo is resolved in the following priority order:
+
+1. **Project logo** — if the system permits custom project logos and the project has uploaded one, it is shown.
+2. **System logo** — if a system-level logo has been uploaded and enabled, it is used as the default across all projects.
+3. **Default** — the original REDCapPRO logo (`RCPro_Logo_Alternate.svg`) is shown.
+
+Custom logos are only shown on **participant-facing pages**. Project staff pages always display the standard REDCapPRO logo.
+
+**System-level configuration** (Control Center → External Modules → REDCapPRO):
+- Upload a logo file with **System Header Logo Image**.
+- Toggle it on/off with **Use System Logo** without deleting the file.
+- Grant projects the ability to override it with **Allow Custom Project Logos**.
+
+**Project-level configuration** (REDCapPRO Project Menu → Settings):
+- Upload a per-project logo with **Header Logo** (only visible when **Allow Custom Project Logos** is enabled at the system level).
+- Remove the custom logo by checking the *Remove custom logo and restore the default* checkbox and saving.
 
 ### Translation
 
