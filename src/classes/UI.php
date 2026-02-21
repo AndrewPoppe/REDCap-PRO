@@ -32,7 +32,7 @@ class UI
                 ';
             foreach ($this->languageList as $lang_key => $lang_item) {
                 $langCode  = $lang_item['code'] ?? $lang_key;
-                $response .= '<li class="dropdown-item"><a href="" class="languageSelect" value="' . $langCode . '">' . $langCode . '</a></li>';
+                $response .= '<li class="dropdown-item" style="cursor: pointer;"><a href="" class="languageSelect" value="' . $langCode . '">' . $langCode . '</a></li>';
             }
                 $response .= '</ul></div></div>
                 <div class="modal" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -69,6 +69,11 @@ class UI
                             item.href = url.toString();
                             item.addEventListener("click", (e) => {
                                 showLoadingModal();
+                            });
+                            item.closest("li").addEventListener("click", (e) => {
+                                if (e.target !== item) {
+                                    item.click();
+                                }
                             });
                         });
                         setTimeout(() => {
