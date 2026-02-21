@@ -96,6 +96,9 @@ class UI
 
     public function ShowParticipantHeader(string $title)
     {
+        $bootstrapCSS = $this->languageDirection === 'rtl' ?
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.rtl.min.css" integrity="sha384-CfCrinSRH2IR6a4e6fy2q6ioOX7O6Mtm1L9vRvFZ1trBncWmMePhzvafv7oIcWiW" crossorigin="anonymous">' :
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">';
         $customLogoEnabled = (bool) $this->module->framework->getSystemSetting('allow-custom-logo-system');
         $customLogo        = $customLogoEnabled ? $this->module->framework->getProjectSetting('project-header-logo') : null;
         if ( !empty($customLogo) ) {
@@ -138,8 +141,12 @@ class UI
                 <body dir="' . $this->languageDirection . '">
                     <div class="center flex-column p-3">
                         <div id="rcpro-header" class="row d-flex align-items-start justify-content-center">
+                            <div style="width: 100px;"></div>
                             <div style="width: 500px;">
                                 <img id="rcpro-logo" class="w-100" src="' . $participantLogo . '">
+                            </div>
+                            <div style="width: 100px;">
+                                ' . $this->showLanguageOptions() . '
                             </div>
                         </div>
                         <div class="wrapper px-3">
