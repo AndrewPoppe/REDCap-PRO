@@ -1,7 +1,9 @@
 {
     "name": "REDCapPRO",
+    "tt_name": "module_name",
     "namespace": "YaleREDCap\\REDCapPRO",
     "description": "<strong>Patient Reported Outcomes in REDCap</strong><br>This module provides a means of identifying and authenticating study participants when collecting survey data. It stores that information in the REDCap project's audit trail.<br><strong><a href='https://github.com/AndrewPoppe/REDCap-PRO#readme' style='color:#900000 !important;' target='_blank' rel='noreferrer noopen'>See full documentation here.</a></strong>",
+    "tt_description": "module_description",
     "authors": [
         {
             "name": "Andrew Poppe",
@@ -11,69 +13,126 @@
     ],
     "system-settings": [
         {
+            "key": "add-language",
+            "name": "add_language",
+            "tt_name": true,
+            "type": "sub_settings",
+            "sub_settings": [
+                {
+                    "key": "language-code",
+                    "name": "language_code",
+                    "tt_name": true,
+                    "type": "text"
+                },
+                {
+                    "key": "language-file",
+                    "name": "language_file",
+                    "tt_name": true,
+                    "type": "file"
+                },
+                {
+                    "key": "language-direction",
+                    "name": "language_direction",
+                    "tt_name": true,
+                    "type": "dropdown",
+                    "choices": [
+                        {
+                            "value": "ltr",
+                            "name": "ltr",
+                            "tt_name": true
+                        },
+                        {
+                            "value": "rtl",
+                            "name": "rtl",
+                            "tt_name": true
+                        }
+                    ]
+                },
+                {
+                    "key": "language-active",
+                    "name": "language_active",
+                    "tt_name": true,
+                    "type": "checkbox"
+                }
+            ],
+            "repeatable": true
+        },
+        {
             "key": "email-from-address",
-            "name": "<strong>Email From Address</strong>:<br>This will be the <em>From</em> email address for all system emails. This can help if emails are being sent to spam or are not delivered (default is noreply@REDCapPRO.com)",
+            "name": "email_from_address",
+            "tt_name": true,
             "type": "email"
         },
         {
             "key": "prevent-email-login-system",
-            "name": "<strong>Prevent Email Login</strong>:<br>Should participants be prevented from using their email address to log in to the system. Checking this will require that they login using their participant username only.<br><em>Note: if checked, this overrides the associated project-level setting</em>",
+            "name": "prevent_email_login_system",
+            "tt_name": true,
             "type": "checkbox"
         },
         {
             "key": "warning-time",
-            "name": "<strong>Warning Time</strong>:<br>Number of minutes to wait before warning participant of inactivity timeout (default is 1 minute)",
+            "name": "warning_time",
+            "tt_name": true,
             "type": "text",
             "validation": "number"
         },
         {
             "key": "timeout-time",
-            "name": "<strong>Timeout Time</strong>:<br>Number of minutes to wait before logging participant out due to inactivity (default is 5 minutes)",
+            "name": "timeout_time",
+            "tt_name": true,
             "type": "text",
             "validation": "number"
         },
         {
             "key": "allow-project-timeout-time-override",
-            "name": "<strong>Allow Project-Level Timeout Time Override</strong>:<br>If enabled, the participant inactivity timeout duration can be modified at the project-level to be longer or shorter than the system timeout setting. (default is No)",
+            "name": "allow_project_timeout_time_override",
+            "tt_name": true,
             "type": "checkbox"
         },
         {
             "key": "timeout-time-maximum",
-            "name": "<strong>Maximum Timeout Time</strong>:<br>If the <code>Allow Project-Level Timeout Time Override</code> setting is enabled above, then this value sets the upper-bound on the project-level override. This value has no effect unless that setting is enabled. (default is the same as the system <code>Timeout Time</code> setting)",
+            "name": "timeout_time_maximum",
+            "tt_name": true,
             "type": "text",
             "validation": "number"
         },
         {
             "key": "password-length",
-            "name": "<strong>Password Length</strong>:<br>Minimum length of password (default is 8 characters)",
+            "name": "password_length",
+            "tt_name": true,
             "type": "text",
             "validation": "integer"
         },
         {
             "key": "login-attempts",
-            "name": "<strong>Login Attempts</strong>:<br>Number of failed login attempts before being locked out (default is 3 attempts)",
+            "name": "login_attempts",
+            "tt_name": true,
             "type": "text",
             "validation": "integer"
         },
         {
             "key": "lockout-seconds",
-            "name": "<strong>Lockout Duration</strong>:<br>Length of a lockout due to failed login attempts, in seconds (default is 300 seconds)",
+            "name": "lockout_seconds",
+            "tt_name": true,
             "type": "text",
             "validation": "integer"
         },
         {
             "key": "mfa-descriptive",
-            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(197, 248, 255), rgb(197, 248, 255)); border: 1px solid rgba(37, 168, 133, 0.4); border-radius: 0.375rem;'><strong>Multi-Factor Authentication Settings</strong><p>These settings control the use of multi-factor authentication (MFA). Please take care to understand how MFA may be used before enabling it in the system.</p></div>",
+            "name": "mfa_descriptive",
+            "tt_name": true,
             "type": "descriptive"
         },
         {
             "key": "mfa-system",
-            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(197, 248, 255), rgb(197, 248, 255)); border: 1px solid rgba(37, 168, 133, 0.4); border-radius: 0.375rem;'><strong>Multi-Factor Authentication</strong>:</div><br>Should participants be required to use multi-factor authentication (MFA) when logging in? If so, they will be required to enter a code after entering their username and password. This is an additional security measure to prevent unauthorized access.<br><em>Note: this setting enables the MFA option globally, but it still must be enabled in the project settings to take effect</em>",
+            "name": "mfa_system",
+            "tt_name": true,
             "type": "checkbox"
         },
         {
             "key": "mfa-authenticator-app-system",
-            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(197, 248, 255), rgb(197, 248, 255)); border: 1px solid rgba(37, 168, 133, 0.4); border-radius: 0.375rem;'><strong>Multi-Factor Authentication with Authenticator App</strong>:</div><br>Should participants be allowed to use an authenticator app (such as Google Authenticator or Microsoft Authenticator) to generate their MFA code? If not, they will be required to use the code sent to their email address.<br><em>Note: this setting only applies if MFA is enabled globally, but it still must be enabled in the project settings to take effect</em>",
+            "name": "mfa_authenticator_app_system",
+            "tt_name": true,
             "type": "checkbox",
             "branchingLogic": {
                 "field": "mfa-system",
@@ -82,27 +141,32 @@
         },
         {
             "key": "mfa-require-admin",
-            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(197, 248, 255), rgb(197, 248, 255)); border: 1px solid rgba(37, 168, 133, 0.4); border-radius: 0.375rem;'><strong>Restrict MFA project settings to REDCap administrators</strong>:</div><br>Should only REDCap administrators be able to enable/disable MFA options in project settings? If not, any REDCapPRO manager in the project will be able to enable/disable MFA options in project settings.<br><em>Note: this setting only applies if MFA is enabled globally</em>",
+            "name": "mfa_require_admin",
+            "tt_name": true,
             "type": "checkbox"
         },
         {
             "key": "self-registration-descriptive",
-            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 197,248), rgb(255, 197,248)); border: 1px solid rgba(168, 37, 133, 0.4); border-radius: 0.375rem;'><strong>Self-Registration and Enrollment Settings</strong><p>These settings control the ability for participants to register and/or enroll themselves. Please take care to understand the implications of this before enabling it in the system.</p></div>",
+            "name": "self_registration_descriptive",
+            "tt_name": true,
             "type": "descriptive"
         },
         {
             "key": "allow-self-registration-system",
-            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 197,248), rgb(255, 197,248)); border: 1px solid rgba(168, 37, 133, 0.4); border-radius: 0.375rem;'><strong>Allow Self-Registration:</strong></div><br>Should participants be allowed to create their own accounts? (default is No)<br><em>Note: this must also be enabled in a project's settings to take effect</em>",
+            "name": "allow_self_registration_system",
+            "tt_name": true,
             "type": "checkbox"
         },
         {
             "key": "self-registration-require-admin",
-            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 197, 248), rgb(255, 197, 248)); border: 1px solid rgba(168, 37, 133, 0.4); border-radius: 0.375rem;'><strong>Restrict Self-Registration project settings to REDCap administrators:</strong></div>Should only REDCap administrators be able to enable/disable the API in project settings? If not, any REDCapPRO manager in the project will be able to enable/disable participant self-registration and/or enrollment in project settings.<br><em>Note: this setting only applies if participant self-registration is enabled globally</em>",
+            "name": "self_registration_require_admin",
+            "tt_name": true,
             "type": "checkbox"
         },
         {
             "key": "allow-auto-enroll-upon-self-registration-system",
-            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 197,248), rgb(255, 197,248)); border: 1px solid rgba(168, 37, 133, 0.4); border-radius: 0.375rem;'><strong>Allow Auto-Enroll Upon Self-Registration:</strong></div><br>Should participants be automatically enrolled in the project upon self-registration? (default is No)<br><em>Note: this must also be enabled in a project's settings to take effect</em>",
+            "name": "allow_auto_enroll_upon_self_registration_system",
+            "tt_name": true,
             "type": "checkbox",
             "branchingLogic": {
                 "field": "allow-self-registration-system",
@@ -111,12 +175,14 @@
         },
         {
             "key": "recaptcha-site-key",
-            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 197,248), rgb(255, 197,248)); border: 1px solid rgba(168, 37, 133, 0.4); border-radius: 0.375rem;'><strong>reCAPTCHA Site Key:</strong></div><br>Site key for reCAPTCHA v3 (default is empty)<br>If this is blank, reCAPTCHA will not be used when participants self-register (not recommended)<br><em>You cannot use the same site key that you use for REDCap, since that is a v2 key. Create a v3 key <a href='https://www.google.com/recaptcha/admin#list'>here</a> and then copy and paste the site key</em>",
+            "name": "recaptcha_site_key",
+            "tt_name": true,
             "type": "text"
         },
         {
             "key": "recaptcha-secret-key",
-            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 197,248), rgb(255, 197,248)); border: 1px solid rgba(168, 37, 133, 0.4); border-radius: 0.375rem;'><strong>reCAPTCHA Secret Key:</strong></div><br>Secret key for reCAPTCHA v3 (default is empty)<br><em>You cannot use the same secret key that you use for REDCap surveys, since that is a v2 key. This must be a v3 key</em>",
+            "name": "recaptcha_secret_key",
+            "tt_name": true,
             "type": "password"
         },
         {
@@ -150,24 +216,28 @@
         },
         {
             "key": "api-descriptive",
-            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 248, 197), rgb(255, 248, 197)); border: 1px solid rgba(168, 133, 37, 0.4); border-radius: 0.375rem;'><strong>API Settings</strong><p>These settings control the use of the API. Please take care to understand how the API may be used before enabling it in the system.</p>    </div>",
+            "name": "api_descriptive",
+            "tt_name": true,
             "type": "descriptive"
         },
         {
             "key": "api-enabled-system",
-            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 248, 197), rgb(255, 248, 197)); border: 1px solid rgba(168, 133, 37, 0.4); border-radius: 0.375rem;'><strong>Enable the API</strong></div>Should the API be enabled for use?<br><em>Note: this setting enables the API option globally, but it still must be enabled in the project settings to take effect</em>",
+            "name": "api_enabled_system",
+            "tt_name": true,
             "type": "checkbox"
         },
         {
             "key": "api-require-admin",
-            "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 248, 197), rgb(255, 248, 197)); border: 1px solid rgba(168, 133, 37, 0.4); border-radius: 0.375rem;'><strong>Restrict API project settings to REDCap administrators</strong></div>Should only REDCap administrators be able to enable/disable the API in project settings? If not, any REDCapPRO manager in the project will be able to enable/disable the API in project settings.<br><em>Note: this setting only applies if the API is enabled globally</em>",
+            "name": "api_require_admin",
+            "tt_name": true,
             "type": "checkbox"
         }
     ],
     "links": {
         "project": [
             {
-                "name": "<span style='margin-top:2px;'><strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em></span>",
+                "name": "config_project_link",
+                "tt_name": true,
                 "key": "redcappro",
                 "icon": "images/fingerprint_2.png",
                 "url": "src/home.php",
@@ -176,7 +246,8 @@
         ],
         "control-center": [
             {
-                "name": "<strong><font style='color:black;'>REDCap</font><em><font style='color:#900000;'>PRO</font></em>",
+                "name": "config_control_center_link",
+                "tt_name": true,
                 "key": "redcappro",
                 "icon": "images/fingerprint_2.png",
                 "url": "src/cc_projects.php",
@@ -202,7 +273,10 @@
         "src/api"
     ],
     "auth-ajax-actions": [
+        "deleteLanguage",
+        "downloadLanguageFile",
         "exportLogs",
+        "getLanguage",
         "getLogs",
         "getParticipants",
         "getParticipantsCC",
@@ -211,7 +285,9 @@
         "getStaffCC",
         "importCsvEnroll",
         "importCsvRegister",
-        "searchParticipantByEmail"
+        "searchParticipantByEmail",
+        "setLanguage",
+        "setLanguageActiveStatus"
     ],
     "no-auth-ajax-actions": [
         "sendMfaTokenEmail",
@@ -221,19 +297,23 @@
     "action-tags": [
         {
             "tag": "@RCPRO-USERNAME",
-            "description": "This transforms a text field into a dropdown selector. The user can select an enrolled participant and populate the field with that participant's username"
+            "description": "action_tag_username",
+            "tt_description": true
         },
         {
             "tag": "@RCPRO-EMAIL",
-            "description": "If @RCPRO-USERNAME is present on the instrument, then when the participant is selected the email field with the @RCPRO-EMAIL tag will be populated with the participant's email address"
+            "description": "action_tag_email",
+            "tt_description": true
         },
         {
             "tag": "@RCPRO-FNAME",
-            "description": "If @RCPRO-USERNAME is present on the instrument, then when the participant is selected the text field with the @RCPRO-FNAME tag will be populated with the participant's first name"
+            "description": "action_tag_fname",
+            "tt_description": true
         },
         {
             "tag": "@RCPRO-LNAME",
-            "description": "If @RCPRO-USERNAME is present on the instrument, then when the participant is selected the text field with the @RCPRO-LNAME tag will be populated with the participant's last name"
+            "description": "action_tag_lname",
+            "tt_description": true
         }
     ],
     "framework-version": 15,

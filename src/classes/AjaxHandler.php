@@ -9,7 +9,10 @@ class AjaxHandler
     private $project_id;
     public $args;
     private $methods = [
+        "deleteLanguage",
+        "downloadLanguageFile",
         "exportLogs",
+        "getLanguage",
         "getLogs",
         "getParticipants",
         "getParticipantsCC",
@@ -21,7 +24,9 @@ class AjaxHandler
         "searchParticipantByEmail",
         "sendMfaTokenEmail",
         "showMFAInfo",
-        "sendMFAInfo"
+        "sendMFAInfo",
+        "setLanguage",
+        "setLanguageActiveStatus"
     ];
     public function __construct(REDCapPRO $module, string $method, array $params, $project_id, $args = null)
     {
@@ -41,7 +46,145 @@ class AjaxHandler
             return $this->{$this->method}();
         } catch ( \Throwable $e ) {
             $this->module->logError($e->getMessage() ?? 'Error', $e);
-            return $this->module->escape($e->getMessage() ?? 'Error');
+            return $this->module->escape($e->rcpro ?? 'Error');
+        }
+    }
+
+    private function getLanguage()
+    {
+        try {
+            $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+            if ( $role < 3 ) {
+                throw new REDCapProException("You must be a manager or admin to edit languages");
+            }
+
+            $languageCode = $this->params['languageCode'] ?? null;
+            if ( empty($languageCode) ) {
+                throw new REDCapProException("No language code provided");
+            }
+            $language = new Language($this->module);
+
+            $languages = $language->getLanguages(false);
+            if (!isset($languages[$languageCode])) {
+                throw new REDCapProException("Language not found");
+            }
+            $thisLanguage = $languages[$languageCode];
+            $thisLanguage['strings'] = $language->getLanguageStrings($languageCode);
+            $thisLanguage['EnglishStrings'] = $this->module->escape($language->getEnglishStrings());
+            return $thisLanguage;
+        } catch ( \Throwable $e ) {
+            $this->module->logError($e->getMessage(), $e);
+            return $this->module->escape($e->rcpro ?? 'Error');
+        }
+    }
+
+    private function setLanguage()
+    {
+        try {
+            $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+            if ( $role < 3 ) {
+                throw new REDCapProException("You must be a manager or admin to edit languages");
+            }
+            $languageCode     = $this->params['code'];
+            $languageStrings  = $this->params['strings'];
+            if ( empty($languageCode) ) {
+                throw new REDCapProException("No language code provided");
+            }
+            if ( empty($languageStrings) || !is_array($languageStrings) ) {
+                throw new REDCapProException("No language strings provided or invalid format");
+            }
+            $direction = $this->params['direction'] ?? 'ltr';
+            $language = new Language($this->module);
+            $builtInLanguages = $language->getBuiltInLanguages();
+            if (isset($builtInLanguages[$languageCode])) {
+                throw new REDCapProException("Cannot overwrite built-in language: " . $languageCode);
+            }
+            // $language->setLanguageActiveStatus($languageCode, false);
+            $language->setLanguageStrings($languageCode, $languageStrings, $direction);
+            return [ 'status' => 'ok' ];
+        } catch ( \Throwable $e ) {
+            $this->module->logError($e->getMessage(), $e);
+            return ['error' => $this->module->escape($e->rcpro ?? 'Error')];
+        }
+    }
+
+    private function setLanguageActiveStatus()
+    {
+        try {
+            $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+            if ( $role < 3 ) {
+                throw new REDCapProException("You must be a manager or admin to edit languages");
+            }
+            $languageCode = $this->params['languageCode'] ?? null;
+            if ( empty($languageCode) ) {
+                throw new REDCapProException("No language code provided");
+            }
+            $language = new Language($this->module);
+            $language->setLanguageActiveStatus($languageCode, $this->params['active']);
+            return [ 'status' => 'ok' ];
+        } catch ( \Throwable $e ) {
+            $this->module->logError($e->getMessage(), $e);
+            return $this->module->escape($e->rcpro ?? 'Error');
+        }
+    }
+
+    private function deleteLanguage()
+    {
+        try {
+            $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+            if ( $role < 3 ) {
+                throw new REDCapProException("You must be a manager or admin to delete languages");
+            }
+            $languageCode = $this->params['languageCode'] ?? null;
+            if ( empty($languageCode) ) {
+                throw new REDCapProException("No language code provided");
+            }
+            $language = new Language($this->module);
+            $builtInLanguages = $language->getBuiltInLanguages();
+            if (isset($builtInLanguages[$languageCode])) {
+                throw new REDCapProException("Cannot delete built-in language: " . $languageCode);
+            }
+            $language->deleteLanguage($languageCode);
+            return [ 'status' => 'ok' ];
+        } catch ( \Throwable $e ) {
+            $this->module->logError($e->getMessage(), $e);
+            return $this->module->escape($e->rcpro ?? 'Error');
+        }
+    }
+
+    private function downloadLanguageFile() 
+    {
+        try {
+            $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+            if ( $role < 3 ) {
+                throw new REDCapProException("You must be a manager or admin to download language files");
+            }
+            $languageCode = $this->params['languageCode'] ?? null;
+            if ( empty($languageCode) ) {
+                throw new REDCapProException("No language code provided");
+            }
+            $format = $this->params['format'] ?? 'json';
+            if ( !in_array($format, ['json', 'ini'], true) ) {
+                throw new REDCapProException("Invalid format specified");
+            }
+            $language = new Language($this->module);
+            $strings = $language->getLanguageStrings($languageCode);
+            if ($format === 'json') {
+                return ["fileContents" => json_encode($strings, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)];
+            } else {
+                $iniString = "";
+                foreach ($strings as $key => $value) {
+                    $iniString .= "$key = \"$value\"" . PHP_EOL;
+                }
+                return ["fileContents" => $iniString];  
+            }
+            
+        } catch ( \Throwable $e ) {
+            $this->module->logError($e->getMessage(), $e);
+             echo json_encode([
+                'status' => 'error',
+                'message' => $e->rcpro ?? 'Error'
+             ]);
         }
     }
 

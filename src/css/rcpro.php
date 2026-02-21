@@ -303,3 +303,13 @@ transform: rotate(360deg);
 .text-muted-more {
     color: #aaa;
 }
+
+.swal2-styled.swal2-confirm {
+    background-color: <?= $module::$COLORS["primary"] ?> !important;
+    border-color: <?= $module::$COLORS["primary"] ?> !important;
+    color: white !important;
+}
+
+div#center {
+    min-width: 75% !important;
+}

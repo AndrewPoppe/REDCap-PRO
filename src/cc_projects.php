@@ -8,9 +8,6 @@ if ( !$module->framework->isSuperUser() ) {
     exit();
 }
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<title>REDCapPRO Projects</title>
 <link href="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.css" rel="stylesheet">
 <script src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.js" integrity="sha512-tQIUNMCB0+K4nlOn4FRg/hco5B1sf4yWGpnj+V2MxRSDSVNPD84yzoWogPL58QRlluuXkjvuDD5bzCUTMi6MDw==" crossorigin="anonymous"></script>
 
@@ -18,28 +15,31 @@ if ( !$module->framework->isSuperUser() ) {
 
 <?php
 $module->includeFont();
+$language = new Language($module);
+$language->handleSystemLanguageChangeRequest();
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $ui = new UI($module);
 $ui->ShowControlCenterHeader("Projects");
 $module->initializeJavascriptModuleObject();
+$module->tt_transferToJavascriptModuleObject();
 ?>
 <div id="loading-container" class="loader-container">
     <div id="loading" class="loader"></div>
 </div>
 <div class="projectsContainer wrapper" style="display: none;">
-    <h2>Projects</h2>
-    <p>All projects currently utilizing REDCapPRO</p>
+    <h2><?= $module->tt("cc_projects") ?></h2>
+    <p><?= $module->tt("cc_projects_description") ?></p>
     <div id="projects" class="dataTableParentHidden outer_container">
         <table id="RCPRO_TABLE" style="width:100%;">
-            <caption>REDCapPRO Projects</caption>
+            <caption><?= $module->tt("cc_projects_table_caption") ?></caption>
             <thead>
-                <th scope="col" class='dt-center'>Project ID</th>
-                <th scope="col" class='dt-center'>REDCap PID</th>
-                <th scope="col">Title</th>
-                <th scope="col" class='dt-center'>Status</th>
-                <th scope="col" class='dt-center'># Participants</th>
-                <th scope="col" class='dt-center'># Staff Members</th>
-                <th scope="col" class='dt-center'># Records</th>
+                <th scope="col" class='dt-center'><?= $module->tt("cc_projects_table_project_id") ?></th>
+                <th scope="col" class='dt-center'><?= $module->tt("cc_projects_table_redcap_pid") ?></th>
+                <th scope="col"><?= $module->tt("cc_title") ?></th>
+                <th scope="col" class='dt-center'><?= $module->tt("cc_status") ?></th>
+                <th scope="col" class='dt-center'><?= $module->tt("cc_projects_table_n_participants") ?></th>
+                <th scope="col" class='dt-center'><?= $module->tt("cc_projects_table_n_staff_members") ?></th>
+                <th scope="col" class='dt-center'><?= $module->tt("cc_projects_table_n_records") ?></th>
             </thead>
             <tbody>
 
@@ -66,7 +66,7 @@ $module->initializeJavascriptModuleObject();
                 },
                 columns: [
                     {
-                        title: 'Project ID',
+                        title: `<?= $module->tt("cc_projects_table_project_id") ?>`,
                         className: "dt-center rcpro_participant_link",
                         data: function (row, type, set, meta) {
                             if (type === 'display') {
@@ -77,21 +77,21 @@ $module->initializeJavascriptModuleObject();
                         }
                     },
                     {
-                        title: 'REDCap PID',
+                        title: `<?= $module->tt("cc_projects_table_redcap_pid") ?>`,
                         className: "dt-center",
                         data: 'project_id'
                     },
                     {
-                        title: 'Title',
+                        title: `<?= $module->tt("cc_title") ?>`,
                         data: 'title'
                     },
                     {
-                        title: 'Status',
+                        title: `<?= $module->tt("cc_status") ?>`,
                         className: "dt-center",
                         data: 'status'
                     },
                     {
-                        title: '# Participants',
+                        title: `<?= $module->tt("cc_projects_table_n_participants") ?>`,
                         className: "dt-center rcpro_participant_link",
                         data: function (row, type, set, meta) {
                             if (type === 'display') {
@@ -102,7 +102,7 @@ $module->initializeJavascriptModuleObject();
                         }
                     },
                     {
-                        title: '# Staff Members',
+                        title: `<?= $module->tt("cc_projects_table_n_staff_members") ?>`,
                         className: "dt-center rcpro_participant_link",
                         data: function (row, type, set, meta) {
                             if (type === 'display') {
@@ -113,7 +113,7 @@ $module->initializeJavascriptModuleObject();
                         }
                     },
                     {
-                        title: '# Records',
+                        title: `<?= $module->tt("cc_projects_table_n_records") ?>`,
                         className: "dt-center rcpro_participant_link",
                         data: function (row, type, set, meta) {
                             if (type === 'display') {
@@ -134,7 +134,37 @@ $module->initializeJavascriptModuleObject();
                 scrollX: true,
                 scrollY: '50vh',
                 scrollCollapse: true,
-                pageLength: 100
+                pageLength: 100,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: RCPRO_module.tt('cc_dt_search_placeholder'),
+                    infoFiltered: " - " + RCPRO_module.tt('cc_dt_info_filtered', '_MAX_'),
+                    emptyTable: RCPRO_module.tt('cc_dt_empty_table'),
+                    info: RCPRO_module.tt('cc_dt_info', { start: '_START_', end: '_END_', total: '_TOTAL_' }),
+                    infoEmpty: RCPRO_module.tt('cc_dt_info_empty'),
+                    lengthMenu: RCPRO_module.tt('cc_dt_length_menu', '_MENU_'),
+                    loadingRecords: RCPRO_module.tt('cc_dt_loading_records'),
+                    zeroRecords: RCPRO_module.tt('cc_dt_zero_records'),
+                    decimal: RCPRO_module.tt('cc_dt_decimal'),
+                    thousands: RCPRO_module.tt('cc_dt_thousands'),
+                    select: {
+                        rows: {
+                            _: RCPRO_module.tt('cc_dt_select_rows_other'),
+                            0: RCPRO_module.tt('cc_dt_select_rows_zero'),
+                            1: RCPRO_module.tt('cc_dt_select_rows_one')
+                        }
+                    },
+                    paginate: {
+                        first: RCPRO_module.tt('cc_dt_paginate_first'),
+                        last: RCPRO_module.tt('cc_dt_paginate_last'),
+                        next: RCPRO_module.tt('cc_dt_paginate_next'),
+                        previous: RCPRO_module.tt('cc_dt_paginate_previous')
+                    },
+                    aria: {
+                        sortAscending: RCPRO_module.tt('cc_dt_aria_sort_ascending'),
+                        sortDescending: RCPRO_module.tt('cc_dt_aria_sort_descending')
+                    }
+                }
             });
 
             $('#projects').removeClass('dataTableParentHidden');

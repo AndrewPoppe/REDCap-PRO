@@ -7,6 +7,10 @@ namespace YaleREDCap\REDCapPRO;
 $auth = new Auth($module->APPTITLE);
 $auth->init();
 
+// Language Helper
+$language = new Language($module);
+$language->handleLanguageChangeRequest();
+
 // Destroy the session.
 $auth->destroySession();
 

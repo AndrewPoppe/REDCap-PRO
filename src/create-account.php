@@ -14,6 +14,10 @@ if ( isset($recaptcha_site_key) ) {
 $auth = new Auth($module->APPTITLE);
 $auth->init();
 
+// Language Helper
+$language = new Language($module);
+$language->handleLanguageChangeRequest();
+
 // UI Helper
 $ui = new UI($module);
 
@@ -26,7 +30,7 @@ if ( $auth->is_logged_in() ) {
 // Check to make sure a project survey led them here
 $project_id = $auth->get_redcap_project_id();
 if ( !$auth->is_survey_url_set() || empty($project_id) ) {
-    echo "You must access this page from a REDCap survey link.";
+    echo $module->tt("create_account_error");
     return;
 }
 
@@ -50,7 +54,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
         if ( empty($recaptcha_response) ) {
             $any_errors    = true;
-            $recaptcha_err = "Please check the reCAPTCHA box";
+            $recaptcha_err = $module->tt("create_account_recaptcha_error1");
         } else {
 
             // Verify the reCAPTCHA response (returns JSON data)
@@ -60,7 +64,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             $response_data = json_decode($verify_response);
             if ( !$response_data->success ) {
                 $any_errors    = true;
-                $recaptcha_err = "reCAPTCHA failed";
+                $recaptcha_err = $module->tt("create_account_recaptcha_error2");
             }
         }
     }
@@ -73,15 +77,15 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
     if ( empty($fname) ) {
         $any_errors = true;
-        $fname_err  = "Please enter your first name";
+        $fname_err  = $module->tt("create_account_fname_error");
     }
     if ( empty($lname) ) {
         $any_errors = true;
-        $lname_err  = "Please enter your last name";
+        $lname_err  = $module->tt("create_account_lname_error");
     }
     if ( empty($email) ) {
         $any_errors = true;
-        $email_err  = "Please enter a valid email address";
+        $email_err  = $module->tt("create_account_email_error");
     }
 
     // Check that account does not already exist
@@ -113,11 +117,11 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             }
 
             // Give confirmation message
-            $ui->ShowParticipantHeader('Account Created');
+            $ui->ShowParticipantHeader($module->tt("account_created_title"));
             ?>
             <div style="text-align: center;">
                 <p>
-                    Please check your email for a link to set your password. If you already have an account, you will be sent a password reset email.
+                    <?= $module->tt("create_account_confirmation_message"); ?>
                 </p>
             </div>
             <?php
@@ -125,26 +129,26 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             return;
         } catch ( \Throwable $e ) {
             $any_errors = true;
-            echo "There was a problem. Please try again later.";
+            echo $module->tt("project_error_general");
             return;
         }
     }
 }
 
 // This method starts the html doc
-$ui->ShowParticipantHeader('Create Account');
+$ui->ShowParticipantHeader($module->tt("create_account_title"));
 ?>
 
 <div style="text-align: center;">
     <p>
-        Please supply the information below to create a new REDCapPRO account
+        <?= $module->tt("create_account_subtitle"); ?>
     </p>
 </div>
 
 <form id="createAccountForm" action="<?= $module->getUrl("src/create-account.php", true); ?>" method="post">
     <div class="form-group">
         <label>
-            First name
+            <?= $module->tt("create_account_fname_label"); ?>
         </label>
         <input type="text" name="fname" class="form-control <?= (!empty($fname_err)) ? 'is-invalid' : ''; ?>"
             value="<?= htmlspecialchars($fname); ?>">
@@ -154,7 +158,7 @@ $ui->ShowParticipantHeader('Create Account');
     </div>
     <div class="form-group">
         <label>
-            Last name
+            <?= $module->tt("create_account_lname_label"); ?>
         </label>
         <input type="text" name="lname" class="form-control <?= (!empty($lname_err)) ? 'is-invalid' : ''; ?>"
             value="<?= htmlspecialchars($lname); ?>">
@@ -164,7 +168,7 @@ $ui->ShowParticipantHeader('Create Account');
     </div>
     <div class="form-group">
         <label>
-            Email address
+            <?= $module->tt("create_account_email_label"); ?>
         </label>
         <input type="email" name="email" class="form-control <?= (!empty($email_err)) ? 'is-invalid' : ''; ?>"
             value="<?= $email; ?>">
@@ -175,7 +179,7 @@ $ui->ShowParticipantHeader('Create Account');
     <div class="form-group d-grid">
         <?php if ( isset($recaptcha_site_key) ) { ?>
             <!-- Google reCAPTCHA trigger -->
-            <button class="btn btn-primary g-recaptcha" data-sitekey="<?= $recaptcha_site_key ?>" data-callback="onSubmit" data-action="submit">Create Account</button>
+            <button class="btn btn-primary g-recaptcha" data-sitekey="<?= $recaptcha_site_key ?>" data-callback="onSubmit" data-action="submit"><?= $module->tt("create_account_button"); ?></button>
             <?php if ( !empty($recaptcha_err) ) { ?>
                 <input class="is-invalid" hidden>
                 <span class="invalid-feedback">
@@ -183,16 +187,16 @@ $ui->ShowParticipantHeader('Create Account');
                 </span>
             <?php } ?>
         <?php } else { ?>
-            <button type="submit" class="btn btn-primary">Create Account</button>
+            <button type="submit" class="btn btn-primary"><?= $module->tt("create_account_button"); ?></button>
         <?php } ?>
     </div>
     <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
 </form>
 <hr>
 <div style="text-align: center;">
-    Already have an account?
+    <?= $module->tt("create_account_already_have_account"); ?>
     <a href="<?= $module->getUrl("src/login.php", true); ?>">
-        Login
+        <?= $module->tt("login_title"); ?>
     </a>
 </div>
 <style>

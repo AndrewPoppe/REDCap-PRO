@@ -9,12 +9,15 @@ if ( $role < 2 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 $module->includeFont();
+$language = new Language($module);
+$language->handleLanguageChangeRequest();
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $ui = new UI($module);
 $ui->ShowHeader("Register");
-echo "<title>" . $module->APPTITLE . " - Register</title>";
+echo "<title>" . $module->APPTITLE . " - " . $module->tt("project_register_title") . "</title>";
 $module->initializeJavascriptModuleObject();
+$module->tt_transferToJavascriptModuleObject();
 
 // Check for errors
 if ( isset($_GET["error"]) ) {
@@ -22,8 +25,8 @@ if ( isset($_GET["error"]) ) {
     <script>
         Swal.fire({
             icon: "error",
-            title: "Error",
-            text: "There was a problem. Please try again.",
+            title: "<?= $module->tt("project_error") ?>",
+            text: "<?= $module->tt("project_error_general") ?>",
             showConfirmButton: false
         });
     </script>
@@ -34,7 +37,7 @@ if ( isset($_GET["error"]) ) {
 $project_id         = (int) $module->framework->getProjectId();
 $dagHelper          = new DAG($module);
 $project_dags       = $module->framework->escape($dagHelper->getProjectDags());
-$project_dags[null] = "Unassigned";
+$project_dags[null] = $module->tt("project_unassigned");
 $projectHasDags     = count($project_dags) > 1;
 $redcap_dag         = $module->framework->escape($dagHelper->getCurrentDag($redcap_username, $project_id));
 if ( $projectHasDags ) {
@@ -70,28 +73,28 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     $fname       = trim($_POST["REDCapPRO_FName"]);
     $fname_clean = \REDCap::escapeHtml($fname);
     if ( empty($fname_clean) ) {
-        $fname_err = "Please enter a first name for this participant.";
+        $fname_err = $module->tt("project_register_first_name_error");
         $any_error = true;
     }
     $lname       = trim($_POST["REDCapPRO_LName"]);
     $lname_clean = \REDCap::escapeHtml($lname);
     if ( empty($lname_clean) ) {
-        $lname_err = "Please enter a last name for this participant.";
+        $lname_err = $module->tt("project_register_last_name_error");
         $any_error = true;
     }
 
     // Validate email
     $param_email = \REDCap::escapeHtml(trim($_POST["REDCapPRO_Email"]));
     if ( empty($param_email) || !filter_var($param_email, FILTER_VALIDATE_EMAIL) ) {
-        $email_err = "Please enter a valid email address.";
+        $email_err = $module->tt("project_register_email_error");
         $any_error = true;
     } else {
         $result = $participantHelper->checkEmailExists($param_email);
         if ( $result === null ) {
-            echo "Oops! Something went wrong. Please try again later.";
+            echo $module->tt("project_error_general");
             return;
         } elseif ( $result === true ) {
-            $email_err = "This email is already associated with an account.";
+            $email_err = $module->tt("project_register_email_exists_error");
             $any_error = true;
         } else {
             // Everything looks good
@@ -103,7 +106,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     $dag = filter_var($_POST["dag"], FILTER_VALIDATE_INT);
     $dag = $dag === false ? null : $dag;
     if ( !in_array($dag, array_keys($project_dags)) ) {
-        $dag_err   = "That is not a valid Data Access Group.";
+        $dag_err   = $module->tt("project_register_dag_error");
         $any_error = true;
     }
 
@@ -115,7 +118,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             $username          = $participantHelper->createParticipant($email, $fname_clean, $lname_clean);
             $module->sendNewParticipantEmail($username, $email, $fname_clean, $lname_clean);
             $icon  = "success";
-            $title = "Participant Registered";
+            $title = $module->tt("project_register_success_title");
             $module->logEvent("Participant Registered", [
                 "rcpro_username" => $username,
                 "redcap_user"    => $redcap_username
@@ -130,24 +133,24 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 $result        = $projectHelper->enrollParticipant($rcpro_participant_id, $project_id, $dag, $username);
                 if ( $result === -1 ) {
                     $icon  = "error";
-                    $title = 'This participant is already enrolled in this project';
+                    $title = $module->tt("project_enroll_participant_already_enrolled");
                 } elseif ( !$result ) {
                     $icon  = "error";
-                    $title = 'The participant was successfully registered, but there was a problem automatically enrolling them in this project.';
-                    $body  = 'Please try enrolling them manually on the Enroll tab.';
+                    $title = $module->tt("project_register_enroll_error");
+                    $body  = $module->tt("project_register_please_try_enrolling_manually");
                 } else {
-                    $title = 'The participant was successfully registered and enrolled in this project';
-                    $body  = "<strong>First name</strong>: " . $fname_clean . "<br>" .
-                        "<strong>Last name</strong>: " . $lname_clean . "<br>" .
-                        "<strong>Email address</strong>: " . $email . "<br>";
-                    $body .= $projectHasDags ? '<strong>Data Access Group</strong>: ' . $project_dags[$dag] . '<br>' : '';
+                    $title = $module->tt("project_register_registered_and_enrolled");
+                    $body  = "<strong>" . $module->tt("project_enroll_first_name_label") . "</strong>: " . $fname_clean . "<br>" .
+                        "<strong>" . $module->tt("project_enroll_last_name_label") . "</strong>: " . $lname_clean . "<br>" .
+                        "<strong>" . $module->tt("project_enroll_email_label") . "</strong>: " . $email . "<br>";
+                    $body .= $projectHasDags ? '<strong>' . $module->tt("project_enroll_dag_label") . '</strong>: ' . $project_dags[$dag] . '<br>' : '';
                 }
             }
 
         } catch ( \Exception $e ) {
             $module->logError("Error creating participant", $e);
             $icon  = "error";
-            $title = "Error Registering Participant";
+            $title = $module->tt("project_register_error_title");
             $html  = $e->getMessage();
         } finally {
             ?>
@@ -174,12 +177,11 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
 
 <div class="wrapper" hidden>
-    <h2>Register a Participant</h2>
-    <p>Submit this form to create a new account for this participant.</p>
-    <p><em>If the participant already has an account, you can enroll them in this project </em><strong><a
-                href="<?= $module->getUrl("src/enroll.php"); ?>">here</a></strong>.</p>
+    <h2><?= $module->tt("project_register_page_title") ?></h2>
+    <p><?= $module->tt("project_register_instructions1") ?></p>
+    <p><em><?= $module->tt("project_register_instructions2") ?></em></p>
 
-    <button id="importCsv" class="btn btn-xs btn-success mb-2" onclick="$('#csvFile').click();">Import CSV</button>
+    <button id="importCsv" class="btn btn-xs btn-success mb-2" onclick="$('#csvFile').click();"><?= $module->tt("project_import_csv") ?></button>
     <span class="fa-stack fa-1x text-info mb-2 fa-2xs" style="cursor: pointer;"
         onclick="$('#infoModal').modal('show');">
         <i class="fa fa-circle fa-stack-2x icon-background"></i>
@@ -190,7 +192,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     <form class="rcpro-form register-form" action="<?= $module->getUrl("src/register.php"); ?>" method="POST"
         enctype="multipart/form-data" target="_self">
         <div class="form-group">
-            <label>First Name</label>
+            <label><?= $module->tt("project_first_name") ?></label>
             <input type="text" name="REDCapPRO_FName"
                 class="form-control <?php echo (!empty($fname_err)) ? 'is-invalid' : ''; ?>"
                 value="<?php echo $fname_clean; ?>">
@@ -199,7 +201,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             </span>
         </div>
         <div class="form-group">
-            <label>Last Name</label>
+            <label><?= $module->tt("project_last_name") ?></label>
             <input type="text" name="REDCapPRO_LName"
                 class="form-control <?php echo (!empty($lname_err)) ? 'is-invalid' : ''; ?>"
                 value="<?php echo $lname_clean; ?>">
@@ -208,7 +210,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             </span>
         </div>
         <div class="form-group">
-            <label>Email</label>
+            <label><?= $module->tt("project_email") ?></label>
             <input type="email" name="REDCapPRO_Email"
                 class="form-control <?php echo (!empty($email_err)) ? 'is-invalid' : ''; ?>"
                 value="<?php echo $email; ?>">
@@ -218,10 +220,10 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         </div>
         <div class="form-group">
             <button type="submit" class="btn btn-rcpro" name="action" value="register"
-                title="Register the participant but do not enroll">Register</button>
+                title="<?= $module->tt("project_register_button_register_title") ?>"><?= $module->tt("project_register_button_register") ?></button>
             <button type="button" class="btn btn-primary"
-                title="Automatically enroll this participant in the study once they are registered"
-                onclick="getDagAndSubmit();">Register and Enroll</button>
+                title="<?= $module->tt("project_register_button_register_and_enroll_title") ?>"
+                onclick="getDagAndSubmit();"><?= $module->tt("project_register_button_register_and_enroll") ?></button>
         </div>
         <input type="hidden" name="dag">
         <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
@@ -230,76 +232,59 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title fs-5" id="infoModalTitle">Import Participants via CSV</h5>
+                    <h5 class="modal-title fs-5" id="infoModalTitle"><?= $module->tt("project_register_import_csv") ?></h5>
                     <button type="button" class="btn-close" data-dismiss="modal" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>You can register (and optionally enroll) many participants at once by importing a CSV file. The
-                        file must be formatted with the following columns.</p>
-                    <p><a id="importTemplate">Click here</a> to
-                        download an import template.</p>
+                    <p><?= $module->tt("project_register_import_instructions1") ?></p>
+                    <p></p><a id="importTemplate"><?= $module->tt("project_register_import_instructions2") ?></a></p>
                     <table class="table table-bordered table-sm">
-                        <caption>Registration Import File Format</caption>
+                        <caption><?= $module->tt("project_register_import_instructions_caption") ?></caption>
                         <thead class="thead-dark table-dark">
                             <tr>
-                                <th class="align-middle">Column name</th>
-                                <th class="align-middle">Description</th>
-                                <th class="align-middle">Possible values</th>
-                                <th class="align-middle">Required</th>
-                                <th class="align-middle">Notes</th>
+                                <th class="align-middle"><?= $module->tt("project_column_name") ?></th>
+                                <th class="align-middle"><?= $module->tt("project_description") ?></th>
+                                <th class="align-middle"><?= $module->tt("project_possible_values") ?></th>
+                                <th class="align-middle"><?= $module->tt("project_required") ?></th>
+                                <th class="align-middle"><?= $module->tt("project_notes") ?></th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="align-middle text-center"><strong>fname</strong></td>
-                                <td class="align-middle">First name of the participant</td>
-                                <td class="align-middle text-center">Any text</td>
-                                <td class="align-middle text-center"><span class="required">Required</span></td>
+                                <td class="align-middle text-center"><strong><?= $module->tt("project_register_fname_key") ?></strong></td>
+                                <td class="align-middle"><?= $module->tt("project_register_fname_desc") ?></td>
+                                <td class="align-middle text-center"><?= $module->tt("project_register_fname_possible_values") ?></td>
+                                <td class="align-middle text-center"><span class="required"><?= $module->tt("project_required") ?></span></td>
                                 <td class="align-middle"></td>
                             </tr>
                             <tr>
-                                <td class="align-middle text-center"><strong>lname</strong></td>
-                                <td class="align-middle">Last name of the participant</td>
-                                <td class="align-middle text-center">Any text</td>
-                                <td class="align-middle text-center"><span class="required">Required</span></td>
+                                <td class="align-middle text-center"><strong><?= $module->tt("project_register_lname_key") ?></strong></td>
+                                <td class="align-middle"><?= $module->tt("project_register_lname_desc") ?></td>
+                                <td class="align-middle text-center"><?= $module->tt("project_register_lname_possible_values") ?></td>
+                                <td class="align-middle text-center"><span class="required"><?= $module->tt("project_required") ?></span></td>
                                 <td class="align-middle"></td>
                             </tr>
                             <tr>
-                                <td class="align-middle text-center"><strong>email</strong></td>
-                                <td class="align-middle">Email address of the participant</td>
-                                <td class="align-middle text-center">Valid email</td>
-                                <td class="align-middle text-center"><span class="required">Required</span></td>
-                                <td class="align-middle"><span class="notes">The email address must not match the email
-                                        address of a registered participant. If so, you will receive an error message
-                                        and the import will be cancelled. </span></td>
+                                <td class="align-middle text-center"><strong><?= $module->tt("project_register_email_key") ?></strong></td>
+                                <td class="align-middle"><?= $module->tt("project_register_email_desc") ?></td>
+                                <td class="align-middle text-center"><?= $module->tt("project_register_email_possible_values") ?></td>
+                                <td class="align-middle text-center"><span class="required"><?= $module->tt("project_required") ?></span></td>
+                                <td class="align-middle"><span class="notes"><?= $module->tt("project_register_email_notes") ?></span></td>
                             </tr>
                             <tr>
-                                <td class="align-middle text-center"><strong>enroll</strong></td>
-                                <td class="align-middle">Whether or not to enroll the participant into this study once
-                                    they are registered
-                                </td>
-                                <td class="align-middle text-center"><code>Y</code> to
-                                    enroll<br><code>&lt;Blank&gt;</code>
-                                    not to enroll
-                                </td>
-                                <td class="align-middle text-center"><span class="optional">Optional</span></td>
-                                <td class="align-middle"><span class="notes">You can omit the column entirely if you do
-                                        not want to
-                                        enroll any of the newly registered participants.</span></td>
+                                <td class="align-middle text-center"><strong><?= $module->tt("project_register_enroll_key") ?></strong></td>
+                                <td class="align-middle"><?= $module->tt("project_register_enroll_desc") ?></td>
+                                <td class="align-middle text-center"><?= $module->tt("project_register_enroll_possible_values") ?></td>
+                                <td class="align-middle text-center"><span class="optional"><?= $module->tt("project_optional") ?></span></td>
+                                <td class="align-middle"><span class="notes"><?= $module->tt("project_register_enroll_notes") ?></span></td>
                             </tr>
                             <tr>
-                                <td class="align-middle text-center"><strong>dag</strong></td>
-                                <td class="align-middle">Data Access Group to enroll the participant into</td>
-                                <td class="align-middle text-center">Integer value representing the Data Access Group ID
-                                    number</td>
-                                <td class="align-middle text-center"><span class="optional">Optional</span></td>
-                                <td class="align-middle"><span class="notes">This value can be found on the DAGs page in
-                                        the project. If enroll is not "Y" for a row, then the DAG value is ignored for
-                                        that row.<br>The usual DAG rules apply, so you can only assign a participant to
-                                        a DAG if that DAG exists in the project. If you are assigned to a DAG yourself,
-                                        you can only assign participants to that DAG. If you are not assigned to a DAG,
-                                        you can assign the participant to any DAG.</span></td>
+                                <td class="align-middle text-center"><strong><?= $module->tt("project_register_dag_key") ?></strong></td>
+                                <td class="align-middle"><?= $module->tt("project_register_dag_desc") ?></td>
+                                <td class="align-middle text-center"><?= $module->tt("project_register_dag_possible_values") ?></td>
+                                <td class="align-middle text-center"><span class="optional"><?= $module->tt("project_optional") ?></span></td>
+                                <td class="align-middle"><span class="notes"><?= $module->tt("project_register_dag_notes") ?></span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -351,7 +336,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
             if (!window.csv_file_contents || window.csv_file_contents === "") {
                 return;
             }
-            Swal.fire({ title: 'Please wait...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
+            Swal.fire({ title: "<?= $module->tt('project_please_wait') ?>", allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
             RCPRO.ajax('importCsvRegister', { data: window.csv_file_contents, confirm: true })
                 .then((response) => {
                     Swal.close();
@@ -359,8 +344,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                     if (result.status != 'error') {
                         Swal.fire({
                             icon: 'success',
-                            html: 'Successfully registered participants',
-                            confirmButtonText: 'OK',
+                            html: "<?= $module->tt('project_register_success') ?>",
+                            confirmButtonText: "<?= $module->tt('project_ok') ?>",
                             customClass: {
                                 confirmButton: 'btn btn-primary',
                             },
@@ -369,7 +354,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                     } else {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Error',
+                            title: "<?= $module->tt("project_error") ?>",
                             html: result.message,
                             showConfirmButton: false
                         });
@@ -381,7 +366,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         }
 
         RCPRO.handleFiles = function () {
-            Swal.fire({ title: 'Please wait...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
+            Swal.fire({ title: "<?= $module->tt('project_please_wait') ?>", allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
             if (this.files.length !== 1) {
                 return;
             }
@@ -404,7 +389,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                         } else {
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Error',
+                                title: "<?= $module->tt("project_error") ?>",
                                 html: result.message,
                                 showConfirmButton: false
                             });
@@ -422,7 +407,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     <?php if ( $dag_err ) { ?>
         Swal.fire({
             icon: "error",
-            title: "Error",
+            title: "<?= $module->tt("project_error") ?>",
             text: "<?= $dag_err ?>",
             showConfirmButton: false
         });
@@ -432,7 +417,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         if (projectHasDags && userDag === '') {
             let selectedDag = userDag;
             const result = await Swal.fire({
-                title: "Select a Data Access Group",
+                title: "<?= $module->tt("project_register_select_dag") ?>",
                 input: 'select',
                 inputOptions: projectDags,
                 inputValue: '',

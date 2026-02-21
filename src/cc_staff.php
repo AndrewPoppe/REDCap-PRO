@@ -9,12 +9,15 @@ if ( !$module->framework->isSuperUser() ) {
 }
 echo '<!DOCTYPE html><html lang="en">';
 $module->includeFont();
+$language = new Language($module);
+$language->handleSystemLanguageChangeRequest();
 
 require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $ui = new UI($module);
 $ui->ShowControlCenterHeader("Staff");
 echo '<link rel="stylesheet" type="text/css" href="' . $module->getUrl("src/css/rcpro_cc.php") . '">';
 $module->initializeJavascriptModuleObject();
+$module->tt_transferToJavascriptModuleObject();
 ?>
 <link href="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.css" rel="stylesheet">
 <script src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.js" integrity="sha512-tQIUNMCB0+K4nlOn4FRg/hco5B1sf4yWGpnj+V2MxRSDSVNPD84yzoWogPL58QRlluuXkjvuDD5bzCUTMi6MDw==" crossorigin="anonymous"></script>
@@ -23,17 +26,17 @@ $module->initializeJavascriptModuleObject();
     <div id="loading" class="loader"></div>
 </div>
 <div class="usersContainer wrapper" style="display: none;">
-    <h2>Staff Members</h2>
-    <p>All users across studies</p>
+    <h2><?= $module->tt("cc_staff_title") ?></h2>
+    <p><?= $module->tt("cc_staff_subtitle") ?></p>
     <div id="users" class="dataTableParentHidden outer_container">
         <table class="table" id="RCPRO_TABLE">
-            <caption>REDCapPRO Staff</caption>
+            <caption><?= $module->tt("cc_staff_table_caption") ?></caption>
             <thead>
                 <tr>
-                    <th id="username">Username</th>
-                    <th id="name" class="dt-center">Name</th>
-                    <th id="email">Email</th>
-                    <th id="projects" class="dt-center">Projects</th>
+                    <th id="username"><?= $module->tt("cc_staff_table_username") ?></th>
+                    <th id="name" class="dt-center"><?= $module->tt("cc_staff_table_name") ?></th>
+                    <th id="email"><?= $module->tt("cc_staff_table_email") ?></th>
+                    <th id="projects" class="dt-center"><?= $module->tt("cc_staff_table_projects") ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -60,7 +63,7 @@ $module->initializeJavascriptModuleObject();
                 },
                 columns: [
                     {
-                        title: 'Username',
+                        title: `<?= $module->tt("cc_staff_table_username") ?>`,
                         className: "rcpro_user_link",
                         data: 'username',
                         createdCell: function (td, cellData, rowData, row, col) {
@@ -70,16 +73,16 @@ $module->initializeJavascriptModuleObject();
                         }
                     },
                     {
-                        title: 'Name',
+                        title: `<?= $module->tt("cc_staff_table_name") ?>`,
                         className: "dt-center",
                         data: 'name'
                     },
                     {
-                        title: 'Email',
+                        title: `<?= $module->tt("cc_staff_table_email") ?>`,
                         data: 'email'
                     },
                     {
-                        title: 'Projects',
+                        title: `<?= $module->tt("cc_staff_table_projects") ?>`,
                         className: "dt-center",
                         data: function (row, type, set, meta) {
                             if (type === 'display') {
@@ -87,7 +90,7 @@ $module->initializeJavascriptModuleObject();
                                 let result = "";
                                 for (const project of projects) {
                                     const url = `<?= $module->getUrl("src/manage-users.php?pid=") ?>${project}`;
-                                    result += `<div><a class="rcpro_project_link" title="Active" href="${url}">PID ${project}</a></div>`;
+                                    result += `<div><a class="rcpro_project_link" title="Active" href="${url}"><?= $module->tt("cc_pid") ?> ${project}</a></div>`;
                                 }
                                 return result;
                             } else {
@@ -105,7 +108,37 @@ $module->initializeJavascriptModuleObject();
                 },
                 scrollY: '50vh',
                 scrollCollapse: true,
-                pageLength: 100
+                pageLength: 100,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: RCPRO_module.tt('cc_dt_search_placeholder'),
+                    infoFiltered: " - " + RCPRO_module.tt('cc_dt_info_filtered', '_MAX_'),
+                    emptyTable: RCPRO_module.tt('cc_dt_empty_table'),
+                    info: RCPRO_module.tt('cc_dt_info', { start: '_START_', end: '_END_', total: '_TOTAL_' }),
+                    infoEmpty: RCPRO_module.tt('cc_dt_info_empty'),
+                    lengthMenu: RCPRO_module.tt('cc_dt_length_menu', '_MENU_'),
+                    loadingRecords: RCPRO_module.tt('cc_dt_loading_records'),
+                    zeroRecords: RCPRO_module.tt('cc_dt_zero_records'),
+                    decimal: RCPRO_module.tt('cc_dt_decimal'),
+                    thousands: RCPRO_module.tt('cc_dt_thousands'),
+                    select: {
+                        rows: {
+                            _: RCPRO_module.tt('cc_dt_select_rows_other'),
+                            0: RCPRO_module.tt('cc_dt_select_rows_zero'),
+                            1: RCPRO_module.tt('cc_dt_select_rows_one')
+                        }
+                    },
+                    paginate: {
+                        first: RCPRO_module.tt('cc_dt_paginate_first'),
+                        last: RCPRO_module.tt('cc_dt_paginate_last'),
+                        next: RCPRO_module.tt('cc_dt_paginate_next'),
+                        previous: RCPRO_module.tt('cc_dt_paginate_previous')
+                    },
+                    aria: {
+                        sortAscending: RCPRO_module.tt('cc_dt_aria_sort_ascending'),
+                        sortDescending: RCPRO_module.tt('cc_dt_aria_sort_descending')
+                    }
+                }
             });
             $('#users').removeClass('dataTableParentHidden');
             $('#loading-container').hide();

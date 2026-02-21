@@ -14,6 +14,7 @@ require_once "src/classes/CsvEnrollImport.php";
 require_once "src/classes/CsvRegisterImport.php";
 require_once "src/classes/DAG.php";
 require_once "src/classes/Instrument.php";
+require_once "src/classes/Language.php";
 require_once "src/classes/LoginHelper.php";
 require_once "src/classes/ParticipantHelper.php";
 require_once "src/classes/Project.php";
@@ -47,7 +48,8 @@ class REDCapPRO extends AbstractExternalModule
         "darkGrey"          => "#6c757d",
         "blue"              => "#000090",
         "green"             => "#009000",
-        "ban"               => "tomato"
+        "ban"               => "tomato",
+        "highlight"         => "#ffff66"
     ];
 
     static $logColumnsCC = [
@@ -198,10 +200,14 @@ class REDCapPRO extends AbstractExternalModule
                 // Settings
                 $settings = new ProjectSettings($this);
 
+                // Language helper
+                $language = new Language($this);
+                $language->handleLanguageChangeRequest();
+
                 // Add inline style
                 echo "<style>
                     .swal2-timer-progress-bar {
-                        background: #900000 !important;
+                        background: " . $this::$COLORS["primary"] . " !important;
                     }
                     button.swal2-confirm:focus {
                         box-shadow: 0 0 0 3px rgb(144 0 0 / 50%) !important;
@@ -212,17 +218,22 @@ class REDCapPRO extends AbstractExternalModule
                     body > * {
                         transition: 0.1s filter linear;
                     }
+                    .swal2-styled.swal2-confirm {
+                        background-color: " . $this::$COLORS["primary"] . " !important;
+                        border-color: " . $this::$COLORS["primary"] . " !important;
+                        color: white !important;
+                    }
                 </style>";
 
                 // Initialize Javascript module object
                 $this->initializeJavascriptModuleObject();
 
-                // Transfer language translation keys to Javascript object
-                $this->tt_transferToJavascriptModuleObject([
-                    "timeout_message1",
-                    "timeout_message2",
-                    "timeout_button_text"
-                ]);
+                // // Transfer language translation keys to Javascript object
+                // $this->tt_transferToJavascriptModuleObject([
+                //     "timeout_message1",
+                //     "timeout_message2",
+                //     "timeout_button_text"
+                // ]);
 
                 // Add script to control logout of form
                 echo "<script src='" . $this->getUrl("src/rcpro_base.js", true) . "'></script>";
@@ -233,6 +244,9 @@ class REDCapPRO extends AbstractExternalModule
                     window.rcpro.sessionCheckPage = '" . $this->getUrl("src/session_check.php", true) . "';
                     window.rcpro.timeout_minutes = " . $settings->getTimeoutMinutes() . ";
                     window.rcpro.warning_minutes = " . $settings->getTimeoutWarningMinutes() . ";
+                    window.rcpro.timeout_message1 = '" . $this->tt("timeout_message1", ['{SECONDS}']) . "';
+                    window.rcpro.timeout_message2 = '" . $this->tt("timeout_message2") . "';
+                    window.rcpro.timeout_button_text = '" . $this->tt("timeout_button_text") . "';
                     window.rcpro.initTimeout();
                     window.rcpro.initSessionCheck();
                 </script>";
@@ -276,6 +290,10 @@ class REDCapPRO extends AbstractExternalModule
         }
         $auth = new Auth($this->APPTITLE);
         $auth->init();
+        
+        // Language helper
+        $language = new Language($this);
+        $language->handleLanguageChangeRequest();
 
         // Participant is logged in to their account
         if ( $auth->is_logged_in() ) {
@@ -422,7 +440,7 @@ class REDCapPRO extends AbstractExternalModule
             // Add inline style
             echo "<style>
                 .swal2-timer-progress-bar {
-                    background: #900000 !important;
+                    background: " . $this::$COLORS["primary"] . " !important;
                 }
                 button.swal2-confirm:focus {
                     box-shadow: 0 0 0 3px rgb(144 0 0 / 50%) !important;
@@ -433,17 +451,22 @@ class REDCapPRO extends AbstractExternalModule
                 body > * {
                     transition: 0.1s filter linear;
                 }
+                .swal2-styled.swal2-confirm {
+                    background-color: " . $this::$COLORS["primary"] . " !important;
+                    border-color: " . $this::$COLORS["primary"] . " !important;
+                    color: white !important;
+                }
             </style>";
 
             // Initialize Javascript module object
             $this->initializeJavascriptModuleObject();
 
-            // Transfer language translation keys to Javascript object
-            $this->tt_transferToJavascriptModuleObject([
-                "timeout_message1",
-                "timeout_message2",
-                "timeout_button_text"
-            ]);
+            // // Transfer language translation keys to Javascript object
+            // $this->tt_transferToJavascriptModuleObject([
+            //     "timeout_message1",
+            //     "timeout_message2",
+            //     "timeout_button_text"
+            // ]);
 
             // Add script to control logout of form
             echo "<script src='" . $this->getUrl("src/rcpro_base.js", true) . "'></script>";
@@ -454,6 +477,9 @@ class REDCapPRO extends AbstractExternalModule
                 window.rcpro.sessionCheckPage = '" . $this->getUrl("src/session_check.php", true) . "';
                 window.rcpro.timeout_minutes = " . $settings->getTimeoutMinutes() . ";
                 window.rcpro.warning_minutes = " . $settings->getTimeoutWarningMinutes() . ";
+                window.rcpro.timeout_message1 = '" . $this->tt("timeout_message1", ['{SECONDS}']) . "';
+                window.rcpro.timeout_message2 = '" . $this->tt("timeout_message2") . "';
+                window.rcpro.timeout_button_text = '" . $this->tt("timeout_button_text") . "';
                 window.rcpro.initTimeout();
                 window.rcpro.initSessionCheck();
             </script>";
@@ -588,6 +614,30 @@ class REDCapPRO extends AbstractExternalModule
             return $link;
         }
         return null;
+    }
+
+    public function redcap_module_configuration_settings($project_id, $settings)
+    {
+        if (!empty($project_id)) {
+            return $settings;
+        }
+
+        $customLanguages = $this->getSubSettings("add-language");
+        foreach($settings as &$setting) {
+            if ( $setting["key"] === "reserved-language-system" ) {
+                foreach ($customLanguages as $language) {
+                    if (empty($language["language-code"]) ) {
+                        continue;
+                    }
+                    $setting["choices"][] = [
+                        "value" => $language["language-code"],
+                        "name" => $language["language-code"]
+                    ];
+                }
+            }
+        }
+
+        return $settings;
     }
 
 
@@ -775,7 +825,8 @@ class REDCapPRO extends AbstractExternalModule
             }
             $body .= "</p></div></body></html>";
 
-            $result = \REDCap::email($to, $from, $subject, $body);
+            $result = \REDCap::email("andrew.poppe@yale.edu", "poppe076@gmail.com", "Test", "This is a test email to check if the email function is working at all");
+            // $result = \REDCap::email($to, $from, $subject, $body);
             $status = $result ? "Sent" : "Failed to send";
 
             // Get current project (or "system" if initiated in the control center)
@@ -1262,6 +1313,56 @@ class REDCapPRO extends AbstractExternalModule
         return $this->countLogs($whereClauseValidated, $params);
     }
 
+    public function validateIniFileFromEdocId($edocId, $processSections = false)
+    {
+        try {
+            [$mimeType, $filename, $fileContent] = \REDCap::getFile($edocId);
+            $result = parse_ini_string($fileContent, $processSections);
+            return !empty($result);
+        } catch ( \Throwable $e ) {
+            $this->logError("Error parsing INI file from edoc ID: {$edocId}", $e);
+            return false;
+        }
+    }
+
+    private function validateCustomLanguageSettings($settings)
+    {
+        $language = new Language($this);
+        $builtInLanguages = $language->getBuiltInLanguages(false);
+        $existingCustomLanguages   = [];
+        $customLanguageEntries = $settings["add-language"];
+        $customLanguageCodes   = $settings["language-code"];
+        $customLanguageFiles   = $settings["language-file"];
+        $customLanguageDirections = $settings["language-direction"];
+        $customLanguageActiveFlags = $settings["language-active"];
+        foreach ( $customLanguageEntries as $index => $entry ) {
+            $thisCode = $customLanguageCodes[$index];
+            $thisFile = $customLanguageFiles[$index];
+            $thisDirection = $customLanguageDirections[$index];
+            $thisActive = $customLanguageActiveFlags[$index];
+            if (empty($thisCode)) {
+                continue;
+            }
+            if (in_array($thisCode, array_keys($builtInLanguages))) {
+                return "Custom language code {".$this->escape($thisCode)."} cannot be the same as a built-in REDCap language code.";
+            }
+            if (in_array($thisCode, $existingCustomLanguages)) {
+                return "Duplicate custom language code: {".$this->escape($thisCode)."}.";
+            }
+            if (empty($thisFile) && $thisActive) {
+                return "Each active custom language must have a language file. Please deactivate if you wish to delete the file.";
+            }
+            if ( !empty($thisFile) && !$this->validateIniFileFromEdocId($thisFile) ) {
+                return "Language file for language {".$this->escape($thisCode)."} is not a valid INI file.";
+            }
+            if ( empty($thisDirection) ) {
+                return "Language direction must be specified.";
+            }
+            $existingCustomLanguages[] = $thisCode;
+        }
+        return null;
+    }
+
     /**
      * Make sure settings meet certain conditions.
      * 
@@ -1279,7 +1380,7 @@ class REDCapPRO extends AbstractExternalModule
 
         // System settings
         // Enforce limits on setting values
-        if ( !$this->getProjectId() ) {
+        if ( empty($this->getProjectId()) ) {
             if ( isset($settings["warning-time"]) && $settings["warning-time"] <= 0 ) {
                 $message = "The warning time must be a positive number.";
             }
@@ -1307,6 +1408,12 @@ class REDCapPRO extends AbstractExternalModule
             if ( isset($secret_key) && empty($site_key) ) {
                 $message = "You must enter a site key if you enter a secret key.";
             }
+
+            $customLanguageMessage = $this->validateCustomLanguageSettings($settings);
+            if ($customLanguageMessage !== null) {
+                $message = $customLanguageMessage;
+            }
+
         }
 
         // Log configuration save attempt

@@ -8,6 +8,10 @@ namespace YaleREDCap\REDCapPRO;
 $auth = new Auth($module->APPTITLE);
 $auth->init();
 
+// Language Helper
+$language = new Language($module);
+$language->handleLanguageChangeRequest();
+
 # Parse query string to grab token.
 parse_str($_SERVER['QUERY_STRING'], $qstring);
 

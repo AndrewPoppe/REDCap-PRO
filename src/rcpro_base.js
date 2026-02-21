@@ -7,10 +7,13 @@ let rcpro = {
     warning_minutes: 0,
     warningOpen: false,
     seconds: 0,
-    stop: false
+    stop: false,
+    timeout_message1: "",
+    timeout_message2: "",
+    timeout_button_text: ""
 }
 rcpro.warning_duration = rcpro.timeout_minutes - rcpro.warning_minutes;
-rcpro.initTimeout = function() {
+rcpro.initTimeout = function () {
     let lastTS = Date.now();
     let timeout;
     let events = ["scroll", "click", "keyup", "wheel"];
@@ -29,7 +32,7 @@ rcpro.initTimeout = function() {
         }
         timeout = setTimeout(timer, 1000);
     }
-    let resetTimer = function() {
+    let resetTimer = function () {
         if (rcpro.warningOpen) {
             Swal.close();
         }
@@ -44,8 +47,8 @@ rcpro.initTimeout = function() {
     startTimer();
 };
 
-rcpro.initSessionCheck = function() {
-    setInterval(async function() {
+rcpro.initSessionCheck = function () {
+    setInterval(async function () {
         let result = await fetch(rcpro.sessionCheckPage)
             .then(resp => resp.json());
         if (result.redcap_session_active || !result.redcappro_logged_in) {
@@ -54,33 +57,33 @@ rcpro.initSessionCheck = function() {
     }, 1000);
 }
 
-rcpro.logoutWarning = function() {
+rcpro.logoutWarning = function () {
     let timerInterval;
     return Swal.fire({
         imageUrl: rcpro.logo,
         imageWidth: '150px',
-        html: `<strong>${rcpro.module.tt("timeout_message1")}</strong><br>${rcpro.module.tt("timeout_message2")}`,
-        confirmButtonText: rcpro.module.tt("timeout_button_text"),
+        html: `<strong>${rcpro.timeout_message1.replace("{SECONDS}", rcpro.timeout_minutes * 60)}</strong><br>${rcpro.timeout_message2}`,
+        confirmButtonText: rcpro.timeout_button_text,
         confirmButtonColor: "#900000",
         allowEnterKey: false,
-        onOpen: () => {
+        didOpen: () => {
             timerInterval = setInterval(() => {
                 const content = Swal.getHtmlContainer()
                 if (content) {
                     let remaining = (rcpro.timeout_minutes * 60) - rcpro.seconds;
                     let rDate = new Date(remaining * 1000);
-                    let formatted = `${rDate.getMinutes()}:${String(rDate.getSeconds()).padStart(2,0)}`;
-                    content.innerHTML = `<strong>${rcpro.module.tt("timeout_message1", formatted)}</strong><br>${rcpro.module.tt("timeout_message2")}`;
+                    let formatted = `${rDate.getMinutes()}:${String(rDate.getSeconds()).padStart(2, 0)}`;
+                    content.innerHTML = `<strong>${rcpro.timeout_message1.replace("{SECONDS}", formatted)}</strong><br>${rcpro.timeout_message2}`;
                 }
             }, 100)
         },
-        onClose: () => {
+        didClose: () => {
             rcpro.warningOpen = false;
             clearInterval(timerInterval)
         }
     });
 };
-rcpro.logout = function(cancelPopup) {
+rcpro.logout = function (cancelPopup) {
     rcpro.stop = true;
     $('body').html('');
     let logoutPage = cancelPopup ? rcpro.logoutPage + "&cancelPopup=true" : rcpro.logoutPage;

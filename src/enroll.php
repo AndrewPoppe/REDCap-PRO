@@ -9,12 +9,14 @@ if ( $role < 2 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 $module->includeFont();
+$language = new Language($module);
+$language->handleLanguageChangeRequest();   
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $ui = new UI($module);
 $ui->ShowHeader("Enroll");
 
-echo "<title>" . $module->APPTITLE . " - Enroll</title>";
+echo "<title>" . $module->APPTITLE . " - " . $module->tt("project_enroll_title") . "</title>";
 
 ?>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
@@ -26,8 +28,8 @@ if ( isset($_GET["error"]) ) {
     <script>
         Swal.fire({
             icon: "error",
-            title: "Error",
-            text: "There was a problem. Please try again.",
+            title: "<?= $module->tt("project_error") ?>",
+            text: "<?= $module->tt("project_error_general") ?>",
             showConfirmButton: false
         });
     </script>
@@ -47,7 +49,7 @@ if ( isset($_POST["id"]) && isset($project_id) ) {
     $participantHelper = new ParticipantHelper($module);
     if ( !$participantHelper->isParticipantActive($rcpro_participant_id) ) {
 
-        echo "<script defer>Swal.fire({'title':'This participant is not currently active in REDCapPRO', 'html':'Contact your REDCap Administrator with questions.', 'icon':'info', 'showConfirmButton': false});</script>";
+        echo "<script defer>Swal.fire({'title':'" . $module->tt("project_enroll_participant_not_active") . "', 'html':'" . $module->tt("project_enroll_contact_admin") . "', 'icon':'info', 'showConfirmButton': false});</script>";
     } else {
 
         $redcap_dag = $dagHelper->getCurrentDag($module->safeGetUsername(), $module->framework->getProjectId());
@@ -63,11 +65,11 @@ if ( isset($_POST["id"]) && isset($project_id) ) {
         $result         = $projectHelper->enrollParticipant($rcpro_participant_id, $pid, $dag, $rcpro_username);
 
         if ( $result === -1 ) {
-            echo "<script defer>Swal.fire({'title':'This participant is already enrolled in this project', 'icon':'info', 'showConfirmButton': false});</script>";
-        } elseif ( $result === true ) {
-            echo "<script defer>Swal.fire({'title':'The participant was successfully enrolled in this project', 'icon':'success', 'showConfirmButton': false});</script>";
+            echo "<script defer>Swal.fire({'title':'" . $module->tt("project_enroll_participant_already_enrolled") . "', 'icon':'info', 'showConfirmButton': false});</script>";
+        } elseif ( $result === true || $result === 1 ) {
+            echo "<script defer>Swal.fire({'title':'" . $module->tt("project_enroll_participant_success") . "', 'icon':'success', 'showConfirmButton': false});</script>";
         } elseif ( !$result ) {
-            echo "<script defer>Swal.fire({'title':'There was a problem enrolling this participant in this project', 'icon':'error', 'showConfirmButton': false});</script>";
+            echo "<script defer>Swal.fire({'title':'" . $module->tt("project_enroll_error") . "', 'icon':'error', 'showConfirmButton': false});</script>";
         }
     }
 }
@@ -77,11 +79,10 @@ $module->initializeJavascriptModuleObject();
 ?>
 
 <div class="wrapper enroll-wrapper" hidden>
-    <h2>Enroll a Participant</h2>
-    <p>Search for a participant by their email address and enroll the selected participant in this project.</p>
-    <p><em>If the participant does not have an account, you can register them </em><strong><a
-                href="<?= $module->getUrl("src/register.php"); ?>">here</a></strong>.</p>
-    <button id="importCsv" class="btn btn-xs btn-success mb-2" onclick="$('#csvFile').click();">Import CSV</button>
+    <h2><?= $module->tt("project_enroll_page_title") ?></h2>
+    <p><?= $module->tt("project_enroll_instructions1") ?></p>
+    <p><em><?= $module->tt("project_enroll_instructions2") ?></em></p>
+    <button id="importCsv" class="btn btn-xs btn-success mb-2" onclick="$('#csvFile').click();"><?= $module->tt("project_import_csv") ?></button>
     <span class="fa-stack fa-1x text-info mb-2 fa-2xs" style="cursor: pointer;"
         onclick="$('#infoModal').modal('show');">
         <i class="fa fa-circle fa-stack-2x icon-background"></i>
@@ -91,11 +92,11 @@ $module->initializeJavascriptModuleObject();
     <form class="rcpro-form enroll-form" id="enroll-form" onkeydown="return event.key != 'Enter';">
         <div class="form-group">
             <div id="searchContainer">
-                <input type="email" placeholder="Enter the participant's email address..." name="REDCapPRO_Search"
+                <input type="email" placeholder="<?= $module->tt("project_enroll_search_placeholder") ?>" name="REDCapPRO_Search"
                     id="REDCapPRO_Search" class="form-control">
                 <div class="searchResults" id="searchResults"></div>
                 <button type="button" id="emailSearchButton" class="btn btn-rcpro enroll-button"
-                    style="margin-top: 10px;" onclick='RCPRO.searchEmail()' disabled>Search</button>
+                    style="margin-top: 10px;" onclick='RCPRO.searchEmail()' disabled><?= $module->tt("project_search") ?></button>
             </div>
         </div>
     </form>
@@ -105,26 +106,26 @@ $module->initializeJavascriptModuleObject();
         <div class="form-group">
             <div class="selection" id="selectionContainer">
                 <div class="mb-3 row">
-                    <label for="username" class="col-sm-3 col-form-label">Username:</label>
+                    <label for="username" class="col-sm-3 col-form-label"><?= $module->tt("project_enroll_username_label") ?></label>
                     <div class="col-sm-9">
                         <input type="text" id="username" name="username" class="form-control-plaintext" disabled
                             readonly>
                     </div>
                 </div>
                 <div class="mb-3 row">
-                    <label for="fname" class="col-sm-3 col-form-label">First Name:</label>
+                    <label for="fname" class="col-sm-3 col-form-label"><?= $module->tt("project_enroll_first_name_label") ?></label>
                     <div class="col-sm-9">
                         <input type="text" id="fname" name="fname" class="form-control-plaintext" disabled readonly>
                     </div>
                 </div>
                 <div class="mb-3 row">
-                    <label for="lname" class="col-sm-3 col-form-label">Last Name:</label>
+                    <label for="lname" class="col-sm-3 col-form-label"><?= $module->tt("project_enroll_last_name_label") ?></label>
                     <div class="col-sm-9">
                         <input type="text" id="lname" name="lname" class="form-control-plaintext" disabled readonly>
                     </div>
                 </div>
                 <div class="mb-3 row">
-                    <label for="email" class="col-sm-3 col-form-label">Email:</label>
+                    <label for="email" class="col-sm-3 col-form-label"><?= $module->tt("project_enroll_email_label") ?></label>
                     <div class="col-sm-9">
                         <input type="text" id="email" name="email" class="form-control-plaintext" disabled readonly>
                     </div>
@@ -133,10 +134,10 @@ $module->initializeJavascriptModuleObject();
                 <?php if ( count($dagHelper->getProjectDags()) > 0) {
                     $userDag = $dagHelper->getCurrentDag($module->safeGetUsername(), $module->framework->getProjectId());
                     if ( isset($userDag) && $userDag != "" ) {
-                        $dagName = isset($userDag) ? \REDCap::getGroupNames(false, $userDag) : "No Assignment";
+                        $dagName = isset($userDag) ? \REDCap::getGroupNames(false, $userDag) : $module->tt("project_enroll_dag_no_assignment");
                         ?>
                         <div class="mb-3 row">
-                            <label for="dag" class="col-sm-3 col-form-label">Data Access Group:</label>
+                            <label for="dag" class="col-sm-3 col-form-label"><?= $module->tt("project_enroll_dag_label") ?></label>
                             <div class="col-sm-9">
                                 <input type="text" id="dag" name="dag" class="form-control-plaintext" disabled readonly
                                     value="<?= $dagName ?>">
@@ -144,10 +145,10 @@ $module->initializeJavascriptModuleObject();
                         </div>
                     <?php } else { ?>
                         <div class="mb-3 row">
-                            <label for="dag" class="col-sm-3 col-form-label">Data Access Group:</label>
+                            <label for="dag" class="col-sm-3 col-form-label"><?= $module->tt("project_enroll_dag_label") ?></label>
                             <div class="col-sm-9">
                                 <select class="form-control" id="dag" name="dag">
-                                    <option value="">No Assignment</option>
+                                    <option value=""><?= $module->tt("project_enroll_dag_no_assignment") ?></option>
                                     <?php
                                     $projectDags = $module->framework->escape($dagHelper->getProjectDags());
                                     foreach ( $projectDags as $dag => $name ) {
@@ -163,9 +164,9 @@ $module->initializeJavascriptModuleObject();
                     <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
                     <div>
                         <hr>
-                        <button type="submit" class="btn btn-rcpro">Enroll Participant</button>
+                        <button type="submit" class="btn btn-rcpro"><?= $module->tt("project_enroll_enroll_button") ?></button>
                         <button type="button" onclick="(function() { RCPRO.resetForm(); return false;})()"
-                            class="btn btn-secondary">Cancel</button>
+                            class="btn btn-secondary"><?= $module->tt("project_cancel") ?></button>
                     </div>
                 </div>
             </div>
@@ -176,55 +177,45 @@ $module->initializeJavascriptModuleObject();
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fs-5" id="infoModalTitle">Import Participants via CSV</h5>
+                <h5 class="modal-title fs-5" id="infoModalTitle"><?= $module->tt("project_enroll_import_participants_via_csv") ?></h5>
                 <button type="button" class="btn-close" data-dismiss="modal" data-bs-dismiss="modal"
                     aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>You can register (and optionally enroll) many participants at once by importing a CSV file. The
-                    file must be formatted with the following columns.</p>
-                <p><a id="importTemplate">Click here</a> to
-                    download an import template.</p>
+                <p><?= $module->tt("project_enroll_import_instructions1") ?></p>
+                <p><a id="importTemplate"><?= $module->tt("project_enroll_import_instructions2") ?></a></p>
                 <table class="table table-bordered table-sm">
-                    <caption>Registration Import File Format</caption>
+                    <caption><?= $module->tt("project_enroll_import_instructions_caption") ?></caption>
                     <thead class="thead-dark table-dark">
                         <tr>
-                            <th class="align-middle">Column name</th>
-                            <th class="align-middle">Description</th>
-                            <th class="align-middle">Possible values</th>
-                            <th class="align-middle">Required</th>
-                            <th class="align-middle">Notes</th>
+                            <th class="align-middle"><?= $module->tt("project_column_name") ?></th>
+                            <th class="align-middle"><?= $module->tt("project_description") ?></th>
+                            <th class="align-middle"><?= $module->tt("project_possible_values") ?></th>
+                            <th class="align-middle"><?= $module->tt("project_required") ?></th>
+                            <th class="align-middle"><?= $module->tt("project_notes") ?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td class="align-middle text-center"><strong>username</strong></td>
-                            <td class="align-middle">REDCapPRO username of the participant</td>
-                            <td class="align-middle text-center">Any text</td>
-                            <td class="align-middle text-center"><span class="required">Required</span></td>
-                            <td class="align-middle"><span class="notes">Either this column or the <code>email</code>
-                                    column must be present in the import file. <strong>NOT BOTH</strong></span></td>
+                            <td class="align-middle text-center"><strong><?= $module->tt("project_enroll_username_key") ?></strong></td>
+                            <td class="align-middle"><?= $module->tt("project_enroll_username_desc") ?></td>
+                            <td class="align-middle text-center"><?= $module->tt("project_enroll_username_possible_values") ?></td>
+                            <td class="align-middle text-center"><span class="required"><?= $module->tt("project_required") ?></span></td>
+                            <td class="align-middle"><span class="notes"><?= $module->tt("project_enroll_username_notes") ?></span></td>
                         </tr>
                         <tr>
-                            <td class="align-middle text-center"><strong>email</strong></td>
-                            <td class="align-middle">Email address of the participant</td>
-                            <td class="align-middle text-center">Valid email</td>
-                            <td class="align-middle text-center"><span class="required">Required</span></td>
-                            <td class="align-middle"><span class="notes">Either this column or the <code>username</code>
-                                    column must be present in the import file. <strong>NOT BOTH</strong></span></td>
+                            <td class="align-middle text-center"><strong><?= $module->tt("project_enroll_email_key") ?></strong></td>
+                            <td class="align-middle"><?= $module->tt("project_enroll_email_desc") ?></td>
+                            <td class="align-middle text-center"><?= $module->tt("project_enroll_email_possible_values") ?></td>
+                            <td class="align-middle text-center"><span class="required"><?= $module->tt("project_required") ?></span></td>
+                            <td class="align-middle"><span class="notes"><?= $module->tt("project_enroll_email_notes") ?></span></td>
                         </tr>
                         <tr>
-                            <td class="align-middle text-center"><strong>dag</strong></td>
-                            <td class="align-middle">Data Access Group to enroll the participant into</td>
-                            <td class="align-middle text-center">Integer value representing the Data Access Group ID
-                                number</td>
-                            <td class="align-middle text-center"><span class="optional">Optional</span></td>
-                            <td class="align-middle"><span class="notes">This value can be found on the DAGs page in
-                                    the project. If enroll is not "Y" for a row, then the DAG value is ignored for
-                                    that row.<br>The usual DAG rules apply, so you can only assign a participant to
-                                    a DAG if that DAG exists in the project. If you are assigned to a DAG yourself,
-                                    you can only assign participants to that DAG. If you are not assigned to a DAG,
-                                    you can assign the participant to any DAG.</span></td>
+                            <td class="align-middle text-center"><strong><?= $module->tt("project_enroll_dag_key") ?></strong></td>
+                            <td class="align-middle"><?= $module->tt("project_enroll_dag_desc") ?></td>
+                            <td class="align-middle text-center"><?= $module->tt("project_enroll_dag_possible_values") ?></td>
+                            <td class="align-middle text-center"><span class="optional"><?= $module->tt("project_optional") ?></span></td>
+                            <td class="align-middle"><span class="notes"><?= $module->tt("project_enroll_dag_notes") ?></span></td>
                         </tr>
                     </tbody>
                 </table>
@@ -304,7 +295,7 @@ $module->initializeJavascriptModuleObject();
     RCPRO.isEmailFieldValid = function () {
         let inputField = $("#REDCapPRO_Search");
         if (!RCPRO.checkForClear() && !inputField[0].checkValidity()) {
-            let response = "<font style='color: red;'>Search term is not an email address</font>";
+            let response = "<font style='color: red;'><?= $module->tt("project_enroll_email_error") ?></font>";
             document.getElementById("searchResults").innerHTML = response;
             return false;
         }
@@ -335,7 +326,7 @@ $module->initializeJavascriptModuleObject();
         if (!window.csv_file_contents || window.csv_file_contents === "") {
             return;
         }
-        Swal.fire({ title: 'Please wait...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
+        Swal.fire({ title: '<?= $module->tt("project_please_wait") ?>', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
         RCPRO.ajax('importCsvEnroll', { data: window.csv_file_contents, confirm: true })
             .then((response) => {
                 Swal.close();
@@ -343,8 +334,8 @@ $module->initializeJavascriptModuleObject();
                 if (result.status != 'error') {
                     Swal.fire({
                         icon: 'success',
-                        html: 'Successfully enrolled participants',
-                        confirmButtonText: 'OK',
+                        html: '<?= $module->tt("project_enroll_successfully_enrolled") ?>',
+                        confirmButtonText: '<?= $module->tt("project_ok") ?>',
                         customClass: {
                             confirmButton: 'btn btn-primary',
                         },
@@ -353,7 +344,7 @@ $module->initializeJavascriptModuleObject();
                 } else {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error',
+                        title: '<?= $module->tt("project_error") ?>',
                         html: result.message,
                         showConfirmButton: false
                     });
@@ -365,7 +356,7 @@ $module->initializeJavascriptModuleObject();
     }
 
     RCPRO.handleFiles = function () {
-        Swal.fire({ title: 'Please wait...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
+        Swal.fire({ title: '<?= $module->tt("project_please_wait") ?>', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }, onOpen: () => { Swal.showLoading() } });
         if (this.files.length !== 1) {
             return;
         }
@@ -388,7 +379,7 @@ $module->initializeJavascriptModuleObject();
                     } else {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Error',
+                            title: '<?= $module->tt("project_error") ?>',
                             html: result.message,
                             showConfirmButton: false
                         });

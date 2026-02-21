@@ -9,6 +9,8 @@ if ( $role < 3 ) {
     header("location:" . $module->getUrl("src/home.php"));
 }
 $module->includeFont();
+$language = new Language($module);
+$language->handleLanguageChangeRequest();
 
 require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 $ui = new UI($module);
@@ -25,8 +27,8 @@ if ( isset($_GET["error"]) ) {
     <script>
         Swal.fire({
             icon: "error",
-            title: "Error",
-            text: "There was a problem. Please try again.",
+            title: "<?= $module->tt('project_error') ?>",
+            text: "<?= $module->tt('project_error_general') ?>",
             showConfirmButton: false
         });
     </script>
@@ -34,6 +36,7 @@ if ( isset($_GET["error"]) ) {
 }
 
 $module->framework->initializeJavascriptModuleObject();
+$module->tt_transferToJavascriptModuleObject();
 
 // Update roles if requested
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
@@ -57,7 +60,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         <script>
             Swal.fire({
                 icon: "success",
-                title: "Roles successfully changed",
+                title: "<?= $module->tt('project_staff_success_title') ?>",
                 showConfirmButton: false
             });
         </script>
@@ -67,7 +70,7 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
         <script>
             Swal.fire({
                 icon: "error",
-                title: "Error",
+                title: "<?= $module->tt('project_error') ?>",
                 text: "<?php echo $e->getMessage(); ?>",
                 showConfirmButton: false
             });
@@ -80,23 +83,23 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 ?>
 
 <div class="manageContainer wrapper" style="display: none;">
-    <h2>Manage Study Staff</h2>
-    <p>Set <span id="infotext" onclick="(function() {
+    <h2><?= $module->tt('project_staff_title') ?></h2>
+    <p><?= $module->tt('project_staff_set') ?> <span id="infotext" onclick="(function() {
             Swal.fire({
                 icon: 'info',
                 iconColor: 'black',
-                title: 'Staff Roles',
-                confirmButtonText: 'Got it!',
+                title: '<?= $module->tt('project_staff_roles') ?>',
+                confirmButtonText: '<?= $module->tt('project_staff_got_it') ?>',
                 confirmButtonColor: '<?php echo $module::$COLORS["secondary"]; ?>',
-                html: 'Staff may have one of the following roles:<br><br>'+
+                html: '<?= $module->tt('project_staff_instructions1') ?><br><br>'+
                     '<div style=\'text-align:left;\'>'+
                         '<ul>'+
-                            '<li><strong>Manager:</strong> Highest permissions. Has the ability to grant/revoke staff access. You are a manager if you are reading this.</li>'+
-                            '<li><strong>User:</strong> Able to view participant identifying information, register participants, enroll/disenroll participants in the study, and initiate password reset.</li>'+
-                            '<li><strong>Monitor:</strong> Basic access. Can only view usernames and initiate password resets.</li>'+
+                            '<li><?= $module->tt('project_staff_instructions2') ?></li>'+
+                            '<li><?= $module->tt('project_staff_instructions3') ?></li>'+
+                            '<li><?= $module->tt('project_staff_instructions4') ?></li>'+
                         '</ul><br>'+
                         '</div>'
-            })})();">staff permissions</span> to REDCapPRO</p>
+            })})();"><?= $module->tt('project_staff_instructions5') ?></span></p>
     <div id="loading-container" class="loader-container">
         <div id="loading" class="loader"></div>
     </div>
@@ -108,19 +111,19 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                     <caption></caption>
                     <thead>
                         <tr>
-                            <th id="rcpro_username">Username</th>
-                            <th id="rcpro_name">Name</th>
-                            <th id="rcpro_email">Email</th>
-                            <th id="rcpro_role">User Role</th>
+                            <th id="rcpro_username"><?= $module->tt('project_username'); ?></th>
+                            <th id="rcpro_name"><?= $module->tt('project_name'); ?></th>
+                            <th id="rcpro_email"><?= $module->tt('project_email'); ?></th>
+                            <th id="rcpro_role"><?= $module->tt('project_role'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
                     </tbody>
                 </table>
                 <button class="btn btn-rcpro rcpro-form-button role_select_button" id="role_select_submit" type="submit"
-                    disabled>Save Changes</button>
+                    disabled><?= $module->tt('project_save_changes') ?></button>
                 <button class="btn btn-secondary rcpro-form-button role_select_button" id="role_select_reset"
-                    disabled>Reset</button>
+                    disabled><?= $module->tt('project_reset') ?></button>
             </div>
             <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
         </form>
@@ -177,19 +180,19 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                 },
                 columns: [
                     {
-                        title: 'Username',
+                        title: '<?= $module->tt('project_username'); ?>',
                         data: 'username'
                     },
                     {
-                        title: 'Name',
+                        title: '<?= $module->tt('project_name'); ?>',
                         data: 'fullname'
                     },
                     {
-                        title: 'Email',
+                        title: '<?= $module->tt('project_email'); ?>',
                         data: 'email'
                     },
                     {
-                        title: 'User Role',
+                        title: '<?= $module->tt('project_user_role'); ?>',
                         data: function (row, type, val, meta) {
                             if (type === 'display') {
                                 const select = document.createElement('select');
@@ -198,10 +201,10 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                                 $(select).addClass('role_select');
                                 $(select).attr('orig_value', row.role);
                                 $(select).attr('form', 'manage-users-form');
-                                select.add(new Option('No Access', 0, row.role == 0 ? 'selected' : ''));
-                                select.add(new Option('Monitor', 1, row.role == 1 ? 'selected' : ''));
-                                select.add(new Option('Normal User', 2, row.role == 2 ? 'selected' : ''));
-                                select.add(new Option('Manager', 3, row.role == 3 ? 'selected' : ''));
+                                select.add(new Option('<?= $module->tt('project_staff_no_access'); ?>', 0, row.role == 0 ? 'selected' : ''));
+                                select.add(new Option('<?= $module->tt('project_staff_monitor'); ?>', 1, row.role == 1 ? 'selected' : ''));
+                                select.add(new Option('<?= $module->tt('project_staff_user'); ?>', 2, row.role == 2 ? 'selected' : ''));
+                                select.add(new Option('<?= $module->tt('project_staff_manager'); ?>', 3, row.role == 3 ? 'selected' : ''));
 
                                 return select.outerHTML;
                             }
@@ -220,7 +223,37 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
                     document.querySelectorAll('.role_select').forEach((el) => el.onchange = handleButtons);
                 },
                 scrollY: '50vh',
-                scrollCollapse: true
+                scrollCollapse: true,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: RCPRO_module.tt('project_dt_search_placeholder'),
+                    infoFiltered: " - " + RCPRO_module.tt('project_dt_info_filtered', '_MAX_'),
+                    emptyTable: RCPRO_module.tt('project_dt_empty_table'),
+                    info: RCPRO_module.tt('project_dt_info', { start: '_START_', end: '_END_', total: '_TOTAL_' }),
+                    infoEmpty: RCPRO_module.tt('project_dt_info_empty'),
+                    lengthMenu: RCPRO_module.tt('project_dt_length_menu', '_MENU_'),
+                    loadingRecords: RCPRO_module.tt('project_dt_loading_records'),
+                    zeroRecords: RCPRO_module.tt('project_dt_zero_records'),
+                    decimal: RCPRO_module.tt('project_dt_decimal'),
+                    thousands: RCPRO_module.tt('project_dt_thousands'),
+                    select: {
+                        rows: {
+                            _: RCPRO_module.tt('project_dt_select_rows_other'),
+                            0: RCPRO_module.tt('project_dt_select_rows_zero'),
+                            1: RCPRO_module.tt('project_dt_select_rows_one')
+                        }
+                    },
+                    paginate: {
+                        first: RCPRO_module.tt('project_dt_paginate_first'),
+                        last: RCPRO_module.tt('project_dt_paginate_last'),
+                        next: RCPRO_module.tt('project_dt_paginate_next'),
+                        previous: RCPRO_module.tt('project_dt_paginate_previous')
+                    },
+                    aria: {
+                        sortAscending: RCPRO_module.tt('project_dt_aria_sort_ascending'),
+                        sortDescending: RCPRO_module.tt('project_dt_aria_sort_descending')
+                    }
+                } 
             });
             $('#parent').removeClass('dataTableParentHidden');
             $('.wrapper').show();

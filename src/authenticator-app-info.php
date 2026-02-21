@@ -24,6 +24,10 @@ if ( !isset($qstring["t"]) ) {
 $participantHelper    = new ParticipantHelper($module);
 $verified_participant = $participantHelper->verifyAuthenticatorAppInfoToken($qstring["t"]);
 
+// Language Helper
+$language = new Language($module);
+$language->handleLanguageChangeRequest();
+
 $ui->ShowParticipantHeader($module->tt("mfa_info_page_title"));
 
 if ( !$verified_participant ) { ?>
