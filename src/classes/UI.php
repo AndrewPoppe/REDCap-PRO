@@ -13,6 +13,24 @@ class UI
 
     public function ShowParticipantHeader(string $title)
     {
+        $customLogoEnabled = (bool) $this->module->framework->getSystemSetting('allow-custom-logo-system');
+        $customLogo        = $customLogoEnabled ? $this->module->framework->getProjectSetting('project-header-logo') : null;
+        if ( !empty($customLogo) ) {
+            $participantLogo = $customLogo;
+        } else {
+            $systemLogoEnabled = (bool) $this->module->framework->getSystemSetting('system-header-logo-enabled');
+            $systemLogoEdoc   = $this->module->framework->getSystemSetting('system-header-logo-file');
+            if ( $systemLogoEnabled && !empty($systemLogoEdoc) ) {
+                try {
+                    [$mime, , $content] = \REDCap::getFile($systemLogoEdoc);
+                    $participantLogo = 'data:' . $mime . ';base64,' . base64_encode($content);
+                } catch ( \Throwable $e ) {
+                    $participantLogo = $this->module->getUrl('images/RCPro_Logo_Alternate.svg');
+                }
+            } else {
+                $participantLogo = $this->module->getUrl('images/RCPro_Logo_Alternate.svg');
+            }
+        }
         echo '<!DOCTYPE html>
                 <html lang="en">
                 <head>
@@ -38,7 +56,7 @@ class UI
                 <body>
                     <div class="center">
                         <div class="wrapper">
-                            <img id="rcpro-logo" src="' . $this->module->getUrl("images/RCPro_Logo_Alternate.svg") . '" width="500px">
+                            <img id="rcpro-logo" class="w-100" src="' . $participantLogo . '">
                             <hr>
                             <div style="text-align: center;"><h2 class="title">' . $title . '</h2></div>';
     }

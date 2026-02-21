@@ -43,6 +43,7 @@ $showMfa                     = $allowMfaSystem && ($isAdmin || !$module->framewo
 $showApi                     = $allowApiSystem && ($isAdmin || !$module->framework->getSystemSetting("api-require-admin"));
 $showSelfRegistration        = $allowSelfRegistrationSystem && ($isAdmin || !$module->framework->getSystemSetting("self-registration-require-admin"));
 $showTimeoutTimeSetting      = $module->framework->getSystemSetting("allow-project-timeout-time-override");
+$showCustomLogo              = (bool) $module->framework->getSystemSetting("allow-custom-logo-system");
 
 // Update settings if requested
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
@@ -66,6 +67,28 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
 
         // Validate Prevent Email Login
         $new_settings["prevent-email-login"] = $post_settings["prevent-email-login"] === "true";
+
+        // Validate Header Logo Upload
+        if ( $showCustomLogo ) {
+            $clearLogo = isset($post_settings["project-header-logo-clear"]) && $post_settings["project-header-logo-clear"] === "on";
+            if ( $clearLogo ) {
+                $new_settings["project-header-logo"] = null;
+            } elseif ( isset($_FILES["project-header-logo-file"]) && $_FILES["project-header-logo-file"]["error"] === UPLOAD_ERR_OK ) {
+                $allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/svg+xml", "image/webp"];
+                $maxSize      = 2 * 1024 * 1024; // 2 MB
+                $file         = $_FILES["project-header-logo-file"];
+                if ( !in_array($file["type"], $allowedTypes, true) ) {
+                    $header_logo_err = $module->tt("project_settings_header_logo_type_err");
+                    $any_err         = true;
+                } elseif ( $file["size"] > $maxSize ) {
+                    $header_logo_err = $module->tt("project_settings_header_logo_size_err");
+                    $any_err         = true;
+                } else {
+                    $imageData                           = base64_encode(file_get_contents($file["tmp_name"]));
+                    $new_settings["project-header-logo"] = "data:{$file['type']};base64,{$imageData}";
+                }
+            }
+        }
 
         // Validate Primary Contact
         $new_settings["pc-name"]  = \REDCap::escapeHtml($post_settings["pc-name"]);
@@ -434,6 +457,48 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
                 </div>
                 <br>
             <?php } ?>
+            <?php if ( $showCustomLogo ) { ?>
+            <div class="card">
+                <div class="card-header">
+                    <span class="fa-stack">
+                        <i class="fas fa-image fa-2x"></i>
+                    </span>
+                    <nbsp></nbsp>
+                    <strong><?= $module->tt("project_settings_header_logo"); ?></strong>
+                </div>
+                <div class="card-body">
+                    <div class="card-title">
+                        <?= $module->tt("project_settings_header_logo_desc"); ?>
+                    </div>
+                    <?php $currentLogo = $settings["project-header-logo"]; ?>
+                    <?php if ( !empty($currentLogo) ) { ?>
+                        <div style="margin-bottom: 12px;">
+                            <label class="form-label fw-semibold"><?= $module->tt("project_settings_header_logo_current"); ?></label><br>
+                            <img src="<?= $currentLogo ?>" alt="Current Logo" style="max-height: 80px; max-width: 400px; border: 1px solid #ccc; padding: 4px; border-radius: 4px;">
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="project-header-logo-clear" id="project-header-logo-clear">
+                            <label class="form-check-label" for="project-header-logo-clear"><?= $module->tt("project_settings_header_logo_clear"); ?></label>
+                        </div>
+                    <?php } ?>
+                    <div class="form-group">
+                        <label class="form-label"><?= $module->tt("project_settings_header_logo_upload_label"); ?></label>
+                        <input type="file" name="project-header-logo-file" id="project-header-logo-file"
+                            class="form-control <?php echo (!empty($header_logo_err)) ? 'is-invalid' : ''; ?>"
+                            accept="image/jpeg,image/png,image/gif,image/svg+xml,image/webp">
+                        <div class="form-text"><?= $module->tt("project_settings_header_logo_upload_hint"); ?></div>
+                        <span class="invalid-feedback">
+                            <?php echo $header_logo_err; ?>
+                        </span>
+                    </div>
+                    <div id="logo-preview-container" style="margin-top: 12px; display: none;">
+                        <label class="form-label fw-semibold"><?= $module->tt("project_settings_header_logo_preview"); ?></label><br>
+                        <img id="logo-preview" src="" alt="Logo Preview" style="max-height: 80px; max-width: 400px; border: 1px solid #ccc; padding: 4px; border-radius: 4px;">
+                    </div>
+                </div>
+            </div>
+            <br>
+            <?php } ?>
             <div class="card">
                 <div class="card-header">
                     <span class="fa-stack">
@@ -493,6 +558,23 @@ $autoEnrollNotificationEmail    = $projectSettings->getAutoEnrollNotificationEma
             let form = document.querySelector('#settings-form');
             form.addEventListener('change', function () {
                 $('#rcpro-submit-button').attr("disabled", null);
+            });
+            // Logo file preview
+            document.getElementById('project-header-logo-file').addEventListener('change', function () {
+                const file = this.files[0];
+                const container = document.getElementById('logo-preview-container');
+                const preview   = document.getElementById('logo-preview');
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        preview.src = e.target.result;
+                        container.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    container.style.display = 'none';
+                    preview.src = '';
+                }
             });
             <?php if ( $showSelfRegistration && $allowAutoEnrollSystem ) { ?>
                 const isChecked = $('#allow-self-registration-form-check').get(0).checked;

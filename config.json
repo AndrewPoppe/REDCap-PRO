@@ -120,6 +120,35 @@
             "type": "password"
         },
         {
+            "key": "system-header-logo-descriptive",
+            "name": "system_header_logo_descriptive",
+            "tt_name": true,
+            "type": "descriptive"
+        },
+        {
+            "key": "system-header-logo-file",
+            "name": "system_header_logo_file",
+            "tt_name": true,
+            "type": "file"
+        },
+        {
+            "key": "system-header-logo-enabled",
+            "name": "system_header_logo_enabled",
+            "tt_name": true,
+            "type": "checkbox",
+            "branchingLogic": {
+                "field": "system-header-logo-file",
+                "op": "<>",
+                "value": ""
+            }
+        },
+        {
+            "key": "allow-custom-logo-system",
+            "name": "allow_custom_logo_system",
+            "tt_name": true,
+            "type": "checkbox"
+        },
+        {
             "key": "api-descriptive",
             "name": "<div class='p-2' style='background-image: linear-gradient(rgb(255, 248, 197), rgb(255, 248, 197)); border: 1px solid rgba(168, 133, 37, 0.4); border-radius: 0.375rem;'><strong>API Settings</strong><p>These settings control the use of the API. Please take care to understand how the API may be used before enabling it in the system.</p>    </div>",
             "type": "descriptive"
