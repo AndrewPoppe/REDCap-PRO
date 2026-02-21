@@ -13,6 +13,24 @@ class UI
 
     public function ShowParticipantHeader(string $title)
     {
+        $customLogoEnabled = (bool) $this->module->framework->getSystemSetting('allow-custom-logo-system');
+        $customLogo        = $customLogoEnabled ? $this->module->framework->getProjectSetting('project-header-logo') : null;
+        if ( !empty($customLogo) ) {
+            $participantLogo = $customLogo;
+        } else {
+            $systemLogoEnabled = (bool) $this->module->framework->getSystemSetting('system-header-logo-enabled');
+            $systemLogoEdoc   = $this->module->framework->getSystemSetting('system-header-logo-file');
+            if ( $systemLogoEnabled && !empty($systemLogoEdoc) ) {
+                try {
+                    [$mime, , $content] = \REDCap::getFile($systemLogoEdoc);
+                    $participantLogo = 'data:' . $mime . ';base64,' . base64_encode($content);
+                } catch ( \Throwable $e ) {
+                    $participantLogo = $this->module->getUrl('images/RCPro_Logo_Alternate.svg');
+                }
+            } else {
+                $participantLogo = $this->module->getUrl('images/RCPro_Logo_Alternate.svg');
+            }
+        }
         echo '<!DOCTYPE html>
                 <html lang="en">
                 <head>
@@ -29,16 +47,19 @@ class UI
                     <script src="https://kit.fontawesome.com/cf0d92172e.js" crossorigin="anonymous"></script>
                     <style>
                         body {  font-family: "Atkinson Hyperlegible", sans-serif; }
-                        .wrapper { width: 360px; padding: 20px; }
+                        .wrapper { width: 360px; }
                         .form-group { margin-top: 20px; }
                         .center { display: flex; justify-content: center; align-items: center; }
-                        img#rcpro-logo { position: relative; left: -125px; }
                     </style>
                 </head>
                 <body>
-                    <div class="center">
-                        <div class="wrapper">
-                            <img id="rcpro-logo" src="' . $this->module->getUrl("images/RCPro_Logo_Alternate.svg") . '" width="500px">
+                    <div class="center flex-column p-3">
+                        <div id="rcpro-header" class="row d-flex align-items-start justify-content-center">
+                            <div style="width: 500px;">
+                                <img id="rcpro-logo" class="w-100" src="' . $participantLogo . '">
+                            </div>
+                        </div>
+                        <div class="wrapper px-3">
                             <hr>
                             <div style="text-align: center;"><h2 class="title">' . $title . '</h2></div>';
     }
