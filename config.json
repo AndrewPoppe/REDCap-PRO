@@ -85,6 +85,12 @@
             "type": "descriptive"
         },
         {
+            "key": "allow-project-language-manager",
+            "name": "allow_project_language_manager",
+            "tt_name": true,
+            "type": "checkbox"
+        },
+        {
             "key": "add-language",
             "name": "add_language",
             "tt_name": true,

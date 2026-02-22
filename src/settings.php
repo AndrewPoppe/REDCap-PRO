@@ -31,6 +31,7 @@ $showApi                     = $allowApiSystem && ($isAdmin || !$module->framewo
 $showSelfRegistration        = $allowSelfRegistrationSystem && ($isAdmin || !$module->framework->getSystemSetting("self-registration-require-admin"));
 $showTimeoutTimeSetting      = $module->framework->getSystemSetting("allow-project-timeout-time-override");
 $showCustomLogo              = (bool) $module->framework->getSystemSetting("allow-custom-logo-system");
+$showLanguageManager         = $isAdmin || (bool) $module->framework->getSystemSetting("allow-project-language-manager");
 
 // Update settings if requested
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
@@ -218,6 +219,7 @@ $module->tt_transferToJavascriptModuleObject();
                             <?php echo $lang_err; ?>
                         </span>
                     </div>
+                    <?php if ( $showLanguageManager ) { ?>
                     <div class="card-title"><?= $module->tt("project_settings_languages_and_translation_info") ?></div>
 
                     <table class="table">
@@ -292,6 +294,7 @@ $module->tt_transferToJavascriptModuleObject();
                             <li><a class="dropdown-item" href="#" id="add-language-manually-btn"><i class="fas fa-keyboard"></i> <?= $module->tt('project_settings_lang_manual_entry')?></a></li>
                         </ul>
                     </div>
+                    <?php } ?>
                 </div>
             </div>
             <br>

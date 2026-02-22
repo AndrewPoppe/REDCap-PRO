@@ -53,6 +53,11 @@ class AjaxHandler
     private function getLanguage()
     {
         try {
+            $isAdmin = $this->module->framework->isSuperUser();
+            $projectSettingAllowed = (bool) $this->module->framework->getSystemSetting("allow-project-language-manager");
+            if ( !$isAdmin && !$projectSettingAllowed ) {
+                throw new REDCapProException("Project language editing is disabled at the system level");
+            }
             $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
             if ( $role < 3 ) {
                 throw new REDCapProException("You must be a manager or admin to edit languages");
@@ -81,6 +86,11 @@ class AjaxHandler
     private function setLanguage()
     {
         try {
+            $isAdmin = $this->module->framework->isSuperUser();
+            $projectSettingAllowed = (bool) $this->module->framework->getSystemSetting("allow-project-language-manager");
+            if ( !$isAdmin && !$projectSettingAllowed ) {
+                throw new REDCapProException("Project language editing is disabled at the system level");
+            }
             $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
             if ( $role < 3 ) {
                 throw new REDCapProException("You must be a manager or admin to edit languages");
@@ -111,6 +121,11 @@ class AjaxHandler
     private function setLanguageActiveStatus()
     {
         try {
+            $isAdmin = $this->module->framework->isSuperUser();
+            $projectSettingAllowed = (bool) $this->module->framework->getSystemSetting("allow-project-language-manager");
+            if ( !$isAdmin && !$projectSettingAllowed ) {
+                throw new REDCapProException("Project language editing is disabled at the system level");
+            }
             $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
             if ( $role < 3 ) {
                 throw new REDCapProException("You must be a manager or admin to edit languages");
@@ -131,6 +146,11 @@ class AjaxHandler
     private function deleteLanguage()
     {
         try {
+            $isAdmin = $this->module->framework->isSuperUser();
+            $projectSettingAllowed = (bool) $this->module->framework->getSystemSetting("allow-project-language-manager");
+            if ( !$isAdmin && !$projectSettingAllowed ) {
+                throw new REDCapProException("Project language editing is disabled at the system level");
+            }
             $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
             if ( $role < 3 ) {
                 throw new REDCapProException("You must be a manager or admin to delete languages");
@@ -155,6 +175,11 @@ class AjaxHandler
     private function downloadLanguageFile() 
     {
         try {
+            $isAdmin = $this->module->framework->isSuperUser();
+            $projectSettingAllowed = (bool) $this->module->framework->getSystemSetting("allow-project-language-manager");
+            if ( !$isAdmin && !$projectSettingAllowed ) {
+                throw new REDCapProException("Project language editing is disabled at the system level");
+            }
             $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
             if ( $role < 3 ) {
                 throw new REDCapProException("You must be a manager or admin to download language files");
