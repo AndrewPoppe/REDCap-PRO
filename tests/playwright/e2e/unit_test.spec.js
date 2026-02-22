@@ -81,7 +81,7 @@ test.describe('Setup', () => {
 
             // Enable EM
             await modulePage.enableModule(config.projects.Project.pid);
-            await modulePage.page.reload({ waitUntil: 'domcontentloaded' });
+            await modulePage.visitProjectHomePage(config.projects.Project.pid);
             await expect(modulePage.page.locator('div#app_panel a > span#RCPro-Link')).toBeVisible();
             await modulePage.page.screenshot({ path: `${outDir}/S0_07-module_enabled_on_project.png`, fullPage: false });
 

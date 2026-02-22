@@ -279,6 +279,10 @@ export class Module {
         await this.page.locator(`table#external-modules-enabled tr[data-module="${this.settings.module.name}"]`).waitFor({ state: 'visible' });
     }
 
+    async visitProjectHomePage(pid) {
+        await this.page.goto(`${this.url}/index.php?pid=${pid}`, { waitUntil: 'domcontentloaded' });
+    }
+
     async disableModule(pid) {
         await this.page.goto(`${this.url}/ExternalModules/manager/project.php?pid=${pid}`, { waitUntil: 'domcontentloaded' });
         await this.page.locator(`tr[data-module="${this.settings.module.name}"] button.external-modules-disable-button`).click();
