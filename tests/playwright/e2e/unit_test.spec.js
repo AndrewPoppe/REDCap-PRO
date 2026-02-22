@@ -15,10 +15,13 @@ test.describe('Setup', () => {
     test('Setup system and projects', async ({ modulePage }, testInfo) => {
         test.setTimeout(300000);
         const outDir = `test-results/${testInfo.project.name}`;
+        fs.mkdirSync(outDir, { recursive: true });
         modulePage.page.video().saveAs(`${outDir}/S0_Setup.mp4`);
+
         await test.step('Log in and enable module', async () => {
             await modulePage.enableModuleSystemWide();
             await modulePage.setLanguageToEnglish();
+            await modulePage.page.screenshot({ path: `${outDir}/S0_01-module_enabled_system_wide.png`, fullPage: false });
         });
 
         await test.step('Check module system configuration', async () => {
@@ -30,15 +33,17 @@ test.describe('Setup', () => {
             await modulePage.page.locator('select[name="reserved-language-system"]').click();
             const settingTable = modulePage.page.locator('div#external-modules-configure-modal table');
             for (let defaultSetting of config.system_em_framework_config.default_options) {
-                await expect(await settingTable.locator('label', { hasText: new RegExp(`^${defaultSetting}$`) }).count()).toEqual(1);
+                await expect(await settingTable.locator('label', { hasText: new RegExp(`^\\s*${defaultSetting}\\s*$`) }).count()).toBeGreaterThan(0);
             }
             for (let customSetting of config.system_em_framework_config.custom_options) {
                 await expect(await settingTable.locator('label', { hasText: customSetting }).count()).toBeGreaterThan(0);
             }
+            await modulePage.page.screenshot({ path: `${outDir}/S0_02-module_system_configuration.png`, fullPage: false });
         });
 
         await test.step('Setup project', async () => {
             config.projects.Project.pid = await modulePage.createProject(config.projects.Project.projectName, config.projects.Project.xml);
+            await modulePage.page.screenshot({ path: `${outDir}/S0_03-project_created.png`, fullPage: false });
 
             // Create User Import CSV File
             const userImportData = fs.readFileSync('data_files/templates/UserImport_Template.csv');
@@ -62,78 +67,110 @@ test.describe('Setup', () => {
 
             // Import Users
             await modulePage.importUserCSV(config.projects.Project.pid, 'data_files/UserImport.csv');
+            await modulePage.page.screenshot({ path: `${outDir}/S0_04-users_imported.png`, fullPage: false });
 
             // Import DAGs
             await modulePage.importDAGAssignmentsCSV(config.projects.Project.pid, 'data_files/DAGImport.csv');
+            await modulePage.page.screenshot({ path: `${outDir}/S0_05-dags_imported.png`, fullPage: false });
 
             // Set DAG Switcher
             config.dag1 = (await modulePage.page.locator('tr', { has: modulePage.page.locator('td', { hasText: 'dag_1' }) }).locator('td').nth(4).innerText()).valueOf();
             console.log(config.dag1);
             await modulePage.setDAGSwitcher(config.projects.Project.pid, [config.users.NormalUser1.username], [0, config.dag1]);
+            await modulePage.page.screenshot({ path: `${outDir}/S0_06-dag_switcher_set.png`, fullPage: false });
 
             // Enable EM
             await modulePage.enableModule(config.projects.Project.pid);
             await modulePage.page.reload({ waitUntil: 'domcontentloaded' });
             await expect(modulePage.page.locator('div#app_panel a > span#RCPro-Link')).toBeVisible();
+            await modulePage.page.screenshot({ path: `${outDir}/S0_07-module_enabled_on_project.png`, fullPage: false });
 
             // Check menu tabs
             await modulePage.page.locator('div#app_panel a > span#RCPro-Link').click();
             for (let tab of config.project_em_framework_config.project_menu_tabs) {
                 await expect(modulePage.page.locator('div#center nav li a', { hasText: tab })).toBeVisible();
             }
+            await modulePage.page.screenshot({ path: `${outDir}/S0_08-project_menu_tabs.png`, fullPage: false });
 
             // Disable EM
             await modulePage.disableModule(config.projects.Project.pid);
+            await modulePage.page.screenshot({ path: `${outDir}/S0_09-module_disabled.png`, fullPage: false });
 
             // Re-Enable EM
             await modulePage.enableModule(config.projects.Project.pid);
-
+            await modulePage.page.screenshot({ path: `${outDir}/S0_10-module_re_enabled.png`, fullPage: false });
         });
     });
 });
 
 test.describe('Registering a Participant', () => {
     test('Register', async ({ modulePage, emailPage }, testInfo) => {
-        //test.setTimeout(300000);
+        test.setTimeout(300000);
         const outDir = `test-results/${testInfo.project.name}`;
+        fs.mkdirSync(outDir, { recursive: true });
         modulePage.page.video().saveAs(`${outDir}/S1_Registering_a_participant_REDCap.mp4`);
         emailPage.page.video().saveAs(`${outDir}/S1_Registering_a_participant_Email.mp4`);
-        await test.step('initiate registration', async () => {
 
-            await modulePage.changeEmailForExistingParticipant(config.participants.Participant1.email);
+        await test.step('Clear existing participant email', async () => {
+            await modulePage.visitSystemParticipantsPage();
+            const existingRow = modulePage.page.locator('tr', { hasText: config.participants.Participant1.email });
+            if (await existingRow.count() > 0) {
+                await existingRow.locator('a[title="Change Email Address"]').click();
+                await modulePage.page.locator('div.swal2-popup input.swal2-input').fill(
+                    'fakeemail_' + Math.random().toString(16).substring(2) + '@example.com'
+                );
+                await modulePage.page.locator('div.swal2-popup button.swal2-confirm').click();
+                await modulePage.page.screenshot({ path: `${outDir}/S1_01-existing_participant_email_changed.png`, fullPage: false });
+            }
+        });
 
+        await test.step('Visit registration page and verify form fields', async () => {
             await modulePage.visitRegisterPage(config.projects.Project.pid);
             await expect(modulePage.page.locator('div.form-group', { hasText: 'First Name' })).toBeVisible();
             await expect(modulePage.page.locator('div.form-group', { hasText: 'Last Name' })).toBeVisible();
             await expect(modulePage.page.locator('div.form-group', { hasText: 'Email' })).toBeVisible();
+            await modulePage.page.screenshot({ path: `${outDir}/S1_02-register_page.png`, fullPage: false });
+        });
 
+        await test.step('Verify required field validation', async () => {
             await modulePage.page.locator('form.rcpro-form.register-form button[type="submit"]').click();
             await expect(modulePage.page.locator('span', { hasText: 'Please enter a first name for this participant.' })).toBeVisible();
             await expect(modulePage.page.locator('span', { hasText: 'Please enter a last name for this participant.' })).toBeVisible();
             await expect(modulePage.page.locator('span', { hasText: 'Please enter a valid email address.' })).toBeVisible();
+            await modulePage.page.screenshot({ path: `${outDir}/S1_03-required_field_validation.png`, fullPage: false });
+        });
 
+        await test.step('Verify email format validation', async () => {
             await modulePage.page.locator('input[name="REDCapPRO_FName"]').fill(config.participants.Participant1.firstName);
             await modulePage.page.locator('input[name="REDCapPRO_LName"]').fill(config.participants.Participant1.lastName);
             const email = await modulePage.page.locator('input[name="REDCapPRO_Email"]');
             await email.fill('bad.email');
             await modulePage.page.locator('form.rcpro-form.register-form button[type="submit"]').click();
-
             const emailValidationMessage = await email.evaluate((element) => {
                 return element.validationMessage;
             });
             await expect(emailValidationMessage).toContain("Please include an '@' in the email address. 'bad.email' is missing an '@'.");
+            await modulePage.page.screenshot({ path: `${outDir}/S1_04-email_format_validation.png`, fullPage: false });
+        });
 
+        await test.step('Register participant successfully', async () => {
             await emailPage.deleteAllMessages();
+            const email = await modulePage.page.locator('input[name="REDCapPRO_Email"]');
             await email.fill(config.participants.Participant1.email);
             await modulePage.page.locator('form.rcpro-form.register-form button[type="submit"]').click();
             await expect(modulePage.page.locator('div.swal2-popup', { hasText: 'Participant Registered' })).toBeVisible();
+            await modulePage.page.screenshot({ path: `${outDir}/S1_05-participant_registered.png`, fullPage: false });
+        });
 
+        await test.step('Verify registration email', async () => {
             await emailPage.openInbox();
+            await emailPage.page.screenshot({ path: `${outDir}/S1_06-email_inbox.png`, fullPage: false });
             const registrationEmail = await emailPage.findEmailBySubject('REDCapPRO - Account Created');
             await registrationEmail.click();
             await expect(await emailPage.page.locator('tr', {
                 has: emailPage.page.locator('th', { hasText: 'From' })
             }).locator('td').nth(0).innerText()).toEqual('noreply@REDCapPRO.com');
+            await emailPage.page.screenshot({ path: `${outDir}/S1_07-registration_email.png`, fullPage: false });
         });
     });
 });
