@@ -118,11 +118,13 @@ These are settings/configuration options accessible in the normal External Modul
 | Setting                                                                            |   Type   | Description                                                                                                                                                                                                                                            |     Default Value     |
 | :--------------------------------------------------------------------------------- | :------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------: |
 | **Language File**                                                                  | Dropdown | The language that participant-facing text in the module will appear in. This system setting can be overridden by the corresponding project setting. See the [Translation / Multi-Language Management](#translation--multi-language-management) section below for more information.                            |        English        |
+| **Add Language** *(repeatable)*                                                    | Sub-settings group | Add one or more custom languages beyond the built-in set. Each entry has the following fields: **Language Code** (unique name shown in dropdowns), **Language File** (upload a `.ini` translation file), **Language Direction** (`ltr` or `rtl`), and **Active** (whether the language is available for selection). See [Custom System Languages](#custom-system-languages) for details. | (none) |
 | **Email From Address**                                                             |  Email   | This will be the From email address for all system emails. This can help if emails are being sent to spam or are not delivered.                                                                                                                        | noreply@REDCapPRO.com |
 | **Prevent Email Login**                                                            | Checkbox | Should participants be prevented from using their email address to log in to the system. Checking this will require that they login using their participant username only.<br>*Note: if checked, this overrides the associated project-level setting.* |       Unchecked       |
 | **Warning Time**                                                                   |  Number  | Number of minutes to wait before warning participant of inactivity timeout                                                                                                                                                                             |       1 minute        |
 | **Timeout Time**                                                                   |  Number  | Number of minutes to wait before logging participant out due to inactivity                                                                                                                                                                             |       5 minutes       |
 | **Allow Project-Level Timeout Time Override**                                      | Checkbox | Allow a project-level timeout time to be defined and override system timeout time setting                                                                                                                                                              |       Unchecked       |
+| **Maximum Timeout Time**                                                           |  Number  | When **Allow Project-Level Timeout Time Override** is enabled, this sets the upper limit (in minutes) that a project may use for its timeout. Has no effect unless that setting is enabled.                                                            | (same as Timeout Time) |
 | **Password Length**                                                                | Integer  | Minimum length of participant's password in characters                                                                                                                                                                                                 |     8 characters      |
 | **Login Attempts**                                                                 | Integer  | Number of consecutive failed login attempts before being locked out                                                                                                                                                                                    |      3 attempts       |
 | **Lockout Duration**                                                               | Integer  | Length of a lockout due to failed login attempts, in seconds                                                                                                                                                                                           |      300 seconds      |
@@ -165,7 +167,10 @@ Custom logos are only shown on **participant-facing pages**. Project staff pages
 
 ### Translation / Multi-Language Management
 
-**REDCapPRO** has full multi-language support across every page of the module — participant-facing pages, project staff pages, and the Control Center. All text is driven by `.ini` translation files and can be customized at both the system and project level. Participants can switch languages on the fly from any participant-facing page, and their choice persists across sessions.
+**REDCapPRO** has full multi-language support across every page of the module — participant-facing pages, project-level 
+pages, and the Control Center pages. All text is driven by `.ini` translation files or `.json` files and can be 
+customized at both the system and project level. Participants and users can switch languages on the fly from any enabled
+language, and their choice persists across sessions.
 
 #### Built-In Languages
 
@@ -179,7 +184,8 @@ The following languages ship with the module as built-in `.ini` files located in
 | Français (French) |
 | Chinese  |
 
-The default language for all pages is configured with the **Language File** system setting (Control Center → External Modules → REDCapPRO). This can be overridden at the project level via the **Language** dropdown in the REDCapPRO Project Menu → Settings tab.
+The default language for all pages is configured with the **Language File** system setting. This can be overridden at 
+the project level via the **Language** dropdown in the REDCapPRO Project Menu → [Settings tab](#settings).
 
 If the language you need is not in the list, feel free to create an `.ini` file and open a pull request, or send the file to `andrew dot poppe at yale dot edu`.
 
