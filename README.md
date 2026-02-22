@@ -15,7 +15,12 @@
     - [System Settings](#system-settings)
     - [Project Settings](#project-settings)
     - [Custom Header Logo](#custom-header-logo)
-    - [Translation](#translation)
+    - [Translation / Multi-Language Management](#translation--multi-language-management)
+      - [Built-In Languages](#built-in-languages)
+      - [Custom System Languages](#custom-system-languages)
+      - [Project Language Manager](#project-language-manager)
+      - [Participant Language Selection](#participant-language-selection)
+      - [Language Resolution Order](#language-resolution-order)
   - [REDCapPRO Project Menu](#redcappro-project-menu)
     - [Home Tab](#home-tab)
     - [Manage Participants](#manage-participants)
@@ -112,7 +117,7 @@ These are settings/configuration options accessible in the normal External Modul
 
 | Setting                                                                            |   Type   | Description                                                                                                                                                                                                                                            |     Default Value     |
 | :--------------------------------------------------------------------------------- | :------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------: |
-| **Language File**                                                                  | Dropdown | The language that participant-facing text in the module will appear in. This system setting can be overridden by the corresponding project setting. See the [Translation](#translation) section below for more information.                            |        English        |
+| **Language File**                                                                  | Dropdown | The language that participant-facing text in the module will appear in. This system setting can be overridden by the corresponding project setting. See the [Translation / Multi-Language Management](#translation--multi-language-management) section below for more information.                            |        English        |
 | **Email From Address**                                                             |  Email   | This will be the From email address for all system emails. This can help if emails are being sent to spam or are not delivered.                                                                                                                        | noreply@REDCapPRO.com |
 | **Prevent Email Login**                                                            | Checkbox | Should participants be prevented from using their email address to log in to the system. Checking this will require that they login using their participant username only.<br>*Note: if checked, this overrides the associated project-level setting.* |       Unchecked       |
 | **Warning Time**                                                                   |  Number  | Number of minutes to wait before warning participant of inactivity timeout                                                                                                                                                                             |       1 minute        |
@@ -158,13 +163,68 @@ Custom logos are only shown on **participant-facing pages**. Project staff pages
 - Upload a per-project logo with **Header Logo** (only visible when **Allow Custom Project Logos** is enabled at the system level).
 - Remove the custom logo by checking the *Remove custom logo and restore the default* checkbox and saving.
 
-### Translation
+### Translation / Multi-Language Management
 
-This external module makes use of the built-in text translation functions in REDCap's External Module framework. These functions use `.ini` files (located in the [lang](lang) directory of this module's source code) to replace placeholder text with the equivalent translated text. 
+**REDCapPRO** has full multi-language support across every page of the module — participant-facing pages, project staff pages, and the Control Center. All text is driven by `.ini` translation files and can be customized at both the system and project level. Participants can switch languages on the fly from any participant-facing page, and their choice persists across sessions.
 
-If the language you desire does not appear in the `Language File` dropdown in the the external module settings, then no `.ini` file has been created for that language. Feel free to supply a translation file in whichever language you need. See the current language files located in the [lang](lang) directory as guides. Feel free to open a pull request or send the file directly to `andrew dot poppe at yale dot edu`.
+#### Built-In Languages
 
-***Note:** Currently the module only translates participant-facing pages. Work is underway to translate all module pages.*
+The following languages ship with the module as built-in `.ini` files located in the [lang](lang) directory:
+
+| Language |
+| -------- |
+| English  |
+| Deutsch (German) |
+| Español (Spanish) |
+| Français (French) |
+| Chinese  |
+
+The default language for all pages is configured with the **Language File** system setting (Control Center → External Modules → REDCapPRO). This can be overridden at the project level via the **Language** dropdown in the REDCapPRO Project Menu → Settings tab.
+
+If the language you need is not in the list, feel free to create an `.ini` file and open a pull request, or send the file to `andrew dot poppe at yale dot edu`.
+
+#### Custom System Languages
+
+REDCap administrators can add additional languages beyond the built-in set directly from the External Module system settings using the **Add Language** repeatable sub-setting:
+
+| Field | Description |
+| :---- | :---------- |
+| **Language Code** | A unique name/identifier for this language (e.g. `Italian`). This is what appears in language dropdowns. |
+| **Language File** | Upload a `.ini` translation file in the same format as the built-in files in the [lang](lang) directory. |
+| **Language Direction** | Text direction — `ltr` (left-to-right) or `rtl` (right-to-left). |
+| **Active** | Whether this language is available for selection. |
+
+Custom system languages act as built-in languages and are available in all projects.
+
+#### Project Language Manager
+
+Within the REDCapPRO Project Menu → Settings tab, managers and administrators have access to a full **Language Manager** that goes far beyond simply picking a default language:
+
+- **Activate / Deactivate built-in languages** — Choose which of the built-in (and custom system) languages are offered to participants in this project. Only active languages appear in the participant language selector.
+- **Add a custom project language** — Add a brand-new language that exists only within this project using one of two methods:
+  - **Import from file** — Upload a `.ini` or `.json` translation file. A downloadable English template is provided in both formats to use as a starting point.
+  - **Manual entry** — Use the built-in string editor, which presents every English string alongside an editable field for the translated value. A text direction (`ltr` or `rtl`) can be set for each custom language.
+- **Copy a language** — Duplicate any existing language (built-in or custom) as a new custom project language, then edit it from there.
+- **Edit existing custom translations** — Reopen the string editor for any custom project language to update individual strings.
+- **Download language files** — Export any language (built-in or custom) in either **JSON** or **INI** format. This is useful for sharing translations or using them as a starting point for another language.
+- **Delete custom project languages** — Remove a custom project language and its stored strings. Built-in languages cannot be deleted (only deactivated).
+
+> **Note:** Only managers and REDCap administrators can access the Language Manager. Built-in languages can be deactivated but not edited or deleted through the UI.
+
+#### Participant Language Selection
+
+On all participant-facing pages, a **language selector** is displayed so participants can switch to any language that has been activated for the project. Their selection persists across sessions.
+
+#### Language Resolution Order
+
+When rendering a page, **REDCapPRO** resolves text strings in the following layered order (later layers override earlier ones):
+
+1. **English built-in** — The ultimate fallback; guarantees every string has a value.
+2. **System default language** — The language configured in the system settings (`Language File`).
+3. **Project default language** — The language selected in the project's Settings tab.
+4. **Participant's selected language** — The language most recently chosen by the participant via the on-page language selector.
+
+This layered approach means that a custom translation only needs to define the strings it cares about — any untranslated strings gracefully fall back through the chain.
 
 ## REDCapPRO Project Menu
 
@@ -265,7 +325,7 @@ This tab contains some project-level configuration options. This tab is only
 accessible by managers.
 | Setting                                                             |       Type       | Description                                                                                                                                                                                                                                                                |            Default Value             |
 | :------------------------------------------------------------------ | :--------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------: |
-| **Language**                                                        |     Dropdown     | The language that participant-facing text in the module will appear in. This overrides the default system setting. See the [Translation](#translation) section for more information.                                                                                       |               English                |
+| **Language**                                                        |     Dropdown     | The language that participant-facing text in the module will appear in. This overrides the default system setting. See the [Translation / Multi-Language Management](#translation--multi-language-management) section for more information.                                                                                       |               English                |
 | **Prevent Email Login**                                             |     Checkbox     | If checked, this prevents participants from using their email address to log in to surveys. Instead, they must use their REDCapPRO username to log in. <br>*If email logins are prevented at the system level, this setting will not appear in the project setttings tab.* |              Unchecked               |
 | **Timeout Time**                                                    | Positive Integer | Number of minutes to wait before logging participant out due to inactivity. This overrides the default system setting, but it is only shown if enabled at the system level.                                                                                                | (blank) - defaults to system setting |
 | **Multifactor Authentication**                                      |     Checkbox     | Require participants to use multi-factor authentication when logging in. This requires participants to enter a code sent to their email address in addition to their password.                                                                                             |              Unchecked               |
