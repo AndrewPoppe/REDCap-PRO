@@ -369,7 +369,9 @@ export class Module {
         await this.page.locator('form#importUserForm').waitFor({ state: 'visible' });
         await this.page.locator('form#importUserForm input[type="file"]').setInputFiles(csv);
         await this.page.locator('div.ui-dialog', { has: this.page.locator('div#importUsersDialog') }).locator('button', { hasText: 'Upload' }).click();
-        await this.page.locator('div.ui-dialog', { has: this.page.locator('div#importUsersDialog2[title="Upload users (CSV) - Confirm"]') }).locator('button', { hasText: 'Upload' }).click();
+        const confirmDialog = this.page.locator('div.ui-dialog', { has: this.page.locator('div#importUsersDialog2') });
+        await confirmDialog.waitFor({ state: 'visible' });
+        await confirmDialog.locator('button', { hasText: 'Upload' }).click();
     }
 
     async importRoleCSV(pid, csv) {
@@ -379,7 +381,9 @@ export class Module {
         await this.page.locator('form#importRoleForm').waitFor({ state: 'visible' });
         await this.page.locator('form#importRoleForm input[type="file"]').setInputFiles(csv);
         await this.page.locator('div.ui-dialog', { has: this.page.locator('div#importRolesDialog') }).locator('button', { hasText: 'Upload' }).click();
-        await this.page.locator('div.ui-dialog', { has: this.page.locator('div#importRolesDialog2[title="Upload user roles (CSV) - Confirm"]') }).locator('button', { hasText: 'Upload' }).click();
+        const confirmDialog = this.page.locator('div.ui-dialog', { has: this.page.locator('div#importRolesDialog2') });
+        await confirmDialog.waitFor({ state: 'visible' });
+        await confirmDialog.locator('button', { hasText: 'Upload' }).click();
     }
 
     async getUniqueRoleName(pid, roleLabel) {
@@ -396,7 +400,9 @@ export class Module {
         await this.page.locator('form#importUserRoleForm').waitFor({ state: 'visible' });
         await this.page.locator('form#importUserRoleForm input[type="file"]').setInputFiles(csv);
         await this.page.locator('div.ui-dialog', { has: this.page.locator('div#importUserRoleDialog') }).locator('button', { hasText: 'Upload' }).click();
-        await this.page.locator('div.ui-dialog', { has: this.page.locator('div#importUserRoleDialog2[title="Upload user role assignments (CSV) - Confirm"]') }).locator('button', { hasText: 'Upload' }).click();
+        const confirmDialog = this.page.locator('div.ui-dialog', { has: this.page.locator('div#importUserRoleDialog2') });
+        await confirmDialog.waitFor({ state: 'visible' });
+        await confirmDialog.locator('button', { hasText: 'Upload' }).click();
     }
 
     async importDAGAssignmentsCSV(pid, csv) {
