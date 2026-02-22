@@ -3,6 +3,7 @@ namespace YaleREDCap\REDCapPRO;
 
 class Language {
     const LANGUAGE_PREFIX = 'language_strings_';
+    const COOKIE_EXPIRATION = 60 * 60 * 24 * 365; // 1 year in seconds
     public ?int $project_id;
     public function __construct(
         private REDCapPRO $module
@@ -192,7 +193,7 @@ class Language {
     public function storeLanguageChoice(string $lang_code): void
     {
         $cookie = $this->module->APPTITLE . "_language" . (empty($this->project_id) ? "" : "_" . $this->project_id);
-        \Session::savecookie($cookie, $lang_code, 0, TRUE);
+        \Session::savecookie($cookie, $lang_code, self::COOKIE_EXPIRATION);
     }
 
     /**
