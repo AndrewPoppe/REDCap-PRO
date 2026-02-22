@@ -30,7 +30,7 @@ test.describe('Setup', () => {
             await modulePage.page.locator('select[name="reserved-language-system"]').click();
             const settingTable = modulePage.page.locator('div#external-modules-configure-modal table');
             for (let defaultSetting of config.system_em_framework_config.default_options) {
-                await expect(await settingTable.locator('label', { hasText: defaultSetting }).count()).toEqual(1);
+                await expect(await settingTable.locator('label', { hasText: new RegExp(`^${defaultSetting}$`) }).count()).toEqual(1);
             }
             for (let customSetting of config.system_em_framework_config.custom_options) {
                 await expect(await settingTable.locator('label', { hasText: customSetting }).count()).toBeGreaterThan(0);
