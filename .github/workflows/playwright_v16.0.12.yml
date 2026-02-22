@@ -1,7 +1,7 @@
 name: v16.0.12
 on:
   push:
-    branches: main
+    branches: master
   workflow_dispatch:
 jobs:
   test:
