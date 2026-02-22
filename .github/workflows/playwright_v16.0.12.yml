@@ -1,0 +1,62 @@
+name: v16.0.12
+on:
+  push:
+    branches: main
+  workflow_dispatch:
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: AndrewPoppe/redcap_source
+          ref: v16.0.12_zip
+          token: ${{ secrets.REPOS_TOKEN }}
+          persist-credentials: false
+      - name: Build the REDCap Image
+        run: |
+          git clone https://github.com/AndrewPoppe/redcap-docker.git
+          mkdir redcap-docker/testing_container/data
+          mv redcap16.0.12.zip redcap-docker/testing_container/data
+          cd redcap-docker/testing_container/data
+          unzip redcap16.0.12.zip
+      - name: Start Docker REDCap Container
+        working-directory: ./redcap-docker/testing_container
+        run: |
+          docker compose pull
+          docker compose up -d --wait
+      - uses: actions/checkout@v4
+        with:
+          path: redcap_pro
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 21
+      - name: Install dependencies
+        working-directory: ./redcap_pro/tests/playwright
+        run: npm install
+      - name: Install Playwright Browsers
+        working-directory: ./redcap_pro/tests/playwright
+        run: npx playwright install --with-deps
+      - name: Move module files
+        run: |
+          sudo chmod -R 777 ./redcap-docker/testing_container/data/redcap/modules
+          mv ./redcap_pro ./redcap-docker/testing_container/data/redcap/modules/redcap_pro_v99
+      - name: Run Playwright tests
+        working-directory: ./redcap-docker/testing_container/data/redcap/modules/redcap_pro_v99/tests/playwright
+        run: |
+          sed -i 's|redcapVersion:.*|redcapVersion: "redcap_v16.0.12",|' fixtures/config.js
+          sed -i 's|redcapUrl:.*|redcapUrl: "http://localhost",|' fixtures/config.js
+          npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: ./redcap-docker/testing_container/data/redcap/modules/redcap_pro_v99/tests/playwright/playwright-report/
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: test-results
+          path: ./redcap-docker/testing_container/data/redcap/modules/redcap_pro_v99/tests/playwright/test-results/
+          retention-days: 30
