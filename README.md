@@ -173,6 +173,8 @@ pages, and the Control Center pages. All text is driven by `.ini` translation fi
 customized at both the system and project level. Participants and users can switch languages on the fly from any enabled
 language, and their choice persists across sessions.
 
+![mlm-language-picker](images/screenshots/mlm-language-picker.jpg)
+
 #### Built-In Languages
 
 The following languages ship with the module as built-in `.ini` files located in the [lang](lang) directory:
@@ -205,6 +207,8 @@ Custom system languages act as built-in languages and are available in all proje
 
 #### Project Language Manager
 
+![mlm-settings](images/screenshots/mlm-settings.jpg)
+
 Within the REDCapPRO Project Menu → Settings tab, managers and administrators have access to a full **Language Manager** that goes far beyond simply picking a default language:
 
 - **Activate / Deactivate built-in languages** — Choose which of the built-in (and custom system) languages are offered to participants in this project. Only active languages appear in the participant language selector.
@@ -215,6 +219,11 @@ Within the REDCapPRO Project Menu → Settings tab, managers and administrators 
 - **Edit existing custom translations** — Reopen the string editor for any custom project language to update individual strings.
 - **Download language files** — Export any language (built-in or custom) in either **JSON** or **INI** format. This is useful for sharing translations or using them as a starting point for another language.
 - **Delete custom project languages** — Remove a custom project language and its stored strings. Built-in languages cannot be deleted (only deactivated).
+
+![mlm-edit-settings](images/screenshots/mlm-edit-settings.jpg)
+![mlm-edit-participant](images/screenshots/mlm-edit-participant.jpg)
+![mlm-edit-project](images/screenshots/mlm-edit-project.jpg)
+![mlm-edit-search](images/screenshots/mlm-edit-search.jpg)
 
 > **Note:** Only managers and REDCap administrators can access the Language Manager. The Language Manager is only shown in project settings when the **Allow Project-Level Language Manager** system setting is enabled (REDCap administrators always see it). Built-in languages can be deactivated but not edited or deleted through the UI.
 
@@ -232,6 +241,9 @@ When rendering a page, **REDCapPRO** resolves text strings in the following laye
 4. **Participant's selected language** — The language most recently chosen by the participant via the on-page language selector.
 
 This layered approach means that a custom translation only needs to define the strings it cares about — any untranslated strings gracefully fall back through the chain.
+
+![mlm-picker-project](images/screenshots/mlm-picker-project.jpg)
+![mlm-picker-cc](images/screenshots/mlm-picker-cc.jpg)
 
 ## REDCapPRO Project Menu
 
