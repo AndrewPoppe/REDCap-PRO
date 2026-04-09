@@ -825,8 +825,7 @@ class REDCapPRO extends AbstractExternalModule
             }
             $body .= "</p></div></body></html>";
 
-            $result = \REDCap::email("andrew.poppe@yale.edu", "poppe076@gmail.com", "Test", "This is a test email to check if the email function is working at all");
-            // $result = \REDCap::email($to, $from, $subject, $body);
+            $result = \REDCap::email($to, $from, $subject, $body);
             $status = $result ? "Sent" : "Failed to send";
 
             // Get current project (or "system" if initiated in the control center)
