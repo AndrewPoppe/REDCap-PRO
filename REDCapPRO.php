@@ -1071,9 +1071,17 @@ class REDCapPRO extends AbstractExternalModule
      */
     public function getUserRole(string $username)
     {
+        if ( empty($username) ) {
+            return 0;
+        }
 
-        if ( $this->framework->getUser($username)->isSuperUser() ) {
-            return 3;
+        try {
+            if ( $this->framework->getUser($username)->isSuperUser() ) {
+                return 3;
+            }
+        } catch ( \Throwable $e ) {
+            // Not a valid REDCap user (e.g., survey respondent context)
+            return 0;
         }
         // FIX: PHP 8 fix
         $managers = $this->framework->getProjectSetting("managers") ?? array( '' );

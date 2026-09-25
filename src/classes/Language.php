@@ -88,7 +88,7 @@ class Language {
     public function getBuiltInLanguages(bool $includeCustomSystemLanguages = true): array
     {
         $langs = array();
-        $path  = $this->module->framework->getModulePath() . DS . "lang" . DS;
+        $path  = $this->module->framework->getModulePath() . "lang" . DS;
         if ( is_dir($path) ) {
             $files = glob($path . "*.{i,I}{n,N}{i,I}", GLOB_BRACE);
             foreach ( $files as $filename ) {
@@ -259,7 +259,7 @@ class Language {
             $result = parse_ini_string($fileContent, $processSections);
             return $result;
         } catch ( \Throwable $e ) {
-            $this->logError("Error parsing INI file from edoc ID", $e);
+            $this->module->logError("Error parsing INI file from edoc ID", $e);
             return false;
         }
     }
@@ -270,7 +270,6 @@ class Language {
         $isBuiltIn = array_key_exists($lang_code, $builtInLanguages);
         if ($isBuiltIn) {
             $file_path = $builtInLanguages[$lang_code];
-            $this->module->framework->log("Loading built-in language file for language code " . $lang_code . " from path: " . $file_path);
             if (!file_exists($file_path)) {
                 throw new \Exception("Language file does not exist at path: " . $file_path);
             }
@@ -283,7 +282,6 @@ class Language {
         $customLanguages = $this->getActiveCustomSystemLanguages();
         if (array_key_exists($lang_code, $customLanguages)) {
             $file_path = $customLanguages[$lang_code];
-            $this->module->framework->log("Loading custom system language file for language code " . $this->module->escape($lang_code) );
             $lang_strings = $this->parseIniFileFromEdocId($file_path);
             if (empty($lang_strings)) {
                 throw new \Exception("Custom system language file did not return an array of strings");
