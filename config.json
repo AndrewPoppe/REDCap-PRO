@@ -332,6 +332,11 @@
             "tag": "@RCPRO-LNAME",
             "description": "action_tag_lname",
             "tt_description": true
+        },
+        {
+            "tag": "@RCPRO-SURVEY-USERNAME",
+            "description": "action_tag_survey_username",
+            "tt_description": true
         }
     ],
     "framework-version": 15,

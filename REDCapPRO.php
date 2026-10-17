@@ -21,6 +21,7 @@ require_once "src/classes/Project.php";
 require_once "src/classes/ProjectHelper.php";
 require_once "src/classes/ProjectSettings.php";
 require_once "src/classes/REDCapProException.php";
+require_once "src/classes/SurveyUsernameTag.php";
 require_once "src/classes/UI.php";
 /**
  * @property Framework $framework
@@ -187,13 +188,22 @@ class REDCapPRO extends AbstractExternalModule
         }
     }
 
+    public function redcap_every_page_before_render($project_id)
+    {
+        // Survey submission - @RCPRO-SURVEY-USERNAME fields must get the participant's username
+        if ( isset($project_id) && defined("PAGE") && PAGE === "surveys/index.php" && !empty($_POST) ) {
+            $surveyUsernameTag = new SurveyUsernameTag($this, $project_id);
+            $surveyUsernameTag->enforceSubmittedValues();
+        }
+    }
+
     public function redcap_every_page_top($project_id)
     {
     	// Survey Queue - Treat like a survey to an extent
         if (isset($_GET['sq']) ) {
             $hash = $_GET['sq'];
             $auth = new Auth($this->APPTITLE);
-            $auth->init();
+            $auth->init(true);
 
             // Participant is logged in to their account
             if ( $auth->is_logged_in() ) {
@@ -289,7 +299,7 @@ class REDCapPRO extends AbstractExternalModule
             \Session::savecookie("record", $record, 0, true);
         }
         $auth = new Auth($this->APPTITLE);
-        $auth->init();
+        $auth->init(true);
         
         // Language helper
         $language = new Language($this);
@@ -488,6 +498,10 @@ class REDCapPRO extends AbstractExternalModule
                 window.rcpro.initTimeout();
                 window.rcpro.initSessionCheck();
             </script>";
+
+            // Fill any @RCPRO-SURVEY-USERNAME fields with the participant's username
+            $surveyUsernameTag = new SurveyUsernameTag($this, $project_id);
+            $surveyUsernameTag->populateSurveyFields($instrument, $auth->get_username());
 
             // Participant is not logged into their account
             // Store cookie to return to survey

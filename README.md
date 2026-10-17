@@ -465,6 +465,14 @@ information about **REDCapPRO** participants. These are described below:
 | @RCPRO-FNAME    |        text         |           none           | Like @RCPRO-EMAIL, but the field will be populated with the participant's first name                                                                                 |
 | @RCPRO-LNAME    |        text         |           none           | Likewise, with last name                                                                                                                                             |
 
+The following action tag is for use on surveys instead:
+
+| Action Tag             | Use with field type | Validation on field type | Description                                                                                                                                                        |
+| ---------------------- | :-----------------: | :----------------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| @RCPRO-SURVEY-USERNAME |        text         |           none           | When a participant who is logged in to **REDCapPRO** takes the survey, the field is filled with their username and made read-only. Use it to save the participant's username in the record |
+
+The username is also enforced on the server when each survey page is submitted, so the participant cannot change it. The field is saved when the survey page that contains it is submitted, so put it on the first page of a multi-page survey if you want it to be captured even for incomplete responses. Combine it with `@HIDDEN-SURVEY` if participants should not see the field at all.
+
 ## Changelog
 
 See the [Release Notes](https://github.com/AndrewPoppe/REDCap-PRO/releases) for a complete list of changes.

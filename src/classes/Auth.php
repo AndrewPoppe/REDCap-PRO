@@ -26,13 +26,19 @@ class Auth
     }
 
     /**
-     * 
-     * @return void 
-     * @throws Exception 
+     *
+     * @param bool $isSurveyPage Whether this is called from a REDCap survey page
+     * @return void
+     * @throws Exception
      */
-    public function init()
+    public function init(bool $isSurveyPage = false)
     {
-        // To ensure any REDCap user is logged out 
+        // On a survey page, the active session is REDCap's own survey session.
+        // Note its ID before switching to the REDCapPRO session, so that we can
+        // write to it later without having to work out REDCap's cookie name.
+        $redcap_survey_session_id = $isSurveyPage ? $this->get_active_redcap_survey_session_id() : null;
+
+        // To ensure any REDCap user is logged out
         $redcapSessionCookieName = $this->get_redcap_session_cookie_name();
         $redcap_session_id = $_COOKIE[$redcapSessionCookieName];
         if ( isset($redcap_session_id) ) {
@@ -58,6 +64,10 @@ class Auth
 
         session_name($this->SESSION_NAME);
         session_start();
+
+        if ( isset($redcap_survey_session_id) ) {
+            $_SESSION[$this->APPTITLE . "_redcap_survey_session_id"] = $redcap_survey_session_id;
+        }
 
         $this->set_survey_username($_SESSION["username"]);
         $this->set_survey_record();
@@ -92,7 +102,34 @@ class Auth
 
     public function get_redcap_session_id($isSurveyPage=false)
     {
+        // Prefer the survey session ID noted on the survey page itself (see init)
+        $redcap_survey_session_id = $_SESSION[$this->APPTITLE . "_redcap_survey_session_id"] ?? null;
+        if ( $isSurveyPage && !empty($redcap_survey_session_id) ) {
+            return $redcap_survey_session_id;
+        }
         return $_COOKIE[$this->get_redcap_session_cookie_name($isSurveyPage)];
+    }
+
+    /**
+     * Gets the ID of the active session, but only if it is REDCap's survey session
+     *
+     * @return string|null
+     */
+    private function get_active_redcap_survey_session_id()
+    {
+        if ( session_status() !== PHP_SESSION_ACTIVE || !self::is_redcap_survey_session_name(session_name()) ) {
+            return null;
+        }
+        return session_id();
+    }
+
+    public static function is_redcap_survey_session_name($name) : bool
+    {
+        // Before REDCap 15.5.1, the survey session was simply named "survey"
+        if ( $name === "survey" ) {
+            return true;
+        }
+        return defined("Session::cookie_name_survey_prefix") && strpos($name, \Session::cookie_name_survey_prefix) === 0;
     }
 
     // TESTS
