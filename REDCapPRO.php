@@ -322,10 +322,15 @@ class REDCapPRO extends AbstractExternalModule
             // Determine whether participant is enrolled in the study.
             $rcpro_participant_id = $auth->get_participant_id();
             $participantIsEnrolled = $participantHelper->enrolledInProject($rcpro_participant_id, $rcpro_project_id);
-            if ( !$participantIsEnrolled && !$autoEnrollAllowed ) {
+
+            // Deactivated participants may keep using existing enrollments but may not be auto-enrolled in new projects
+            $participantIsActive = $participantHelper->isParticipantActive($rcpro_participant_id);
+
+            if ( !$participantIsEnrolled && (!$autoEnrollAllowed || !$participantIsActive) ) {
                 $this->logEvent("Participant not enrolled", [
                     "rcpro_participant_id" => $rcpro_participant_id,
                     "rcpro_project_id"     => $rcpro_project_id,
+                    "participant_active"   => $participantIsActive ? 1 : 0,
                     "instrument"           => $instrument,
                     "event"                => $event_id,
                     "group_id"             => $group_id,
