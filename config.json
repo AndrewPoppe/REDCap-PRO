@@ -339,11 +339,11 @@
             "tt_description": true
         }
     ],
-    "framework-version": 15,
+    "framework-version": 17,
     "compatibility": {
         "php-version-min": "7.4.0",
         "php-version-max": "",
-        "redcap-version-min": "14.0.2",
+        "redcap-version-min": "17.0.1",
         "redcap-version-max": ""
     },
     "enable-no-auth-logging": true
