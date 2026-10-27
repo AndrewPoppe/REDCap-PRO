@@ -16,9 +16,6 @@ $ui->ShowHeader("Users");
 echo "<title>" . $module->APPTITLE . " - Staff</title>
 <link rel='stylesheet' type='text/css' href='" . $module->getUrl('src/css/rcpro.php') . "'/>";
 
-// Get list of users
-$project = $module->getProject();
-
 // Check for errors
 if ( isset($_GET["error"]) ) {
     ?>
@@ -42,9 +39,8 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     $module->logForm("Submitted Manage Staff Form", $_POST);
 
     try {
-        $userList = $project->getUsers();
-        foreach ( $userList as $user ) {
-            $username = $user->getUsername();
+        foreach ( $module->getProjectUsers() as $user ) {
+            $username = $user["username"];
             parse_str($username, $username_temp);
             $username_clean = array_key_first($username_temp);
             $newRole        = strval($_POST["role_select_{$username_clean}"]);
