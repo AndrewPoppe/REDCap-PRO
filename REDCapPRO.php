@@ -31,6 +31,20 @@ class REDCapPRO extends AbstractExternalModule
 {
     const DEFAULT_TIMEOUT_MINUTES = 5;
 
+    // Read-only ajax actions that are safe to send a second time (see initializeJavascriptModuleObject)
+    const AJAX_RETRY_ACTIONS = [
+        "downloadLanguageFile",
+        "exportLogs",
+        "getLanguage",
+        "getLogs",
+        "getParticipants",
+        "getParticipantsCC",
+        "getProjectsCC",
+        "getStaff",
+        "getStaffCC",
+        "searchParticipantByEmail"
+    ];
+
     public $APPTITLE = "REDCapPRO";
     public $AUTH;
     public $UI;
@@ -1210,6 +1224,42 @@ class REDCapPRO extends AbstractExternalModule
         } catch (\Exception $e) {
             $this->module->logError("Error getting staff", $e);
         }
+    }
+
+    /**
+     * Initializes the JSMO, and makes its ajax() retry read-only actions once
+     * if the response could not be parsed as JSON.
+     *
+     * When REDCap is installed at the web root and a project's record list
+     * cache has not been built, REDCap redirects the module's ajax request to
+     * build the cache (Records::determineBuildRecordListCache), so the first
+     * request in that project returns HTML instead of JSON. The cache exists
+     * by then, so a second attempt succeeds.
+     *
+     * @return void
+     */
+    public function initializeJavascriptModuleObject()
+    {
+        parent::initializeJavascriptModuleObject();
+        ?>
+        <script>
+            (function (module, retryActions) {
+                const ajax = module.ajax;
+                if (typeof ajax !== 'function' || ajax.rcproRetry) {
+                    return;
+                }
+                module.ajax = function (action, payload) {
+                    return ajax(action, payload).catch(function (error) {
+                        if (error instanceof SyntaxError && retryActions.includes(action)) {
+                            return ajax(action, payload);
+                        }
+                        throw error;
+                    });
+                };
+                module.ajax.rcproRetry = true;
+            })(<?= $this->getJavascriptModuleObjectName() ?>, <?= json_encode(self::AJAX_RETRY_ACTIONS) ?>);
+        </script>
+        <?php
     }
 
     public function safeGetUsername() : string

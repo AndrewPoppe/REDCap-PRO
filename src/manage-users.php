@@ -32,7 +32,7 @@ if ( isset($_GET["error"]) ) {
     <?php
 }
 
-$module->framework->initializeJavascriptModuleObject();
+$module->initializeJavascriptModuleObject();
 $module->tt_transferToJavascriptModuleObject();
 
 // Update roles if requested
