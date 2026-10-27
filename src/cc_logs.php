@@ -17,10 +17,10 @@ $ui = new UI($module);
 $ui->ShowControlCenterHeader("Logs");
 
 ?>
-<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<link href="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/date-1.5.3/sr-1.4.1/datatables.min.css" rel="stylesheet"> 
-<script src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/date-1.5.3/sr-1.4.1/datatables.min.js" integrity="sha512-Dp027lG1kw+OxJjCYvBw8jT9Buw65dP8HYTtfUQ8DAeBUcYn/urzTlQ8jbWXENZaYnujGvQlgJT21m+GsaCH5w==" crossorigin="anonymous"></script>
-<script src="https://code.jquery.com/ui/1.14.0/jquery-ui.js" integrity="sha512-cxRn/7O+JWSqvBOGeODaC+v9wr7RFllEwd6SBAub5ZuBPEzBtYZXTx46KNnlzvEfG42CzbwfscbBYZYcgrXKNA==" crossorigin="anonymous" defer></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.14.2/themes/base/jquery-ui.css" integrity="sha512-k0u6mixrDpfcaeu7sUpo4OcH8rfxzgXtiqauVEbd6CXNo6Sa0SuVkxbWvT7SiPKvNpfovncDTNvm3yX1I+xiNQ==" crossorigin="anonymous">
+<link href="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.3.8/b-3.2.6/b-colvis-3.2.6/b-html5-3.2.6/date-1.6.3/sr-1.4.3/datatables.min.css" rel="stylesheet" integrity="sha512-yREBGeDwSqbMaMsfFCbkH6kD71Ah+c6IwB0mRYFJ1hM7Y6e3Wugu4eJ7xPGToPnuvQtB1ewwhPjtszj778bTlQ==" crossorigin="anonymous"> 
+<script src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.3.8/b-3.2.6/b-colvis-3.2.6/b-html5-3.2.6/date-1.6.3/sr-1.4.3/datatables.min.js" integrity="sha512-jV7coIg5tv9SCYGscDZS6kwAvldF4KtusbxQAbDaJL5kjh48i8gVMseUrDB/YlwL358tTvzbOGEEvpLIlUBcHA==" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/ui/1.14.2/jquery-ui.js" integrity="sha512-nF9ZY+o4GTMKGuKfrwYSdqrbG59QLhdJgtXOPiRZ4CkswwdjyTaPn0qvbRoIsih0ZbEKfCN9dU7lhqkIQUdY/A==" crossorigin="anonymous" defer></script>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro_cc.php") ?>">
 <?php
 

@@ -21,10 +21,10 @@ $module->tt_transferToJavascriptModuleObject();
 <title>
     <?= $module->APPTITLE ?>
 </title>
-<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<link href="https://cdn.datatables.net/v/dt/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.css" rel="stylesheet">
-<script src="https://cdn.datatables.net/v/dt/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.js" integrity="sha512-rel6rKMl1P/jzxDBBLAg4+i3r3sbvTfHJlp/BdGU00s7Zn8HHj1Yb4XYDo4sKuM5WVz1ldkqJgx2+gue608VHg==" crossorigin="anonymous"></script>
-<script src="https://code.jquery.com/ui/1.14.0/jquery-ui.js" integrity="sha512-cxRn/7O+JWSqvBOGeODaC+v9wr7RFllEwd6SBAub5ZuBPEzBtYZXTx46KNnlzvEfG42CzbwfscbBYZYcgrXKNA==" crossorigin="anonymous" defer></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.14.2/themes/base/jquery-ui.css" integrity="sha512-k0u6mixrDpfcaeu7sUpo4OcH8rfxzgXtiqauVEbd6CXNo6Sa0SuVkxbWvT7SiPKvNpfovncDTNvm3yX1I+xiNQ==" crossorigin="anonymous">
+<link href="https://cdn.datatables.net/v/dt/jszip-3.10.1/dt-2.3.8/b-3.2.6/b-colvis-3.2.6/b-html5-3.2.6/sr-1.4.3/datatables.min.css" rel="stylesheet" integrity="sha512-f7O60zIL8r8zheoepLkxShesZy62kEhnT2VkuIPBX/yeEZQn4QYBxMA20B7rq6KmoSJ5Fi/WPrjrW8YpuDtAwA==" crossorigin="anonymous">
+<script src="https://cdn.datatables.net/v/dt/jszip-3.10.1/dt-2.3.8/b-3.2.6/b-colvis-3.2.6/b-html5-3.2.6/sr-1.4.3/datatables.min.js" integrity="sha512-q484kVJD3XN3+1RmkkYXAe38xBRNO+KX7EmGL5f9WgtQCBt4bAfypf4SIV/lhFU8a5/jGlF4MC1SFwp6F7W+Uw==" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/ui/1.14.2/jquery-ui.js" integrity="sha512-nF9ZY+o4GTMKGuKfrwYSdqrbG59QLhdJgtXOPiRZ4CkswwdjyTaPn0qvbRoIsih0ZbEKfCN9dU7lhqkIQUdY/A==" crossorigin="anonymous" defer></script>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
 
 <div class="manageContainer wrapper log-wrapper" style="display: none;">

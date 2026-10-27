@@ -30,8 +30,8 @@ require_once APP_PATH_DOCROOT . 'ControlCenter/header.php';
 $ui = new UI($module);
 $ui->ShowControlCenterHeader("Participants");
 ?>
-<link href="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.css" rel="stylesheet">
-<script src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.1.3/b-3.1.1/b-colvis-3.1.1/b-html5-3.1.1/sr-1.4.1/datatables.min.js" integrity="sha512-tQIUNMCB0+K4nlOn4FRg/hco5B1sf4yWGpnj+V2MxRSDSVNPD84yzoWogPL58QRlluuXkjvuDD5bzCUTMi6MDw==" crossorigin="anonymous"></script>
+<link href="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.3.8/b-3.2.6/b-colvis-3.2.6/b-html5-3.2.6/sr-1.4.3/datatables.min.css" rel="stylesheet" integrity="sha512-qFqmj6bHx547nJqIFDi6rX2/Exl1RP9VRqbgNcvE5taVzkHQUjbf4UiuMvhYhWA0H1nM3127Qg5NfZTlaWOa3Q==" crossorigin="anonymous">
+<script src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.3.8/b-3.2.6/b-colvis-3.2.6/b-html5-3.2.6/sr-1.4.3/datatables.min.js" integrity="sha512-1AlhgSX2f7mM6fj8jSGqL+ApaJ0A2uba1GoszDjhqfD1r+iyHYvnLuR482iChPagxEAT1+igVzcAw2hDRCBlCw==" crossorigin="anonymous"></script>
 <?php 
 $participantHelper = new ParticipantHelper($module);
 

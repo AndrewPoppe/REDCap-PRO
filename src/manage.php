@@ -298,8 +298,8 @@ $module->tt_transferToJavascriptModuleObject();
 ?>
 <link rel="stylesheet" type="text/css" href="<?= $module->getUrl("src/css/rcpro.php") ?>" />
 <script src="<?= $module->getUrl("lib/sweetalert/sweetalert2.all.min.js"); ?>"></script>
-<link rel='stylesheet' type='text/css' href='https://cdn.datatables.net/select/1.3.3/css/select.dataTables.min.css' />
-<script type='text/javascript' src='https://cdn.datatables.net/select/1.3.3/js/dataTables.select.min.js' defer></script>
+<link rel='stylesheet' type='text/css' href='https://cdn.datatables.net/select/1.7.0/css/select.dataTables.min.css' integrity='sha512-yzGR7nopDOVv4K9/fVnsZ8QU3SrN4E3K+LTs/RGZkl4IWbxZT1V8DQ/QQddLksJtiw0phjSqxhPwiN25sOaQxA==' crossorigin='anonymous' />
+<script type='text/javascript' src='https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js' integrity='sha512-YVAiaCgpqu4HEfmkfaQqfs5iYNJSBc6gJIEULPzFEI7qdX/ajk3eI78Kh9AzG9M1kqjG1DmQPdUKLM6BgEaIFQ==' crossorigin='anonymous' defer></script>
 
 <?php if ( $_SERVER["REQUEST_METHOD"] == "POST" ) { ?>
     <script>
