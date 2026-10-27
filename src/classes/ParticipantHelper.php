@@ -4,6 +4,12 @@ namespace YaleREDCap\REDCapPRO;
 
 class ParticipantHelper
 {
+    // Reasons a password reset token can be rejected
+    const TOKEN_MISSING             = "missing";
+    const TOKEN_UNKNOWN_OR_REPLACED = "unknown or replaced";
+    const TOKEN_EXPIRED             = "expired";
+    const TOKEN_ALREADY_USED        = "already used";
+
     public REDCapPRO $module;
 
     function __construct(REDCapPRO $module)
@@ -28,6 +34,9 @@ class ParticipantHelper
         try {
             $result = $this->module->query($SQL, [ $new_email, $rcpro_participant_id ]);
             if ( $result ) {
+
+                // Links sent to the old address should no longer work
+                $this->clearPasswordResetToken($rcpro_participant_id);
 
                 $username = $this->getUserName($rcpro_participant_id);
 
@@ -191,20 +200,25 @@ class ParticipantHelper
     }
 
     /**
-     * Create and store token for resetting participant's password
-     * 
+     * Get a token for creating/resetting participant's password
+     *
+     * If the participant already has an unused, unexpired token, that token is
+     * reused so the links in earlier emails keep working. Its expiration is
+     * extended if needed so it is valid for at least $hours_valid hours.
+     *
      * @param mixed $rcpro_participant_id
      * @param int $hours_valid - how long should the token be valid for
-     * 
+     *
      * @return string token
      */
-    public function createResetToken($rcpro_participant_id, int $hours_valid = 1)
+    public function getOrCreateResetToken($rcpro_participant_id, int $hours_valid = 1)
     {
-        $token    = bin2hex(random_bytes(32));
-        $token_ts = time() + ($hours_valid * 60 * 60);
-        $SQL1     = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'token'";
-        $SQL2     = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'token_ts'";
-        $SQL3     = "UPDATE redcap_external_modules_log_parameters SET value = 1 WHERE log_id = ? AND name = 'token_valid'";
+        $active_token = $this->getActiveResetToken($rcpro_participant_id);
+        $token        = $active_token["token"] ?? bin2hex(random_bytes(32));
+        $token_ts     = max(time() + ($hours_valid * 60 * 60), (int) ($active_token["token_ts"] ?? 0));
+        $SQL1         = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'token'";
+        $SQL2         = "UPDATE redcap_external_modules_log_parameters SET value = ? WHERE log_id = ? AND name = 'token_ts'";
+        $SQL3         = "UPDATE redcap_external_modules_log_parameters SET value = 1 WHERE log_id = ? AND name = 'token_valid'";
         try {
             $result1 = $this->module->query($SQL1, [ $token, $rcpro_participant_id ]);
             $result2 = $this->module->query($SQL2, [ $token_ts, $rcpro_participant_id ]);
@@ -215,6 +229,24 @@ class ParticipantHelper
             return $token;
         } catch ( \Exception $e ) {
             $this->module->logError("Error creating reset token", $e);
+        }
+    }
+
+    /**
+     * Gets the participant's current password token if it is unused and unexpired
+     *
+     * @param mixed $rcpro_participant_id
+     *
+     * @return array|NULL token and token_ts, or NULL if there is no active token
+     */
+    private function getActiveResetToken($rcpro_participant_id)
+    {
+        $SQL = "SELECT token, token_ts WHERE message = 'PARTICIPANT' AND log_id = ? AND token <> '' AND token_valid = 1 AND token_ts > ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+        try {
+            $result = $this->module->selectLogs($SQL, [ $rcpro_participant_id, time() ]);
+            return $result->fetch_assoc();
+        } catch ( \Exception $e ) {
+            $this->module->logError("Error getting active reset token", $e);
         }
     }
 
@@ -289,6 +321,27 @@ class ParticipantHelper
             return $this->module->query($SQL, [ $rcpro_participant_id ]);
         } catch ( \Exception $e ) {
             $this->module->logError("Error expiring password reset token.", $e);
+        }
+    }
+
+    /**
+     * Removes the participant's password reset token so links in earlier emails stop working
+     *
+     * Unlike expirePasswordResetToken, the old token is no longer recognized at all,
+     * so it is reported as unknown or replaced rather than already used.
+     *
+     * @param mixed $rcpro_participant_id id of participant
+     *
+     * @return bool|null success or failure
+     */
+    public function clearPasswordResetToken($rcpro_participant_id)
+    {
+        $SQL1 = "UPDATE redcap_external_modules_log_parameters SET value = '' WHERE log_id = ? AND name = 'token'";
+        $SQL2 = "UPDATE redcap_external_modules_log_parameters SET value = 0 WHERE log_id = ? AND name = 'token_valid'";
+        try {
+            return $this->module->query($SQL1, [ $rcpro_participant_id ]) && $this->module->query($SQL2, [ $rcpro_participant_id ]);
+        } catch ( \Exception $e ) {
+            $this->module->logError("Error clearing password reset token.", $e);
         }
     }
 
@@ -714,24 +767,52 @@ class ParticipantHelper
 
     /**
      * Verify that the supplied password reset token is valid.
-     * 
-     * @param string $token
-     * 
-     * @return array with participant id and username
+     *
+     * Rejected tokens are logged with the reason they were rejected.
+     *
+     * @param string|null $token
+     * @param string|null $rejection_reason - set to one of the TOKEN_* constants if the token is rejected
+     *
+     * @return array|NULL with participant id and username, or NULL if the token is rejected
      */
-    public function verifyPasswordResetToken(string $token)
+    public function verifyPasswordResetToken(?string $token, ?string &$rejection_reason = null)
     {
-        $SQL = "SELECT log_id, rcpro_username WHERE message = 'PARTICIPANT' AND token = ? AND token_ts > ? AND token_valid = 1 AND (project_id IS NULL OR project_id IS NOT NULL)";
+        $rejection_reason = null;
+        $participant      = null;
         try {
-            $result = $this->module->selectLogs($SQL, [ $token, time() ]);
-            if ( $result->num_rows > 0 ) {
-                $result_array = $result->fetch_assoc();
-                $this->module->logEvent("Password Token Verified", [
-                    'rcpro_participant_id' => $result_array['log_id'],
-                    'rcpro_username'       => $result_array['rcpro_username']
-                ]);
-                return $result_array;
+            if ( empty($token) ) {
+                $rejection_reason = self::TOKEN_MISSING;
+            } else {
+                $SQL         = "SELECT log_id, rcpro_username, token_ts, token_valid WHERE message = 'PARTICIPANT' AND token = ? AND (project_id IS NULL OR project_id IS NOT NULL)";
+                $result      = $this->module->selectLogs($SQL, [ $token ]);
+                $participant = $result->fetch_assoc();
+                if ( empty($participant) ) {
+                    $rejection_reason = self::TOKEN_UNKNOWN_OR_REPLACED;
+                } elseif ( (int) $participant['token_valid'] !== 1 ) {
+                    $rejection_reason = self::TOKEN_ALREADY_USED;
+                } elseif ( (int) $participant['token_ts'] <= time() ) {
+                    $rejection_reason = self::TOKEN_EXPIRED;
+                }
             }
+
+            if ( isset($rejection_reason) ) {
+                $this->module->logEvent("Password Token Rejected", [
+                    'rejection_reason'     => $rejection_reason,
+                    'token_prefix'         => substr(preg_replace('/[^0-9a-f]/i', '', $token ?? ''), 0, 8),
+                    'rcpro_participant_id' => $participant['log_id'] ?? null,
+                    'rcpro_username'       => $participant['rcpro_username'] ?? null
+                ]);
+                return null;
+            }
+
+            $this->module->logEvent("Password Token Verified", [
+                'rcpro_participant_id' => $participant['log_id'],
+                'rcpro_username'       => $participant['rcpro_username']
+            ]);
+            return [
+                'log_id'         => $participant['log_id'],
+                'rcpro_username' => $participant['rcpro_username']
+            ];
         } catch ( \Exception $e ) {
             $this->module->logError("Error verifying password reset token", $e);
         }

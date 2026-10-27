@@ -771,7 +771,7 @@ class REDCapPRO extends AbstractExternalModule
             $participantHelper    = new ParticipantHelper($this);
             $rcpro_participant_id = $participantHelper->getParticipantIdFromUsername($username);
             $hours_valid          = 24;
-            $token                = $participantHelper->createResetToken($rcpro_participant_id, $hours_valid);
+            $token                = $participantHelper->getOrCreateResetToken($rcpro_participant_id, $hours_valid);
 
             // create email
             $subject = $this->tt("email_new_participant_subject");
@@ -818,7 +818,7 @@ class REDCapPRO extends AbstractExternalModule
             $participantHelper = new ParticipantHelper($this);
 
             // generate token
-            $token          = $participantHelper->createResetToken($rcpro_participant_id);
+            $token          = $participantHelper->getOrCreateResetToken($rcpro_participant_id);
             $to             = $participantHelper->getEmail($rcpro_participant_id);
             $username       = $participantHelper->getUserName($rcpro_participant_id);
             $username_clean = \REDCap::escapeHtml($username);
@@ -833,7 +833,7 @@ class REDCapPRO extends AbstractExternalModule
             <br>" . $this->tt("email_password_reset_message3") . "<strong>{$username_clean}</strong>
             <br>
             <br>" . $this->tt("email_password_reset_message4") . "<a href='" . $this->getUrl("src/reset-password.php", true) . "&t={$token}'>" . $this->tt("email_password_reset_link_text") . "</a>
-            <br><em>" . $this->tt("email_password_reset_message5") . "<a href='" . $this->getUrl("src/forgot-password.php", true) . "'>" . $this->tt("email_password_reset_link_text") . "</a>
+            <br><em>" . $this->tt("email_password_reset_message5") . "<a href='" . $this->getUrl("src/forgot-password.php", true) . "'>" . $this->tt("request_new_link") . "</a>
             </em></p><br>";
             $body .= "<p>" . $this->tt("email_password_reset_message6");
             if ( $this->framework->getProjectId() ) {

@@ -36,10 +36,10 @@ $ui = new UI($module);
 
 // Verify password reset token
 $participantHelper = new ParticipantHelper($module);
-$verified_participant = $participantHelper->verifyPasswordResetToken($qstring["t"]);
+$verified_participant = $participantHelper->verifyPasswordResetToken($qstring["t"] ?? null, $token_rejection_reason);
 
-// Processing form data when form is submitted
-if ( $_SERVER["REQUEST_METHOD"] === "POST" ) {
+// Processing form data when form is submitted (only allowed with a valid token)
+if ( $verified_participant && $_SERVER["REQUEST_METHOD"] === "POST" ) {
 
     // Validate password
     $new_password = trim($_POST["new_password"]);
@@ -83,8 +83,8 @@ if ( $_SERVER["REQUEST_METHOD"] === "POST" ) {
     // Check input errors before updating the database
     if ( !$any_error ) {
 
-        // Grab all user details
-        $participant = $participantHelper->getParticipant($_POST["username"]);
+        // Grab all user details for the participant the token belongs to
+        $participant = $participantHelper->getParticipant($verified_participant["rcpro_username"]);
 
         // Update password
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
@@ -158,12 +158,11 @@ if ( $verified_participant ) {
             <input type="submit" class="btn btn-primary" value="<?= $module->tt("ui_button_submit") ?>">
         </div>
         <input type="hidden" name="redcap_csrf_token" value="<?= $module->framework->getCSRFToken() ?>">
-        <input type="hidden" name="username" value="<?= $verified_participant["rcpro_username"] ?>">
     </form>
     </div>
     </body>
 
     </html>
 <?php } else {
-    echo "<div class='red'>" . $module->tt("create_password_error") . "</div>";
+    $ui->ShowPasswordTokenError($token_rejection_reason);
 }

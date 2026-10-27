@@ -159,7 +159,24 @@ class UI
     {
 
         echo '</div></div></body></html>';
-        
+
+    }
+
+    /**
+     * Shows why a create/reset password link did not work, with a link to request a new one
+     *
+     * @param string|null $rejection_reason - one of the ParticipantHelper::TOKEN_* constants
+     */
+    public function ShowPasswordTokenError(?string $rejection_reason)
+    {
+        $messages = [
+            ParticipantHelper::TOKEN_EXPIRED      => "password_link_err_expired",
+            ParticipantHelper::TOKEN_ALREADY_USED => "password_link_err_used"
+        ];
+        $message  = $this->module->tt($messages[$rejection_reason] ?? "password_link_err_invalid");
+        echo "<div class='red' style='text-align: center;'>" . $message . "<br><br>
+            <a href='" . $this->module->getUrl("src/forgot-password.php", true) . "'>" . $this->module->tt("request_new_link") . "</a>
+            </div>";
     }
 
     public function ShowHeader(string $page)
