@@ -495,21 +495,13 @@ class AjaxHandler
         if ( $role < 3 ) {
             throw new REDCapProException("You must be a manager to view this page.");
         }
-        $project  = $this->module->framework->getProject();
-        $userList = $project->getUsers();
-
         $users = [];
-        foreach ( $userList as $user ) {
-            $username  = $user->getUsername();
-            $fullname  = $this->module->getUserFullname($username);
-            $email     = $user->getEmail();
-            $this_role = $this->module->getUserRole($username);
-
+        foreach ( $this->module->getProjectUsers() as $user ) {
             $users[] = [
-                "username" => $username,
-                "fullname" => $fullname,
-                "email"    => $email,
-                "role"     => $this_role
+                "username" => $user["username"],
+                "fullname" => $user["fullname"],
+                "email"    => $user["email"],
+                "role"     => $this->module->getUserRole($user["username"])
             ];
         }
         return $this->module->framework->escape($users);

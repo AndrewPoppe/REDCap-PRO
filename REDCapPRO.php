@@ -1085,6 +1085,32 @@ class REDCapPRO extends AbstractExternalModule
     }
 
     /**
+     * Gets the REDCap users with rights in the current project
+     *
+     * The framework's $project->getUsers() throws if any user in the project
+     * has no row in redcap_user_information (e.g., an LDAP/Shibboleth user who
+     * was added to the project before ever logging in), so we query directly.
+     *
+     * @return array of [username, fullname, email]
+     */
+    public function getProjectUsers()
+    {
+        $SQL    = 'SELECT LOWER(r.username) AS username,
+                COALESCE(CONCAT(i.user_firstname, " ", i.user_lastname), "") AS fullname,
+                COALESCE(i.user_email, "") AS email
+            FROM redcap_user_rights r
+            LEFT JOIN redcap_user_information i ON i.username = r.username
+            WHERE r.project_id = ?
+            ORDER BY r.username';
+        $result = $this->query($SQL, [ $this->framework->requireProjectId() ]);
+        $users  = [];
+        while ( $row = $result->fetch_assoc() ) {
+            $users[] = $row;
+        }
+        return $users;
+    }
+
+    /**
      * Gets the REDCapPRO role for the given REDCap user
      * @param string $username REDCap username
      * 
@@ -1101,8 +1127,8 @@ class REDCapPRO extends AbstractExternalModule
                 return 3;
             }
         } catch ( \Throwable $e ) {
-            // Not a valid REDCap user (e.g., survey respondent context)
-            return 0;
+            // No redcap_user_information row (e.g., a user added to the project
+            // who has never logged in) - fall through to the project settings
         }
         // FIX: PHP 8 fix
         $managers = $this->framework->getProjectSetting("managers") ?? array( '' );
