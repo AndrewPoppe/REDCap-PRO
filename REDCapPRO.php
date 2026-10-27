@@ -692,10 +692,12 @@ class REDCapPRO extends AbstractExternalModule
 
     /**
      * Gets project contact person's details
-     * 
+     *
+     * @param string|null $subject - subject for the email link (a generic subject is used if not provided)
+     *
      * @return array of contact details
      */
-    public function getContactPerson(string|null $subject)
+    public function getContactPerson(?string $subject = null)
     {
         $name  = $this->getProjectSetting("pc-name");
         $email = $this->getProjectSetting("pc-email");
