@@ -171,7 +171,7 @@ $ui->ShowParticipantHeader($module->tt("create_account_title"));
             <?= $module->tt("create_account_email_label"); ?>
         </label>
         <input type="email" name="email" class="form-control <?= (!empty($email_err)) ? 'is-invalid' : ''; ?>"
-            value="<?= $email; ?>">
+            value="<?= htmlspecialchars($email); ?>">
         <span class="invalid-feedback">
             <?= $email_err; ?>
         </span>
