@@ -20,6 +20,7 @@ require_once "src/classes/ParticipantHelper.php";
 require_once "src/classes/Project.php";
 require_once "src/classes/ProjectHelper.php";
 require_once "src/classes/ProjectSettings.php";
+require_once "src/classes/Recaptcha.php";
 require_once "src/classes/REDCapProException.php";
 require_once "src/classes/SurveyUsernameTag.php";
 require_once "src/classes/UI.php";
@@ -1504,13 +1505,22 @@ class REDCapPRO extends AbstractExternalModule
             if ( isset($settings["lockout-seconds"]) && $settings["lockout-seconds"] < 0 ) {
                 $message = "The minimum lockout duration is 0 seconds.";
             }
-            $site_key   = $settings["recaptcha-site-key"];
-            $secret_key = $settings["recaptcha-secret-key"];
-            if ( isset($site_key) && empty($secret_key) ) {
-                $message = "You must enter a secret key if you enter a site key.";
+            $site_key   = trim($settings["recaptcha-site-key"] ?? '');
+            $secret_key = trim($settings["recaptcha-secret-key"] ?? '');
+            $project_id = trim($settings["recaptcha-project-id"] ?? '');
+            $api_key    = trim($settings["recaptcha-api-key"] ?? '');
+            $threshold  = trim($settings["recaptcha-score-threshold"] ?? '');
+            if ( $site_key !== '' && $secret_key === '' && ($project_id === '' || $api_key === '') ) {
+                $message = "You must enter either a Google Cloud project ID and API key (reCAPTCHA Enterprise) or a secret key (legacy) if you enter a site key.";
             }
-            if ( isset($secret_key) && empty($site_key) ) {
-                $message = "You must enter a site key if you enter a secret key.";
+            if ( ($project_id === '') !== ($api_key === '') ) {
+                $message = "You must enter both a Google Cloud project ID and an API key to use reCAPTCHA Enterprise.";
+            }
+            if ( $site_key === '' && ($secret_key !== '' || $project_id !== '' || $api_key !== '') ) {
+                $message = "You must enter a site key to use reCAPTCHA.";
+            }
+            if ( $threshold !== '' && (!is_numeric($threshold) || $threshold < 0 || $threshold > 1) ) {
+                $message = "The reCAPTCHA score threshold must be a number between 0 and 1.";
             }
 
             $customLanguageMessage = $this->validateCustomLanguageSettings($settings);

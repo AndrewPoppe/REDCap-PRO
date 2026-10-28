@@ -4,9 +4,9 @@ namespace YaleREDCap\REDCapPRO;
 
 /** @var REDCapPRO $module */
 
-$recaptcha_site_key = $module->framework->getSystemSetting('recaptcha-site-key');
-if ( isset($recaptcha_site_key) ) {
-    echo '<script src="https://www.google.com/recaptcha/api.js" async defer></script>';
+$recaptcha = new Recaptcha($module);
+if ( $recaptcha->isEnabled() ) {
+    echo '<script src="' . $recaptcha->getScriptUrl() . '" async defer></script>';
     echo '<script type="text/javascript">function onSubmit(token) {document.querySelector("#createAccountForm").submit();}</script>';
 }
 
@@ -44,28 +44,19 @@ if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
     $any_errors = false;
 
     // Check reCAPTCHA if enabled
-    if ( isset($recaptcha_site_key) ) {
-        $recpatch_secret_key = $module->framework->getSystemSetting('recaptcha-secret-key');
-        $recaptcha_response  = trim(filter_input(INPUT_POST, 'g-recaptcha-response', FILTER_VALIDATE_REGEXP, array(
+    if ( $recaptcha->isEnabled() ) {
+        $recaptcha_response = trim(filter_input(INPUT_POST, 'g-recaptcha-response', FILTER_VALIDATE_REGEXP, array(
             "options" => array(
                 "regexp" => "/^[a-zA-Z0-9_-]+$/"
             )
-        )));
+        )) ?? '');
 
         if ( empty($recaptcha_response) ) {
             $any_errors    = true;
             $recaptcha_err = $module->tt("create_account_recaptcha_error1");
-        } else {
-
-            // Verify the reCAPTCHA response (returns JSON data)
-            $verify_response = file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret=' . $recpatch_secret_key . '&response=' . $recaptcha_response);
-
-            // Decode JSON data of API response
-            $response_data = json_decode($verify_response);
-            if ( !$response_data->success ) {
-                $any_errors    = true;
-                $recaptcha_err = $module->tt("create_account_recaptcha_error2");
-            }
+        } elseif ( !$recaptcha->verify($recaptcha_response) ) {
+            $any_errors    = true;
+            $recaptcha_err = $module->tt("create_account_recaptcha_error2");
         }
     }
 
@@ -177,9 +168,9 @@ $ui->ShowParticipantHeader($module->tt("create_account_title"));
         </span>
     </div>
     <div class="form-group d-grid">
-        <?php if ( isset($recaptcha_site_key) ) { ?>
+        <?php if ( $recaptcha->isEnabled() ) { ?>
             <!-- Google reCAPTCHA trigger -->
-            <button class="btn btn-primary g-recaptcha" data-sitekey="<?= $recaptcha_site_key ?>" data-callback="onSubmit" data-action="submit"><?= $module->tt("create_account_button"); ?></button>
+            <button class="btn btn-primary g-recaptcha" data-sitekey="<?= htmlspecialchars($recaptcha->getSiteKey()) ?>" data-callback="onSubmit" data-action="<?= Recaptcha::ACTION ?>"><?= $module->tt("create_account_button"); ?></button>
             <?php if ( !empty($recaptcha_err) ) { ?>
                 <input class="is-invalid" hidden>
                 <span class="invalid-feedback">

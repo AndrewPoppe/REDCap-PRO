@@ -198,6 +198,24 @@
             "type": "text"
         },
         {
+            "key": "recaptcha-project-id",
+            "name": "recaptcha_project_id",
+            "tt_name": true,
+            "type": "text"
+        },
+        {
+            "key": "recaptcha-api-key",
+            "name": "recaptcha_api_key",
+            "tt_name": true,
+            "type": "password"
+        },
+        {
+            "key": "recaptcha-score-threshold",
+            "name": "recaptcha_score_threshold",
+            "tt_name": true,
+            "type": "text"
+        },
+        {
             "key": "recaptcha-secret-key",
             "name": "recaptcha_secret_key",
             "tt_name": true,
