@@ -44,7 +44,7 @@ class Auth
         if ( isset($redcap_session_id) ) {
             \Session::destroy($redcap_session_id);
             \Session::deletecookie($redcapSessionCookieName);
-            session_destroy();
+            $this->close_active_session($redcap_survey_session_id);
         }
 
         // If we already have a session, use it.
@@ -52,13 +52,11 @@ class Auth
         $session_id = $_COOKIE[$this->SESSION_NAME];
         if ( !empty($session_id) ) {
             if ( $session_id !== session_id() ) {
-                \Session::destroy(session_id());
-                session_destroy();
+                $this->close_active_session($redcap_survey_session_id);
             }
             session_id($session_id);
         } else {
-            \Session::destroy(session_id());
-            session_destroy();
+            $this->close_active_session($redcap_survey_session_id);
             $this->createSession();
         }
 
@@ -71,6 +69,33 @@ class Auth
 
         $this->set_survey_username($_SESSION["username"]);
         $this->set_survey_record();
+    }
+
+    /**
+     * Ends the active session so the REDCapPRO session can be started in its place.
+     *
+     * REDCap's survey session is only closed, never destroyed: REDCap keeps survey state there
+     * between requests (e.g. the Save & Return email authorization added in REDCap 17.5.7).
+     * Any other session is destroyed, as before (see issue #61).
+     *
+     * @param string|null $redcap_survey_session_id ID of REDCap's survey session, if this is a survey page
+     * @return void
+     */
+    private function close_active_session(?string $redcap_survey_session_id)
+    {
+        if ( session_id() === '' ) {
+            return;
+        }
+        if ( isset($redcap_survey_session_id) && session_id() === $redcap_survey_session_id ) {
+            if ( session_status() === PHP_SESSION_ACTIVE ) {
+                session_write_close();
+            }
+            // Forget the ID too, or the REDCapPRO session would reuse REDCap's survey session ID
+            session_id('');
+            return;
+        }
+        \Session::destroy(session_id());
+        session_destroy();
     }
 
     public function createSession()
@@ -341,6 +366,20 @@ class Auth
     }
 
     // --- TOTP Authenticator MFA --- \\
+
+    /**
+     * Marks that mfa.php just created this participant's authenticator app secret,
+     * which is the only time the secret may be shown on screen.
+     */
+    public function set_authenticator_app_setup_pending(bool $pending)
+    {
+        $_SESSION[$this->APPTITLE . "_authenticator_app_setup_pending"] = $pending;
+    }
+
+    public function is_authenticator_app_setup_pending() : bool
+    {
+        return ($_SESSION[$this->APPTITLE . "_authenticator_app_setup_pending"] ?? false) === true;
+    }
 
     public function get_totp_mfa_qr_url(string $otpauth, REDCapPRO $module)
     {

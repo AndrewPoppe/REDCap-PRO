@@ -25,6 +25,7 @@ class APIHandler
         $this->rights     = $this->extractRights();
         $this->user       = $this->extractUser();
         $this->project    = $this->extractProject();
+        $this->checkApiRights();
         $this->actionData = $this->extractActionData();
 
         define('USERID', $this->user->getUsername());
@@ -49,6 +50,53 @@ class APIHandler
             throw new \Error("Invalid API token");
         }
         return $this->module->framework->getProject($project_id);
+    }
+
+    /**
+     * Mirrors REDCap's own API checks (API/index.php, RestUtility::processRequest): the project must not be
+     * deleted, completed or offline, rights must not have expired, and both actions import data, so API
+     * Import rights are required. Admins are exempt from the rights checks, as in REDCap.
+     */
+    private function checkApiRights()
+    {
+        $project_id = $this->rights['project_id'];
+        $project    = (new \Project($project_id))->project;
+        if ( !empty($project['date_deleted']) ) {
+            throw new \Error("This project has been deleted");
+        }
+        if ( !empty($project['completed_time']) ) {
+            throw new \Error("This project has been marked as completed");
+        }
+        if ( ($project['online_offline'] ?? '1') == '0' ) {
+            throw new \Error("This project is currently offline");
+        }
+
+        $username = $this->user->getUsername();
+        if ( $this->user->isSuperUser() || $this->isProjectAdmin($username, $project_id) ) {
+            return;
+        }
+        // REDCap keys privileges by lower-cased username
+        $privileges = \UserRights::getPrivileges($project_id, $username);
+        $rights     = $privileges[$project_id][strtolower($username)] ?? [];
+        $expiration = $rights['expiration'] ?? '';
+        if ( $expiration != '' && str_replace('-', '', $expiration) <= date('Ymd') ) {
+            throw new \Error("Your privileges have expired for this project");
+        }
+        if ( (int) ($rights['api_import'] ?? 0) !== 1 ) {
+            throw new \Error("You do not have API Import privileges in this project");
+        }
+    }
+
+    /**
+     * Project Admin Groups (REDCap 17.1.0+): REDCap's API treats these admins like super users
+     */
+    private function isProjectAdmin(string $username, $project_id) : bool
+    {
+        if ( !method_exists('ProjectAdminGroups', 'userIsAdminForProject') ) {
+            return false;
+        }
+        $ui_id = \User::getUIIDByUsername($username);
+        return !empty($ui_id) && \ProjectAdminGroups::userIsAdminForProject($ui_id, $project_id);
     }
 
     public function extractRights()
@@ -76,7 +124,10 @@ class APIHandler
 
     private function getUserRightsFromToken() : array
     {
-        $sql    = "SELECT * FROM redcap_user_rights WHERE api_token = ?";
+        // Like REDCap's API, ignore tokens belonging to suspended users
+        $sql    = "SELECT r.* FROM redcap_user_rights r
+                   JOIN redcap_user_information i ON i.username = r.username
+                   WHERE r.api_token = ? AND i.user_suspended_time IS NULL";
         $rights = [];
         try {
             $result = $this->module->framework->query($sql, [ $this->token ]);

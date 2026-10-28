@@ -39,6 +39,8 @@ if ( empty($mfa_secret) && $settings->mfaAuthenticatorAppEnabled($project_id) ) 
     $showFullAuthenticatorAppInfo = true;
     $mfa_secret                   = $auth->create_totp_mfa_secret();
     $participantHelper->storeMfaSecret($rcpro_participant_id, $mfa_secret);
+    // Only now may the secret be shown on screen (showMFAInfo); later it is only emailed
+    $auth->set_authenticator_app_setup_pending(true);
 }
 
 // Processing form data when form is submitted
@@ -48,29 +50,59 @@ if ( $isPost ) {
 
         // Is Email
         $emailMfa = filter_input(INPUT_POST, "emailMfa", FILTER_VALIDATE_BOOLEAN);
-        $code     = filter_input(INPUT_POST, "mfa_token", FILTER_VALIDATE_INT);
+        // Keep the code as a string: authenticator app codes can start with 0
+        $code = preg_replace('/[\s-]+/', '', (string) filter_input(INPUT_POST, "mfa_token"));
+        if ( !preg_match('/^[0-9]{6,8}$/', $code) ) {
+            $code = "";
+        }
+
+        // Code checks are throttled per participant across all projects (mfa.php works under any pid).
+        // A lock makes concurrent requests take turns, and every check is logged with log() rather than
+        // logEvent(), which skips repeats within 2 seconds; otherwise the throttle could be outrun.
+        $checkCode = function (string $message, callable $check) use ($module, $rcpro_participant_id, &$mfa_err) {
+            $lock = "redcap_pro_mfa_" . $rcpro_participant_id;
+            if ( (int) $module->framework->query("SELECT GET_LOCK(?, 10)", [ $lock ])->fetch_row()[0] !== 1 ) {
+                $mfa_err = $module->framework->tt("mfa_err3");
+                return false;
+            }
+            try {
+                $throttled = $module->framework->throttle(
+                    'message = ? AND participant_id = ? AND (project_id IS NULL OR project_id IS NOT NULL)',
+                    [ $message, $rcpro_participant_id ],
+                    60,
+                    10
+                );
+                if ( $throttled ) {
+                    $mfa_err = $module->framework->tt("mfa_err3");
+                    return false;
+                }
+                $codeIsCorrect = $check();
+                $module->log($message, [
+                    'participant_id' => $rcpro_participant_id,
+                    'codeIsCorrect'  => $codeIsCorrect,
+                    'module_token'   => $module->getModuleToken()
+                ]);
+                return $codeIsCorrect;
+            } finally {
+                $module->framework->query("SELECT RELEASE_LOCK(?)", [ $lock ]);
+            }
+        };
+
         if ( $emailMfa ) {
             $thisPreferredMethod = 'email';
-            $codeIsCorrect       = $auth->check_email_mfa_code($code);
+            $codeIsCorrect       = $checkCode("Checked Email MFA Code", fn() => $auth->check_email_mfa_code((int) $code));
+        } elseif ( !$settings->mfaAuthenticatorAppEnabled($project_id) ) {
+            $codeIsCorrect = false;
         } else {
-            // Authenticator App
-            if ( $module->framework->throttle('message = "Checked Authenticator App MFA Code" AND participant_id = ?', [ $rcpro_participant_id ], 60, 10) ) {
-                $codeIsCorrect = false;
-                $mfa_err       = $module->framework->tt("mfa_err3");
-            } else {
-                $thisPreferredMethod = 'authenticator-app';
-                $codeIsCorrect       = $auth->check_totp_mfa_code($code, $mfa_secret);
-                $module->logEvent("Checked Authenticator App MFA Code", [
-                    'participant_id' => $rcpro_participant_id,
-                    'codeIsCorrect'  => $codeIsCorrect
-                ]);
-            }
+            $thisPreferredMethod = 'authenticator-app';
+            $codeIsCorrect       = $checkCode("Checked Authenticator App MFA Code", fn() => $auth->check_totp_mfa_code($code, $mfa_secret));
         }
         if ( $codeIsCorrect ) {
             // Set MFA method preference
             $participantHelper->setMfaMethodPreference($rcpro_participant_id, $thisPreferredMethod);
             // Set MFA verification status
             $auth->set_mfa_verification_status(true);
+            $auth->set_authenticator_app_setup_pending(false);
             // Redirect user to appropriate page
             if ( $auth->is_survey_url_set() ) {
                 header("location: " . $auth->get_survey_url());
@@ -510,6 +542,10 @@ $module->framework->tt_transferToJavascriptModuleObject();
 
         $('.needs-validation').each(function () {
             $(this).on('submit', function (event) {
+                // Codes are often copied as "123 456"
+                $(this).find('input[name="mfa_token"]').val(function (i, value) {
+                    return value.replace(/[\s-]+/g, '');
+                });
                 $(this).find('is-invalid').removeClass('is-invalid');
                 $(this).find('.invalid-feedback').each(function () {
                     $(this).text($(this).data('original'));

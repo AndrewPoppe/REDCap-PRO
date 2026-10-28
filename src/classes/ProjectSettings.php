@@ -200,6 +200,9 @@ class ProjectSettings
     /**
      * Checks whether API is enabled in this project
      * 
+     * Besides the REDCapPRO settings, the module must still be enabled in the project (project
+     * settings remain after it is disabled) and REDCap's own API must be enabled system-wide.
+     * 
      * @param int $pid The redcap project ID
      * 
      * @return bool Whether API is enabled in this project
@@ -207,8 +210,10 @@ class ProjectSettings
     public function apiEnabled(int $pid)
     {
         $apiEnabledSystem  = $this->module->framework->getSystemSetting("api-enabled-system");
-        $apiEnabledProject = $this->module->getProjectSetting("api-enabled", $pid);
+        $apiEnabledProject = $this->module->getProjectSetting("api", $pid);
+        $moduleEnabled     = $this->module->framework->isModuleEnabled($this->module->PREFIX, $pid);
+        $redcapApiEnabled  = (bool) ($GLOBALS['api_enabled'] ?? false);
 
-        return $apiEnabledSystem === true && $apiEnabledProject === true;
+        return $apiEnabledSystem === true && $apiEnabledProject === true && $moduleEnabled && $redcapApiEnabled;
     }
 }

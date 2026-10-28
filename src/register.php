@@ -7,6 +7,7 @@ $redcap_username = $module->safeGetUsername();
 $role            = $module->getUserRole($redcap_username); // 3=admin/manager, 2=user, 1=monitor, 0=not found
 if ( $role < 2 ) {
     header("location:" . $module->getUrl("src/home.php"));
+    return;
 }
 $module->includeFont();
 $language = new Language($module);

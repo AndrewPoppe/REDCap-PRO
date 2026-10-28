@@ -216,8 +216,15 @@ class AjaxHandler
     private function getLogs()
     {
         try {
-            if ( $this->params["cc"] === TRUE && !$this->module->framework->isSuperUser() ) {
+            $isCC = $this->params["cc"] === TRUE;
+            if ( $isCC && !$this->module->framework->isSuperUser() ) {
                 throw new REDCapProException("You must be an admin to view Control Center logs");
+            }
+            if ( !$isCC ) {
+                $role = $this->module->getUserRole($this->module->safeGetUsername()); // 3=admin/manager, 2=user, 1=monitor, 0=not found
+                if ( $role < 3 ) {
+                    throw new REDCapProException("You must be a manager or admin to view logs");
+                }
             }
 
             $baseColumns = [
@@ -234,12 +241,21 @@ class AjaxHandler
             $length    = (int) $this->params["length"];
             $limitTerm = ($length < 0) ? "" : " limit " . $start . "," . $length;
 
+            if ($isCC) {
+                $columns = REDCapPRO::$logColumnsCC;
+                $projectClause = "";
+            } else {
+                $columns = REDCapPRO::$logColumns;
+                $projectClause = " AND l.project_id = ?";
+            }
+            // Log parameters that are displayed. Searching is limited to these, so hidden
+            // parameters (e.g. password reset tokens) can't be probed through search results.
+            $parameterColumns = array_values(array_diff($columns, $baseColumns));
+
             $fastQueryParameters = [];
-            $queryParameters = [ $this->module->getModuleToken() ];
             $columnSearchParameters = [];
 
             $generalSearchTerm       = $this->params["search"]["value"] ?? "";
-            $generalSearchText       = "module_token = ?" . ($generalSearchTerm === "" ? "" : " and (");
             $columnSearchText  = "";
 
             // Timestamp filtering
@@ -255,54 +271,34 @@ class AjaxHandler
             }
 
             // Filtering
-            foreach ( $this->params["columns"] as $key => $column ) {
-
-                // Add column to general search if it is searchable
-                if ( $generalSearchTerm !== "" && $column["searchable"] == "true" ) {
-                    if ( array_key_first($this->params["columns"]) !== $key ) {
-                        $generalSearchText .= " or ";
-                    }
-                    $generalSearchText .= db_escape($column["data"]) . " like ?";
-                    array_push($queryParameters, sprintf("%%%s%%", $generalSearchTerm));
-                }
-
+            foreach ( $this->params["columns"] ?? [] as $column ) {
                 // Add any column-specific filtering
-                $searchVal = $column["search"]["value"];
-                if ( $searchVal != "" ) {
+                $searchVal = $column["search"]["value"] ?? "";
+                if ( $searchVal != "" && in_array($column["data"], $columns, true) ) {
                     $searchVal        = $column["search"]["regex"] == "true" ? $searchVal : sprintf("%%%s%%", $searchVal);
                     if (in_array($column["data"], $baseColumns, true)) {
-                        $columnSearchText .= " and l." . db_escape($column["data"]) . " like ?";
+                        $columnSearchText .= " and l." . $column["data"] . " like ?";
                         array_push($columnSearchParameters, $searchVal);
                     } else {
                         $columnSearchText .= " and l.log_id in (select distinct log_id from redcap_external_modules_log_parameters where name = ? and value like ?) ";
-                        array_push($columnSearchParameters, $column["data"], $searchVal);    
+                        array_push($columnSearchParameters, $column["data"], $searchVal);
                     }
                 }
             }
-            $generalSearchText .= $generalSearchTerm === "" ? "" : ")";
 
-            $orderTerm = "";
-            foreach ( $this->params["order"] as $index => $order ) {
-                $column    = db_escape($this->params["columns"][intval($order["column"])]["data"]);
-                $direction = $order["dir"] === "asc" ? "asc" : "desc";
-                if ( $index === 0 ) {
-                    $orderTerm .= " order by ";
+            // Column names can't be bound as parameters, so only sort by columns we select
+            $orderTerms = [];
+            foreach ( $this->params["order"] ?? [] as $order ) {
+                $column = $this->params["columns"][intval($order["column"])]["data"] ?? null;
+                if ( !in_array($column, $columns, true) ) {
+                    continue;
                 }
-                $orderTerm .= $column . " " . $direction;
-                if ( $index !== sizeof($this->params["order"]) - 1 ) {
-                    $orderTerm .= ", ";
-                }
+                $direction    = $order["dir"] === "asc" ? "asc" : "desc";
+                $orderTerms[] = $column . " " . $direction;
             }
+            $orderTerm = empty($orderTerms) ? "" : " order by " . implode(", ", $orderTerms);
 
             // BUILD A FAST QUERY OF THE LOGS
-            if ($this->params['cc'] === TRUE) {
-                $columns = REDCapPRO::$logColumnsCC;
-                $projectClause = "";
-            } else {
-                $columns = REDCapPRO::$logColumns;
-                $projectClause = " AND l.project_id = ?";
-            }
-
             $sqlFull = "SELECT ";
             foreach ($columns as $key => $column) {
                 if ( in_array( $column, $baseColumns, true) ) {
@@ -324,7 +320,7 @@ class AjaxHandler
                     WHERE l.external_module_id = (SELECT external_module_id FROM redcap_external_modules WHERE directory_prefix = ?)
                     and module_token.value = ? " . $projectClause;
             array_push($fastQueryParameters, $this->module->framework->getModuleInstance()->PREFIX, $this->module->getModuleToken());
-            if (!$this->params['cc']) {
+            if (!$isCC) {
                 array_push($fastQueryParameters, $this->project_id);
             }
 
@@ -334,7 +330,9 @@ class AjaxHandler
                     $sql .= "l.$baseColumn like ? or ";
                     array_push($fastQueryParameters, "%$generalSearchTerm%");
                 }
-                $sql .= " l.log_id in (select log_id from redcap_external_modules_log_parameters where value like ?)) ";
+                $namePlaceholders = implode(",", array_fill(0, count($parameterColumns), "?"));
+                $sql .= " l.log_id in (select log_id from redcap_external_modules_log_parameters where name in ($namePlaceholders) and value like ?)) ";
+                array_push($fastQueryParameters, ...$parameterColumns);
                 array_push($fastQueryParameters, "%$generalSearchTerm%");
             }
 
@@ -694,6 +692,21 @@ class AjaxHandler
         try {
             $auth = new Auth($this->module->APPTITLE);
             $auth->init();
+
+            // This runs before MFA is complete, so only reveal the secret while it is being set up
+            // on mfa.php. Otherwise the password alone would be enough to get the second factor.
+            $settings = new ProjectSettings($this->module);
+            if (
+                !$auth->is_logged_in() ||
+                !$auth->is_authenticator_app_setup_pending() ||
+                !$settings->mfaAuthenticatorAppEnabled((int) $this->project_id)
+            ) {
+                $this->module->logEvent("Authenticator App Info Request Refused", [
+                    "rcpro_participant_id" => $auth->get_participant_id()
+                ]);
+                return null;
+            }
+
             $participantHelper    = new ParticipantHelper($this->module);
             $rcpro_participant_id = $auth->get_participant_id();
             $rcpro_username       = $participantHelper->getUserName($rcpro_participant_id);

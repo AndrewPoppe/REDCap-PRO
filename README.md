@@ -422,6 +422,8 @@ This module provides an API for interacting with **REDCapPRO**. Using this API i
 1. **token**: The REDCap API token
 2. **action**: The action you want to perform (either `register` or `enroll`, see below)
 3. **data**: A JSON encoded array of participants. Details about the format of the data are described below. 
+
+As with the REDCap API, the token's owner must not be suspended, their project privileges must not have expired, and they need **API Import** rights in the project (REDCap administrators, including Project Admin Group admins, are exempt). They must also have the **REDCapPRO** role of Normal User or higher. Requests are refused if REDCap's API is disabled, if **REDCapPRO** is no longer enabled in the project, or if the project has been deleted, marked as completed, or taken offline.
    
 ### Register Participants
 This method allows you to register participants with **REDCapPRO**. 

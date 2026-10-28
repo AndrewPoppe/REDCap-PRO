@@ -210,6 +210,56 @@ class REDCapPRO extends AbstractExternalModule
             $surveyUsernameTag = new SurveyUsernameTag($this, $project_id);
             $surveyUsernameTag->enforceSubmittedValues();
         }
+
+        // The External Modules "Import Settings" feature only needs Design rights and replaces all of this
+        // module's project settings (staff roles, MFA, API, languages), skipping the REDCapPRO role checks.
+        if ( isset($project_id) && $this->isSettingsImportForThisModule() && !$this->currentUserIsAdmin() ) {
+            exit(json_encode([ "message" => "REDCapPRO settings can only be imported by a REDCap administrator." ]));
+        }
+    }
+
+    /**
+     * Whether this request is an External Modules settings import that includes this module's settings
+     *
+     * @return bool
+     */
+    private function isSettingsImportForThisModule() : bool
+    {
+        $importScript = "/manager/ajax/import-settings.php";
+        $script       = $_SERVER["SCRIPT_NAME"] ?? "";
+        $zipPath      = $_FILES["file"]["tmp_name"] ?? "";
+        if ( substr($script, -strlen($importScript)) !== $importScript || empty($zipPath) ) {
+            return false;
+        }
+        $zip = new \ZipArchive();
+        if ( $zip->open($zipPath) !== true ) {
+            return false;
+        }
+        $modulePath = "modules/" . $this->PREFIX . "/";
+        $found      = false;
+        for ( $i = 0; $i < $zip->numFiles; $i++ ) {
+            $name = ltrim(str_replace("\\", "/", (string) $zip->getNameIndex($i)), "./");
+            if ( stripos($name, $modulePath) === 0 ) {
+                $found = true;
+                break;
+            }
+        }
+        $zip->close();
+        return $found;
+    }
+
+    /**
+     * Whether the current user is a REDCap administrator, decided the same way as in getUserRole()
+     *
+     * @return bool
+     */
+    private function currentUserIsAdmin() : bool
+    {
+        try {
+            return $this->framework->getUser()->isSuperUser();
+        } catch ( \Throwable $e ) {
+            return false;
+        }
     }
 
     public function redcap_every_page_top($project_id)
@@ -1528,6 +1578,11 @@ class REDCapPRO extends AbstractExternalModule
                 $message = $customLanguageMessage;
             }
 
+        } elseif ( !$this->currentUserIsAdmin() ) {
+            // Project settings (staff roles, MFA, API, self-registration) are changed on the Settings and
+            // Study Staff pages, which check REDCapPRO roles. Saving them through the External Module
+            // configuration endpoint would skip those checks.
+            $message = "REDCapPRO project settings can only be changed on the REDCapPRO Settings and Study Staff pages.";
         }
 
         // Log configuration save attempt
