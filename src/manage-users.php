@@ -30,7 +30,7 @@ if ( isset($_GET["error"]) ) {
     <?php
 }
 
-$module->framework->initializeJavascriptModuleObject();
+$module->initializeJavascriptModuleObject();
 
 // Update roles if requested
 if ( $_SERVER["REQUEST_METHOD"] == "POST" ) {
