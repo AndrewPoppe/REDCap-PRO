@@ -859,19 +859,13 @@ $module->tt_transferToJavascriptModuleObject();
              */
             window.rcpro_module.openAddLanguageModal = function(options) {
 
-                console.log(options);
                 const allStringSections = Object.keys(options.EnglishStrings);
-                const majorSections = Set.from(allStringSections.map(key => key.split(' - ')[0]).filter(section => section !== "Control Center Pages"));
+                const majorSections = new Set(allStringSections.map(key => key.split(' - ')[0]).filter(section => section !== "Control Center Pages"));
                 const sections = {};
                 majorSections.forEach(major => {
                     sections[major] = allStringSections.filter(key => key.split(' - ')[0] === major);
                 });
-                window.things = {
-                    allStringSections,
-                    majorSections,
-                    sections
-                }
-            
+
                 let modalBody = `<div>
                 <ul class="nav nav-tabs" id="languageTab" role="tablist">
                     <li class="nav-item" role="presentation">
